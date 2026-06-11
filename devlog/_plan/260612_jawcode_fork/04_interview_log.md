@@ -167,3 +167,15 @@
    session_storage/extensibility/gitstructure), 전 항목 파일경로:라인 근거 포함.
    참고: dispatch CLI가 fetch failed를 떴지만 서버측 워커는 정상 실행(pendingReplay 케이스) — 폴링으로 회수
 - 답변: (대기 — 010 실행 승인 여부)
+
+### R11 (260612 03:34) — rebrand-inventory 가드 의도 분석
+
+- 질문: "rebrand-inventory --strict는 의도적으로 막아놓은 건가?"
+- 답 (코드 확인): **의도적 가드 맞음, 단 대상이 다름.** gajae-code 자체가 상류 "oh-my-pi"의 리브랜드 포크이고,
+  `scripts/rebrand-inventory.ts`는 자기 리브랜드 완전성을 지키는 가드 (`docs/REBRANDING_PLAN_260525.md` 계약 산출물).
+  금지 토큰이 oh-my-pi 계열(L47)이라는 게 증거 — 다운스트림 포크(우리)를 막으려는 게 아님
+- 강제 항목: @gajae-code/ 스코프(비스코프는 gajae-code만), bin [gjc, gjc-stats], 번들 스킬 정확히 4종,
+  롤 에이전트 정확히 4종 (L32-37, L257-261 기계 검사)
+- 010 전략 확정: 가드 비활성화가 아니라 **상수 확장** (allowedUnscopedPackageNames+expectedCliBins에 jwc) —
+  가드를 jaw 리브랜드의 가드로 전환. gjc가 oh-my-pi에 한 작업의 반복이라 REBRANDING_PLAN_260525.md가 교본
+- 파급 반영: 040/050 MOC에 "번들 스킬 추가 시 정확히-4종 가드 저촉" 경고 추가

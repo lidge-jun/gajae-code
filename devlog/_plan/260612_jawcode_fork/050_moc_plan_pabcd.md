@@ -19,6 +19,8 @@
 
 ## [기본값] 결정
 
+- ⚠️ [기본값 가드] 번들 스킬 정확히-4종 기계 강제 (`rebrand-inventory.ts:32`) — pabcd를 번들 스킬로 넣으면
+  expected 목록 확장 필요. 슬래시커맨드/CLI 진입(번들 스킬 아님)으로 가면 가드 비저촉 (010 MOC §리포 가드 참조)
 - 단계 전환은 명시 커맨드만 (자동 전환 금지) — cli-jaw 규약 유지
 - 아티팩트는 ralplan 라이터 재사용 (`.gjc/plans/` 직접 편집 금지 계약 유지)
 - 게이트 기본값: P/A 종료 시 STOP, goal 모드에선 self-advance (cli-jaw 규약 이식)

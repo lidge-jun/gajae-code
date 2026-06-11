@@ -25,6 +25,9 @@
 
 - [기본값] pipeline: `deep-interview → plan`, handoff-policy: approval-required (frontmatter 기존 계약 유지)
 - [제안] 기존 deep-interview 스킬 보존(업스트림 검증용) + jaw-interview 별도 등록, jwc 기본 진입은 jaw-interview
+- ⚠️ [기본값 가드] `scripts/rebrand-inventory.ts:32`가 번들 워크플로 스킬을 **정확히 4종으로 기계 강제** —
+  jaw-interview를 번들로 추가하려면 `expectedBundledWorkflowSkills` 확장(포크 수정) 필요.
+  대안: 번들이 아닌 `.gjc` 디스커버리 계층으로 배포 (010 MOC §리포 가드 참조)
 
 ## 완료 기준
 

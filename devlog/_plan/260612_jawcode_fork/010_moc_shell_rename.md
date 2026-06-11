@@ -23,11 +23,19 @@
 - [기본값] `gjc` bin 공존 (업스트림 구조 유지, 제거하지 않음)
 - `.gjc/` 상태 경로, `@gajae-code/*` 패키지명, env prefix는 그대로 [확정 D4]
 
-## 리포 가드 (260612 03:30 발견 — bun check 실측)
+## 리포 가드 (260612 03:30 발견, 03:34 의도 분석 완료)
 
-- [기본값] 업스트림 `bun check`에 **`rebrand-inventory --strict`** 단계가 있어 nonGajae 패키지명을
-  violation으로 잡음 — 현재 `packages/jwc/package.json`의 `jwc`가 걸려 check 실패
-- → 010 스코프에 포함: rebrand inventory 허용목록에 `jwc` 등록(또는 동등 처리)해서 `bun check` 그린 복구
+- **의도적 가드 맞음 — 단 우리를 막으려는 게 아님.** gajae-code 자체가 상류 "oh-my-pi"의 리브랜드 포크이고,
+  `scripts/rebrand-inventory.ts`는 **자기 리브랜드 완전성 가드**다 (`docs/REBRANDING_PLAN_260525.md` 승인 계약의 산출물):
+  - 패키지 스코프 `@gajae-code/` + 비스코프 허용은 `gajae-code` 1개만 (L36-37) → `jwc`가 걸린 지점
+  - CLI bin 정확히 `[gjc, gjc-stats]` (L35)
+  - **번들 워크플로 스킬 정확히 4종 / 롤 에이전트 정확히 4종을 기계 강제** (L32-33, L257-260)
+  - 레거시 토큰(oh-my-pi 계열) 금지 + allowlist 사례 (attribution/호환 문서)
+- **010 전략**: 가드를 끄지 않고 **상수를 jaw 기대값으로 확장** — `allowedUnscopedPackageNames`에 `jwc` 추가,
+  `expectedCliBins`에 `jwc` 추가. 가드는 그대로 살아서 우리 리브랜드의 가드가 됨 (gjc가 oh-my-pi에 한 일을 우리가 gjc에 반복)
+- 참고 교본: `docs/REBRANDING_PLAN_260525.md` — gjc의 리브랜드 계약 문서. 010 착수 시 jaw 버전 작성 권장
+- ⚠️ 파급: 040/050에서 jaw-interview/pabcd를 **번들 스킬로 추가하면 이 가드의 정확히-4종 검사에 걸림** —
+  expected 목록 확장(포크 수정, D5 허용) 또는 비번들 계층 배포 중 선택 필요 (해당 MOC에 기록)
 - 브랜딩 상수: `packages/utils/src/dirs.ts:20 APP_NAME = "gjc"` (+`VERSION`), 사용처 21파일 —
   치환 지점이 이미 중앙화돼 있어 [제안]의 brand.ts 별도 모듈은 불필요할 수 있음 (착수 시 판단)
 
