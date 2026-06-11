@@ -21,4 +21,4 @@ bun packages/jwc/bin/jwc.js --version  # jwc/<engine version>
 - M1 (000–099): jwc 단독 완성 — 리네이밍 · 프롬프팅 · 스킬 3계층 · Interview/Plan/Goal 병합 · 메모리 · TUI · 인증 시딩
 - M2 (100–150): cli-jaw 상주 런타임 이식 — Node 포팅 · JawRuntime · jaw.db 세션 · 주입 · 승격
 
-정본 계획: `devlog/_plan/260612_jawcode_fork/000_roadmap.md` · 코드 지도: `structure/INDEX.md`
+정본 계획: `devlog/_plan/260612_jawcode_fork/000_roadmap.md` · 코드 지도: `devlog/_reference/structure/INDEX.md`

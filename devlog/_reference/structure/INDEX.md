@@ -6,9 +6,9 @@
 
 | Tier | 문서 | 한줄 설명 | 근거 |
 |---:|---|---|---|
-| 1 | [README.md](./README.md) | structure/ 허브와 관련 문서 위치 | `/Users/jun/Developer/new/700_projects/jawcode/structure/README.md:1` |
-| 1 | [architecture.md](./architecture.md) | 현재 모노레포 형태와 cli-jaw 임베딩 시임 | `/Users/jun/Developer/new/700_projects/jawcode/structure/architecture.md:1` |
-| 1 | [conventions.md](./conventions.md) | 포크/리베이스/jawdev/MOC 표기 규약 | `/Users/jun/Developer/new/700_projects/jawcode/structure/conventions.md:1` |
+| 1 | [README.md](./README.md) | structure/ 허브와 관련 문서 위치 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_reference/structure/README.md:1` |
+| 1 | [architecture.md](./architecture.md) | 현재 모노레포 형태와 cli-jaw 임베딩 시임 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_reference/structure/architecture.md:1` |
+| 1 | [conventions.md](./conventions.md) | 포크/리베이스/jawdev/MOC 표기 규약 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_reference/structure/conventions.md:1` |
 | 2 | [packages_overview.md](./packages_overview.md) | `packages/*`와 `crates/*` 전체 지도 | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/package.json:49` |
 | 2 | [sdk_surface.md](./sdk_surface.md) | `jwc/sdk`로 볼 공개 SDK 표면 | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/src/sdk.ts:1`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:217` |
 | 2 | [prompt_flow.md](./prompt_flow.md) | 시스템 프롬프트 템플릿, `SYSTEM.md`, append prompt, skills 조립 흐름 | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/system-prompt.ts:372` |
