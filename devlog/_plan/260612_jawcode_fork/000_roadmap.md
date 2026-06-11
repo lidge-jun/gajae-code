@@ -52,6 +52,9 @@
 | [080_moc_tui.md](./080_moc_tui.md) | |
 | [090_moc_auth_release_gate.md](./090_moc_auth_release_gate.md) ← **M1 done 지점 (G1–G9)** | |
 
+설계 정본 (밴드 횡단): [051_design_command_port.md](./051_design_command_port.md) — D10 명령 이식 (050/060/070 기반) ·
+[111_design_runtime_attach.md](./111_design_runtime_attach.md) — M2 런타임 부착 통합 설계 (100–130 기반)
+
 ## 횡단 원칙
 
 0. **명령어 체계 cli-jaw 통일 (D10, 260612 04:54)**: jwc 사용자-가시 명령은 cli-jaw 어휘를 따른다 —

@@ -1,5 +1,9 @@
 # 050 MOC — 워크플로 병합 ②: Plan + PABCD 범용 커맨드
 
+> 📐 상세 설계: [051_design_command_port.md](./051_design_command_port.md) — D10 표면 3종(orchestrate/goal/memory)의
+> 명령 아키텍처(CLI Command 클래스 + 슬래시 2계층, jaw 브랜드 게이트), cli-jaw 이식 자산 표(state-machine
+> getPrefix/getStatePrompt/canTransition/parseWorkerVerdict), 단계 엔진 매핑.
+
 > 상태: ⬜. 결정 근거: D3 [확정] ralplan ↔ jaw P+A 동형 (코드 검증: Planner/Architect/Critic 합의 루프 = P계획+A감사의 다중 에이전트 버전).
 
 ## 병합 소재

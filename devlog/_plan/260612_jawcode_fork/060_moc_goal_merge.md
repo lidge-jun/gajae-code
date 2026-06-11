@@ -1,5 +1,7 @@
 # 060 MOC — 워크플로 병합 ③: Goal
 
+> 📐 상세 설계: [051_design_command_port.md](./051_design_command_port.md) §2 — cli-jaw goal 동사 셋 → ultragoal goal 도구/레저 매핑.
+
 > 상태: ⬜. 결정 근거: D3 [확정] ultragoal ↔ jaw goal 매핑.
 
 ## 코드 사실 (조사 완료)

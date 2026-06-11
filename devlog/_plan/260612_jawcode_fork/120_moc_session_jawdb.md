@@ -1,5 +1,7 @@
 # 120 MOC — 세션 jaw.db 영속화 (resume/steer 재발명)
 
+> 📐 상세 설계: [111_design_runtime_attach.md](./111_design_runtime_attach.md) §4 — steer/followUp = session.prompt streamingBehavior (kill-respawn 소멸 확정 근거).
+
 > 상태: ⬜. 결정 근거: D6 [확정] — 임베디드 런타임 세션 정본 = jaw.db. 구 02 §세션 승계.
 
 ## 현재 문제 (대체 대상)

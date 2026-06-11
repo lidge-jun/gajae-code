@@ -1,5 +1,8 @@
 # 110 MOC — JawRuntime 상주 서비스
 
+> 📐 상세 설계: [111_design_runtime_attach.md](./111_design_runtime_attach.md) — M2 100–130 통합 설계
+> (spawnAgent 어댑터 시맨틱, JawRuntime 풀/steer=session.prompt(steer), 이벤트 매핑 원칙, M1 산출물 시너지: GJC_BRAND_NAME=jwc로 030 디스커버리 그대로 동작).
+
 > 상태: ⬜. 결정 근거: D1/D8 [확정] — cli-jaw 서버 프로세스 안 상주, spawn 소멸. 구 02/03 시임 분석 승계.
 
 ## 코드 사실 (구 02 승계)

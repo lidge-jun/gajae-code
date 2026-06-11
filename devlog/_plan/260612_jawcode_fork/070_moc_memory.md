@@ -1,5 +1,8 @@
 # 070 MOC — 메모리 통합
 
+> 📐 상세 설계: [051_design_command_port.md](./051_design_command_port.md) §2 — jwc memory 동사 → memories/hindsight-retain 매핑.
+> R16 확정: gjc 메모리는 user-level 전역(+per-project-tagged 스코핑, settings-schema.ts:1415) — "세션 단위" 우려 해소.
+
 > 상태: ⬜. 입력: 사용자 "jwc memory 폴더를 만들어서 확장 가능하게" (R2, 시맨틱 미확정 — 본 MOC의 [기본값]이 1안).
 
 ## repo 기본값 (코드 확인 260612 03:09 — 중요 발견)

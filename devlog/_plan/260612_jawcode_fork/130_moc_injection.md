@@ -1,5 +1,8 @@
 # 130 MOC — 스킬·PABCD·인증 주입 (cli-jaw 측) = M2 Done 지점
 
+> 📐 상세 설계: [111_design_runtime_attach.md](./111_design_runtime_attach.md) §5 — 030 brand-aware 디스커버리 덕에
+> 스킬 주입 1차 경로가 "서버 GJC_BRAND_NAME=jwc 설정"으로 단순화됨 (프롬프트 합성 주입안 대체).
+
 > 상태: ⬜. 결정 근거: D5/D7 [확정]. **이 밴드 완료 = M2 done 3항목 충족.**
 
 ## 스코프 A — 스킬 주입 (M2 done ③)
