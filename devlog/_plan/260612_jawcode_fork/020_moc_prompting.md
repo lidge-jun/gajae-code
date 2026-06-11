@@ -42,8 +42,17 @@
 - → jwc 아이덴티티도 같은 구조로: [기본값] 중립 아이덴티티(a2-default 상당: Jaw 🦈, friendly+technically accurate)
   + 사용자 vibe는 설정 주입 계층으로 분리. "미소녀 톤 적용 여부"는 설계 결정이 아니라 사용자 설정의 몫
 
+## [확정] 사용자 identity 설정 표면 (260612 04:07 인터뷰 R12)
+
+- **저장 모델 (a)**: config.yml에 `identity.name / identity.emoji / identity.vibe / identity.language` 필드 →
+  020 합성기가 아이덴티티 블록 렌더 (cli-jaw a2 동형). **무회귀 불변식: 필드 미설정 시 업스트림 프롬프트 diff 0**
+- **TUI 표면 3종**:
+  1. `/settings`에 Identity 섹션 (settings-defs 확장)
+  2. **`/identity`** — 프롬프트/설정 경로 안내만 (config.yml 위치 + SYSTEM.md 통로 설명)
+  3. **`/identity-auto`** — 대화형: 에이전트가 이름/이모지/말투/언어 등을 질문한 뒤 config.yml에 자동 작성 ("질문 후 ㄱㄱ")
+- **밴드 배치 (a)**: 합성기 + config.yml 필드 + /settings 노출 + /identity·/identity-auto 전부 020에서
+
 ## 열린 질문
 
-- jwc 사용자 설정 주입 표면: cli-jaw a2 템플릿 오버라이드처럼 jwc도 사용자 설정 파일에서 identity/vibe를
-  읽을지, 1차는 고정 중립으로 갈지
-- AGENTS.md vs CLAUDE.md 디스커버리 우선순위
+- AGENTS.md vs CLAUDE.md 디스커버리 우선순위 (P에서)
+- /identity-auto의 질문 셋 구성 (P에서 초안)

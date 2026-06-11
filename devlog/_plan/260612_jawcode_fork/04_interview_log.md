@@ -179,3 +179,14 @@
 - 010 전략 확정: 가드 비활성화가 아니라 **상수 확장** (allowedUnscopedPackageNames+expectedCliBins에 jwc) —
   가드를 jaw 리브랜드의 가드로 전환. gjc가 oh-my-pi에 한 작업의 반복이라 REBRANDING_PLAN_260525.md가 교본
 - 파급 반영: 040/050 MOC에 "번들 스킬 추가 시 정확히-4종 가드 저촉" 경고 추가
+
+### R10–R12 (260612 03:38–04:07) — 010 실행 + 020 스코프 확정
+
+- R10: goal 모드로 010 밴드 PABCD 풀사이클 실행 완료 (011 문서, 커밋 59d10c6/1b23d24/f2ef1f7, 독립 감사 COMPLETE, goal paused)
+- R11: "020 쉽게 설명" — 020 = 시스템 프롬프트 jaw화. 주입 통로 3종 기존재 확인(SYSTEM.md/systemPrompt fn/appendPrompt)
+- R12 (04:07) **020 스코프 확정**:
+  - 저장 모델 (a): config.yml `identity.{name,emoji,vibe,language}` + 합성기 렌더 (cli-jaw a2 동형)
+  - TUI 표면: /settings Identity 섹션 + `/identity`(경로 안내) + `/identity-auto`(대화형 질문 후 자동 작성) — 사용자 설계
+  - 밴드 배치 (a): 020에서 한 번에
+  - 무회귀 불변식: identity 필드 미설정 시 업스트림 프롬프트 diff 0
+- 코드 근거: /settings 커맨드(builtin-registry.ts:212) + settings-selector/settings-defs 분리 구조 + config.yml(settings.ts:223)
