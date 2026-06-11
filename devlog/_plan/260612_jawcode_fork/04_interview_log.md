@@ -190,3 +190,15 @@
   - 밴드 배치 (a): 020에서 한 번에
   - 무회귀 불변식: identity 필드 미설정 시 업스트림 프롬프트 diff 0
 - 코드 근거: /settings 커맨드(builtin-registry.ts:212) + settings-selector/settings-defs 분리 구조 + config.yml(settings.ts:223)
+
+### R13 (260612 04:42–46) — 030 스킬 루트 셋 확정 (대체 모델)
+
+- 사용자 재정의: "추가"가 아니라 **"뺄 건 빼고 우리 쪽으로 확정"** — 대체 검토 지시
+- 실측 조사: ~/.gjc/agent/skills **빈 디렉토리** / ~/.cli-jaw/skills 29개(최신) /
+  Developer/new/.agents/skills 48개(크로스툴 컬렉션, 일부 노후) / gjc 베이스는 .gjc+.gemini만 (config.ts:9-11)
+- **확정 4건**:
+  ① user-level **대체+폴백**: jwc 브랜드 = ~/.cli-jaw/skills (부재 시 업스트림 폴백), gjc 브랜드 = 업스트림 (diff-0)
+  ② **.agents 프로젝트 베이스 추가** (워크업 nearest, 충돌 시 글로벌 승)
+  ③ `<루트>/skills/` 인식 안 함 — ".agents가 표본"
+  ④ .gemini 베이스 유지
+- 기각: "M1은 .gjc/skills 쓰고 M2에서 전환" 대안 — 정본 이중화 드리프트(과거 cli-jaw skill sync 버그 패턴) + R3 요구 충돌
