@@ -3,7 +3,7 @@ import * as path from "node:path";
 import type { ThinkingLevel } from "@gajae-code/agent-core";
 import { type Model, modelsAreEqual } from "@gajae-code/ai";
 import { getOAuthProviders } from "@gajae-code/ai/utils/oauth";
-import { setProjectDir } from "@gajae-code/utils";
+import { APP_NAME, getAgentDir, setProjectDir } from "@gajae-code/utils";
 import {
 	GJC_MODEL_ASSIGNMENT_TARGET_IDS,
 	GJC_MODEL_ASSIGNMENT_TARGETS,
@@ -222,6 +222,53 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 		handleTui: (_command, runtime) => {
 			runtime.ctx.showThemeSelector();
 			runtime.ctx.editor.setText("");
+		},
+	},
+	{
+		name: "identity",
+		description: "Show agent identity settings and where to configure them",
+		handle: async (_command, runtime) => {
+			const configPath = path.join(getAgentDir(), "config.yml");
+			const value = (key: "identity.name" | "identity.emoji" | "identity.vibe" | "identity.language") =>
+				runtime.settings.get(key) ?? "(unset)";
+			await runtime.output(
+				[
+					"Identity settings (rendered into the system prompt identity block when set):",
+					`  identity.name     = ${value("identity.name")}`,
+					`  identity.emoji    = ${value("identity.emoji")}`,
+					`  identity.vibe     = ${value("identity.vibe")}`,
+					`  identity.language = ${value("identity.language")}`,
+					"",
+					"Configure via:",
+					"  /settings → Identity tab",
+					"  /identity-auto — the agent interviews you, then saves the answers",
+					`  ${APP_NAME} config set identity.name "<value>" — CLI`,
+					`  ${configPath} — identity.* keys`,
+					"  SYSTEM.md (project or user level) — free-form prompt customization beyond identity",
+				].join("\n"),
+			);
+			return commandConsumed();
+		},
+	},
+	{
+		name: "identity-auto",
+		description: "Interview-style identity setup: answer a few questions, the agent saves them",
+		handle: async (_command, runtime) => {
+			const configPath = path.join(getAgentDir(), "config.yml");
+			const instruction = [
+				"Help me set up my agent identity settings interactively.",
+				"Ask me, in the language I have been using, a few short questions (one compact message) covering:",
+				"1. display name for the agent (identity.name)",
+				"2. signature emoji, optional (identity.emoji)",
+				"3. tone/personality lines (identity.vibe — separate multiple traits with ;)",
+				"4. preferred response language (identity.language)",
+				"Wait for my answers. Skip any field I decline.",
+				`Then persist each answered field with: ${APP_NAME} config set <key> "<value>"`,
+				`(settings file: ${configPath})`,
+				"Finish with a one-line summary of what was saved, and note that the identity block applies to new prompts.",
+			].join("\n");
+			await runtime.session.prompt(instruction);
+			return commandConsumed();
 		},
 	},
 	{

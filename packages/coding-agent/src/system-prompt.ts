@@ -8,7 +8,7 @@ import { $env, getGpuCachePath, getProjectDir, hasFsCode, isEnoent, logger, prom
 import { $ } from "bun";
 import { contextFileCapability } from "./capability/context-file";
 import { systemPromptCapability } from "./capability/system-prompt";
-import type { SkillsSettings } from "./config/settings";
+import { type SkillsSettings, settings } from "./config/settings";
 import { type ContextFile, loadCapability, type SystemPrompt as SystemPromptFile } from "./discovery";
 import { loadSkills, type Skill } from "./extensibility/skills";
 import customSystemPromptTemplate from "./prompts/system/custom-system-prompt.md" with { type: "text" };
@@ -272,6 +272,48 @@ export async function loadProjectContextFiles(
 	});
 
 	return dedupeExactContextFiles(files);
+}
+
+/**
+ * Render the agent identity block from `identity.*` settings (name, emoji,
+ * vibe, language). Returns null when no field is set or when the settings
+ * singleton is not initialized (bare SDK/embedding paths), so the default
+ * system prompt stays byte-identical to upstream.
+ */
+export function renderIdentityBlock(): string | null {
+	let name: string | undefined;
+	let emoji: string | undefined;
+	let vibe: string | undefined;
+	let language: string | undefined;
+	try {
+		name = settings.get("identity.name");
+		emoji = settings.get("identity.emoji");
+		vibe = settings.get("identity.vibe");
+		language = settings.get("identity.language");
+	} catch {
+		// Settings not initialized — no identity block.
+		return null;
+	}
+	if (!name && !emoji && !vibe && !language) return null;
+
+	const lines: string[] = ["# Identity"];
+	if (name || emoji) {
+		lines.push(`- Name: ${[name, emoji].filter(Boolean).join(" ")}`);
+	}
+	if (vibe) {
+		const vibeLines = vibe
+			.split(/;|\n/)
+			.map(line => line.trim())
+			.filter(Boolean);
+		if (vibeLines.length > 0) {
+			lines.push("", "## Vibe");
+			for (const line of vibeLines) lines.push(`- ${line}`);
+		}
+	}
+	if (language) {
+		lines.push("", `Respond in ${language} unless the user writes in another language.`);
+	}
+	return lines.join("\n");
 }
 
 /**
@@ -543,9 +585,13 @@ export async function buildSystemPrompt(options: BuildSystemPromptOptions = {}):
 	const promptSources = [effectiveSystemPromptCustomization, resolvedCustomPrompt, resolvedAppendPrompt];
 	const injectedAlwaysApplyRules = dedupeAlwaysApplyRules(alwaysApplyRules, promptSources);
 
+	const identityBlock = renderIdentityBlock();
+	const composedSystemPromptCustomization =
+		[identityBlock, effectiveSystemPromptCustomization].filter(Boolean).join("\n\n") || null;
+
 	const environment = await logger.time("getEnvironmentInfo", getEnvironmentInfo);
 	const data = {
-		systemPromptCustomization: effectiveSystemPromptCustomization,
+		systemPromptCustomization: composedSystemPromptCustomization,
 		customPrompt: resolvedCustomPrompt,
 		appendPrompt: resolvedAppendPrompt ?? "",
 		tools: toolNames,

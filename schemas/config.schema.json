@@ -26,6 +26,28 @@
 			},
 			"additionalProperties": false
 		},
+		"identity": {
+			"type": "object",
+			"properties": {
+				"name": {
+					"type": "string",
+					"description": "Agent display name for the system prompt identity block"
+				},
+				"emoji": {
+					"type": "string",
+					"description": "Signature emoji shown alongside the agent name"
+				},
+				"vibe": {
+					"type": "string",
+					"description": "Tone and personality lines (separate with ; or newlines)"
+				},
+				"language": {
+					"type": "string",
+					"description": "Preferred response language (e.g. Korean, English)"
+				}
+			},
+			"additionalProperties": false
+		},
 		"autoResume": {
 			"type": "boolean",
 			"description": "Automatically resume the most recent session in the current directory",

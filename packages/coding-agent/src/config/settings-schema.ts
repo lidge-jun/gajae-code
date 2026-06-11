@@ -32,7 +32,8 @@ export type SettingTab =
 	| "editing"
 	| "tools"
 	| "tasks"
-	| "providers";
+	| "providers"
+	| "identity";
 
 /** Tab display metadata - icon is resolved via theme.symbol() */
 export type TabMetadata = { label: string; icon: `tab.${string}` };
@@ -48,6 +49,7 @@ export const SETTING_TABS: SettingTab[] = [
 	"tools",
 	"tasks",
 	"providers",
+	"identity",
 ];
 
 /** Tab display metadata - icon is a symbol key from theme.ts (tab.*) */
@@ -61,6 +63,7 @@ export const TAB_METADATA: Record<SettingTab, { label: string; icon: `tab.${stri
 	tools: { label: "Tools", icon: "tab.tools" },
 	tasks: { label: "Tasks", icon: "tab.tasks" },
 	providers: { label: "Providers", icon: "tab.providers" },
+	identity: { label: "Identity", icon: "tab.identity" },
 };
 
 /** Status line segment identifiers */
@@ -248,6 +251,48 @@ export const SETTINGS_SCHEMA = {
 	// per-machine overrides remain trivial.
 	"auth.broker.url": { type: "string", default: undefined },
 	"auth.broker.token": { type: "string", default: undefined },
+
+	// ────────────────────────────────────────────────────────────────────────
+	// Identity — agent persona rendered into the system prompt identity block.
+	// All fields default to undefined; when none are set the system prompt is
+	// byte-identical to upstream (no identity block is rendered).
+	// ────────────────────────────────────────────────────────────────────────
+	"identity.name": {
+		type: "string",
+		default: undefined,
+		ui: {
+			tab: "identity",
+			label: "Name",
+			description: "Agent display name for the system prompt identity block",
+		},
+	},
+	"identity.emoji": {
+		type: "string",
+		default: undefined,
+		ui: {
+			tab: "identity",
+			label: "Emoji",
+			description: "Signature emoji shown alongside the agent name",
+		},
+	},
+	"identity.vibe": {
+		type: "string",
+		default: undefined,
+		ui: {
+			tab: "identity",
+			label: "Vibe",
+			description: "Tone and personality lines (separate with ; or newlines)",
+		},
+	},
+	"identity.language": {
+		type: "string",
+		default: undefined,
+		ui: {
+			tab: "identity",
+			label: "Language",
+			description: "Preferred response language (e.g. Korean, English)",
+		},
+	},
 
 	autoResume: {
 		type: "boolean",
