@@ -16,6 +16,17 @@
 - **`<루트>/skills/` 인식 안 함** — ".agents가 표본이니까 이걸로" (사용자)
 - **`.gemini` 베이스 유지**
 
+## [D10 파급] 네이티브-충돌 스킬 처리 (R14)
+
+- 스킬 의존도 실측 (R14): 순수 가이드 19개 ✅ / cli-jaw 명령 의존(browser·search 등)은 cli-jaw 설치 머신에서
+  bash로 그대로 동작 ✅ / **네이티브 충돌 2개: `memory`, `dev-pabcd`** — cli-jaw의 메모리·오케스트레이터를
+  조작하라고 지시
+- D10(명령 통일)으로 처리 논리 확정: jwc는 같은 명령 어휘(`jwc memory`, `jwc orchestrate`)를 **네이티브로 제공**
+  (050/070) → 두 스킬은 jwc 브랜드에서 **네이티브-대체 제외 목록**으로 로드 제외, jwc 자체 가이드(040/050 병합
+  스킬 문서)가 그 자리를 채움. 범용 exclude 메커니즘 아님 — 고정 명단 2개
+- jwc 명령 재구현 범위는 D10 표면(orchestrate/goal/memory)에 한정 — browser/telegram 등 cli-jaw 인프라
+  명령은 재구현하지 않음 (bash 실행으로 충분)
+
 ## 코드 사실
 
 - `packages/coding-agent/src/extensibility/skills.ts` — SKILL.md 디스커버리

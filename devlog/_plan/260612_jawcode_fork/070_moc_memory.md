@@ -17,7 +17,8 @@
 1. gjc 메모리 엔진 실사 마무리: consolidation 트리거 조건/read-path 주입 시점 정밀 조사 — 본 밴드 첫 문서
 2. [기본값] **gjc 엔진·경로 그대로 사용** (`~/.gjc/agent/memories/state`, SQLite) — 사용자 요구
    "jwc memory 폴더 + 확장 가능"의 1차 충족은 repo 기본 경로의 규약 문서화로
-3. 표면 커맨드: gjc에 이미 있는 메모리 조작 표면 실사 후, 없으면 `jwc memory search/save` 추가 [제안]
+3. 표면 커맨드 [확정 D10 — cli-jaw 통일, R14]: `jwc memory search/read/save` — cli-jaw memory 명령과
+   동일 어휘·시맨틱 (엔진은 gjc memories 재사용, 저장소는 jwc 자체 — D6 비공유 유지)
 
 ## 제안 (인터뷰 결정 필요)
 

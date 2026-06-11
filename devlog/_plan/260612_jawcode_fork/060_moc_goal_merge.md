@@ -17,9 +17,12 @@
 3. gjc 강점 유지: repo-native 아티팩트(레저 감사 추적), 통합 goal 도구 1개로 조작
 4. goal-continuation 프롬프트에 jaw 규칙(자율 진행/권한/증거 번들) 어휘 통일 (020 연계)
 
-## [기본값] 결정
+## [확정 D10] 명령 표면 — cli-jaw 통일 (R14)
 
-- 엔진은 gjc goal 도구+레저 유지, jaw CLI 표면(`jwc goal set/update/done/pause`)을 별칭으로 추가
+- 엔진은 gjc goal 도구+레저 유지, **사용자 표면은 `jwc goal set/refine/status/update/done/pause` —
+  cli-jaw goal 명령과 동일 어휘·시맨틱** (evidence 의무, pause --agent --audit 게이트 포함)
+
+## [기본값] 결정
 - 단독 jwc의 goal과 cli-jaw 인스턴스 goal은 **별개** (D6 세션 비공유와 동일 원칙) — M2에서도 통합하지 않음
 
 ## 완료 기준

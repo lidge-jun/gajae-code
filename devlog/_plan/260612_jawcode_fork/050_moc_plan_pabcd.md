@@ -14,7 +14,9 @@
 1. P단계 엔진 = ralplan: P 진입 시 ralplan 합의 루프가 돌고, 최종 plan이 pending-approval로 멈춤 [기본값]
 2. A단계 = ralplan의 Critic 패스를 독립 단계로 분리 노출 (jaw A의 read-only 감사 계약 유지)
 3. B/C/D는 jaw 계약 이식: B 구현(역할 에이전트 게이팅 — gjc role agent의 read-only 패턴 재사용), C 기계 검증, D 요약
-4. **범용 진입 커맨드**: `/pabcd` 슬래시커맨드 + `jwc pabcd <I|P|A|B|C|D>` CLI — 어떤 디렉토리에서도 진입
+4. **명령 표면 [확정 D10 — cli-jaw 통일]**: `jwc orchestrate I|P|A|B|C|D` (+alias `jwc pabcd`) +
+   `/pabcd`·`/orchestrate` 슬래시커맨드 — **cli-jaw orchestrate와 동일 어휘·전이 규칙·게이트 시맨틱**.
+   PABCD는 jwc 일상 사용의 핵심 워크플로 (사용자 확정, R14)
 5. 상태 영속화: [기본값] `.gjc/state/pabcd.json` (단계, ctx, plan ref) — resume 가능
 
 ## [기본값] 결정

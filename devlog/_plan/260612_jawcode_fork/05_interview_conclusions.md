@@ -16,6 +16,7 @@
 | D7 | **인증: 로컬 토큰 시딩** | 기존 로그인(Keychain `Claude Code-credentials`, `.credentials.json` — cli-jaw `src/routes/quota.ts:145` 패턴)을 jwc AuthStorage에 시딩해 즉시 사용. OAuth 플로우는 옵션 유지. 공유는 `createAgentSession({authStorage})` 주입(sdk.ts:409) |
 | D8 | **호스팅: Node 포팅 상주** (기존 확정) | 사이드카 기각. M2에서 Bun.* 셰임 + 트랜스파일 (bun:sqlite→better-sqlite3 포함) |
 | D9 | **검색 연동은 후순위** | jwc 세션은 현 federation에서 비가시(스키마 불일치). 목표 상태 = federation에 gjc `history` 스키마 어댑터(b안). M1/M2 done에 미포함. cli-jaw messages LIKE→FTS5 전환은 별도 프로젝트로 분리 |
+| D10 | **명령어 체계 cli-jaw 통일** (260612 04:54, R14) | jwc의 사용자-가시 명령 표면(서브커맨드·슬래시커맨드)은 cli-jaw 어휘·시맨틱을 따른다: `jwc orchestrate I\|P\|A\|B\|C\|D`(PABCD), `jwc goal set/update/...`, `jwc memory search/save/...`. 엔진은 gjc 네이티브(ralplan/ultragoal/memories)를 재사용하되 표면은 cli-jaw와 1:1 — 사용자·스킬·에이전트가 두 도구 사이에서 하나의 명령 어휘만 학습. PABCD는 jwc 일상 사용의 핵심 (사용자: "평소에도 그걸 쓴다") |
 
 ## 마일스톤 / 개념 phase 구조
 

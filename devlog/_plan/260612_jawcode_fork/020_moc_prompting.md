@@ -21,7 +21,8 @@
 
 1. jaw 아이덴티티 오버레이: [기본값 메커니즘 사용] `systemPrompt: (def) => [...def, JAW_IDENTITY]`
    — 업스트림 prompts/ 파일 무수정, jwc 셸에서 주입 (이름/말투/한국어 규칙/존칭)
-2. 어휘 정합: cli-jaw 보스-직원/PABCD/goal 어휘와 통일 (M2에서 같은 프롬프트 어휘 공유 대비)
+2. 어휘 정합 [D10으로 확장, R14]: cli-jaw 보스-직원/PABCD/goal 어휘와 통일 + **시스템 프롬프트가 안내하는
+   명령 예시도 cli-jaw 통일 표면(`jwc orchestrate/goal/memory`) 기준** (M2에서 같은 프롬프트 어휘 공유 대비)
 3. 역할 프롬프트(agents/) 검토: planner/architect/critic은 050 병합의 입력 — 여기선 어휘만 손봄
 4. 언어 정책: [기본값] `language.instruction` 패턴 재사용
 

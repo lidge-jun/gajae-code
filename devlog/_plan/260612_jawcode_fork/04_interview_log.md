@@ -202,3 +202,17 @@
   ③ `<루트>/skills/` 인식 안 함 — ".agents가 표본"
   ④ .gemini 베이스 유지
 - 기각: "M1은 .gjc/skills 쓰고 M2에서 전환" 대안 — 정본 이중화 드리프트(과거 cli-jaw skill sync 버그 패턴) + R3 요구 충돌
+
+### R14 (260612 04:49–54) — D10 확정: 명령어 체계 cli-jaw 통일
+
+- 사용자 지적 (맹점): cli-jaw 스킬들이 본문에서 `cli-jaw ...` 명령·서버 API를 지시 + cli-jaw 스킬 로딩은
+  깃헙 최신 로직에 의존 → "jwc 명령어를 cli-jaw처럼 구현해야 하지 않나"
+- 의존도 실측 (29개): 순수 가이드 19 / cli-jaw 명령 의존(browser·desktop-control·screen-capture·search·pptx·dev) /
+  서버 API 의존(telegram-send·dev-scaffolding·diagram) / **네이티브 충돌 2 (memory, dev-pabcd)**
+- **D10 확정** (사용자: "pabcd 로직을 jwc에서 구현, 평소에도 쓴다, 명령어 체계는 cli-jaw로 통일"):
+  jwc 사용자-가시 명령 표면 = cli-jaw 어휘 (`jwc orchestrate I|P|A|B|C|D`, `jwc goal ...`, `jwc memory ...`).
+  엔진은 gjc 네이티브(ralplan/ultragoal/memories) 재사용, 표면만 통일
+- 파급 패치 완료: 05(D10 추가) / 000(횡단 원칙 0) / 050(명령 표면 확정) / 060(jwc goal 표면) /
+  070(jwc memory 표면 확정 승격) / 030(충돌 스킬 2개 = 네이티브-대체 제외 명단) / 020(명령 예시 어휘) / 130(이득)
+- 재구현 경계: D10 표면 3종(orchestrate/goal/memory)만 — browser 등 cli-jaw 인프라 명령은 재구현 안 함(bash 실행)
+- "깃헙 최신 의존" 우려는 대체 모델로 자연 해소 (라이브 디렉토리 직독, 동기화 코드 0)
