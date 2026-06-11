@@ -5,6 +5,7 @@ import type { ThinkingLevel } from "@gajae-code/agent-core";
 import { FileType, glob } from "@gajae-code/natives";
 import {
 	CONFIG_DIR_NAME,
+	ENGINE_NAME,
 	getConfigDirName,
 	getPluginsDir,
 	getProjectDir,
@@ -21,6 +22,17 @@ import type { ForkContextPolicy } from "../task/types";
 import { parseThinkingLevel } from "../thinking";
 
 import { buildPluginDirRoot } from "./plugin-dir-roots";
+
+/**
+ * Whether the process is running under a jaw brand (e.g. `jwc` sets
+ * GJC_BRAND_NAME before importing the CLI). Read from the environment at call
+ * time — unlike APP_NAME, which is frozen at module load — so tests can toggle
+ * brands per test case.
+ */
+export function isJawBrand(): boolean {
+	const brand = process.env.GJC_BRAND_NAME;
+	return !!brand && brand !== ENGINE_NAME;
+}
 
 /**
  * Standard paths for each config source.

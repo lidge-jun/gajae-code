@@ -1,11 +1,13 @@
+import { existsSync } from "node:fs";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
+import * as path from "node:path";
 import { getProjectDir } from "@gajae-code/utils";
 import { skillCapability } from "../capability/skill";
 import type { SourceMeta } from "../capability/types";
 import type { SkillsSettings } from "../config/settings";
 import { type Skill as CapabilitySkill, loadCapability } from "../discovery";
-import { compareSkillOrder, scanSkillsFromDir } from "../discovery/helpers";
+import { compareSkillOrder, isJawBrand, scanSkillsFromDir } from "../discovery/helpers";
 import type { SkillPromptDetails } from "../session/messages";
 import { expandTilde } from "../tools/path-utils";
 import type { LoadedSubskillActivation } from "./gjc-plugins";
@@ -119,13 +121,26 @@ export async function loadSkills(options: LoadSkillsOptions = {}): Promise<LoadS
 		return { skills: [], warnings: [] };
 	}
 
-	// GJC only accepts native `.gjc` skills. Other providers may still exist for
-	// their own capabilities, but their skill surfaces are intentionally ignored.
+	// GJC accepts native `.gjc` skills. Under a jaw brand (jwc) the cli-jaw
+	// global root replaces the native user root (with fallback when absent) and
+	// the `.agents` cross-tool convention is enabled. Other providers may still
+	// exist for their own capabilities, but their skill surfaces stay ignored.
+	const jawBrand = isJawBrand();
+	const cliJawSkillsDirExists = jawBrand && existsSync(path.join(os.homedir(), ".cli-jaw", "skills"));
 	function isSourceEnabled(source: SourceMeta): boolean {
 		const { provider, level } = source;
-		if (provider !== "native") return false;
-		if (level === "user") return enablePiUser;
-		if (level === "project") return enablePiProject;
+		if (provider === "native") {
+			if (level === "user") {
+				// Substitution: suppress the native user root only while the
+				// cli-jaw global root actually exists (fallback otherwise).
+				if (cliJawSkillsDirExists) return false;
+				return enablePiUser;
+			}
+			if (level === "project") return enablePiProject;
+			return false;
+		}
+		if (provider === "cli-jaw") return jawBrand;
+		if (provider === "agents") return jawBrand;
 		return false;
 	}
 
@@ -142,10 +157,13 @@ export async function loadSkills(options: LoadSkillsOptions = {}): Promise<LoadS
 		return includeSkills.some(pattern => new Bun.Glob(pattern).match(name));
 	}
 
-	// Check if skill name matches any of the ignore patterns
+	// Check if skill name matches any of the ignore patterns. Under a jaw
+	// brand, cli-jaw skills that contradict jwc-native command surfaces
+	// (D10: jwc memory / jwc orchestrate) are excluded by default.
+	const effectiveIgnoredSkills = jawBrand ? [...ignoredSkills, "memory", "dev-pabcd"] : ignoredSkills;
 	function matchesIgnorePatterns(name: string): boolean {
-		if (ignoredSkills.length === 0) return false;
-		return ignoredSkills.some(pattern => new Bun.Glob(pattern).match(name));
+		if (effectiveIgnoredSkills.length === 0) return false;
+		return effectiveIgnoredSkills.some(pattern => new Bun.Glob(pattern).match(name));
 	}
 
 	const disabledSkillNames = new Set(
