@@ -82,9 +82,18 @@ rename(D040-1)이 닿는 추가 파일 — 정식 P의 diff 목록에 필수 포
 - **R7 (감사 추가)**: 펜스 파서가 jawcode에 부재 — D040-3은 기존 정규식 "대체"가 아니라
   **신규 파서 작성** + 기존 경로 제거의 2단계 작업 (난이도 불변, 프레이밍 정정)
 
-## 미결 세부사항 (다음 결정 대상)
+## 세부 결정 (D041-A ~ D, 260612 08:48 확정)
 
-- **D041-A**: elicitation 펜스 TUI 렌더러 ↔ ask 도구 관계 (ask가 펜스 payload를 받아 렌더 vs 펜스가 ask 우회) — R6과 연동
-- **D041-B**: 체크포인트 외부 감사 호출의 cacheIdentity 고정 여부
-- **D041-C**: negativity bias의 Execution_Policy 삽입 문구 초안
-- **D041-D**: settings 키 어휘 — `gjc.deepInterview.ambiguityThreshold` 유지 vs `jawInterview`로 rename (D10 어휘 통일 관점)
+- **D041-A [확정]**: **ask 유지 + 입력 스키마를 elicitation 스키마로 통일** — ask 도구 입력을
+  elicitation 스키마(id/type/options/visibleWhen)로 확장하고 TUI 렌더러가 이를 그림.
+  unattended/RPC 게이트(`deep-interview-gate.ts`) 경로 무손상(R6 해소). 펜스는 비대화형·웹
+  출력용 동일 스키마
+- **D041-B [확정]**: 체크포인트 스코어링 호출 간 **cacheIdentity 고정** — 시드가 append-only로
+  자라는 동안 프리픽스 캐시 연쇄 적중
+- **D041-C [확정]**: negativity bias의 Execution_Policy 삽입 문구는 **정식 P에서 초안 제시 후 확인**
+- **D041-D [확정]**: settings 키 = **`jwc.interview.ambiguityThreshold`**, 사용자 진입 명령 =
+  **`/interview`**, 기존 `/deepinterview`(`/skill:deep-interview`) 계열은 **호환 alias 유지**.
+  설정 우선순위(프로젝트>유저>기본)는 그대로, 구 키 `gjc.deepInterview.*`는 읽기 fallback 검토(P)
+
+> 인터뷰 상태: ✅ 완결 (7라운드 + 감사 1회 + 세부결정 라운드). 다음 = 정식 P
+> (`cli-jaw orchestrate P`)에서 본 문서를 diff 레벨로 확장.
