@@ -36,7 +36,14 @@
 
 - G1–G9 전부 ✅ + 증거(출력/스크린샷)를 본 밴드 문서에 기록 → **M1 done 선언**
 
+## 서브플랜
+
+- [091_plan_provider_kiro.md](./091_plan_provider_kiro.md) — kiro 프로바이더 추가 [제안] (260612 06시).
+  토큰 캐시 임포트(`~/.aws/sso/cache/kiro-auth-token.json` 등)가 본 밴드 D7 시딩 패턴과 동형.
+  **착수 게이트**: Kiro ToS가 서드파티 하네스 사용을 명문 금지 — 리스크 수용 인터뷰 선행
+
 ## 열린 질문
 
 - OAuth ToS 그레이존(구 03 리스크 2) 재평가 시점 — [기본값] 150 승격 전 재검토
 - Windows/Linux 토큰 추출(DPAPI/keyring) — [기본값] M1은 macOS만
+- kiro ToS 리스크 수용 여부 + 계정 분리 정책 (091 §⑥)

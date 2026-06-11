@@ -15,6 +15,10 @@
   - `scripts/verify-gjc-ui-redesign.ts` 가드: 상태줄 프리셋이 레거시 "pi" 세그먼트를 쓰지 않는지 검사 —
     jaw 테마/세그먼트 추가 시 저촉 여부 착수 시 확인
 - 010/020에서 이미 끝난 텍스트 표면: 배너 타이틀(`jwc vX · Jawcode`), 상태줄 `JWC`, 안내문/헬프, Identity 탭 🦈
+- **(260612 06시 조사) "TUI에 도구 행이 안 나오는" 버그는 TUI 무죄 판정** — 원인은 cursor 프로바이더
+  파서의 네이티브 ToolCall oneof 드롭 ([081_issue_tui_toolcall_render.md](./081_issue_tui_toolcall_render.md),
+  수정 대상은 `packages/ai/src/providers/cursor.ts`). 자매 이슈 [082](./082_issue_cursor_tools_fail.md)(타이틀 환각)도 본 밴드 발현·프로바이더 소관.
+  TUI는 미등록 도구명도 폴백 렌더 가능 (`ui-helpers.ts:371`, `tool-execution.ts:188`) — 본 밴드 비주얼 작업과 독립
 
 ## 스코프 — 2트랙
 

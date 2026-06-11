@@ -4,6 +4,8 @@
 > (spawnAgent 어댑터 시맨틱, JawRuntime 풀/steer=session.prompt(steer), 이벤트 매핑 원칙, M1 산출물 시너지: GJC_BRAND_NAME=jwc로 030 디스커버리 그대로 동작).
 
 > 상태: ⬜. 결정 근거: D1/D8 [확정] — cli-jaw 서버 프로세스 안 상주, spawn 소멸. 구 02/03 시임 분석 승계.
+> 표면 트랙: [112_moc_gui.md](./112_moc_gui.md) — 본 밴드 산출물(상주 런타임 + Web UI)의 GUI 패키징
+> (기존 `electron/` 셸 완성 본선 + PWA 즉효 + Claude Desktop 보조). [제안] 단계, 착수 시점은 112 열린 질문 1.
 
 ## 코드 사실 (구 02 승계)
 
