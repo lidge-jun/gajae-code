@@ -63,10 +63,11 @@ bind는 `this`만 복원하고 `#assertActiveRun` 로직에 영향 없음.
 - 파일: `/Users/jun/Developer/new/700_projects/jawcode/packages/agent/src/agent.ts:678-774`
 - 검증: `packages/agent` 타입체크·biome 통과 + 위 격리 재현으로 before(에러)/after(정상) 대조.
 
-## upstream vs fork
+## upstream vs fork — ⚠️ 정정 (260612 09시)
 
-cursor 통합(provider + exec 핸들러 + agent 래핑)은 fork 측 어댑터다(081 참조). 이 unbound 추출도
-fork 코드이며 업스트림 리베이스 충돌 면적과 무관.
+**업스트림 버그로 확정.** `devlog/_upstream_gjc`(HEAD `498d86b` v0.4.4)의 `agent.ts:683`이 동일하게
+`const read = source.read;`(unbound). fork가 아니라 업스트림에서 상속된 버그 → 업스트림 PR 대상.
+([084](./084_fix_cursor_tools_resolution.md))
 
 ## 검증 결과 (사용자 e2e ✅)
 

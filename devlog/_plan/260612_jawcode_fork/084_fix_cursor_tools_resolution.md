@@ -29,7 +29,7 @@
    (`undefined is not an object (evaluating 'this.#opt')`) 재현. 환경 문제(bind+private)가 아님도 별도 확인.
 5. **근본 위치 확정**: `packages/agent/src/agent.ts:678` `#cursorExecHandlersForRun`가 핸들러를 unbound로 추출.
 
-## 근본 원인 4종 (전부 fork 측 cursor 통합 코드)
+## 근본 원인 4종 (전부 **업스트림 gjc** 코드 — `_upstream_gjc` HEAD 498d86b/v0.4.4에서 동일 라인 확인)
 
 | # | 증상 | 근본 원인 | 파일 |
 |---|------|-----------|------|

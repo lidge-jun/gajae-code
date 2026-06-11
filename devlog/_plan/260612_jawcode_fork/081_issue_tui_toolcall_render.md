@@ -8,7 +8,7 @@
 > 검증: `jwc`(로컬 소스 symlink)로 cursor 모델에 도구 호출 유도 → TUI에 도구 행 렌더 확인.
 > 소속: 080 밴드 (발현 표면 = TUI). 자매 이슈: [082](./082_issue_cursor_tools_fail.md)·[083](./083_issue_cursor_exec_unbound.md) — 셋 다 **별개 원인**.
 > 후속: 본 폴백으로 도구가 렌더되자 진짜 실행 실패([083](./083_issue_cursor_exec_unbound.md), exec 핸들러 unbound this)가 드러나 확정·수정됨.
-> 판정: **fork(gjc) 측 cursor 통합 코드의 문제. TUI(080 밴드)는 무죄.**
+> 판정: **업스트림 gjc cursor 통합 코드의 문제. TUI(080 밴드)는 무죄.** (업스트림 동일 코드 확인 — 아래 정정)
 > **착수 시점: 밴드 순서 무관 — 즉시 가능 (hotfix 트랙).** M1 산출물 의존 0, 수정 파일은 fork 로컬 `cursor.ts`뿐.
 
 260612 05:01 세션(gjc v0.4.4 + `cursor/composer-2.5-fast`)에서 에이전트가 도구를 시도하는 동안
@@ -74,10 +74,11 @@ generic `tool {}`로 표시되던 문제를, **중첩 키(oneof variant 이름)�
 아예 없다. 같은 와이어 스키마(ToolCall oneof) — A안 구현 시 cli-jaw의 kindKey→라벨 별칭 테이블을
 그대로 차용하면 된다 (사실상 A안의 검증된 템플릿).
 
-## upstream vs fork
+## upstream vs fork — ⚠️ 정정 (260612 09시)
 
-`cursor.ts`의 git 이력은 `19f8c1f`(OMP baseline) / `24a8d7c`(auto-checkpoint)뿐 — cursor 통합은
-**fork 측 어댑터**이고, 이 불완전한 oneof 처리도 fork 코드다. 업스트림 리베이스 충돌 면적과 무관.
+**업스트림 버그로 확정.** `devlog/_upstream_gjc`(Yeachan-Heo/gajae-code, HEAD `498d86b` v0.4.4)에
+동일 코드가 **같은 라인**(`cursor.ts:1958` mcpToolCall만 처리)으로 존재. fork가 만든 게 아니라
+업스트림에서 그대로 상속된 것. → 수정은 업스트림 PR 대상([084](./084_fix_cursor_tools_resolution.md) 참조).
 
 ## 잔여 불확실성 (95→100 검증 실험)
 
