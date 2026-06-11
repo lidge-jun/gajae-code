@@ -16,6 +16,11 @@ bun packages/jwc/bin/jwc.js            # TUI
 bun packages/jwc/bin/jwc.js --version  # jwc/<engine version>
 ```
 
+## 아이덴티티 설정
+
+`/settings` Identity 탭(또는 `identity.{name,emoji,vibe,language}` config 키)으로 에이전트 이름/말투/언어를
+설정하면 시스템 프롬프트에 반영된다. `/identity`는 설정 경로 안내, `/identity-auto`는 대화형 설정. 미설정 시 업스트림과 동일.
+
 ## 로드맵
 
 - M1 (000–099): jwc 단독 완성 — 리네이밍 · 프롬프팅 · 스킬 3계층 · Interview/Plan/Goal 병합 · 메모리 · TUI · 인증 시딩
