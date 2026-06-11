@@ -9,6 +9,7 @@ devlog/
   _plan/       # active or pending plans (YYMMDD_slug/)
   _fin/        # completed summaries
   _reference/  # structure/ — 코드 지도와 source-of-truth 문서
+               # 002_proxy/ — gjc 프로바이더 계층 분석 노트 (자체 git repo, 원본: /Users/jun/Developer/new/002_proxy)
 ```
 
 upstream(gajae-code) 소유인 `docs/`는 리베이스 충돌 방지를 위해 루트에 그대로 둔다.

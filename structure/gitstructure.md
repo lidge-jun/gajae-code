@@ -10,7 +10,7 @@
 | HEAD | `498d86b` | `git -C /Users/jun/Developer/new/700_projects/jawcode rev-parse --short HEAD` 실행 결과 |
 | upstream fetch/push | `https://github.com/Yeachan-Heo/gajae-code` | `git -C /Users/jun/Developer/new/700_projects/jawcode remote -v` 실행 결과 |
 | origin | 없음 | `git -C /Users/jun/Developer/new/700_projects/jawcode remote -v` 실행 결과에 upstream만 있음 |
-| 기존 worktree 변경 | `bun.lock`, `002_proxy/`, `devlog/`, `packages/jwc/`, `devlog/_reference/structure/` | `git -C /Users/jun/Developer/new/700_projects/jawcode status --short` 실행 결과 |
+| 기존 worktree 변경 | `bun.lock`, `devlog/` (`_reference/002_proxy/`, `_reference/structure/` 포함), `packages/jwc/` | `git -C /Users/jun/Developer/new/700_projects/jawcode status --short` 실행 결과 |
 
 ## 표면 리네이밍 정책
 
