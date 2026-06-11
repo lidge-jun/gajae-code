@@ -32,9 +32,9 @@ const repoRoot = process.cwd();
 const expectedBundledWorkflowSkills = ["deep-interview", "ralplan", "team", "ultragoal"] as const;
 const expectedBundledRoleAgents = ["architect", "critic", "executor", "planner"] as const;
 const expectedPackageScope = "@gajae-code/";
-const expectedCliBins = ["gjc", "gjc-stats"] as const;
+const expectedCliBins = ["gjc", "gjc-stats", "jwc"] as const;
 const expectedRootPackageName = "gajae-code";
-const allowedUnscopedPackageNames = new Set([expectedRootPackageName]);
+const allowedUnscopedPackageNames = new Set([expectedRootPackageName, "jwc"]);
 const rootPublicMetadataFields = ["name", "description", "homepage", "repository", "bugs"] as const;
 const rootLegacyScriptKeys = new Set(["test:py"]);
 

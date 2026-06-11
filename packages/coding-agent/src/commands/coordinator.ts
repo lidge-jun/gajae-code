@@ -1,3 +1,4 @@
+import { APP_NAME } from "@gajae-code/utils";
 import { Args, Command, Flags } from "@gajae-code/utils/cli";
 import {
 	COORDINATOR_MCP_PROTOCOL_VERSION,
@@ -25,7 +26,7 @@ function coordinatorContractPayload(): {
 }
 
 export default class Coordinator extends Command {
-	static description = "Inspect GJC coordinator MCP bridge contracts";
+	static description = `Inspect ${APP_NAME.toUpperCase()} coordinator MCP bridge contracts`;
 	static strict = false;
 
 	static args = {

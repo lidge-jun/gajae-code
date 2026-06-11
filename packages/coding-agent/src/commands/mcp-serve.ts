@@ -1,3 +1,4 @@
+import { APP_NAME } from "@gajae-code/utils";
 import { Args, Command, Flags } from "@gajae-code/utils/cli";
 import {
 	COORDINATOR_MCP_PROTOCOL_VERSION,
@@ -15,7 +16,7 @@ export function validateMcpServeSubcommandForTest(server: string | undefined): v
 }
 
 export default class McpServe extends Command {
-	static description = "Serve GJC MCP compatibility bridges";
+	static description = `Serve ${APP_NAME.toUpperCase()} MCP compatibility bridges`;
 	static strict = false;
 
 	static args = {

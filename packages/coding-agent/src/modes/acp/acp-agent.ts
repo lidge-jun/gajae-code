@@ -43,7 +43,7 @@ import {
 	type Usage,
 } from "@agentclientprotocol/sdk";
 import type { AssistantMessage, Model } from "@gajae-code/ai";
-import { logger, VERSION } from "@gajae-code/utils";
+import { APP_NAME, logger, VERSION } from "@gajae-code/utils";
 import { disableProvider, enableProvider, reset as resetCapabilities } from "../../capability";
 import { Settings } from "../../config/settings";
 import { clearPluginRootsAndCaches, resolveActiveProjectRegistryPath } from "../../discovery/helpers";
@@ -405,7 +405,7 @@ export class AcpAgent implements Agent {
 				type: "terminal",
 				id: "terminal",
 				name: "Set up Gajae Code in terminal",
-				description: "Launch the gjc TUI to add provider keys and select models.",
+				description: `Launch the ${APP_NAME} TUI to add provider keys and select models.`,
 				args: [ACP_TERMINAL_AUTH_FLAG],
 			});
 		}

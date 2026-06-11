@@ -1,3 +1,4 @@
+import { APP_NAME } from "@gajae-code/utils";
 /**
  * Install GJC defaults or optional feature dependencies.
  */
@@ -8,7 +9,7 @@ import { initTheme } from "../modes/theme/theme";
 const COMPONENTS: SetupComponent[] = ["defaults", "hermes", "hooks", "provider", "python", "stt"];
 
 export default class Setup extends Command {
-	static description = "Install GJC defaults or optional feature dependencies";
+	static description = `Install ${APP_NAME.toUpperCase()} defaults or optional feature dependencies`;
 
 	static args = {
 		component: Args.string({

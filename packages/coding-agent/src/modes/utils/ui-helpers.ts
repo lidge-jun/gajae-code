@@ -1,6 +1,7 @@
 import type { AgentMessage } from "@gajae-code/agent-core";
 import type { AssistantMessage, ImageContent, Message } from "@gajae-code/ai";
 import { type Component, Spacer, Text, TruncatedText } from "@gajae-code/tui";
+import { APP_NAME } from "@gajae-code/utils";
 import { settings } from "../../config/settings";
 import { AssistantMessageComponent } from "../../modes/components/assistant-message";
 import { BashExecutionComponent } from "../../modes/components/bash-execution";
@@ -535,7 +536,7 @@ export class UiHelpers {
 				theme.bold(theme.fg("warning", "Update Available")) +
 					"\n" +
 					theme.fg("muted", `New version ${newVersion} is available. Run: `) +
-					theme.fg("accent", "gjc update"),
+					theme.fg("accent", `${APP_NAME} update`),
 				1,
 				0,
 			),

@@ -2,7 +2,14 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { ThinkingLevel } from "@gajae-code/agent-core";
 import { TERMINAL } from "@gajae-code/tui";
-import { formatDuration, formatNumber, getProjectDir, pathIsWithin, relativePathWithinRoot } from "@gajae-code/utils";
+import {
+	APP_NAME,
+	formatDuration,
+	formatNumber,
+	getProjectDir,
+	pathIsWithin,
+	relativePathWithinRoot,
+} from "@gajae-code/utils";
 import { type ThemeColor, theme } from "../../../modes/theme/theme";
 import { shortenPath } from "../../../tools/render-utils";
 import { getSessionAccentAnsi, getSessionAccentHex } from "../../../utils/session-color";
@@ -66,7 +73,7 @@ function classifyProjectDir(pwd: string): { scratch: boolean; relative: string |
 const gajaeSegment: StatusLineSegment = {
 	id: "gajae",
 	render(_ctx) {
-		return { content: theme.fg("accent", "GJC"), visible: true };
+		return { content: theme.fg("accent", APP_NAME.toUpperCase()), visible: true };
 	},
 };
 

@@ -1,3 +1,4 @@
+import { APP_NAME } from "@gajae-code/utils";
 import { Args, Command, Flags } from "@gajae-code/utils/cli";
 import { renderCliWriteReceipt } from "../gjc-runtime/cli-write-receipt";
 import { renderTeamStatusMarkdown } from "../gjc-runtime/state-renderer";
@@ -75,7 +76,7 @@ function parseInputFlag(argv: string[]): Record<string, unknown> {
 
 export default class Team extends Command {
 	static description =
-		"Run native GJC tmux team orchestration from inside an existing tmux/GJC --tmux session; --dry-run writes ephemeral .gjc/state/team state only";
+		`Run native ${APP_NAME.toUpperCase()} tmux team orchestration from inside an existing tmux/${APP_NAME.toUpperCase()} --tmux session; --dry-run writes ephemeral .gjc/state/team state only`;
 	static strict = false;
 
 	static args = {

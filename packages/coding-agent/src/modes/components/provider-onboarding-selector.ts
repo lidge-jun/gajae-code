@@ -1,4 +1,5 @@
 import { Container, matchesKey, Spacer, TruncatedText } from "@gajae-code/tui";
+import { APP_NAME } from "@gajae-code/utils";
 import { theme } from "../../modes/theme/theme";
 import { matchesSelectCancel } from "../../modes/utils/keybinding-matchers";
 import { formatModelOnboardingGuidance } from "../../setup/model-onboarding-guidance";
@@ -25,7 +26,7 @@ const PROVIDER_ONBOARDING_OPTIONS: ProviderOnboardingOption[] = [
 	},
 	{
 		label: "Add API-compatible provider",
-		description: "Show the /provider add and gjc setup provider commands.",
+		description: `Show the /provider add and ${APP_NAME} setup provider commands.`,
 		action: "api-guide",
 	},
 ];

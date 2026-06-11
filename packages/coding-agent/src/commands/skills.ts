@@ -1,3 +1,4 @@
+import { APP_NAME } from "@gajae-code/utils";
 /**
  * Inspect bundled workflow skills.
  */
@@ -7,7 +8,7 @@ import { runSkillsCommand, type SkillsAction, type SkillsCommandArgs } from "../
 const ACTIONS: SkillsAction[] = ["list", "read"];
 
 export default class Skills extends Command {
-	static description = "Inspect bundled GJC workflow skills";
+	static description = `Inspect bundled ${APP_NAME.toUpperCase()} workflow skills`;
 
 	static args = {
 		action: Args.string({

@@ -1,8 +1,9 @@
+import { APP_NAME } from "@gajae-code/utils";
 import { Command, Flags } from "@gajae-code/utils/cli";
 import { runNativeDeepInterviewCommand } from "../gjc-runtime/deep-interview-runtime";
 
 export default class DeepInterview extends Command {
-	static description = "Run native GJC deep-interview workflow";
+	static description = `Run native ${APP_NAME.toUpperCase()} deep-interview workflow`;
 	static strict = false;
 	static flags = {
 		quick: Flags.boolean({ description: "Seed a quick deep-interview run" }),

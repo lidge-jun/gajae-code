@@ -1,8 +1,9 @@
+import { APP_NAME } from "@gajae-code/utils";
 import { Command } from "@gajae-code/utils/cli";
 import { runNativeRalplanCommand } from "../gjc-runtime/ralplan-runtime";
 
 export default class Ralplan extends Command {
-	static description = "Run native GJC RALPLAN consensus planning workflow";
+	static description = `Run native ${APP_NAME.toUpperCase()} RALPLAN consensus planning workflow`;
 	static strict = false;
 	static examples = [
 		'$ gjc ralplan "<task description>"',

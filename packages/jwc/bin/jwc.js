@@ -1,2 +1,3 @@
 #!/usr/bin/env bun
-import "@gajae-code/coding-agent/cli";
+process.env.GJC_BRAND_NAME = "jwc";
+await import("@gajae-code/coding-agent/cli");

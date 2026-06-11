@@ -16,8 +16,11 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { engines, version } from "../package.json" with { type: "json" };
 
-/** App name (e.g. "gjc") */
-export const APP_NAME: string = "gjc";
+/** Engine name — fixed identifier for paths, log filenames, release assets (e.g. "gjc") */
+export const ENGINE_NAME: string = "gjc";
+
+/** App name shown to users (brandable via GJC_BRAND_NAME, e.g. "jwc"); defaults to the engine name */
+export const APP_NAME: string = process.env.GJC_BRAND_NAME || ENGINE_NAME;
 
 /** Config directory name (e.g. ".gjc") */
 export const CONFIG_DIR_NAME: string = ".gjc";
@@ -140,7 +143,7 @@ class DirResolver {
 				const value = process.env[envVar];
 				if (value) {
 					try {
-						const joined = path.join(value, APP_NAME);
+						const joined = path.join(value, ENGINE_NAME);
 						if (fs.existsSync(joined)) {
 							return joined;
 						}
@@ -239,7 +242,7 @@ export function getLogsDir(): string {
 
 /** Get the path to a dated log file (~/.gjc/logs/gjc.YYYY-MM-DD.log). */
 export function getLogPath(date = new Date()): string {
-	return path.join(getLogsDir(), `${APP_NAME}.${date.toISOString().slice(0, 10)}.log`);
+	return path.join(getLogsDir(), `${ENGINE_NAME}.${date.toISOString().slice(0, 10)}.log`);
 }
 
 /**
@@ -444,7 +447,7 @@ export function getCrashLogPath(agentDir?: string): string {
 
 /** Get the debug log path (~/.gjc/agent/gjc-debug.log). */
 export function getDebugLogPath(agentDir?: string): string {
-	return dirs.agentSubdir(agentDir, `${APP_NAME}-debug.log`, "state");
+	return dirs.agentSubdir(agentDir, `${ENGINE_NAME}-debug.log`, "state");
 }
 
 // =============================================================================

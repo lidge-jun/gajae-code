@@ -1,3 +1,4 @@
+import { APP_NAME } from "@gajae-code/utils";
 import { Args, Command, Flags } from "@gajae-code/utils/cli";
 import {
 	attachGjcTmuxSession,
@@ -42,7 +43,7 @@ function sessionJson(session: SessionJsonDto): SessionJsonDto {
 }
 
 export default class Session extends Command {
-	static description = "List, inspect, attach, and remove tagged GJC-managed tmux sessions";
+	static description = `List, inspect, attach, and remove tagged ${APP_NAME.toUpperCase()}-managed tmux sessions`;
 	static strict = false;
 
 	static args = {
