@@ -73,7 +73,7 @@ Inspired by the [Ouroboros project](https://github.com/Q00/ouroboros) which demo
 
 ## Native Plugin Invocation Guard (Issue #3030)
 
-If this raw bundled skill is loaded by jwc's native skill loader through `/skill:jaw-interview`, do not treat that path as permission to skip rendered jwc setup. The user-facing invocation is `/skill:jaw-interview`; do not recommend or advertise CLI bridge commands as the jaw-interview entrypoint. Regardless of invocation path, Phase 0 below remains blocking and must resolve `gjc.jawInterview.ambiguityThreshold` from settings before any announcement, state write, question, or ambiguity score.
+If this raw bundled skill is loaded by jwc's native skill loader through `/skill:jaw-interview`, do not treat that path as permission to skip rendered jwc setup. The user-facing invocation is `/skill:jaw-interview`; do not recommend or advertise CLI bridge commands as the jaw-interview entrypoint. Regardless of invocation path, Phase 0 below remains blocking and must resolve `jwc.interview.ambiguityThreshold` (legacy read-fallback: `gjc.deepInterview.ambiguityThreshold`) from settings before any announcement, state write, question, or ambiguity score.
 
 ## Phase 0: Resolve Ambiguity Threshold (blocking prerequisite)
 
@@ -83,7 +83,7 @@ Complete this phase before Phase 1, before brownfield exploration, before jwc st
    - User settings: `[$GJC_CONFIG_DIR|~/.gjc]/settings.json`
    - Project settings: `./.gjc/settings.json` (overrides user settings)
 2. **Resolve threshold and source**:
-   - Read `gjc.jawInterview.ambiguityThreshold` from both files when present.
+   - Read `jwc.interview.ambiguityThreshold` from both files when present (legacy read-fallback: `gjc.deepInterview.ambiguityThreshold` — same chain as the native runtime, 042 D041-D).
    - Use the project value when valid; otherwise use the user value when valid; otherwise use the default `0.05`.
    - Set these run variables exactly: `<resolvedThreshold>`, `<resolvedThresholdPercent>`, and `<resolvedThresholdSource>` (for example `./.gjc/settings.json`, `[$GJC_CONFIG_DIR|~/.gjc]/settings.json`, or `default`).
 3. **Emit the required first line to the user before any other interview announcement**:
