@@ -369,6 +369,9 @@ export class EventController {
 						content.id,
 					);
 					component.setExpanded(this.ctx.toolOutputExpanded);
+					// 083.1: a new tool starting collapses the previous one to a one-line summary
+					this.ctx.lastToolComponent?.setMinimized?.(true);
+					this.ctx.lastToolComponent = component;
 					this.ctx.chatContainer.addChild(component);
 					this.ctx.pendingTools.set(content.id, component);
 				} else {
@@ -484,6 +487,9 @@ export class EventController {
 				event.toolCallId,
 			);
 			component.setExpanded(this.ctx.toolOutputExpanded);
+			// 083.1: a new tool starting collapses the previous one to a one-line summary
+			this.ctx.lastToolComponent?.setMinimized?.(true);
+			this.ctx.lastToolComponent = component;
 			this.ctx.chatContainer.addChild(component);
 			this.ctx.pendingTools.set(event.toolCallId, component);
 			this.ctx.ui.requestRender();

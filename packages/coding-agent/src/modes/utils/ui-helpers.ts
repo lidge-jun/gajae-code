@@ -388,6 +388,10 @@ export class UiHelpers {
 						content.id,
 					);
 					component.setExpanded(this.ctx.toolOutputExpanded);
+					// 083.1: during replay, every tool minimizes its predecessor so only
+					// the final tool block keeps its preview.
+					this.ctx.lastToolComponent?.setMinimized?.(true);
+					this.ctx.lastToolComponent = component;
 					this.ctx.chatContainer.addChild(component);
 
 					if (hasErrorStop && errorMessage) {
