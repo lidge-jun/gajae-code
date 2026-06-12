@@ -36,6 +36,14 @@ export interface ModelManagerOptions<TApi extends Api = Api, TModelsDevPayload =
 	cacheTtlMs?: number;
 	/** Optional dynamic endpoint fetcher. */
 	fetchDynamicModels?: () => Promise<readonly Model<TApi>[] | null>;
+	/**
+	 * When true and the dynamic fetch succeeds, models whose id the endpoint no
+	 * longer serves are tagged `unlisted: true` instead of being dropped —
+	 * selectors hide them by default but can reveal them on demand. Models the
+	 * endpoint does serve get any stale `unlisted` tag cleared. No effect when
+	 * the dynamic fetch fails (bundle/cache remain untagged fallbacks).
+	 */
+	markUnlistedOutsideDynamic?: boolean;
 	/** Optional models.dev fallback hook. */
 	modelsDev?: ModelsDevFallback<TApi, TModelsDevPayload>;
 	/** Clock override for deterministic tests. */
@@ -146,12 +154,19 @@ export async function resolveProviderModels<TApi extends Api = Api, TModelsDevPa
 	const dynamicFetchSucceeded = fetchedDynamicModels !== null;
 	const cacheModels = dynamicFetchSucceeded ? [] : normalizeModelList<TApi>(cache?.models ?? []);
 	const dynamicModels = fetchedDynamicModels ?? [];
+	const unlistedTagger =
+		dynamicFetchSucceeded && options.markUnlistedOutsideDynamic === true
+			? buildUnlistedTagger<TApi>(dynamicModels)
+			: null;
 	const mergedWithCache = mergeDynamicModels(mergeModelSources(staticModels, modelsDevModels), cacheModels);
-	const models = mergeDynamicModels(mergedWithCache, dynamicModels);
+	const models = applyUnlistedTagger(mergeDynamicModels(mergedWithCache, dynamicModels), unlistedTagger);
 	const dynamicAuthoritative = !hasDynamicFetcher || dynamicFetchSucceeded || shouldUseFreshCacheAsAuthoritative;
 	if (shouldFetchFromNetwork) {
 		if (dynamicFetchSucceeded) {
-			const snapshotModels = mergeDynamicModels(mergeModelSources(staticModels, modelsDevModels), dynamicModels);
+			const snapshotModels = applyUnlistedTagger(
+				mergeDynamicModels(mergeModelSources(staticModels, modelsDevModels), dynamicModels),
+				unlistedTagger,
+			);
 			writeModelCache(options.providerId, now(), snapshotModels, true, staticFingerprint, dbPath);
 		} else {
 			// Dynamic fetch failed — update cache with a non-authoritative snapshot so
@@ -227,6 +242,33 @@ function shouldFetchRemoteSources(
 		return cacheAgeMs >= NON_AUTHORITATIVE_RETRY_MS;
 	}
 	return false;
+}
+
+/**
+ * Tags models outside the dynamic id set as `unlisted` and clears stale tags
+ * on models the endpoint still serves. The dynamic models themselves may carry
+ * pre-set `unlisted` flags (provider allowlist filters) — those are respected.
+ */
+function buildUnlistedTagger<TApi extends Api>(
+	dynamicModels: readonly Model<TApi>[],
+): (model: Model<TApi>) => Model<TApi> {
+	const dynamicById = new Map(dynamicModels.map(model => [model.id, model]));
+	return model => {
+		const dynamicModel = dynamicById.get(model.id);
+		const unlisted = dynamicModel ? dynamicModel.unlisted === true : true;
+		if (unlisted === (model.unlisted === true)) return model;
+		if (unlisted) return { ...model, unlisted: true };
+		const { unlisted: _stale, ...rest } = model;
+		return rest as Model<TApi>;
+	};
+}
+
+function applyUnlistedTagger<TApi extends Api>(
+	models: Model<TApi>[],
+	tagger: ((model: Model<TApi>) => Model<TApi>) | null,
+): Model<TApi>[] {
+	if (!tagger) return models;
+	return models.map(tagger);
 }
 
 function mergeModelSources<TApi extends Api>(...sources: readonly (readonly Model<TApi>[])[]): Model<TApi>[] {

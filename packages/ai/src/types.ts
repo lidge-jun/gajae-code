@@ -896,6 +896,13 @@ export interface Model<TApi extends Api = any> {
 	preferWebsockets?: boolean;
 	/** Preferred model to switch to when context promotion is triggered (model id or provider/id). */
 	contextPromotionTarget?: string;
+	/**
+	 * Not servable by the current auth path (e.g. a catalog-only legacy id the
+	 * provider's discovery no longer returns, or a model outside the OAuth
+	 * allowlist). Kept in the registry so selectors can reveal it on demand
+	 * (ctrl+o), but hidden by default and skipped by automatic selection.
+	 */
+	unlisted?: boolean;
 	/** Provider-facing model id when it differs from the local selector id. */
 	wireModelId?: string;
 	/** Declarative request shaping for OpenAI-compatible proxy providers. */
