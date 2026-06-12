@@ -182,9 +182,8 @@ function planTasks(paths: readonly string[], packages: readonly WorkspacePackage
 	const rustChanged = paths.some(isRustPath);
 	const installChanged = paths.some(isInstallPath);
 	const publishChanged = paths.some(isReleasePublishPath);
-	const wrapperChanged = paths.some(isUnscopedWrapperPath);
 	const toolingScriptChanged = paths.some(isToolingScriptPath);
-	const needsNativeRuntime = paths.some(isCodingAgentRuntimePath) || wrapperChanged || fullWorkspace;
+	const needsNativeRuntime = paths.some(isCodingAgentRuntimePath) || fullWorkspace;
 	const workflowHarnessOnly = paths.length > 0 && paths.every(isWorkflowHarnessPath);
 	const ciOnly = paths.length > 0 && paths.every(changedPath => changedPath.startsWith(".github/"));
 
@@ -213,9 +212,6 @@ function planTasks(paths: readonly string[], packages: readonly WorkspacePackage
 
 	if (toolingScriptChanged && !fullWorkspace && !ciOnly && !workflowHarnessOnly) {
 		add(tasks, "root-check", "Root TypeScript/tooling check", ["bun", "run", "check:ts"]);
-	}
-	if (wrapperChanged) {
-		add(tasks, "wrapper-version", "Unscoped wrapper CLI version smoke", ["bun", "packages/gajae-code/bin/gjc.js", "--version"]);
 	}
 	if (publishChanged) {
 		add(tasks, "release-publish-contract", "Release publish contract tests", ["bun", "run", "test:release"]);
@@ -313,7 +309,6 @@ function isRootPackageReleaseHarnessOnly(paths: readonly string[]): boolean {
 			changedPath === "package.json" ||
 			isReleasePublishPath(changedPath) ||
 			isReleaseHarnessScriptPath(changedPath) ||
-			isUnscopedWrapperPath(changedPath),
 		)
 	);
 }
@@ -366,11 +361,7 @@ function isToolingScriptPath(changedPath: string): boolean {
 }
 
 function isReleasePublishPath(changedPath: string): boolean {
-	return changedPath === "scripts/ci-release-publish.ts" || changedPath.startsWith("packages/gajae-code/");
-}
-
-function isUnscopedWrapperPath(changedPath: string): boolean {
-	return changedPath.startsWith("packages/gajae-code/");
+	return changedPath === "scripts/ci-release-publish.ts";
 }
 
 function isString(value: unknown): value is string {

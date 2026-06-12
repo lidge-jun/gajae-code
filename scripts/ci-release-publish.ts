@@ -56,8 +56,8 @@ export const packages: PublishPackage[] = [
 	},
 	{ dir: "packages/agent", kind: "typescript" },
 	{ dir: "packages/coding-agent", kind: "typescript" },
+	{ dir: "packages/jwc", kind: "manifest" },
 	{ dir: "packages/bridge-client", kind: "typescript" },
-	{ dir: "packages/gajae-code", kind: "manifest" },
 ];
 const dependencyFieldNames = [
 	"dependencies",
