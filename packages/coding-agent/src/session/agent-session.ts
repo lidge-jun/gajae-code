@@ -6508,10 +6508,16 @@ export class AgentSession {
 		// Skip if this was an error (non-overflow errors don't have usage data)
 		if (assistantMessage.stopReason === "error") return;
 		const pruneResult = await this.#pruneToolOutputs();
-		let contextTokens = calculateContextTokens(assistantMessage.usage);
+		let usageTokens = calculateContextTokens(assistantMessage.usage);
 		if (pruneResult) {
-			contextTokens = Math.max(0, contextTokens - pruneResult.tokensSaved);
+			usageTokens = Math.max(0, usageTokens - pruneResult.tokensSaved);
 		}
+		// Some providers (e.g. cursor) under-report usage (input: 0, tiny totalTokens),
+		// which keeps the usage-based count below threshold forever and silently
+		// disables auto-compaction. Guard with the content-based estimate the status
+		// line already trusts and use whichever is larger. The estimate is taken
+		// after #pruneToolOutputs so pruned outputs are already excluded from it.
+		const contextTokens = Math.max(usageTokens, this.#estimateMessagesTokens());
 		if (shouldCompact(contextTokens, contextWindow, compactionSettings, this.model?.maxTokens ?? 0)) {
 			// Try promotion first — if a larger model is available, switch instead of compacting
 			const promoted = await this.#tryContextPromotion(assistantMessage);
@@ -9507,6 +9513,7 @@ export class AgentSession {
 		tokens: number;
 	} {
 		const messages = this.messages;
+		const estimated = this.#estimateMessagesTokens();
 
 		// Find last assistant message with usage
 		let lastUsageIndex: number | null = null;
@@ -9525,10 +9532,6 @@ export class AgentSession {
 
 		if (!lastUsage || lastUsageIndex === null) {
 			// No usage data - estimate all messages
-			let estimated = 0;
-			for (const message of messages) {
-				estimated += estimateTokens(message);
-			}
 			return {
 				tokens: estimated,
 			};
@@ -9540,9 +9543,24 @@ export class AgentSession {
 			trailingTokens += estimateTokens(messages[i]);
 		}
 
+		// Providers that under-report usage (e.g. cursor's input: 0) would make the
+		// usage-based number near zero; never report less than the content estimate.
 		return {
-			tokens: usageTokens + trailingTokens,
+			tokens: Math.max(usageTokens + trailingTokens, estimated),
 		};
+	}
+
+	/**
+	 * Content-based token estimate over the current message history. Lower-bound
+	 * guard for providers that under-report usage (cursor reports input: 0), which
+	 * would otherwise disable threshold auto-compaction and zero out context usage.
+	 */
+	#estimateMessagesTokens(): number {
+		let total = 0;
+		for (const message of this.messages) {
+			total += estimateTokens(message);
+		}
+		return total;
 	}
 
 	/**

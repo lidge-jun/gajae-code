@@ -240,4 +240,52 @@ describe("AgentSession auto-compaction queue resume", () => {
 		expect(continueSpy).toHaveBeenCalledTimes(1);
 		await session.waitForIdle();
 	});
+
+	// Regression (081.7): providers that under-report usage (cursor reports
+	// input: 0 with a tiny totalTokens) must not disable threshold compaction.
+	// The check falls back to the content-based estimate of the message history.
+	it("triggers threshold compaction from the content estimate when usage is under-reported", async () => {
+		vi.spyOn(session.agent, "continue").mockResolvedValue();
+
+		// Large history: estimate must exceed the threshold (~80% of 200k window).
+		const bigText = "lorem ipsum dolor sit amet consectetur adipiscing elit sed do ".repeat(20000);
+		session.agent.replaceMessages([
+			{
+				role: "user",
+				content: [{ type: "text", text: bigText }],
+				timestamp: Date.now(),
+			},
+		]);
+
+		const { promise: compactionDone, resolve: onCompactionDone } = Promise.withResolvers<void>();
+		session.subscribe(event => {
+			if (event.type === "auto_compaction_end") onCompactionDone();
+		});
+
+		// Cursor-shaped usage: input 0, totalTokens far below the real context size.
+		const assistantMsg = {
+			role: "assistant" as const,
+			content: [],
+			api: "anthropic-messages" as const,
+			provider: "anthropic" as const,
+			model: "claude-sonnet-4-5",
+			stopReason: "stop" as const,
+			usage: {
+				input: 0,
+				output: 379,
+				cacheRead: 0,
+				cacheWrite: 0,
+				totalTokens: 10,
+				cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+			},
+			timestamp: Date.now(),
+		};
+
+		session.agent.emitExternalEvent({ type: "message_end", message: assistantMsg });
+		session.agent.emitExternalEvent({ type: "agent_end", messages: [assistantMsg] });
+
+		await withTimeout(compactionDone, 5000, "Auto-compaction did not trigger from content estimate");
+
+		expect(getRuntimeSignals()).toContain("compaction:start:threshold");
+	});
 });
