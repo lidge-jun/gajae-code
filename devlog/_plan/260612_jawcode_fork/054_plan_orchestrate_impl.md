@@ -2,7 +2,7 @@
 
 > 2026-06-12 10:17 초안 (Boss-author). 선행: [051](./051_design_command_port.md) §1–3, [053](./053_decisions_p_boss_author.md) D050-10~21.
 > 본 문서는 **D050-19~21 개정 topology 기준** — P = Boss+Critic 1-pass, A = Planner∥Architect 병렬 감사.
-> 상태: **v5 — A 3라운드 PASS, B 착수 가능** (D050-20 도그푸딩: 1R 병렬 FAIL → v2 → 결정 3건 → v3 → 2R solo FAIL → v4 → **3R solo PASS** → wording 4건 정리 v5).
+> 상태: **v6 — 최종(인터뷰 완전 종결, D050-25~26 반영). A 3라운드 PASS, B 착수 가능** (1R 병렬 FAIL → v2 → 결정 3건 → v3 → 2R solo FAIL → v4 → **3R solo PASS** → v5 → 클로징 라운드 v6).
 
 ## 결정 입력 (요약)
 
@@ -45,7 +45,8 @@
 | NEW `packages/coding-agent/src/commands/orchestrate.ts` | `commands/interview.ts:1-40` 템플릿 — `APP_NAME` 브랜드 안전 설명, positional `i\|p\|a\|b\|c\|d`, `--deliberate` 플래그(ctx 전달), 코어는 `gjc-runtime/orchestrate-runtime.ts` 위임 |
 | `packages/coding-agent/src/cli.ts:50` 부근 | `{ name: "orchestrate", aliases: ["pabcd"], load: ... }` — **[확정 D050-24] jaw 전용 등록 게이트 신설**: 조건부 등록 빌더(`isJawBrand()` — `discovery/helpers.ts:32-35` 재사용)로 gjc 브랜드에서 미노출. 명령 등록 게이트의 첫 선례가 됨(interview 소급은 후속 검토) |
 | `packages/coding-agent/src/slash-commands/builtin-registry.ts` | `/orchestrate` (+alias `/pabcd`) — subcommands `i..d`, `/goal`(275-295) 패턴, handle/handleTui. **D050-24 동일 적용: `isJawBrand()` 조건부 등록** — gjc TUI에 `/orchestrate` 미노출 (2R 지적 보강) |
-| `packages/coding-agent/src/hooks/skill-keywords.ts:15-76` | (선택) `$orchestrate` keyword — 채택 여부 미정 |
+| interview 게이트 소급 | **[확정 D050-25]** 같은 조건부 등록 빌더에 `interview`(+`deep-interview` alias) 편입 — gjc 브랜드에서 미노출, 표면 비대칭 제거 |
+| `packages/coding-agent/src/hooks/skill-keywords.ts` | **[확정 D050-26] `$orchestrate` keyword 미채택** — 변경 없음 |
 
 ### B3 — 단계 프롬프트
 
@@ -80,7 +81,7 @@
 - 단위: `test/workflow-state-command.test.ts:35-70` 패턴 — pabcd state write/receipt + `canTransition` 이식분(전이 표 전수)
 - e2e: `orchestrate i→p→a→…→d` 풀사이클 1회 / spec 보유 시 `p` 단독 진입 / 승인 전 mutation 0
 - 기계: `bun run check:ts`(root — biome+tsgo+schemas+`check:gjc-ui`=rebrand-inventory `--strict`), `scripts/verify-g002-gates.ts`
-- gjc 브랜드 diff-0: **gjc에서 `orchestrate`/`pabcd` CLI 미등록 + `/orchestrate` slash 미노출 확인** (D050-24 기준, 2R stale 문구 정정)
+- gjc 브랜드 diff-0: **gjc에서 `orchestrate`/`pabcd`/`interview` CLI 미등록 + `/orchestrate` slash 미노출 확인** (D050-24·25 기준)
 
 ### B7 — 문서 패치 diff (053 속집 2 체크리스트 구체화)
 

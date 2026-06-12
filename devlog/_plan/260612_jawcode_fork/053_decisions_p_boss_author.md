@@ -108,13 +108,21 @@ orchestrate a
 | D050-23 | **verdict 어휘** | **단계별 분리** — A = `PASS\|FAIL`(`parseWorkerVerdict` 신규 이식 + orchestrate 전용 audit 프롬프트로 출력 형식 고정), P Critic = `OKAY\|ITERATE\|REJECT`(ralplan 생태계 — critic.md·receipt·HUD 재사용) | [확정] |
 | D050-24 | **명령 등록 브랜드 게이트** | **jaw 전용 등록 게이트 신설** — cli.ts 조건부 등록 빌더, gjc 브랜드에서 orchestrate/pabcd 미노출(051 §5 diff-0 원문 유지). interview 무게이트 등록의 소급 여부는 후속 검토 | [확정] |
 
-수용된 [기본값] 3건: P `p_round ≤2`(재FAIL 시 pending-approval 금지+에스컬레이션) / trivial 판정 = `orchestrate a` 진입 시 + `--deliberate` override / envelope 파일명 `pabcd-state.json`(문서상 `pabcd.json`은 논리 계약명).
+~~수용된 [기본값] 3건~~ → **[확정] 일괄 승격** (260612 10:44 최종 클로징 라운드): P `p_round ≤2`(재FAIL 시 pending-approval 금지+에스컬레이션) / trivial 판정 = `orchestrate a` 진입 시 + `--deliberate` override / envelope 파일명 `pabcd-state.json`(문서상 `pabcd.json`은 논리 계약명).
+
+## 속집 4 — 최종 클로징 라운드 (260612 10:44, D050-25 … 26)
+
+| ID | 주제 | 결정 | 표기 |
+|----|------|------|------|
+| D050-25 | **interview 게이트 소급** | D050-24 조건부 등록 빌더에 `interview`(+`deep-interview` alias)도 편입 — **054 B2 스코프에 포함**. gjc 브랜드 표면 비대칭(interview 노출·orchestrate 미노출) 제거, diff-0 원칙 일관 | [확정] |
+| D050-26 | **`$orchestrate` skill-keyword** | **미채택** — keyword는 `{keyword→skill}` 매핑이라 native 명령 노선(D050-22)과 구조 부정합. 진입 표면은 CLI·슬래시로 충분 | [확정] |
+
+> 맹점 기록: 이번 도그푸딩에서 **D050-20/21(A 병렬·solo 감사 루프)은 실전 검증 완료**(054 A 1~3라운드), **D050-19(P Critic 1-pass)는 미검증** — D050-7 풀사이클 e2e가 첫 검증이 된다.
 
 ## 미확정 (054+)
 
 - Planner/Architect **병렬 감사 프롬프트 조각**, Critic 1-pass 프롬프트 조각, devlog `plan_ref` 자동 번호
 - 슬래시 HUD 구현 — 080 위임 (D050-18)
-- interview 명령의 D050-24 게이트 소급 여부
 
 ## Acceptance
 
@@ -122,5 +130,6 @@ orchestrate a
 - [x] D050-16 … D050-18 기록 (cli-jaw 인터뷰 속집)
 - [x] D050-19 … D050-21 기록 (P/A 리뷰어 재배치 속집 2)
 - [x] D050-22 … D050-24 기록 (054 A-1라운드 회수 속집 3)
+- [x] D050-25 … D050-26 기록 + 기본값 3건 [확정] 승격 (최종 클로징 속집 4) — **050 인터뷰 완전 종결**
 - [x] 050/051 본문 패치
 - [ ] `jwc orchestrate p` 구현 (054 diff 플랜)
