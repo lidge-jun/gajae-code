@@ -95,6 +95,59 @@ describe("CustomEditor double-Escape exit safety net", () => {
 	});
 });
 
+describe("CustomEditor Hangul IME Ctrl-chord hint", () => {
+	it("hints on a bare jamo sitting on a bound Ctrl key without firing the action", () => {
+		const editor = createEditor();
+		const onClear = vi.fn();
+		const onHint = vi.fn();
+		editor.onClear = onClear;
+		editor.onHangulCtrlChordHint = onHint;
+
+		editor.handleInput("ㅊ"); // dubeolsik position of "c" → ctrl+c (app.clear)
+
+		expect(onClear).toHaveBeenCalledTimes(0); // never misfires the action
+		expect(onHint).toHaveBeenCalledWith("ㅊ", "ctrl+c");
+		expect(editor.getText()).toBe("ㅊ"); // jamo still inserted as ordinary text
+	});
+
+	it("hints for the exit chord position (ㅇ → ctrl+d)", () => {
+		const editor = createEditor();
+		const onExit = vi.fn();
+		const onHint = vi.fn();
+		editor.onExit = onExit;
+		editor.onHangulCtrlChordHint = onHint;
+
+		editor.handleInput("ㅇ");
+
+		expect(onExit).toHaveBeenCalledTimes(0);
+		expect(onHint).toHaveBeenCalledWith("ㅇ", "ctrl+d");
+	});
+
+	it("follows remapped action keys", () => {
+		const editor = createEditor();
+		const onHint = vi.fn();
+		editor.onHangulCtrlChordHint = onHint;
+		editor.setActionKeys("app.model.selectTemporary", ["ctrl+y"]);
+
+		editor.handleInput("ㅛ"); // dubeolsik position of "y"
+
+		expect(onHint).toHaveBeenCalledWith("ㅛ", "ctrl+y");
+	});
+
+	it("stays silent for jamo on unbound keys, syllables, latin letters, and multi-char chunks", () => {
+		const editor = createEditor();
+		const onHint = vi.fn();
+		editor.onHangulCtrlChordHint = onHint;
+
+		editor.handleInput("ㅏ"); // "k" position — no ctrl+k binding by default
+		editor.handleInput("차"); // composed syllable, not a bare jamo
+		editor.handleInput("c"); // plain latin letter
+		editor.handleInput("ㅊㅏ"); // multi-char chunk (committed composition)
+
+		expect(onHint).toHaveBeenCalledTimes(0);
+	});
+});
+
 describe("CustomEditor bracketed paste interception", () => {
 	it("lets coding-agent consume pasted content before the base editor stores it", async () => {
 		const editor = createEditor();

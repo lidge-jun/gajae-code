@@ -46,6 +46,49 @@ const PENDING_PASTE_INPUT_MAX = 64;
 // Two Escapes within this window trigger the IME-independent exit safety net.
 const DOUBLE_ESCAPE_EXIT_WINDOW_MS = 500;
 
+// Dubeolsik (two-set) Hangul layout: compatibility jamo → the QWERTY key on the
+// same physical position. Used to detect a likely Ctrl-chord attempt while the
+// Hangul IME is active: legacy terminals deliver Ctrl+ㅊ as the bare jamo (no
+// control byte), so the chord can never match — but we can recognize the jamo
+// sitting on a bound Ctrl key and surface a hint instead of silently inserting
+// text. Detection only — the action is never fired from a bare jamo, because a
+// bare jamo is indistinguishable from ordinary Hangul typing (devlog 082.1).
+const DUBEOLSIK_JAMO_TO_QWERTY: Record<string, string> = {
+	ㅂ: "q",
+	ㅃ: "q",
+	ㅈ: "w",
+	ㅉ: "w",
+	ㄷ: "e",
+	ㄸ: "e",
+	ㄱ: "r",
+	ㄲ: "r",
+	ㅅ: "t",
+	ㅆ: "t",
+	ㅛ: "y",
+	ㅕ: "u",
+	ㅑ: "i",
+	ㅐ: "o",
+	ㅒ: "o",
+	ㅔ: "p",
+	ㅖ: "p",
+	ㅁ: "a",
+	ㄴ: "s",
+	ㅇ: "d",
+	ㄹ: "f",
+	ㅎ: "g",
+	ㅗ: "h",
+	ㅓ: "j",
+	ㅏ: "k",
+	ㅣ: "l",
+	ㅋ: "z",
+	ㅌ: "x",
+	ㅊ: "c",
+	ㅍ: "v",
+	ㅠ: "b",
+	ㅜ: "n",
+	ㅡ: "m",
+};
+
 type PastePendingClearReason = "timeout" | "queue-limit";
 
 /**
@@ -86,6 +129,13 @@ export class CustomEditor extends Editor {
 	onDequeue?: () => void;
 	/** Called when Caps Lock is pressed. */
 	onCapsLock?: () => void;
+	/**
+	 * Called when a bare Hangul jamo arrives on a key position that has a Ctrl
+	 * chord bound (e.g. ㅊ on the ctrl+c key while the Hangul IME is active).
+	 * The chord is NOT fired — the jamo is still inserted as text — this is a
+	 * hint hook only (devlog 082.1: bare jamo ≡ ordinary Hangul typing).
+	 */
+	onHangulCtrlChordHint?: (jamo: string, chord: KeyId) => void;
 
 	/** Custom key handlers from extensions and non-built-in app actions. */
 	#customKeyHandlers = new Map<KeyId, () => void>();
@@ -111,6 +161,28 @@ export class CustomEditor extends Editor {
 			if (matchesKey(data, key)) return true;
 		}
 		return false;
+	}
+
+	/**
+	 * If `data` is a single bare Hangul jamo whose dubeolsik key position has a
+	 * Ctrl chord bound (action keys or extension shortcuts), return that chord.
+	 */
+	#hangulCtrlChordFor(data: string): KeyId | undefined {
+		if (data.length !== 1) return undefined;
+		const letter = DUBEOLSIK_JAMO_TO_QWERTY[data];
+		if (!letter) return undefined;
+		const isCtrlChordOnLetter = (key: KeyId): boolean => {
+			const parts = key.split("+");
+			return parts.includes("ctrl") && parts[parts.length - 1] === letter;
+		};
+		for (const keys of this.#actionKeys.values()) {
+			const match = keys.find(isCtrlChordOnLetter);
+			if (match) return match;
+		}
+		for (const key of this.#customKeyHandlers.keys()) {
+			if (isCtrlChordOnLetter(key)) return key;
+		}
+		return undefined;
 	}
 
 	/**
@@ -366,6 +438,19 @@ export class CustomEditor extends Editor {
 			if (matchesKey(data, keyId)) {
 				handler();
 				return;
+			}
+		}
+
+		// Hangul IME chord hint (devlog 082.1): a bare jamo landing on a bound
+		// Ctrl key position is likely a swallowed Ctrl chord (legacy terminals
+		// strip the modifier under a Hangul IME). Never fire the action — a bare
+		// jamo is indistinguishable from ordinary Hangul typing — but let the
+		// parent surface a "switch to English / esc" hint. The jamo still falls
+		// through and is inserted as text.
+		if (this.onHangulCtrlChordHint) {
+			const chord = this.#hangulCtrlChordFor(data);
+			if (chord) {
+				this.onHangulCtrlChordHint(data, chord);
 			}
 		}
 
