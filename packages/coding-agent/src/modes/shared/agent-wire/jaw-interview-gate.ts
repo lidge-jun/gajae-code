@@ -17,12 +17,24 @@ import type { OpenGateInput } from "./workflow-gate-broker";
 /** "Other (type your own)" sentinel, mirroring the interactive ask tool. */
 export const GATE_OTHER_OPTION = "Other (type your own)";
 
+/** Structured round metadata carried by the ask tool (042 D041-A). */
+export interface AskGateQuestionMeta {
+	kind?: "round" | "topology" | "progress";
+	round?: number;
+	component?: string;
+	targeting?: string;
+	whyNow?: string;
+	ambiguity?: number;
+	mode?: string;
+}
+
 export interface AskGateQuestion {
 	id: string;
 	question: string;
 	options: Array<{ label: string }>;
 	multi?: boolean;
 	recommended?: number;
+	meta?: AskGateQuestionMeta;
 }
 
 export interface AskGateResult {
@@ -61,6 +73,25 @@ export class JawInterviewGateError extends Error {
 		super(message);
 		this.name = "JawInterviewGateError";
 	}
+}
+
+/** Meta-first stage_state (042 F1); the legacy text-header regex below is the fallback only. */
+function gateStateFromMeta(meta: AskGateQuestionMeta): Record<string, unknown> {
+	const state: Record<string, unknown> = {};
+	if (typeof meta.round === "number" && Number.isFinite(meta.round)) state.round = meta.round;
+	if (meta.mode) {
+		state.mode = meta.mode;
+		const normalized = meta.mode.toLowerCase();
+		if (/(contrarian|simplifier|ontologist)/u.test(normalized)) state.challenge_mode = normalized;
+	}
+	if (meta.kind === "topology" || meta.round === 0) {
+		state.topology_gate = true;
+		state.mode ??= "Topology confirmation";
+	}
+	if (typeof meta.ambiguity === "number" && Number.isFinite(meta.ambiguity)) state.ambiguity = meta.ambiguity;
+	if (meta.component) state.component = meta.component;
+	if (meta.targeting) state.targeting = meta.targeting;
+	return state;
 }
 
 function jawInterviewQuestionState(questionText: string): Record<string, unknown> {
@@ -151,7 +182,7 @@ export function questionToGate(question: AskGateQuestion): OpenGateInput {
 				multi: question.multi ?? false,
 				options: labels,
 				other_option: GATE_OTHER_OPTION,
-				...jawInterviewQuestionState(question.question),
+				...(question.meta ? gateStateFromMeta(question.meta) : jawInterviewQuestionState(question.question)),
 			},
 		},
 	};

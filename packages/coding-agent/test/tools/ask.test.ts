@@ -1097,14 +1097,19 @@ describe("AskTool multi-question navigation", () => {
 	});
 });
 
-describe("AskTool jaw-interview rendering middleware", () => {
-	it("uses a readable selector prompt while preserving raw question details", async () => {
+describe("AskTool jaw-interview structured questions (meta contract)", () => {
+	const roundMeta = {
+		kind: "round" as const,
+		round: 3,
+		component: "Review UI",
+		targeting: "Success Criteria",
+		whyNow: "the approval criteria are not yet testable",
+		ambiguity: 0.38,
+	};
+
+	it("builds a readable selector prompt from structured meta", async () => {
 		const tool = new AskTool(createSession());
-		const rawQuestion = [
-			"Round 3 | Component: Review UI | Targeting: Success Criteria | Why now: the approval criteria are not yet testable | Ambiguity: 38%",
-			"",
-			"What exact conditions must be satisfied before a reviewer can approve an item?",
-		].join("\n");
+		const question = "What exact conditions must be satisfied before a reviewer can approve an item?";
 		const select = vi.fn(async (_prompt: string, options: string[]) => options[0]);
 		const context = createContext({ select });
 
@@ -1114,8 +1119,9 @@ describe("AskTool jaw-interview rendering middleware", () => {
 				questions: [
 					{
 						id: "round-3",
-						question: rawQuestion,
+						question,
 						options: [{ label: "Condition A" }, { label: "Condition B" }],
+						meta: roundMeta,
 					},
 				],
 			},
@@ -1131,61 +1137,28 @@ describe("AskTool jaw-interview rendering middleware", () => {
 		expect(prompt).toContain("Component: Review UI");
 		expect(prompt).toContain("Target: Success Criteria");
 		expect(prompt).toContain("Why now: the approval criteria are not yet testable");
-		expect(prompt).toContain("What exact conditions must be satisfied before a reviewer can approve an item?");
-		expect(result.details?.question).toBe(rawQuestion);
+		expect(prompt).toContain(question);
+		expect(result.details?.question).toBe(question);
 		expect(result.details?.options).toEqual(["Condition A", "Condition B"]);
 		expect(result.details?.selectedOptions).toEqual(["Condition A"]);
 		expect(result.content[0]).toMatchObject({ type: "text", text: "User selected: Condition A" });
 	});
 
-	it("does not double-number pre-numbered jaw-interview options", async () => {
+	it("renders Korean structured questions identically (no language anchors)", async () => {
 		const tool = new AskTool(createSession());
-		const rawQuestion = [
-			"Round 6 | Component: Review UI | Targeting: Success Criteria | Why now: answer labels might already be numbered | Ambiguity: 29%",
-			"",
-			"Which acceptance shape should be used?",
-		].join("\n");
-		const select = vi.fn(async (_prompt: string, options: string[]) => options[1]);
-		const context = createContext({ select });
-
-		const result = await tool.execute(
-			"call-jaw-interview-pre-numbered",
-			{
-				questions: [
-					{
-						id: "round-6",
-						question: rawQuestion,
-						options: [{ label: "1. Checklist" }, { label: "2) Scenario" }],
-					},
-				],
-			},
-			undefined,
-			undefined,
-			context,
-		);
-
-		expect(select.mock.calls[0]?.[1]).toEqual(["1. Checklist", "2) Scenario", "3. Other (type your own)"]);
-		expect(result.details?.selectedOptions).toEqual(["2) Scenario"]);
-	});
-
-	it("numbers loosely formatted jaw-interview questions that are not structurally rendered", async () => {
-		const tool = new AskTool(createSession());
-		const rawQuestion = [
-			"Round 7 | Component Review UI | Target Success Criteria | Why now option labels must remain scannable | Ambiguity is 34%",
-			"",
-			"What outcome proves the numbering is visible?",
-		].join("\n");
+		const question = "리뷰어가 승인하기 전에 충족해야 하는 조건은 무엇인가요?";
 		const select = vi.fn(async (_prompt: string, options: string[]) => options[0]);
 		const context = createContext({ select });
 
-		const result = await tool.execute(
-			"call-jaw-interview-loose",
+		await tool.execute(
+			"call-jaw-interview-ko",
 			{
 				questions: [
 					{
-						id: "round-7",
-						question: rawQuestion,
-						options: [{ label: "Numbered choices are visible" }, { label: "Raw answer labels are preserved" }],
+						id: "round-3-ko",
+						question,
+						options: [{ label: "조건 A" }, { label: "조건 B" }],
+						meta: { ...roundMeta, targeting: "성공 기준", whyNow: "승인 기준이 아직 테스트 가능하지 않음" },
 					},
 				],
 			},
@@ -1194,22 +1167,15 @@ describe("AskTool jaw-interview rendering middleware", () => {
 			context,
 		);
 
-		expect(select.mock.calls[0]?.[0]).toBe(rawQuestion);
-		expect(select.mock.calls[0]?.[1]).toEqual([
-			"1. Numbered choices are visible",
-			"2. Raw answer labels are preserved",
-			"3. Other (type your own)",
-		]);
-		expect(result.details?.selectedOptions).toEqual(["Numbered choices are visible"]);
+		const prompt = select.mock.calls[0]?.[0] ?? "";
+		expect(prompt).toContain("Jaw Interview · Round 3 · Ambiguity 38%");
+		expect(prompt).toContain("Target: 성공 기준");
+		expect(prompt).toContain(question);
+		expect(select.mock.calls[0]?.[1]).toEqual(["1. 조건 A", "2. 조건 B", "3. Other (type your own)"]);
 	});
 
-	it("accepts the numbered jaw-interview free-text option as custom input", async () => {
+	it("accepts the numbered structured free-text option as custom input", async () => {
 		const tool = new AskTool(createSession());
-		const rawQuestion = [
-			"Round 5 | Component: Review UI | Targeting: Constraints | Why now: boundaries are still unclear | Ambiguity: 31%",
-			"",
-			"Which boundary matters most?",
-		].join("\n");
 		const select = vi.fn(async (_prompt: string, options: string[]) => options[2]);
 		const editor = vi.fn(async () => "Use my own boundary");
 		const context = createContext({ select, editor });
@@ -1220,8 +1186,9 @@ describe("AskTool jaw-interview rendering middleware", () => {
 				questions: [
 					{
 						id: "round-5",
-						question: rawQuestion,
+						question: "Which boundary matters most?",
 						options: [{ label: "Performance" }, { label: "Security" }],
+						meta: { kind: "round" as const, round: 5, targeting: "Constraints", ambiguity: 0.31 },
 					},
 				],
 			},
@@ -1236,13 +1203,8 @@ describe("AskTool jaw-interview rendering middleware", () => {
 		expect(result.details?.customInput).toBe("Use my own boundary");
 	});
 
-	it("opts jaw-interview selector prompts into local prompt scrolling", async () => {
+	it("opts structured selector prompts into local prompt scrolling", async () => {
 		const tool = new AskTool(createSession());
-		const rawQuestion = [
-			"Round 4 | Component: Selector UI | Targeting: Readability | Why now: long prompts hide answers | Ambiguity: 44%",
-			"",
-			"What evidence proves the answer options remain visible while the question scrolls?",
-		].join("\n");
 		const select = vi.fn(
 			async (_prompt: string, options: string[], _dialogOptions?: { scrollTitleRows?: number; helpText?: string }) =>
 				options[0],
@@ -1255,8 +1217,9 @@ describe("AskTool jaw-interview rendering middleware", () => {
 				questions: [
 					{
 						id: "round-4",
-						question: rawQuestion,
+						question: "What evidence proves the answer options remain visible while the question scrolls?",
 						options: [{ label: "Visible options" }, { label: "Scrollable prompt" }],
+						meta: { kind: "round" as const, round: 4, targeting: "Readability", ambiguity: 0.44 },
 					},
 				],
 			},
@@ -1270,7 +1233,7 @@ describe("AskTool jaw-interview rendering middleware", () => {
 		expect(dialogOptions?.helpText).toContain("wheel/PgUp/PgDn scroll question");
 	});
 
-	it("leaves non-jaw-interview selector prompts without scroll-title opt-in", async () => {
+	it("leaves plain questions without meta unstructured and unnumbered", async () => {
 		const tool = new AskTool(createSession());
 		const select = vi.fn(
 			async (_prompt: string, options: string[], _dialogOptions?: { scrollTitleRows?: number; helpText?: string }) =>
@@ -1294,27 +1257,17 @@ describe("AskTool jaw-interview rendering middleware", () => {
 			context,
 		);
 
+		expect(select.mock.calls[0]?.[0]).toBe("Which ordinary option should be selected?");
+		expect(select.mock.calls[0]?.[1]).toEqual(["A", "B", "Other (type your own)"]);
 		const dialogOptions = select.mock.calls[0]?.[2];
 		expect(dialogOptions?.scrollTitleRows).toBeUndefined();
 		expect(dialogOptions?.helpText).not.toContain("scroll question");
 	});
 
-	it("recognizes topology questions even when the agent prepends an intro", async () => {
+	it("recognizes topology questions from meta kind", async () => {
 		const tool = new AskTool(createSession());
-		const rawQuestion = [
-			"Starting deep interview. I'll show a clarity score after each answer.",
-			"",
-			'**Your idea:** "Refresh the GJC UX"',
-			"**Project type:** brownfield",
-			"",
-			"Round 0 | Topology confirmation | Ambiguity: not scored yet",
-			"",
-			"I'm currently reading the scope as these 2 top-level components.",
-			"1. Brand and theme system: red-claw/GJC default theme and semantic color separation.",
-			"2. Tool card UX: readability of ask/approval cards and tool output styling.",
-			"",
-			"Is that topology right? Should any component be added, removed, merged, split, or explicitly deferred?",
-		].join("\n");
+		const question =
+			"Is that topology right? Should any component be added, removed, merged, split, or explicitly deferred?";
 		const select = vi.fn(async (_prompt: string, options: string[]) => options[0]);
 		const context = createContext({ select });
 
@@ -1324,8 +1277,9 @@ describe("AskTool jaw-interview rendering middleware", () => {
 				questions: [
 					{
 						id: "round-0",
-						question: rawQuestion,
+						question,
 						options: [{ label: "Looks right" }, { label: "Revise it" }],
+						meta: { kind: "topology" as const, round: 0 },
 					},
 				],
 			},
@@ -1337,28 +1291,30 @@ describe("AskTool jaw-interview rendering middleware", () => {
 		const prompt = select.mock.calls[0]?.[0] ?? "";
 		expect(prompt).toContain("Jaw Interview · Round 0 · Topology confirmation");
 		expect(prompt).toContain("Ambiguity: not scored yet");
-		expect(prompt).toContain("Reading:");
-		expect(prompt).toContain("I'm currently reading the scope as these 2 top-level components.");
-		expect(prompt).toContain("1. Brand and theme system — red-claw/GJC default theme and semantic color separation.");
-		expect(prompt).toContain("Question:");
-		expect(prompt).not.toContain("Context:");
-		expect(prompt).not.toContain('**Your idea:** "Refresh the GJC UX"');
-		expect(prompt).not.toContain("Round 0 | Topology confirmation");
+		expect(prompt).toContain(question);
 	});
 
-	it("renders round questions as structured cards in history", async () => {
+	it("renders structured round questions as cards in history", async () => {
 		const theme = await getThemeByName("red-claw");
 		expect(theme).toBeDefined();
-		const rawQuestion = [
-			"Round 2 | Component: Export | Targeting: Constraints | Why now: output boundaries are unclear | Ambiguity: 42%",
-			"",
-			"Which export formats are in scope?",
-		].join("\n");
 
 		const rendered = askToolRenderer.renderCall(
 			{
-				question: rawQuestion,
-				options: [{ label: "CSV" }, { label: "PDF" }],
+				questions: [
+					{
+						id: "round-2",
+						question: "Which export formats are in scope?",
+						options: [{ label: "CSV" }, { label: "PDF" }],
+						meta: {
+							kind: "round" as const,
+							round: 2,
+							component: "Export",
+							targeting: "Constraints",
+							whyNow: "output boundaries are unclear",
+							ambiguity: 0.42,
+						},
+					},
+				],
 			},
 			{ expanded: true, isPartial: false },
 			theme!,
@@ -1372,6 +1328,5 @@ describe("AskTool jaw-interview rendering middleware", () => {
 		expect(renderedText).toContain("Question");
 		expect(renderedText).toContain("1. CSV");
 		expect(renderedText).toContain("2. PDF");
-		expect(renderedText).not.toContain("Round 2 | Component:");
 	});
 });

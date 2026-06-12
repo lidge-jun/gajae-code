@@ -30,10 +30,10 @@ import { prompt, untilAborted } from "@gajae-code/utils";
 import * as z from "zod/v4";
 import type { RenderResultOptions } from "../extensibility/custom-tools/types";
 import {
-	formatJawInterviewSelectorPrompt,
-	isJawInterviewAskQuestion,
-	renderJawInterviewAskQuestion,
-} from "../jaw-interview/render-middleware";
+	formatInterviewSelectorPrompt,
+	isStructuredInterviewQuestion,
+	renderInterviewQuestion,
+} from "../jaw-interview/structured-renderer";
 import { gateAnswerToResult, questionToGate } from "../modes/shared/agent-wire/jaw-interview-gate";
 import { getMarkdownTheme, type Theme, theme } from "../modes/theme/theme";
 import askDescription from "../prompts/tools/ask.md" with { type: "text" };
@@ -48,6 +48,18 @@ import { ToolAbortError } from "./tool-errors";
 
 const OptionItem = z.object({
 	label: z.string().describe("display label"),
+	description: z.string().describe("optional one-line tradeoff/description").optional(),
+});
+
+/** Structured round metadata for jaw-interview questions (042 D041-A) — replaces the legacy text-header protocol. */
+const QuestionMeta = z.object({
+	kind: z.enum(["round", "topology", "progress"]).describe("question kind").optional(),
+	round: z.number().describe("interview round number").optional(),
+	component: z.string().describe("target component name").optional(),
+	targeting: z.string().describe("weakest dimension being targeted").optional(),
+	whyNow: z.string().describe("one-sentence targeting rationale").optional(),
+	ambiguity: z.number().describe("latest external ambiguity score (0-1)").optional(),
+	mode: z.string().describe("active challenge mode").optional(),
 });
 
 const QuestionItem = z.object({
@@ -56,6 +68,7 @@ const QuestionItem = z.object({
 	options: z.array(OptionItem).describe("available options"),
 	multi: z.boolean().describe("allow multiple selections").optional(),
 	recommended: z.number().describe("recommended option index").optional(),
+	meta: QuestionMeta.describe("structured interview round metadata").optional(),
 });
 
 const askSchema = z.object({
@@ -515,6 +528,7 @@ export class AskTool implements AgentTool<typeof askSchema, AskToolDetails> {
 					options: q.options,
 					multi: q.multi,
 					recommended: q.recommended,
+					meta: q.meta,
 				};
 				const answer = await gateEmitter.emitGate(questionToGate(gateQuestion));
 				const decoded = gateAnswerToResult(gateQuestion, answer);
@@ -528,9 +542,11 @@ export class AskTool implements AgentTool<typeof askSchema, AskToolDetails> {
 				};
 			}
 			try {
-				const jawInterviewPrompt = formatJawInterviewSelectorPrompt(q.question);
+				const jawInterviewPrompt = isStructuredInterviewQuestion(q.meta)
+					? formatInterviewSelectorPrompt({ question: q.question, meta: q.meta })
+					: null;
 				const displayQuestion = jawInterviewPrompt ?? q.question;
-				const shouldNumberOptions = isJawInterviewAskQuestion(q.question);
+				const shouldNumberOptions = jawInterviewPrompt !== null;
 				const optionLabels = shouldNumberOptions ? numberOptionLabels(rawOptionLabels) : rawOptionLabels;
 				const initialSelection =
 					shouldNumberOptions && options?.previous
@@ -685,6 +701,7 @@ interface AskRenderArgs {
 		question: string;
 		options: Array<{ label: string }>;
 		multi?: boolean;
+		meta?: z.infer<typeof QuestionMeta>;
 	}>;
 }
 
@@ -757,7 +774,9 @@ export const askToolRenderer = {
 				container.addChild(
 					new Text(` ${uiTheme.fg("dim", qBranch)} ${uiTheme.fg("dim", `[${q.id}]`)}${metaStr}`, 0, 0),
 				);
-				const jawInterviewQuestion = renderJawInterviewAskQuestion(q.question, uiTheme);
+				const jawInterviewQuestion = isStructuredInterviewQuestion(q.meta)
+					? renderInterviewQuestion({ question: q.question, meta: q.meta }, uiTheme)
+					: null;
 				container.addChild(jawInterviewQuestion ?? new Markdown(q.question, 3, 0, mdTheme, accentStyle));
 
 				const qOptions = q.options;
@@ -765,7 +784,7 @@ export const askToolRenderer = {
 					const entries = qOptions.map((opt, j) => {
 						const isLastOpt = j === qOptions.length - 1;
 						const optBranch = isLastOpt ? uiTheme.tree.last : uiTheme.tree.branch;
-						const shouldNumberOption = jawInterviewQuestion !== null || isJawInterviewAskQuestion(q.question);
+						const shouldNumberOption = jawInterviewQuestion !== null;
 						const displayLabel = shouldNumberOption ? formatNumberedOptionLabel(opt.label, j) : opt.label;
 						const optLabel = renderInlineMarkdown(displayLabel, mdTheme, t => uiTheme.fg("muted", t));
 						return {
@@ -790,16 +809,14 @@ export const askToolRenderer = {
 		if (args.multi) meta.push("multi");
 		if (args.options?.length) meta.push(`options:${args.options.length}`);
 		container.addChild(new Text(`${label}${formatMeta(meta, uiTheme)}`, 0, 0));
-		const jawInterviewQuestion = renderJawInterviewAskQuestion(question, uiTheme);
-		container.addChild(jawInterviewQuestion ?? new Markdown(question, 1, 0, mdTheme, accentStyle));
+		container.addChild(new Markdown(question, 1, 0, mdTheme, accentStyle));
 
 		const options = args.options;
 		if (options?.length) {
 			const entries = options.map((opt, i) => {
 				const isLast = i === options.length - 1;
 				const branch = isLast ? uiTheme.tree.last : uiTheme.tree.branch;
-				const shouldNumberOption = jawInterviewQuestion !== null || isJawInterviewAskQuestion(question);
-				const displayLabel = shouldNumberOption ? formatNumberedOptionLabel(opt.label, i) : opt.label;
+				const displayLabel = opt.label;
 				const optLabel = renderInlineMarkdown(displayLabel, mdTheme, t => uiTheme.fg("muted", t));
 				return {
 					prefix: ` ${uiTheme.fg("dim", branch)} ${uiTheme.fg("dim", uiTheme.checkbox.unchecked)} `,
@@ -857,10 +874,7 @@ export const askToolRenderer = {
 				container.addChild(
 					new Text(` ${uiTheme.fg("dim", branch)} ${statusIcon} ${uiTheme.fg("dim", `[${r.id}]`)}`, 0, 0),
 				);
-				container.addChild(
-					renderJawInterviewAskQuestion(r.question, uiTheme) ??
-						new Markdown(r.question, 3, 0, mdTheme, accentStyle),
-				);
+				container.addChild(new Markdown(r.question, 3, 0, mdTheme, accentStyle));
 
 				const answerLines: string[] = [];
 				for (let j = 0; j < r.selectedOptions.length; j++) {
@@ -903,10 +917,7 @@ export const askToolRenderer = {
 		const header = renderStatusLine({ icon: hasSelection ? "success" : "warning", title: "Ask" }, uiTheme);
 		const container = new Container();
 		container.addChild(new Text(header, 0, 0));
-		container.addChild(
-			renderJawInterviewAskQuestion(details.question, uiTheme) ??
-				new Markdown(details.question, 1, 0, mdTheme, accentStyle),
-		);
+		container.addChild(new Markdown(details.question, 1, 0, mdTheme, accentStyle));
 
 		const answerLines: string[] = [];
 		if (details.selectedOptions && details.selectedOptions.length > 0) {
