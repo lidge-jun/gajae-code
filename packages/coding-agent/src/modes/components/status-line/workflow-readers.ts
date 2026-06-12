@@ -7,7 +7,7 @@
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { readPabcdState } from "../../../gjc-runtime/orchestrate-state";
+import { readPabcdStateWithFallback } from "../../../gjc-runtime/orchestrate-state";
 
 /** Shared objective summary rule (99.08 확정 #3): single helper, max varies per surface. */
 export function truncateObjective(text: string, max: number): string {
@@ -27,7 +27,7 @@ export interface PabcdSegmentState {
 /** Read the pabcd envelope for segment display (lenient, fail-open null). */
 export async function readPabcdSegmentState(cwd: string, sessionId?: string): Promise<PabcdSegmentState | null> {
 	try {
-		const result = await readPabcdState(cwd, sessionId);
+		const result = await readPabcdStateWithFallback(cwd, sessionId);
 		if (!result || !result.ok) return null;
 		const envelope = result.value;
 		const stage = (envelope.current_phase ?? "").toLowerCase();

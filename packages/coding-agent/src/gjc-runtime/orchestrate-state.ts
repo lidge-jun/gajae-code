@@ -322,3 +322,22 @@ export async function readPabcdState(
 > {
 	return await readGjcJson(pabcdStatePath(cwd, sessionId), NativePabcdEnvelopeSchema);
 }
+
+/**
+ * Session-scoped read with shared-path fallback. Shell-run `jwc orchestrate`
+ * (the 99.03 self-transition pattern) writes the UNSCOPED path because the
+ * subprocess has no session id — TUI consumers (stage header, status-line
+ * strip) must still see that state, so: scoped first, then shared.
+ */
+export async function readPabcdStateWithFallback(
+	cwd: string,
+	sessionId?: string,
+): Promise<
+	{ ok: true; value: NativePabcdEnvelopeParsed; raw: unknown } | { ok: false; error: string; raw: unknown } | null
+> {
+	if (sessionId) {
+		const scoped = await readPabcdState(cwd, sessionId);
+		if (scoped) return scoped;
+	}
+	return await readPabcdState(cwd);
+}

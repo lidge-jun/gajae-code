@@ -181,7 +181,7 @@ import type { HookCommandContext } from "../extensibility/hooks/types";
 import type { Skill, SkillWarning } from "../extensibility/skills";
 import { expandSlashCommand, type FileSlashCommand } from "../extensibility/slash-commands";
 import { buildGjcRuntimeSessionEnv, consumePendingGoalModeRequest } from "../gjc-runtime/goal-mode-request";
-import { readPabcdState } from "../gjc-runtime/orchestrate-state";
+import { readPabcdStateWithFallback } from "../gjc-runtime/orchestrate-state";
 import { persistCoordinatorRuntimeStateFromEvent } from "../gjc-runtime/session-state-sidecar";
 import { writeArtifact } from "../gjc-runtime/state-writer";
 import { requestGjcWorkerIntegrationAttempt } from "../gjc-runtime/team-runtime";
@@ -4545,7 +4545,7 @@ export class AgentSession {
 	async #buildPabcdStageMessage(): Promise<CustomMessage | null> {
 		const cwd = this.sessionManager.getCwd();
 		const sessionId = this.sessionManager.getSessionId();
-		const result = await readPabcdState(cwd, sessionId).catch(() => null);
+		const result = await readPabcdStateWithFallback(cwd, sessionId).catch(() => null);
 		if (!result || !result.ok) return null;
 		const activeGoal = this.getGoalModeState()?.goal;
 		const content = buildPabcdStageContent(result.value, activeGoal ? { objective: activeGoal.objective } : null);

@@ -97,3 +97,28 @@ describe("workflow readers (99.04 C1)", () => {
 		expect(readUltragoalLedgerStats(tempCwd())).toBeNull();
 	});
 });
+
+describe("scoped→shared fallback (00:18 실측 버그)", () => {
+	it("segment reader sees shared-path state when given a session id with no scoped state", async () => {
+		const cwd = tempCwd();
+		const stateDir = path.join(cwd, ".jwc", "state");
+		mkdirSync(stateDir, { recursive: true });
+		writeFileSync(
+			path.join(stateDir, "pabcd-state.json"),
+			JSON.stringify({ skill: "pabcd", active: true, current_phase: "p" }),
+		);
+		const state = await readPabcdSegmentState(cwd, "some-session-id-without-scoped-state");
+		expect(state?.stage).toBe("p");
+	});
+
+	it("scoped state wins over shared state when both exist", async () => {
+		const cwd = tempCwd();
+		const shared = path.join(cwd, ".jwc", "state");
+		const scoped = path.join(shared, "sessions", "sess-1");
+		mkdirSync(scoped, { recursive: true });
+		writeFileSync(path.join(shared, "pabcd-state.json"), JSON.stringify({ active: true, current_phase: "p" }));
+		writeFileSync(path.join(scoped, "pabcd-state.json"), JSON.stringify({ active: true, current_phase: "b" }));
+		const state = await readPabcdSegmentState(cwd, "sess-1");
+		expect(state?.stage).toBe("b");
+	});
+});
