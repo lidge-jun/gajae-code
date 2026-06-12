@@ -20,6 +20,8 @@ function createCtx(usage: Partial<SegmentContext["usageStats"]>): SegmentContext
 		options: {},
 		planMode: null,
 		goalMode: null,
+		pabcd: null,
+		ultragoal: null,
 		usageStats: {
 			input: 0,
 			output: 0,

@@ -45,6 +45,8 @@ function createCtx(overrides?: { pathMaxLength?: number; branch?: string | null 
 		},
 		planMode: null,
 		goalMode: null,
+		pabcd: null,
+		ultragoal: null,
 		usageStats: {
 			input: 0,
 			output: 0,

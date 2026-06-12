@@ -29,6 +29,16 @@ export interface SegmentContext {
 		enabled: boolean;
 		paused: boolean;
 	} | null;
+	/** 99.04.02: native pabcd envelope summary (null when absent/inactive). */
+	pabcd: {
+		stage: string;
+		active: boolean;
+		auditStatus?: "pending" | "pass" | "fail";
+		verificationStatus?: "pending" | "done" | "needs_fix";
+		aRound?: number;
+	} | null;
+	/** 99.04.04: ultragoal ledger summary (null when no ledger). */
+	ultragoal: { checkpointCount: number; lastEvidenceBlank: boolean } | null;
 	// Cached values for performance (computed once per render)
 	usageStats: {
 		input: number;

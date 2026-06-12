@@ -25,6 +25,11 @@ import { getPreset } from "./status-line/presets";
 import { renderSegment, type SegmentContext } from "./status-line/segments";
 import { getSeparator } from "./status-line/separators";
 import { calculateTokensPerSecond } from "./status-line/token-rate";
+import {
+	type PabcdSegmentState,
+	readPabcdSegmentState,
+	readUltragoalLedgerStats,
+} from "./status-line/workflow-readers";
 
 export interface StatusLineSegmentOptions {
 	model?: { showThinkingLevel?: boolean };
@@ -435,6 +440,32 @@ export class StatusLineComponent implements Component {
 		return null;
 	}
 
+	#pabcdState: PabcdSegmentState | null = null;
+	#pabcdInFlight = false;
+	#pabcdLastFetch = 0;
+
+	/** 99.04: 1s-TTL background poll for the pabcd envelope (skill-HUD rail twin). */
+	#refreshPabcdInBackground(): void {
+		const now = Date.now();
+		if (this.#pabcdInFlight || now - this.#pabcdLastFetch < 1000) return;
+		const getCwd = this.session.sessionManager?.getCwd;
+		const getSessionId = this.session.sessionManager?.getSessionId;
+		const cwd = typeof getCwd === "function" ? getCwd.call(this.session.sessionManager) : getProjectDir();
+		const sessionId = typeof getSessionId === "function" ? getSessionId.call(this.session.sessionManager) : undefined;
+		this.#pabcdInFlight = true;
+		void readPabcdSegmentState(cwd, sessionId)
+			.then(state => {
+				this.#pabcdState = state;
+			})
+			.catch(() => {
+				this.#pabcdState = null;
+			})
+			.finally(() => {
+				this.#pabcdLastFetch = Date.now();
+				this.#pabcdInFlight = false;
+			});
+	}
+
 	#refreshSkillHudInBackground(): void {
 		if (this.#settings.showSkillHud === false) return;
 		const now = Date.now();
@@ -626,6 +657,16 @@ export class StatusLineComponent implements Component {
 				pr: this.#lookupPr(),
 			},
 			usage: this.#cachedUsage,
+			pabcd: this.#pabcdState,
+			ultragoal: (() => {
+				try {
+					const getCwd = this.session.sessionManager?.getCwd;
+					const cwd = typeof getCwd === "function" ? getCwd.call(this.session.sessionManager) : getProjectDir();
+					return readUltragoalLedgerStats(cwd);
+				} catch {
+					return null;
+				}
+			})(),
 		};
 	}
 
@@ -817,6 +858,7 @@ export class StatusLineComponent implements Component {
 	render(width: number): string[] {
 		const lines: string[] = [];
 		this.#refreshSkillHudInBackground();
+		this.#refreshPabcdInBackground();
 		const skillHud = this.#settings.showSkillHud === false ? null : renderSkillHudBar(this.#skillHudEntries, width);
 		if (skillHud) {
 			lines.push(skillHud);
