@@ -16,10 +16,23 @@ Kiro 패턴(SQLite auto-read)을 일반화.
 
 | # | CLI | 토큰 경로 | 포맷 | jwc Provider | 동일 OAuth App | Plan |
 |---|---|---|---|---|---|---|
-| 1 | **Codex CLI** | `~/.codex/auth.json` | JSON | `openai-codex` | ✅ `app_EMoamEEZ73f0CkXaXp7hrann` | [094.1](094.1_codex_local_token.md) |
-| 2 | **Claude Code** | macOS Keychain `"Claude Code-credentials"` | JSON in Keychain | `anthropic` | ✅ `9d1c250a-e61b-44d9-88ed-5944d1962f5e` | [094.2](094.2_claude_code_local_token.md) |
-| 3 | **xAI/Grok CLI** | `~/.grok/auth.json` | JSON | `xai` | ✅ `b1a00492-073a-47ea-816f-4c329264a828` | [094.3](094.3_xai_local_token.md) |
+| 1 | **Codex CLI** | `$CODEX_HOME/auth.json` (default `~/.codex/`) | JSON file | `openai-codex` | ✅ `app_EMoamEEZ73f0CkXaXp7hrann` | [094.1](094.1_codex_local_token.md) |
+| 2 | **Claude Code** | OS Secure Storage `"Claude Code-credentials"` | JSON in Keychain/libsecret/DPAPI | `anthropic` | ✅ `9d1c250a-e61b-44d9-88ed-5944d1962f5e` | [094.2](094.2_claude_code_local_token.md) |
+| 3 | **xAI/Grok CLI** | `~/.grok/auth.json` | JSON file | `xai` | ✅ `b1a00492-073a-47ea-816f-4c329264a828` | [094.3](094.3_xai_local_token.md) |
 | 4 | **Kiro CLI** | `~/Library/…/kiro-cli/data.sqlite3` | SQLite | `kiro` | ✅ | ✅ 구현 완료 (093) |
+
+### Cross-platform 지원 현황
+
+| CLI | macOS | Linux | Windows |
+|---|---|---|---|
+| Codex CLI | ✅ 파일 | ✅ 동일 경로 | ✅ `%USERPROFILE%\.codex\` |
+| Claude Code | ✅ Keychain (`security`) | ✅ libsecret (`secret-tool`) | ❌ P3 (DPAPI 복잡) |
+| xAI/Grok CLI | ✅ 파일 | ✅ 동일 경로 | ✅ `%USERPROFILE%\.grok\` |
+| Kiro CLI | ✅ SQLite | ⚠️ 경로 미확인 | ⚠️ 경로 미확인 |
+
+> Codex, Grok은 순수 파일 기반이라 전 플랫폼 동일.
+> Claude Code만 OS별 secure storage API가 다름.
+> cli-jaw는 각 CLI를 직접 spawn하는 구조라 토큰 읽기 불필요 (jwc와 다른 아키텍처).
 
 ---
 
@@ -60,6 +73,7 @@ export function detectLocalToken(provider: OAuthProvider): OAuthCredentials | nu
 
 ## 상세 플랜
 
-- **094.1** — [Codex CLI](094.1_codex_local_token.md) (`~/.codex/auth.json`)
-- **094.2** — [Claude Code](094.2_claude_code_local_token.md) (macOS Keychain)
-- **094.3** — [xAI/Grok CLI](094.3_xai_local_token.md) (`~/.grok/auth.json`)
+- **094.1** — [Codex CLI](094.1_codex_local_token.md) — `~/.codex/auth.json`, 전 플랫폼 파일 기반
+- **094.2** — [Claude Code](094.2_claude_code_local_token.md) — OS Secure Storage (macOS P0, Linux P1, Windows P3)
+- **094.3** — [xAI/Grok CLI](094.3_xai_local_token.md) — `~/.grok/auth.json`, 전 플랫폼 파일 기반
+- **094.4** — [/quota Command](094.4_quota_command.md) — OAuth credential 드롭다운 → 할당량 TUI 표시
