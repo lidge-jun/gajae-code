@@ -92,6 +92,13 @@ function stateDirFor(cwd: string, sessionId: string | undefined): string {
 		: path.join(cwd, ".jwc", "state");
 }
 
+/** Session scoping parity with orchestrate (8331c03b): flag wins, env fallback. */
+function resolveSessionIdWithEnv(flagSessionId: string | undefined): string | undefined {
+	if (flagSessionId) return flagSessionId;
+	const envSession = (process.env.JWC_SESSION_ID ?? process.env.GJC_SESSION_ID ?? "").trim();
+	return envSession || undefined;
+}
+
 function jawInterviewStatePath(cwd: string, sessionId: string | undefined): string {
 	return path.join(stateDirFor(cwd, sessionId), "jaw-interview-state.json");
 }
@@ -280,7 +287,7 @@ async function resolveSpecWriteArgs(args: readonly string[], cwd: string): Promi
 		throw new JawInterviewCommandError(2, "--spec is required for jaw-interview --write");
 	}
 
-	const sessionId = flagValue(args, "--session-id")?.trim() || undefined;
+	const sessionId = resolveSessionIdWithEnv(flagValue(args, "--session-id")?.trim() || undefined);
 	if (sessionId) assertSafePathComponent(sessionId, "session-id");
 
 	const rawHandoff = flagValue(args, "--handoff")?.trim() || undefined;
@@ -327,7 +334,7 @@ async function resolveSpecWriteArgs(args: readonly string[], cwd: string): Promi
 }
 
 async function resolveJawInterviewArgs(args: readonly string[], cwd: string): Promise<ResolvedJawInterviewArgs> {
-	const sessionId = flagValue(args, "--session-id")?.trim() || undefined;
+	const sessionId = resolveSessionIdWithEnv(flagValue(args, "--session-id")?.trim() || undefined);
 	if (sessionId) assertSafePathComponent(sessionId, "session-id");
 
 	const explicitResolutions = (["quick", "standard", "deep"] as const).filter(name => hasFlag(args, `--${name}`));

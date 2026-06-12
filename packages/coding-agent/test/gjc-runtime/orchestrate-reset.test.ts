@@ -48,7 +48,7 @@ describe("orchestrate reset (99.07 U1)", () => {
 			const direct = await runNativeOrchestrateCommand(["p"], cwd);
 			expect(direct.status).toBe(0);
 			const status = await runNativeOrchestrateCommand(["status"], cwd);
-			expect(status.stdout).toContain("stage=p");
+			expect(status.stdout).toContain("Stage:        p");
 		});
 	});
 
@@ -137,6 +137,50 @@ describe("interview cancel (99.07 U2)", () => {
 			const cancel = await runNativeJawInterviewCommand(["cancel"], tempCwd());
 			expect(cancel.status).toBe(0);
 			expect(cancel.stdout).toContain("no interview state");
+		});
+	});
+});
+
+describe("audit follow-ups (99.00.03)", () => {
+	it("P0-1: interview seed honors JWC_SESSION_ID like orchestrate", async () => {
+		const cwd = tempCwd();
+		await withEnvSession("seed-env-1", async () => {
+			const result = await runNativeJawInterviewCommand(["env scoped seed idea"], cwd);
+			expect(result.status).toBe(0);
+		});
+		const scoped = path.join(cwd, ".jwc", "state", "sessions", "seed-env-1", "jaw-interview-state.json");
+		expect(existsSync(scoped)).toBe(true);
+		expect(existsSync(path.join(cwd, ".jwc", "state", "jaw-interview-state.json"))).toBe(false);
+	});
+
+	it("P0-1: seed and cancel now agree on the scoped path", async () => {
+		const cwd = tempCwd();
+		await withEnvSession("seed-env-2", async () => {
+			await runNativeJawInterviewCommand(["seed then cancel"], cwd);
+			const cancel = await runNativeJawInterviewCommand(["cancel"], cwd);
+			expect(cancel.stdout).toContain("cancelled:");
+			expect(cancel.stdout).toContain("seed-env-2");
+		});
+	});
+
+	it("P1-1: orchestrate status prints the 8-field block with next action", async () => {
+		await withEnvSession(undefined, async () => {
+			const cwd = tempCwd();
+			await runNativeOrchestrateCommand(["i"], cwd);
+			const status = await runNativeOrchestrateCommand(["status"], cwd);
+			expect(status.stdout).toContain("Stage:        i");
+			expect(status.stdout).toContain("Scope:        shared");
+			expect(status.stdout).toContain("Audit:        pending");
+			expect(status.stdout).toContain("Verification: pending");
+			expect(status.stdout).toContain("Next:         advance with: jwc orchestrate p");
+		});
+	});
+
+	it("P1-1: idle status offers both entry points", async () => {
+		await withEnvSession(undefined, async () => {
+			const status = await runNativeOrchestrateCommand(["status"], tempCwd());
+			expect(status.stdout).toContain("orchestrate i (interview)");
+			expect(status.stdout).toContain("orchestrate p (plan directly)");
 		});
 	});
 });
