@@ -1057,10 +1057,37 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 	},
 	{
 		name: "resume",
-		description: "Resume a different session",
-		handleTui: (_command, runtime) => {
-			runtime.ctx.showSessionSelector();
+		aliases: ["sessions", "switch"],
+		description: "Resume a different session (optionally by id prefix)",
+		inlineHint: "[session id]",
+		allowArgs: true,
+		handleTui: async (command, runtime) => {
+			const sessionArg = command.args.trim();
 			runtime.ctx.editor.setText("");
+			if (!sessionArg) {
+				runtime.ctx.showSessionSelector();
+				return;
+			}
+			await runtime.ctx.handleResumeByIdCommand(sessionArg);
+		},
+	},
+	{
+		name: "fork",
+		description: "Fork the session and switch to the copy (optionally send a message)",
+		inlineHint: "[message]",
+		allowArgs: true,
+		handleTui: async (command, runtime) => {
+			const message = command.args.trim();
+			runtime.ctx.editor.setText("");
+			await runtime.ctx.handleForkCommand(message || undefined);
+		},
+	},
+	{
+		name: "branch",
+		description: "Branch from an earlier user message",
+		handleTui: (_command, runtime) => {
+			runtime.ctx.editor.setText("");
+			runtime.ctx.showUserMessageSelector();
 		},
 	},
 	{
@@ -1275,6 +1302,7 @@ export function formatUnknownBuiltinSlashCommandDiagnostic(commandName: string):
 export const BUILTIN_SLASH_COMMAND_DEFS: ReadonlyArray<BuiltinSlashCommand> = ACTIVE_BUILTIN_SLASH_COMMAND_REGISTRY.map(
 	command => ({
 		name: command.name,
+		aliases: command.aliases,
 		description: command.description,
 		subcommands: command.subcommands,
 		inlineHint: command.inlineHint,

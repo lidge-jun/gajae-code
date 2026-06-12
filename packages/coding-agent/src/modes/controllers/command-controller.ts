@@ -11,7 +11,7 @@ import {
 	type UsageReport,
 } from "@gajae-code/ai";
 import { Loader, Markdown, padding, Spacer, Text, visibleWidth } from "@gajae-code/tui";
-import { formatDuration, Snowflake, setProjectDir } from "@gajae-code/utils";
+import { APP_NAME, formatDuration, Snowflake, setProjectDir } from "@gajae-code/utils";
 import { $ } from "bun";
 import { reset as resetCapabilities } from "../../capability";
 import { clearClaudePluginRootsCache } from "../../discovery/helpers";
@@ -953,7 +953,7 @@ export class CommandController {
 		await this.#runNewSessionFlow({ drop: true }, "Session dropped");
 	}
 
-	async handleForkCommand(): Promise<void> {
+	async handleForkCommand(message?: string): Promise<void> {
 		if (this.ctx.session.isStreaming) {
 			this.ctx.showWarning("Wait for the current response to finish or abort it before forking.");
 			return;
@@ -964,6 +964,8 @@ export class CommandController {
 		}
 		this.ctx.statusContainer.clear();
 
+		const originalSessionId = this.ctx.session.sessionId;
+
 		const success = await this.ctx.session.fork();
 		if (!success) {
 			this.ctx.showError("Fork failed (session not persisted or cancelled)");
@@ -973,13 +975,35 @@ export class CommandController {
 		this.ctx.statusLine.invalidate();
 		this.ctx.updateEditorTopBorder();
 
-		const sessionFile = this.ctx.session.sessionFile;
-		const shortPath = sessionFile ? sessionFile.split("/").pop() : "new session";
+		const newSessionId = this.ctx.session.sessionId;
 		this.ctx.chatContainer.addChild(new Spacer(1));
 		this.ctx.chatContainer.addChild(
-			new Text(`${theme.fg("accent", `${theme.status.success} Session forked to ${shortPath}`)}`, 1, 1),
+			new Text(
+				`${theme.fg("accent", `${theme.status.success} Forked conversation. You are now in the new session (${newSessionId}).`)}`,
+				1,
+				1,
+			),
 		);
+		// Show the FULL original id: session ids are UUIDv7, whose first 8 hex chars
+		// are timestamp bits shared by every session created in the same ~65s window —
+		// a short prefix would resolve to the fork itself (most recently modified).
+		if (originalSessionId) {
+			this.ctx.chatContainer.addChild(
+				new Text(
+					theme.fg(
+						"muted",
+						`Use /resume ${originalSessionId} to return to the original, or run \`${APP_NAME} -r ${originalSessionId}\` in a new terminal.`,
+					),
+					1,
+					1,
+				),
+			);
+		}
 		this.ctx.ui.requestRender();
+
+		if (message) {
+			await this.ctx.session.prompt(message);
+		}
 	}
 
 	async handleMoveCommand(targetPath: string): Promise<void> {

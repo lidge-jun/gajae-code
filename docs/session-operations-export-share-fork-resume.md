@@ -19,9 +19,10 @@ This document describes operator-visible behavior for session export/share/fork/
 | `/export [path]`                        | Interactive slash command | No                                    | No                                                                                 | HTML file                                                                        |
 | `--export <session.jsonl> [outputPath]` | CLI startup fast-path     | No runtime session mutation           | No active session; reads target file                                               | HTML file                                                                        |
 | `/share`                                | Interactive slash command | No                                    | No                                                                                 | Temp HTML + share URL/gist                                                       |
-| `/fork`                                 | Interactive slash command | Yes (active session identity changes) | Creates new session file and switches current session to it (persistent mode only) | Copies artifact directory to new session namespace when present                  |
+| `/fork [message]`                       | Interactive slash command | Yes (active session identity changes) | Creates new session file and switches current session to it (persistent mode only); prints return guidance with original id; optional message is prompted in the fork | Copies artifact directory to new session namespace when present                  |
+| `/branch`                               | Interactive slash command | Leaf move on selection                | Opens earlier-user-message branch picker (same as `app.session.fork` keybinding)   | None                                                                             |
 | `--fork <id                             | path>`                    | CLI startup                           | Yes after session creation                                                         | Creates a new session fork from the selected source into current cwd/session dir | None |
-| `/resume`                               | Interactive slash command | Yes (active in-memory state replaced) | Switches to selected existing session file                                         | None                                                                             |
+| `/resume [id]` (aliases `/sessions`, `/switch`) | Interactive slash command | Yes (active in-memory state replaced) | No arg: selector. With id prefix: direct switch to matching same-project session   | None                                                                             |
 | `--resume`                              | CLI startup (picker)      | Yes after session creation            | Opens selected existing session file                                               | None                                                                             |
 | `--resume <id                           | path>`                    | CLI startup                           | Yes after session creation                                                         | Opens existing session; cross-project case can fork into current project         | None |
 | `--continue`                            | CLI startup               | Yes after session creation            | Opens terminal breadcrumb or most-recent session; creates new one if none exists   | None                                                                             |
@@ -136,7 +137,20 @@ Cancellation/abort semantics in share:
 
 ## Fork
 
-Interactive `/fork` creates a new session from the current one and switches the active session identity.
+Interactive `/fork [message]` creates a new session from the current one and switches the active session identity.
+
+After a successful fork the UI prints return guidance with the original session id:
+
+```
+✓ Forked conversation. You are now in the new session (<new uuid>).
+Use /resume <original-session-id> to return to the original, or run `<app> -r <original-session-id>` in a new terminal.
+```
+
+The guidance shows the **full** original id: session ids are UUIDv7, whose first 8 hex chars encode timestamp bits shared by all sessions created in the same ~65s window — a short prefix would resolve to the fork itself.
+
+If a `[message]` argument is given (`/fork ㅎㅇ`), it is submitted as a prompt in the forked session immediately after the guidance is printed.
+
+`/branch` is a separate command with different semantics: it opens the earlier-user-message branch picker (same target as the `app.session.fork` keybinding). `/fork` duplicates the whole session at the current point; `/branch` branches from a selected earlier point.
 
 ### Preconditions and immediate guards
 
@@ -151,8 +165,9 @@ Interactive `/fork` creates a new session from the current one and switches the 
 2. Flushes pending writes.
 3. Calls `SessionManager.fork()`.
 4. Copies artifacts directory from old session namespace to new namespace (best-effort; non-ENOENT copy failures are logged, not fatal).
-5. Updates `agent.sessionId`.
-6. Emits `session_switch` with `reason: "fork"`.
+5. Clears queued steering/follow-up/next-turn messages (same set `newSession`/`switchSession` clear) — queued input belongs to the original session.
+6. Updates `agent.sessionId`.
+7. Emits `session_switch` with `reason: "fork"`.
 
 `SessionManager.fork()` behavior:
 
@@ -182,18 +197,27 @@ Startup `--fork` is resolved before normal session creation:
 
 ## Resume and continue
 
-## Interactive `/resume`
+## Interactive `/resume [session id]`
 
-Flow:
+Aliases: `/sessions`, `/switch` (registered as aliases; they appear as separate autocomplete entries marked `(alias of /resume)`).
+
+Flow without argument:
 
 1. Opens session selector populated via `SessionManager.list(currentCwd, currentSessionDir)`.
 2. On selection, `SelectorController.handleResumeSession(sessionPath)` calls `session.switchSession(sessionPath)`.
 3. UI clears/rebuilds chat and todos, then reports `Resumed session`.
 
+Flow with argument (`/resume <id prefix>`):
+
+1. `SelectorController.handleResumeByIdCommand(sessionArg)` resolves the argument via `resolveResumableSession` (same prefix matching as CLI `--resume <id>`: session id, filename, or filename id-suffix prefix).
+2. No match → error `No session matching "<arg>". Use /resume to open the selector.`
+3. Match in a different project → error directing to run `<app> -r <id>` there (no in-TUI cross-project fork).
+4. Same-project match → switches via the standard `handleResumeSession` path.
+
 Notes:
 
-- This picker only lists sessions in the current session directory scope.
-- It does not use global cross-project search.
+- The no-arg picker only lists sessions in the current session directory scope.
+- The id path uses `resolveResumableSession`, which falls back to global search; cross-project matches are reported but not switched to.
 
 ## CLI `--resume`
 

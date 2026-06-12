@@ -99,21 +99,29 @@ export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<
 		getArgumentCompletions?: (prefix: string) => AutocompleteItem[] | null;
 		getInlineHint?: (argumentText: string) => string | null;
 	}
-> = BUILTIN_SLASH_COMMAND_DEFS.map(cmd => {
-	if (cmd.subcommands) {
-		return {
-			...cmd,
-			getArgumentCompletions: buildArgumentCompletions(cmd.subcommands),
-			getInlineHint: buildSubcommandInlineHint(cmd.subcommands),
-		};
-	}
-	if (cmd.inlineHint) {
-		return {
-			...cmd,
-			getInlineHint: buildStaticInlineHint(cmd.inlineHint),
-		};
-	}
-	return cmd;
+> = BUILTIN_SLASH_COMMAND_DEFS.flatMap(cmd => {
+	const decorate = (entry: BuiltinSlashCommand) => {
+		if (entry.subcommands) {
+			return {
+				...entry,
+				getArgumentCompletions: buildArgumentCompletions(entry.subcommands),
+				getInlineHint: buildSubcommandInlineHint(entry.subcommands),
+			};
+		}
+		if (entry.inlineHint) {
+			return {
+				...entry,
+				getInlineHint: buildStaticInlineHint(entry.inlineHint),
+			};
+		}
+		return entry;
+	};
+	// Aliases surface as their own autocomplete entries so they are discoverable;
+	// dispatch still resolves them to the primary command via the registry lookup.
+	const aliasEntries = (cmd.aliases ?? []).map(alias =>
+		decorate({ ...cmd, name: alias, aliases: undefined, description: `${cmd.description} (alias of /${cmd.name})` }),
+	);
+	return [decorate(cmd), ...aliasEntries];
 });
 
 /**

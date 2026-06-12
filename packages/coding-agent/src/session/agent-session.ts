@@ -5736,6 +5736,12 @@ export class AgentSession {
 			}
 		}
 
+		// Queued messages belong to the original session — clear them like newSession/switchSession do.
+		this.#steeringMessages = [];
+		this.#followUpMessages = [];
+		this.#pendingNextTurnMessages = [];
+		this.#scheduledHiddenNextTurnGeneration = undefined;
+
 		// Update agent session ID
 		this.#syncAgentSessionId();
 		this.#rekeyHindsightMemoryForCurrentSessionId();

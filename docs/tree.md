@@ -27,7 +27,8 @@ Any of the following opens the same selector:
 - `/tree`
 - configured keybinding action `tree`
 - double-escape on empty editor when `doubleEscapeAction = "tree"` (default)
-- `/branch` when `doubleEscapeAction = "tree"` (routes to tree selector instead of user-only branch picker)
+
+(`/branch` always opens the earlier-user-message branch picker — it does not route to the tree selector; only double-escape consults `doubleEscapeAction`.)
 
 ## Tree UI model
 
@@ -200,9 +201,9 @@ Label edits in tree UI call `appendLabelChange(targetId, label)`.
 | Operation | Scope                                            | Result                                                                                                                                                   |
 | --------- | ------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `/tree`   | Current session file                             | Moves leaf to selected point (same file)                                                                                                                 |
-| `/branch` | Usually current session file -> new session file | By default branches from selected **user** message into a new session file; if `doubleEscapeAction = "tree"`, `/branch` opens tree navigation UI instead |
-| `/fork`   | Whole current session                            | Duplicates session into a new persisted session file                                                                                                     |
-| `/resume` | Session list                                     | Switches to another session file                                                                                                                         |
+| `/branch` | Current session file                             | Opens the earlier-**user**-message branch picker (same target as the `app.session.fork` keybinding)                                                      |
+| `/fork [message]` | Whole current session                    | Duplicates session into a new persisted session file, switches to it, prints return guidance with the original id; optional message is prompted in the fork |
+| `/resume [id]` (aliases `/sessions`, `/switch`) | Session list | No arg: selector. With id prefix: direct switch to the matching same-project session                                       |
 
 Key distinction: `/tree` is a navigation/repositioning tool inside one session file. `/branch`, `/fork`, and `/resume` all change session-file context.
 

@@ -15,6 +15,8 @@ export interface SubcommandDef {
 export interface BuiltinSlashCommand {
 	name: string;
 	description: string;
+	/** Alternate names that dispatch to the same command (surfaced as separate autocomplete entries). */
+	aliases?: readonly string[];
 	/** Subcommands for dropdown completion (e.g. /mcp add, /mcp list). */
 	subcommands?: SubcommandDef[];
 	/** Static inline hint when command takes a simple argument (no subcommands). */

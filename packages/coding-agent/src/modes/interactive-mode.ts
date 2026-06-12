@@ -2283,9 +2283,9 @@ export class InteractiveMode implements InteractiveModeContext {
 		return this.#commandController.handleDropCommand();
 	}
 
-	handleForkCommand(): Promise<void> {
+	handleForkCommand(message?: string): Promise<void> {
 		this.#btwController.dispose();
-		return this.#commandController.handleForkCommand();
+		return this.#commandController.handleForkCommand(message);
 	}
 
 	handleMoveCommand(targetPath: string): Promise<void> {
@@ -2503,6 +2503,11 @@ export class InteractiveMode implements InteractiveModeContext {
 		this.#btwController.dispose();
 		this.resetObserverRegistry();
 		return this.#selectorController.handleResumeSession(sessionPath);
+	}
+
+	handleResumeByIdCommand(sessionArg: string): Promise<void> {
+		// btw disposal and observer reset happen inside handleResumeSession once a match is confirmed.
+		return this.#selectorController.handleResumeByIdCommand(sessionArg);
 	}
 
 	handleSessionDeleteCommand(): Promise<void> {

@@ -3,7 +3,7 @@ import { getOAuthProviders } from "@gajae-code/ai/utils/oauth";
 import type { OAuthProvider } from "@gajae-code/ai/utils/oauth/types";
 import type { Component, OverlayHandle, SelectItem } from "@gajae-code/tui";
 import { Container, Input, Loader, SelectList, Spacer, Text } from "@gajae-code/tui";
-import { getAgentDbPath, getProjectDir } from "@gajae-code/utils";
+import { APP_NAME, getAgentDbPath, getProjectDir } from "@gajae-code/utils";
 import { activateModelProfile } from "../../config/model-profile-activation";
 import { settings } from "../../config/settings";
 import { DebugSelectorComponent } from "../../debug";
@@ -31,7 +31,7 @@ import {
 	theme,
 } from "../../modes/theme/theme";
 import type { InteractiveModeContext } from "../../modes/types";
-import { type SessionInfo, SessionManager } from "../../session/session-manager";
+import { resolveResumableSession, type SessionInfo, SessionManager } from "../../session/session-manager";
 import { FileSessionStorage } from "../../session/session-storage";
 import {
 	MODEL_ONBOARDING_API_PROVIDER_COMMAND,
@@ -1054,6 +1054,26 @@ export class SelectorController {
 		await this.ctx.reloadTodos();
 		this.ctx.ui.requestRender();
 		return true;
+	}
+
+	async handleResumeByIdCommand(sessionArg: string): Promise<void> {
+		const match = await resolveResumableSession(
+			sessionArg,
+			this.ctx.sessionManager.getCwd(),
+			this.ctx.sessionManager.getSessionDir(),
+		);
+		if (!match) {
+			this.ctx.showError(`No session matching "${sessionArg}". Use /resume to open the selector.`);
+			return;
+		}
+		if (match.session.cwd !== this.ctx.sessionManager.getCwd()) {
+			this.ctx.showError(
+				`Session ${sessionArg} belongs to a different project (${match.session.cwd}). Run \`${APP_NAME} -r ${sessionArg}\` there.`,
+			);
+			return;
+		}
+		// Route through the interactive-mode wrapper so btw disposal and observer reset run.
+		await this.ctx.handleResumeSession(match.session.path);
 	}
 
 	async handleResumeSession(sessionPath: string): Promise<void> {

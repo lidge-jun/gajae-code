@@ -38,8 +38,7 @@ describe("GJC utility extensibility quarantine", () => {
 			"copy",
 			"todo",
 			"changelog",
-			"branch",
-			"fork",
+			// "branch" and "fork" rejoined the registry in 99.07.01 (session slash surface).
 			"handoff",
 			"force",
 			"quit",
