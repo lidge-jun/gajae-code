@@ -211,3 +211,47 @@ describe("skill HUD bar renderer", () => {
 		expect(rendered).not.toContain("warn:stale");
 	});
 });
+
+describe("details rail rendering (99.00.03 P0-2)", () => {
+	it("renders hud.details after chips (interview dimension gauges)", () => {
+		const rendered = Bun.stripANSI(
+			renderSkillHudBar(
+				[
+					{
+						skill: "jaw-interview",
+						phase: "interviewing",
+						hud: {
+							version: 1,
+							chips: [{ label: "round", value: "2", priority: 30 }],
+							details: [{ label: "dims", value: "G▰▰▰ C▰▱▱ S▰▰▱ O▱▱▱", priority: 40 }],
+						},
+					},
+				],
+				160,
+			) ?? "",
+		);
+		expect(rendered).toContain("round=2");
+		expect(rendered).toContain("dims=G▰▰▰ C▰▱▱ S▰▰▱ O▱▱▱");
+	});
+
+	it("width truncation drops details before chips", () => {
+		const rendered = Bun.stripANSI(
+			renderSkillHudBar(
+				[
+					{
+						skill: "jaw-interview",
+						phase: "interviewing",
+						hud: {
+							version: 1,
+							chips: [{ label: "round", value: "2", priority: 30 }],
+							details: [{ label: "dims", value: "G▰▰▰ C▰▱▱ S▰▰▱ O▱▱▱", priority: 40 }],
+						},
+					},
+				],
+				42,
+			) ?? "",
+		);
+		expect(rendered).toContain("round=2");
+		expect(rendered).not.toContain("O▱▱▱");
+	});
+});

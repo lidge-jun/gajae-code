@@ -69,7 +69,14 @@ function formatEntry(entry: SkillActiveEntry): string {
 	if (receiptStatus === "stale") chips.unshift("warn:receipt=stale");
 	if (receiptStatus === "fresh") chips.push("receipt=fresh");
 	const summary = sanitizeHudPart(entry.hud?.summary);
-	return [base, summary, ...chips].filter(Boolean).join(" ");
+	// 99.04.03/P0-2 — the details rail (e.g. interview dimension gauges) was
+	// generated but never rendered; append after chips so width truncation
+	// drops it first when space is tight.
+	const details = [...(entry.hud?.details ?? [])]
+		.sort(compareChips)
+		.map(formatChip)
+		.filter((chip): chip is string => Boolean(chip));
+	return [base, summary, ...chips, ...details].filter(Boolean).join(" ");
 }
 
 export function renderSkillHudBar(entries: readonly SkillActiveEntry[], width: number): string | null {
