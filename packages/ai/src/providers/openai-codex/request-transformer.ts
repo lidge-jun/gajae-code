@@ -51,6 +51,11 @@ export interface RequestBody {
 	[key: string]: unknown;
 }
 
+/** Spark variants (e.g. gpt-5.3-codex-spark) do not accept reasoning parameters. */
+export function isCodexSparkModel(modelId: string): boolean {
+	return /spark/i.test(modelId);
+}
+
 function getReasoningConfig(model: Model<Api>, options: CodexRequestOptions): ReasoningConfig {
 	const config: ReasoningConfig = {
 		effort:
@@ -135,7 +140,12 @@ export async function transformRequestBody(
 		body.input = [...developerMessages, ...body.input];
 	}
 
-	if (options.reasoningEffort !== undefined) {
+	// gpt-5.3-codex-spark rejects `reasoning.*` parameters with 400
+	// "unsupported_parameter" (cli-jaw args.ts precedent: drop them at request
+	// build time). Strip defensively even when a caller passes an effort, and
+	// skip the reasoning include for the same reason.
+	const sparkModel = isCodexSparkModel(model.id);
+	if (!sparkModel && options.reasoningEffort !== undefined) {
 		const reasoningConfig = getReasoningConfig(model, options);
 		body.reasoning = {
 			...body.reasoning,
@@ -151,7 +161,9 @@ export async function transformRequestBody(
 	};
 
 	const include = Array.isArray(options.include) ? [...options.include] : [];
-	include.push("reasoning.encrypted_content");
+	if (!sparkModel) {
+		include.push("reasoning.encrypted_content");
+	}
 	body.include = Array.from(new Set(include));
 
 	delete body.max_output_tokens;
