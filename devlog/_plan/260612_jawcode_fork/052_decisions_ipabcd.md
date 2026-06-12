@@ -2,7 +2,7 @@
 
 > 2026-06-12 jaw-interview 세션 산출. **050번대 lexicographic 연속** — `051` 보강(`51.n`) 없이 본 문서에서 050 밴드 결정을 이어감.
 > 선행: [050_moc_plan_pabcd.md](./050_moc_plan_pabcd.md), [051_design_command_port.md](./051_design_command_port.md)
-> **P Boss-author 후속:** [053_decisions_p_boss_author.md](./053_decisions_p_boss_author.md)
+> **P Boss-author 후속:** [053_decisions_p_boss_author.md](./053_decisions_p_boss_author.md) — D050-10~26 (속집 2에서 P/A 리뷰어 재배치: D050-11/12/15는 D050-19/20/21로 개정·폐기). 구현 diff: [054_plan_orchestrate_impl.md](./054_plan_orchestrate_impl.md)
 > 인터뷰 로그: [04_interview_log.md](./04_interview_log.md)
 
 ## Metadata
@@ -27,7 +27,7 @@
 | D050-5 | B 단계 · team | **jwc 단독 B 기본**. 아주 복잡·대규모면 **team(tmux) 옵션** | [확정] |
 | D050-6 | team 트리거 | **에이전트 재량** — B 진입 시 기본 solo | [확정] |
 | D050-7 | M1 050 완료 기준 | **`orchestrate i→p→a→b→c→d` 풀사이클 1회** | [확정] |
-| D050-8 | `pabcd.json` | `current_stage`, `ctx`, `spec_ref`, `plan_ref` + gjc state receipt 관례 | [확정] |
+| D050-8 | `pabcd.json` | `current_stage`, `ctx`, `spec_ref`, `plan_ref` + gjc state receipt 관례. (구현: 논리 계약명 — envelope은 `.gjc/state/pabcd-state.json`, native 레지스트리 D050-22) | [확정] |
 | D050-9 | C 단계 | **cli-jaw C와 동형** — 고정 체크리스트 + 기계적 pass/fail | [확정] |
 
 > **P/A 엔진 재매핑** (Boss-author, Critic≠A) → **053** D050-10 … D050-14. 본 문서 D050-1…9는 유효; 050/051의 구 「ralplan Planner(+Architect)=P / Critic=A」 표현은 **053으로 supersede**.

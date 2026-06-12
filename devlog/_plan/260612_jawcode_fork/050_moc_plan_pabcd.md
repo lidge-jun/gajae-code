@@ -8,11 +8,11 @@
 > 본 밴드는 I를 포함한 **오케스트레이션 표면·상태머신**을 담당한다. 사용자 관점 파이프라인은 하나:
 > `orchestrate i → p → a → b → c → d` (cli-jaw `orchestrate i|p|a|…`와 동형).
 >
-> 📌 P 재매핑: [053_decisions_p_boss_author.md](./053_decisions_p_boss_author.md) (D050-10 … D050-14)
+> 📌 P/A 재매핑: [053_decisions_p_boss_author.md](./053_decisions_p_boss_author.md) (D050-10 … D050-26, 속집 1~4)
 
-> 상태: 🟡 MOC 본문 패치 완료 (053). **P = Boss-author + 3-reviewer** [확정 D050-10].
+> 상태: 🟢 구현 완료 (054 plan → B 빌드). **P = Boss-author + Critic 1-pass / A = Planner∥Architect 병렬 감사** [확정 D050-19/20].
 > 결정 근거: D3 [확정] 매핑 병합 — deep-interview↔I, ralplan 리뷰·artifact↔P, ultragoal↔goal (05 §D3).
-> **P/A 분리:** P = Boss 계획 + Planner/Architect/Critic 합의; A = cli-jaw audit employee (Critic과 역할 중복 없음).
+> **P/A 분리(D050-19~21):** Critic=품질@P(1-pass, p_round ≤2), Planner=정합@A ∥ Architect=통합@A(a_round ≤3), trivial→A solo(Architect). 수정 권한은 항상 Boss.
 
 ## 040 ↔ 050 역할 분리
 
@@ -31,8 +31,8 @@
                     │
                     ▼
 orchestrate p ──► a ──► b ──► c ──► d
-  Boss 초안          audit
-  + 3-reviewer       employee
+  Boss 초안 +        Planner∥Architect
+  Critic 1-pass      병렬 감사 (trivial→solo)
 (spec 있으면 p부터 진입 가능)
 ```
 
@@ -44,28 +44,28 @@ orchestrate p ──► a ──► b ──► c ──► d
 | jaw orchestrate | **I/P/A/B/C/D 단계 분리** + 명시 전이, **P = Boss plan 초안 + CEO 승인 STOP**, **A = audit employee PASS/FAIL**, B Boss 구현, C 기계 검증, D 요약 |
 | 040 jaw-interview | I 엔진 — 050은 재구현 없이 `orchestrate i` / `interview` 호출 |
 
-## P 단계 — Boss-author + 3-reviewer [확정 053]
+## P/A 단계 — 리뷰어 재배치 [확정 053 속집 2, D050-19~21]
 
-| 역할 | 담당 | 산출 |
-|------|------|------|
-| **Boss** (메인) | spec → devlog plan 초안, 사용자 요약/Mermaid, 리뷰 반영 수정 | devlog plan 파일, `plan_ref` |
-| **Planner** subagent | sequencing, AC, scope 리뷰 (작성 아님) | `stage-*-planner.md` receipt |
-| **Architect** subagent | steelman, tradeoff, CLEAR/WATCH/BLOCK | `stage-*-architect.md` receipt |
-| **Critic** subagent | OKAY/ITERATE/REJECT, max 5 루프 | `stage-*-critic.md` receipt |
-| **ralplan CLI** | artifact writer | `pending-approval.md` (실행 게이트 정본) |
+| 역할 | 단계 | 담당 | 산출 |
+|------|------|------|------|
+| **Boss** (메인) | P/A | spec → devlog plan 초안, 사용자 요약/Mermaid, 감사 발견 수정 적용 | devlog plan 파일, `plan_ref` |
+| **Critic** subagent | P | 품질 1-pass — AC 누락·스코프 구멍·모호 단계, OKAY/ITERATE/REJECT, `p_round ≤2` | `stage-*-critic.md` receipt |
+| **Planner** subagent | A | 계획 정합 감사 (read-only), PASS/FAIL + file:line 증거 | `orchestrate-audit-planner.md` 프롬프트 |
+| **Architect** subagent | A | 통합 리스크 감사 (read-only), PASS/FAIL, 델타 재감사 `a_round ≤3` | `orchestrate-audit-architect.md` 프롬프트 |
+| **ralplan CLI** | P | artifact writer | `pending-approval.md` (실행 게이트 정본) |
 
-**trivial bypass [기본값 D050-15]:** 단일 파일·명시 AC → Boss + Planner 1-pass; 그 외 full 3-reviewer.
+**trivial bypass [확정 D050-21]:** 단일 파일·단일 동작·명시 AC → **A 감사 1명(Architect solo)**, `ctx.a_audit_mode: "solo"|"dual"`. P측 short/full 모드는 폐기(D050-15→21).
 
 **`/skill:ralplan` [D050-14]:** Planner-author consensus **별도 유지** — IPABCD `orchestrate p`와 SKILL 본문 통합은 M1 범위 밖.
 
 ## 스코프
 
 1. **I = orchestrate i**: 040 `jaw-interview`; `pabcd.json` 등록은 orchestrate i만 [확정 D050-1]
-2. **P = orchestrate p**: **Boss 초안 + (full) Planner→Architect→Critic** → pending-approval → 사용자 승인 STOP [확정 D050-10/11/13]
-3. **A = orchestrate a**: **cli-jaw audit employee** + `parseWorkerVerdict` — Critic과 분리 [확정 D050-12]
+2. **P = orchestrate p**: **Boss 초안 + Critic 1-pass** → pending-approval → 사용자 승인 STOP [확정 D050-10/13/19]
+3. **A = orchestrate a**: **Planner∥Architect 병렬 감사** + `parseWorkerVerdict`(PASS|FAIL, D050-23) — Boss 수정→델타 재감사 ≤3 [확정 D050-20]
 4. **B/C/D**: jaw 계약 — B executor, C 체크리스트 pass/fail [D050-9], D 요약
 5. **명령 표면 [확정 D10]**: `jwc orchestrate i|p|a|b|c|d`, alias `pabcd`, 슬래시 `/orchestrate`, `/pabcd`
-6. **상태**: `.gjc/state/pabcd.json` — `current_stage`, `ctx`, `spec_ref`, `plan_ref`, `ctx.p_review_mode` [D050-8/15]
+6. **상태**: envelope `.gjc/state/pabcd-state.json`(논리 계약명 `pabcd.json`) — `current_phase`, `ctx`, `spec_ref`, `plan_ref`, `ctx.a_audit_mode` — **native 레지스트리, canonical 4종 무접촉** [D050-8/21/22]
 
 ## [확정] / [기본값] 결정
 
