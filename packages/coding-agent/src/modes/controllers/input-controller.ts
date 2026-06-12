@@ -191,6 +191,14 @@ export class InputController {
 		this.ctx.editor.setActionKeys("app.message.dequeue", this.ctx.keybindings.getKeys("app.message.dequeue"));
 		this.ctx.editor.onDequeue = () => this.handleDequeue();
 		this.ctx.editor.onHangulCtrlChordHint = (_jamo, chord) => this.showHangulImeHint(chord);
+		// 99.20.03 surface 4: ESC-dismissed autocomplete dropdown leaves a
+		// transient-growth gap above the composer in the overflow zone — compact
+		// it like the slash-dispatch path does. Guarded: no repaint mid-stream.
+		this.ctx.editor.onAutocompleteCancel = () => {
+			if (!this.ctx.session.isStreaming) {
+				this.ctx.ui.compactViewportFill();
+			}
+		};
 
 		this.ctx.editor.clearCustomKeyHandlers();
 		// Wire up extension shortcuts
