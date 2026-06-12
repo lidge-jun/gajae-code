@@ -1380,6 +1380,43 @@ export const SETTINGS_SCHEMA = {
 
 	"memories.summaryInjectionTokenLimit": { type: "number", default: 5000 },
 
+	"memories.searchMode": {
+		type: "enum",
+		values: ["hybrid", "fts", "like"] as const,
+		default: "hybrid",
+		ui: {
+			label: "Memory search mode",
+			description: "hybrid: FTS5 with LIKE fallback; fts: FTS5 only; like: substring scan",
+			tab: "memory",
+		},
+	},
+	"memories.modelRolePattern": {
+		type: "string",
+		default: undefined,
+		ui: {
+			tab: "memory",
+			label: "Memory model",
+			description:
+				"Model pattern for stage1/phase2 jobs (provider/model or modelRoles alias). Falls back to modelRoles.memory, then default.",
+		},
+	},
+
+	// Query/injection limits for the jwc memory surface (99.01) — hidden from
+	// UI; tuned via settings file only. Defaults mirror MEMORY_RUNTIME_DEFAULTS.
+	"memories.taskSnapshotTopN": { type: "number", default: 4 },
+	"memories.taskSnapshotEpisodeCap": { type: "number", default: 2 },
+	"memories.taskSnapshotMaxChars": { type: "number", default: 1200 },
+	"memories.searchMaxChars": { type: "number", default: 4000 },
+	"memories.snapshotSnippetChars": { type: "number", default: 200 },
+	"memories.searchSnippetChars": { type: "number", default: 700 },
+	"memories.hitCountDedupThreshold": { type: "number", default: 3 },
+	"memories.compactedTaskSnapshotTopN": { type: "number", default: 2 },
+	"memories.compactedTaskSnapshotEpisodeCap": { type: "number", default: 1 },
+	"memories.compactedTaskSnapshotMaxChars": { type: "number", default: 600 },
+	"memories.compactedSnapshotSnippetChars": { type: "number", default: 120 },
+	"memories.compactedSearchSnippetChars": { type: "number", default: 400 },
+	"memories.compactionContextMaxChars": { type: "number", default: 800 },
+
 	// Memory backend selector — picks between local memories pipeline,
 	// Hindsight remote memory, or off. Legacy `memories.enabled` keeps gating
 	// the local backend; see config/settings.ts migration for details.
@@ -2982,6 +3019,7 @@ export interface MemoriesSettings {
 	rolloutPayloadPercent: number;
 	fallbackTokenLimit: number;
 	summaryInjectionTokenLimit: number;
+	searchMode: "hybrid" | "fts" | "like";
 }
 
 export interface TodoCompletionSettings {

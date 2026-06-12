@@ -66,6 +66,8 @@ const jawOnlyCommands: CommandEntry[] = [
 	{ name: "interview", aliases: ["deep-interview"], load: () => import("./commands/interview").then(m => m.default) },
 	{ name: "orchestrate", aliases: ["pabcd"], load: () => import("./commands/orchestrate").then(m => m.default) },
 	{ name: "goal", load: () => import("./commands/goal").then(m => m.default) },
+	{ name: "memory", load: () => import("./commands/memory").then(m => m.default) },
+	{ name: "chat", load: () => import("./commands/chat").then(m => m.default) },
 ];
 
 function isJawBrandEnv(): boolean {

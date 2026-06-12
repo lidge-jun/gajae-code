@@ -422,7 +422,7 @@ function encodeRelativeSessionDirName(prefix: string, root: string, cwd: string)
 	return relative ? (prefix.endsWith("-") ? `${prefix}${relative}` : `${prefix}-${relative}`) : prefix;
 }
 
-function getDefaultSessionDirName(cwd: string): { encodedDirName: string; resolvedCwd: string } {
+export function getDefaultSessionDirName(cwd: string): { encodedDirName: string; resolvedCwd: string } {
 	const resolvedCwd = path.resolve(cwd);
 	const canonicalCwd = resolveEquivalentPath(resolvedCwd);
 	const home = resolveEquivalentPath(os.homedir());

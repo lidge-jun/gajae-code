@@ -5,10 +5,15 @@ import path from "node:path";
 import { getAgentDbPath } from "@gajae-code/utils";
 import { getMemoryRoot } from "../../src/memories";
 import {
+	browseLocalMemories,
 	buildLocalTaskSnapshot,
 	contextLocalMemory,
 	expandQueryTerms,
+	getLocalMemoryStatus,
+	listLocalMemoryRefs,
+	normalizeLocalMemoryRef,
 	readLocalMemoryArtifact,
+	reindexLocalMemoryFts,
 	saveLocalMemoryManual,
 	searchLocalMemories,
 } from "../../src/memories/local-query";
@@ -18,12 +23,25 @@ function tempAgentDir(): string {
 	return mkdtempSync(path.join(os.tmpdir(), "jwc-local-query-"));
 }
 
-function seedStage1(agentDir: string, cwd: string, threadId: string, rawMemory: string, generatedAt: number): void {
+function seedStage1(
+	agentDir: string,
+	cwd: string,
+	threadId: string,
+	rawMemory: string,
+	generatedAt: number,
+	rolloutPath?: string,
+): void {
 	const dbPath = getAgentDbPath(agentDir);
 	mkdirSync(path.dirname(dbPath), { recursive: true });
 	const db = openMemoryDb(dbPath);
 	upsertThreads(db, [
-		{ id: threadId, updatedAt: generatedAt, rolloutPath: `/tmp/${threadId}.jsonl`, cwd, sourceKind: "cli" },
+		{
+			id: threadId,
+			updatedAt: generatedAt,
+			rolloutPath: rolloutPath ?? `/tmp/${threadId}.jsonl`,
+			cwd,
+			sourceKind: "cli",
+		},
 	]);
 	db.prepare(
 		`INSERT INTO stage1_outputs (thread_id, source_updated_at, raw_memory, rollout_summary, rollout_slug, generated_at)
@@ -174,5 +192,109 @@ VALUES ('s1', 1, 'remembered fact', 'sum', NULL, 1)`,
 	it("returns null snapshot when nothing matches", () => {
 		const agentDir = tempAgentDir();
 		expect(buildLocalTaskSnapshot(agentDir, "/proj/a", "zzz-nothing", 4)).toBeNull();
+	});
+});
+
+describe("local-query browse + ref normalize (99.01 M7)", () => {
+	it("normalizes artifact filename aliases", () => {
+		expect(normalizeLocalMemoryRef("memory_summary.md")).toBe("summary");
+		expect(normalizeLocalMemoryRef("MEMORY.md")).toBe("memory");
+		expect(normalizeLocalMemoryRef("stage1:t1")).toBe("stage1:t1");
+	});
+
+	it("sorts search ties lexicographically by ref", () => {
+		const agentDir = tempAgentDir();
+		const cwd = "/proj/a";
+		const now = Math.floor(Date.now() / 1000);
+		seedStage1(agentDir, cwd, "z-thread", "alpha keyword tie", now);
+		seedStage1(agentDir, cwd, "a-thread", "alpha keyword tie", now);
+		const hits = searchLocalMemories(agentDir, cwd, "alpha keyword");
+		expect(hits.length).toBeGreaterThanOrEqual(2);
+		expect(hits[0].ref).toBe("stage1:a-thread");
+		expect(hits[1].ref).toBe("stage1:z-thread");
+	});
+
+	it("browse lists artifacts and stage1 rows newest first", () => {
+		const agentDir = tempAgentDir();
+		const cwd = "/proj/browse";
+		const memoryRoot = getMemoryRoot(agentDir, cwd);
+		mkdirSync(memoryRoot, { recursive: true });
+		writeFileSync(path.join(memoryRoot, "MEMORY.md"), "profile browse marker\n");
+		saveLocalMemoryManual(agentDir, cwd, "b.md", "shared browse marker");
+		const rows = browseLocalMemories(agentDir, cwd, 10);
+		expect(rows.some(r => r.ref === "memory")).toBe(true);
+		expect(rows.some(r => r.ref === "stage1:manual:b.md")).toBe(true);
+	});
+});
+
+describe("local-query artifact FTS + searchMode", () => {
+	it("indexes MEMORY.md and finds via FTS", () => {
+		const agentDir = tempAgentDir();
+		const cwd = "/proj/artifact-fts";
+		const memoryRoot = getMemoryRoot(agentDir, cwd);
+		mkdirSync(memoryRoot, { recursive: true });
+		writeFileSync(path.join(memoryRoot, "MEMORY.md"), "unique artifact zebra token\n");
+		reindexLocalMemoryFts(agentDir, memoryRoot);
+		const hits = searchLocalMemories(agentDir, cwd, "zebra", 8, { searchMode: "fts" });
+		expect(hits.some(h => h.ref === "memory")).toBe(true);
+	});
+
+	it("like mode skips FTS artifact index", () => {
+		const agentDir = tempAgentDir();
+		const cwd = "/proj/like-mode";
+		const memoryRoot = getMemoryRoot(agentDir, cwd);
+		mkdirSync(memoryRoot, { recursive: true });
+		writeFileSync(path.join(memoryRoot, "MEMORY.md"), "like-only marker phrase\n");
+		const ftsHits = searchLocalMemories(agentDir, cwd, "marker", 8, { searchMode: "fts" });
+		const likeHits = searchLocalMemories(agentDir, cwd, "marker", 8, { searchMode: "like" });
+		expect(likeHits.some(h => h.ref === "memory")).toBe(true);
+		expect(ftsHits.some(h => h.ref === "memory")).toBe(false);
+	});
+});
+
+describe("local-query list/status/reindex (99.01 M8)", () => {
+	it("listLocalMemoryRefs mirrors browse refs", () => {
+		const agentDir = tempAgentDir();
+		const cwd = "/proj/list";
+		saveLocalMemoryManual(agentDir, cwd, "x.md", "hello");
+		expect(listLocalMemoryRefs(agentDir, cwd, 10)).toContain("stage1:manual:x.md");
+	});
+
+	it("getLocalMemoryStatus reports counts", () => {
+		const agentDir = tempAgentDir();
+		const cwd = "/proj/st";
+		saveLocalMemoryManual(agentDir, cwd, "y.md", "status");
+		const st = getLocalMemoryStatus(agentDir, cwd);
+		expect(st.stage1Count).toBe(1);
+		expect(st.backend).toBe("local");
+	});
+
+	it("reindexLocalMemoryFts indexes manual rows", () => {
+		const agentDir = tempAgentDir();
+		const cwd = "/proj/reindex";
+		saveLocalMemoryManual(agentDir, cwd, "z.md", "zebra reindex token");
+		const memoryRoot = getMemoryRoot(agentDir, cwd);
+		const { indexedStage1 } = reindexLocalMemoryFts(agentDir, memoryRoot);
+		expect(indexedStage1).toBeGreaterThanOrEqual(1);
+		const hits = searchLocalMemories(agentDir, cwd, "zebra");
+		expect(hits.some(h => h.ref === "stage1:manual:z.md")).toBe(true);
+	});
+});
+
+describe("local-query search scope (99.01)", () => {
+	it("filterScopePaths keeps profile artifacts and filters episodes by rollout path", () => {
+		const agentDir = tempAgentDir();
+		const cwd = "/proj/scope";
+		const now = Math.floor(Date.now() / 1000);
+		seedStage1(agentDir, cwd, "in-src", "alpha scope token in src tree", now, "src/memories/foo.jsonl");
+		seedStage1(agentDir, cwd, "in-test", "alpha scope token in test tree", now, "test/out.jsonl");
+		const memoryRoot = getMemoryRoot(agentDir, cwd);
+		mkdirSync(memoryRoot, { recursive: true });
+		writeFileSync(path.join(memoryRoot, "MEMORY.md"), "alpha scope token in profile artifact\n");
+		const hits = searchLocalMemories(agentDir, cwd, "alpha scope", 20, { scopePaths: ["src/memories"] });
+		const refs = hits.map(h => h.ref);
+		expect(refs).toContain("memory");
+		expect(refs).toContain("stage1:in-src");
+		expect(refs).not.toContain("stage1:in-test");
 	});
 });
