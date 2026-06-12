@@ -1,0 +1,50 @@
+# 085 MOC — 워크플로 HUD: IPABCD 단계 띠 + 인터뷰 게이지 + goal 표시 (080 §B 구체화)
+
+> 상태: ⬜ 문서화 완료(085.1–085.4), 구현 미착수. 입력: 사용자 "030/040/050 산출물을 cli-jaw 비슷한 느낌으로
+> TUI에 — 85.n부터 상세 작성" (260612 11:34). 상위: [080_moc_tui.md](./080_moc_tui.md) §B 트랙의 구현 상세.
+> §A 비주얼 트랙(테마/마크)과 독립 — 본 밴드는 **세그먼트·HUD 데이터 표시**만, 색은 기존 시맨틱 토큰 사용.
+
+## 핵심 발견 (260612 11:40 정찰 — 구현 전제)
+
+**TUI에 이미 2층 표시 인프라가 있다. 신규 프레임워크 불필요 — 끼워 넣기만 하면 된다.**
+
+| 층 | 위치 | 동작 | 085 활용 |
+|----|------|------|----------|
+| **스킬 HUD 바** | `status-line.ts:817-839` 렌더 3줄 중 1줄째, `refreshSkillHudInBackground()`(`:438-458`, 1초 TTL) | `.gjc/state/skill-active-state.json`의 `WorkflowHudSummary`(chips/severity)를 읽어 표시. jaw-interview/ralplan/ultragoal/team 빌더가 `skill-state/workflow-hud.ts:87-178`에 **이미 존재** | 인터뷰·goal은 이 레일에 이미 탑승 — 085.2/085.3은 **보강** |
+| **상태줄 세그먼트** | `status-line/segments.ts:546-571` SEGMENTS 레지스트리(24종), `presets.ts:3-108`, `SegmentContext`(`types.ts:20-57`) | preset 배열로 좌/우 배치, 테마 시맨틱 컬러, elastic 폭 관리 | **pabcd 띠는 신규 세그먼트** — pabcd는 native(skill-active-state 밖)라 HUD 바에 안 뜸 |
+
+- pabcd 상태 읽기: `gjc-runtime/orchestrate-state.ts` `readPabcdState()`/`pabcdStatePath()` — lenient 스키마, 050 산출물
+- 갱신 메커니즘: fs.watch 선례 = git HEAD 워처(`status-line.ts:254-278`) / 폴링 선례 = 스킬 HUD 1초 TTL
+- 게이트: `scripts/verify-gjc-ui-redesign.ts:86-100` — 기본 preset의 세그먼트가 문서화된 ID인지 검사 → **신규 세그먼트 ID는 settings-schema의 `StatusLineSegmentId` union + 게이트 문서에 동시 등록 필수**
+- 모방 선례: `modeSegment`(`segments.ts:156-176`) — planMode/goalMode 조건부 표시, 아이콘+텍스트+색
+
+## 문서 구성 (085.n)
+
+| 문서 | 내용 | 의존 |
+|------|------|------|
+| [085.1](./085.1_plan_pabcd_strip.md) | **IPABCD 단계 띠** — `i·p·a·b·c·d` 진행 밴드 세그먼트 (cli-jaw 단계 표시 동형) | 050 (pabcd-state) |
+| [085.2](./085.2_plan_interview_gauge.md) | **인터뷰 4차원 게이지** — 기존 jaw-interview HUD chip 보강 (차원별 점수) | 040 (interview state) |
+| [085.3](./085.3_plan_goal_segment.md) | **goal 상태 표시** — mode 세그먼트 확장 + ultragoal HUD 정합 | 060 (선행 가능 — 현 엔진 기준) |
+| [085.4](./085.4_plan_hud_infra.md) | **공통 인프라** — SegmentContext 확장·pabcd 워처·preset/스키마/게이트 등록·테마 토큰·한글 폭 | 085.1–3의 선행 |
+
+구현 순서: **085.4(인프라) → 085.1(띠) → 085.3(goal) → 085.2(게이지 보강)**. 085.4+085.1이 M1.
+
+## [기본값] 결정 (080 §B에서 이월·구체화)
+
+- 표시 위치: **상태줄 세그먼트**(Option A) — 별도 오버레이/사이드 패널 안 함 (080 열린 질문 3을 [기본값]으로 닫음, 목업으로 뒤집기 가능)
+- pabcd 세그먼트는 **기본 preset에 포함하되 비활성 시 invisible** (state 파일 없으면 0폭 — modeSegment 선례)
+- 색은 기존 시맨틱 토큰만 사용(accent/success/warning/error/dim) — 신규 ThemeColor 추가 없음 → verify-gjc-ui-redesign 시맨틱 분리 검사 비저촉
+- 브랜드 게이트 없음 — HUD는 gjc에서도 무해(상태 파일이 없으면 안 보임). 단 pabcd 상태 파일은 jaw 전용 명령만 쓰므로 사실상 jwc 전용
+
+## 완료 기준
+
+- `jwc orchestrate i→…→d` 진행 중 상태줄에 단계 띠가 현재 단계 강조로 표시, `complete`/미활성 시 사라짐
+- 인터뷰 라운드 중 HUD 바에 4차원 약점 차원 표시
+- goal active 시 mode 세그먼트에 체크포인트 진행 표시
+- `bun run check:ts` + verify-gjc-ui-redesign + 신규 세그먼트 단위 테스트 green
+- 한글 환경 스모크 (폭 계산 — 띠는 ASCII/1폭 문자만 사용해 회피)
+
+## 열린 질문
+
+1. 띠 기호 셋: `I·P·A·B·C·D` 대문자 vs `i p a b c d` 소문자 vs 아이콘 — [기본값] 대문자+현재단계 강조 (085.1 §3)
+2. 게이트 상태(audit pass 대기 등)를 띠에 합칠지 chip으로 분리할지 — [기본값] 띠 옆 1-chip (085.1 §4)
