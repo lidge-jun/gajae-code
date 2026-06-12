@@ -24,6 +24,9 @@
 
 ### §A. 비주얼 리브랜딩 트랙 (워크플로 무관 — 분리 선행 가능)
 
+> 📐 구현 계획: [086_plan_jaw_visual_identity.md](./086_plan_jaw_visual_identity.md) — 260612 P 단계 문서화.
+> cli-jaw 웹 `variables.css` 디자인 DNA 기반 시안 3종(jaw-deep ⭐/shark-gray/abyss-bite) 제시, 선택 대기 (열린 질문 2 응답).
+
 1. **jaw 테마 신설**: `modes/theme/defaults/jaw-<이름>.json` — red-claw.json을 베이스로 jaw 팔레트
    (방향 미정 — 열린 질문 2). 시맨틱 컬러 무결성 유지 (gjc REBRANDING_PLAN 원칙 3: 브랜드색 ≠ error/warning/diff 색)
 2. **브랜드 조건부 기본 테마**: `APP_NAME !== "gjc"`일 때 autoDarkTheme 기본값을 jaw 테마로 —
