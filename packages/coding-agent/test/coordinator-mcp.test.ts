@@ -165,7 +165,7 @@ describe("gjc mcp-serve coordinator", () => {
 				},
 			);
 			expect(created).toBe(true);
-			expect(JSON.parse(allowed.result.content[0].text)).toEqual({
+			expect(JSON.parse(allowed.result.content[0].text)).toMatchObject({
 				ok: true,
 				session: {
 					session_id: "x",

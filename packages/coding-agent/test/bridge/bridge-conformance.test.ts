@@ -181,12 +181,12 @@ describe("bridge docs conformance (anti-drift)", () => {
 	it("docs/environment-variables.md documents the GJC_BRIDGE vars and scopes", async () => {
 		const doc = await readDoc("docs/environment-variables.md");
 		for (const variable of [
-			"GJC_BRIDGE_TOKEN",
-			"GJC_BRIDGE_TLS_CERT",
-			"GJC_BRIDGE_TLS_KEY",
-			"GJC_BRIDGE_HOST",
-			"GJC_BRIDGE_PORT",
-			"GJC_BRIDGE_SCOPES",
+			"JWC_BRIDGE_TOKEN",
+			"JWC_BRIDGE_TLS_CERT",
+			"JWC_BRIDGE_TLS_KEY",
+			"JWC_BRIDGE_HOST",
+			"JWC_BRIDGE_PORT",
+			"JWC_BRIDGE_SCOPES",
 		]) {
 			expect(doc).toContain(variable);
 		}

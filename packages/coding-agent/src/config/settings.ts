@@ -101,9 +101,11 @@ function setByPath(obj: RawSettings, segments: string[], value: unknown): void {
 }
 
 const PATH_SCOPED_ARRAY_SETTINGS = new Set<SettingPath>(["enabledModels", "disabledProviders"]);
+// Legacy flat "dark"/"light" map to the brand's current schema defaults
+// (fork default: abyss pair — 062.1 brand-default change).
 const LEGACY_THEME_NAME_REPLACEMENTS = {
-	dark: "red-claw",
-	light: "blue-crab",
+	dark: SETTINGS_SCHEMA["theme.dark"].default as string,
+	light: SETTINGS_SCHEMA["theme.light"].default as string,
 } as const;
 
 function isLegacyThemeName(name: string): name is keyof typeof LEGACY_THEME_NAME_REPLACEMENTS {
@@ -656,9 +658,9 @@ export class Settings {
 		if (typeof raw.theme === "string") {
 			const oldTheme = raw.theme;
 			const migratedTheme = this.#migrateLegacyBuiltInThemeName(oldTheme);
-			if (oldTheme === "dark" && migratedTheme === "red-claw") {
+			if (oldTheme === "dark" && migratedTheme === LEGACY_THEME_NAME_REPLACEMENTS.dark) {
 				raw.theme = { dark: migratedTheme };
-			} else if (oldTheme === "light" && migratedTheme === "blue-crab") {
+			} else if (oldTheme === "light" && migratedTheme === LEGACY_THEME_NAME_REPLACEMENTS.light) {
 				raw.theme = { light: migratedTheme };
 			} else {
 				const slot = this.#getThemeSlotForName(migratedTheme);

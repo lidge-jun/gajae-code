@@ -22,7 +22,7 @@ Most runtime lookups use `$env` from `@gajae-code/utils` (`packages/utils/src/en
 4. Config-root `.env` (`~/.gjc/.env`, respecting `JWC_CONFIG_DIR`) for keys not already set
 5. Home `.env` (`~/.env`) for keys not already set
 
-Additional rule inside each `.env` file: `JWC_*` keys are mirrored to `JWC_*` keys in that parsed file.
+Additional rule inside each `.env` file: `JWC_*` keys are mirrored onto their legacy `GJC_*` spellings at load time (062.1 safety net).
 
 ---
 

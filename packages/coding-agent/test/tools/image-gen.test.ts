@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it } from "bun:test";
+import { beforeEach, afterEach, describe, expect, it } from "bun:test";
 import * as fs from "node:fs/promises";
 import type { Model } from "@gajae-code/ai";
 import type { ModelRegistry } from "@gajae-code/coding-agent/config/model-registry";
@@ -250,6 +250,23 @@ describe("providers.image settings schema", () => {
 });
 
 describe("imageGenTool antigravity provider", () => {
+	// Isolate from developer-machine .env leakage: auto-detect falls through to
+	// Gemini/OpenRouter env keys after antigravity credentials are rejected.
+	const LEAK_KEYS = ["GEMINI_API_KEY", "GOOGLE_API_KEY", "OPENROUTER_API_KEY", "OPENAI_API_KEY"] as const;
+	const savedLeakEnv: Record<string, string | undefined> = {};
+	beforeEach(() => {
+		for (const key of LEAK_KEYS) {
+			savedLeakEnv[key] = Bun.env[key];
+			delete Bun.env[key];
+		}
+	});
+	afterEach(() => {
+		for (const key of LEAK_KEYS) {
+			if (savedLeakEnv[key] === undefined) delete Bun.env[key];
+			else Bun.env[key] = savedLeakEnv[key];
+		}
+	});
+
 	it("uses structured getOAuthAccess metadata (access token + projectId) for the request", async () => {
 		setPreferredImageProvider("antigravity");
 		let requestUrl: string | undefined;

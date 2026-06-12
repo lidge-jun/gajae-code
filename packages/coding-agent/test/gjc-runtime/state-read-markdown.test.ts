@@ -74,10 +74,10 @@ describe("gjc state read markdown", () => {
 		expect(state.current_phase).toBe("approval");
 	});
 
-	it("rejects unknown gjc state flags", async () => {
+	it("rejects unknown jwc state flags", async () => {
 		const root = await tempDir();
 		const result = await runNativeStateCommand(["read", "--mode", "jaw-interview", "--bogus"], root);
 		expect(result.status).toBe(2);
-		expect(result.stderr).toContain("unknown gjc state flag: --bogus");
+		expect(result.stderr).toContain("unknown jwc state flag: --bogus");
 	});
 });

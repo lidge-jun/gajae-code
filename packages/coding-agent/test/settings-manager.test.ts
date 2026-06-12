@@ -267,15 +267,15 @@ describe("Settings", () => {
 			await writeSettings({ theme: "dark" });
 
 			let settings = await Settings.init({ cwd: projectDir, agentDir });
-			expect(settings.get("theme.dark")).toBe("red-claw");
-			expect(settings.get("theme.light")).toBe("blue-crab");
+			expect(settings.get("theme.dark")).toBe("abyss-bite");
+			expect(settings.get("theme.light")).toBe("abyss-bite-light");
 
 			resetSettingsForTest();
 			await writeSettings({ theme: "light" });
 
 			settings = await Settings.init({ cwd: projectDir, agentDir });
-			expect(settings.get("theme.dark")).toBe("red-claw");
-			expect(settings.get("theme.light")).toBe("blue-crab");
+			expect(settings.get("theme.dark")).toBe("abyss-bite");
+			expect(settings.get("theme.light")).toBe("abyss-bite-light");
 		});
 
 		it("maps legacy nested built-in theme names to retained defaults", async () => {
@@ -283,8 +283,8 @@ describe("Settings", () => {
 
 			const settings = await Settings.init({ cwd: projectDir, agentDir });
 
-			expect(settings.get("theme.dark")).toBe("red-claw");
-			expect(settings.get("theme.light")).toBe("blue-crab");
+			expect(settings.get("theme.dark")).toBe("abyss-bite");
+			expect(settings.get("theme.light")).toBe("abyss-bite-light");
 		});
 
 		it("preserves custom dark and light theme names in nested settings", async () => {

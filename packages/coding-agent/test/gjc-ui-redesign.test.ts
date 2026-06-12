@@ -14,17 +14,17 @@ describe("GJC red-claw redesign defaults", () => {
 		vi.restoreAllMocks();
 	});
 
-	it("uses red-claw as the default dark theme and blue-crab as the default light theme", async () => {
+	it("uses abyss-bite as the fork-default dark theme and abyss-bite-light as the default light theme", async () => {
 		themeModule.onTerminalAppearanceChange("dark");
 		await themeModule.initTheme(false);
 
-		expect(SETTINGS_SCHEMA["theme.dark"].default).toBe("red-claw");
-		expect(SETTINGS_SCHEMA["theme.light"].default).toBe("blue-crab");
-		expect(themeModule.getCurrentThemeName()).toBe("red-claw");
+		expect(SETTINGS_SCHEMA["theme.dark"].default).toBe("abyss-bite");
+		expect(SETTINGS_SCHEMA["theme.light"].default).toBe("abyss-bite-light");
+		expect(themeModule.getCurrentThemeName()).toBe("abyss-bite");
 
 		themeModule.onTerminalAppearanceChange("light");
 		await themeModule.initTheme(false);
-		expect(themeModule.getCurrentThemeName()).toBe("blue-crab");
+		expect(themeModule.getCurrentThemeName()).toBe("abyss-bite-light");
 	});
 
 	it("keeps red-claw brand tokens separate from semantic warning/error/diff tokens", async () => {
@@ -51,9 +51,9 @@ describe("GJC red-claw redesign defaults", () => {
 		const themes = await themeModule.getAvailableThemes();
 
 		expect(themes).toEqual(["abyss-bite", "abyss-bite-light", "blue-crab", "red-claw"]);
-		// Without GJC_BRAND_NAME the schema defaults stay on the upstream gjc pair
-		expect(SETTINGS_SCHEMA["theme.dark"].default).toBe("red-claw");
-		expect(SETTINGS_SCHEMA["theme.light"].default).toBe("blue-crab");
+		// Fork default is the jaw brand (062.1) — schema defaults are the abyss pair
+		expect(SETTINGS_SCHEMA["theme.dark"].default).toBe("abyss-bite");
+		expect(SETTINGS_SCHEMA["theme.light"].default).toBe("abyss-bite-light");
 	});
 
 	it("keeps blue-crab coastal tokens separate from semantic warning/error/diff tokens", async () => {

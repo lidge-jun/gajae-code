@@ -226,29 +226,38 @@ describe("default GJC definitions", () => {
 
 	it("makes installed project workflow skills discoverable without installing project agent stubs", async () => {
 		await withTempHome(async home => {
-			const repoRoot = await makeTempRoot();
-			const projectGjcRoot = path.join(repoRoot, ".gjc");
-			await installDefaultGjcDefinitions({ targetRoot: projectGjcRoot });
+			// Engine brand opt-in: the fork-default jaw brand would substitute the
+			// real ~/.cli-jaw global skills root into this fixture-scoped check.
+			const savedBrand = process.env.GJC_BRAND_NAME;
+			process.env.GJC_BRAND_NAME = "gjc";
+			try {
+				const repoRoot = await makeTempRoot();
+				const projectGjcRoot = path.join(repoRoot, ".gjc");
+				await installDefaultGjcDefinitions({ targetRoot: projectGjcRoot });
 
-			const skills = await loadSkills({
-				cwd: repoRoot,
-				enabled: true,
-				enablePiProject: true,
-				enablePiUser: false,
-			});
-			const agents = await discoverAgents(repoRoot, home);
-			const expected = [...DEFAULT_GJC_DEFINITION_NAMES].sort();
+				const skills = await loadSkills({
+					cwd: repoRoot,
+					enabled: true,
+					enablePiProject: true,
+					enablePiUser: false,
+				});
+				const agents = await discoverAgents(repoRoot, home);
+				const expected = [...DEFAULT_GJC_DEFINITION_NAMES].sort();
 
-			expect(skills.skills.map(skill => skill.name).sort()).toEqual(expected);
-			expect(skills.skills.some(skill => skill.name === "auto-research-greenfield")).toBe(false);
-			expect(skills.skills.some(skill => skill.name === "auto-answer-uncertain")).toBe(false);
-			expect(
-				agents.agents
-					.filter(agent => agent.source === "project")
-					.map(agent => agent.name)
-					.sort(),
-			).toEqual([]);
-			expect(agents.projectAgentsDir).toBeNull();
+				expect(skills.skills.map(skill => skill.name).sort()).toEqual(expected);
+				expect(skills.skills.some(skill => skill.name === "auto-research-greenfield")).toBe(false);
+				expect(skills.skills.some(skill => skill.name === "auto-answer-uncertain")).toBe(false);
+				expect(
+					agents.agents
+						.filter(agent => agent.source === "project")
+						.map(agent => agent.name)
+						.sort(),
+				).toEqual([]);
+				expect(agents.projectAgentsDir).toBeNull();
+			} finally {
+				if (savedBrand === undefined) delete process.env.GJC_BRAND_NAME;
+				else process.env.GJC_BRAND_NAME = savedBrand;
+			}
 		});
 	});
 
