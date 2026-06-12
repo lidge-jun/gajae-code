@@ -1,6 +1,9 @@
 # 040 MOC — 워크플로 병합 ①: Interview
 
-> 상태: ⬜. 결정 근거: D3 [확정] 매핑 병합 (deep-interview ↔ jaw Interview).
+> 상태: ✅ (260612 10:00 완료 — 인터뷰 7라운드 + [041](./041_plan_jaw_interview_merge.md) 결정 14건 + [042](./042_diff_jaw_interview.md) diff 플랜 + B1~B5 구현).
+> 결정 근거: D3 [확정] 매핑 병합 (deep-interview ↔ jaw Interview).
+> 산출물: jaw-interview 스킬(rename+이중감사), structured-renderer, jwc.interview 설정, [043 스키마 계약](./043_contract_elicitation_schema.md).
+> 알려진 한계: ① 레거시 on-disk state 파일명(deep-interview-state.json)은 미조회 — 진행 중이던 구 인터뷰 세션 재개 불가(값 수준 normalize는 동작) ② /skill:deep-interview 직접 호출은 미지원(CLI alias·키워드 트리거는 호환) ③ 050 소비 e2e는 050 밴드 착수 시.
 
 ## 병합 소재 (코드 검증 완료, 04 로그 R4)
 

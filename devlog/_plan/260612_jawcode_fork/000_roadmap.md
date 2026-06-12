@@ -13,7 +13,7 @@
 | 010–019 | jwc 셸 + 표면 리네이밍 | ✅ 셸 완료(구 10). 잔여: bin `jwc` 정식화, 브랜딩(헬프/배너/에러 문구) jaw화, 문서 표면 `gjc`→`jwc`. `.gjc/`·`@gajae-code/*` 유지 (D4) | `jwc --help` 전 표면이 jaw 브랜딩, 업스트림 diff가 표면 파일에 국한 |
 | 020–029 | 프롬프팅 개편 | 시스템 프롬프트 jaw 아이덴티티(말투/언어 규칙/보스-직원 어휘 정합), prompt 모듈 구조 파악 후 jaw 프리셋 추가. cli-jaw 프롬프트 빌더와 어휘 통일 (M2 대비) | jwc 기동 시 jaw 시스템 프롬프트 적용, 스냅샷 테스트로 프리셋 고정 |
 | 030–039 | 스킬 디스커버리 3계층 | 임베디드 → 프로젝트 루트 → `~/.cli-jaw/skills` (글로벌 우선, D5). SKILL.md frontmatter 호환 검증(키워드/트리거), 충돌 해소 규칙 | jwc 세션에서 cli-jaw 스킬 1개가 글로벌 우선순위로 로드되는 e2e |
-| 040–049 | 워크플로 병합 ①: Interview | deep-interview + jaw I 장점 통합 (D3): 수학적 ambiguity 스코어 + topology gate + spec 핸드오프 ←→ 4차원 트래커 + negativity bias + known/unknown 누적. 단일 `jaw-interview` 스킬로 | 모호한 요청 → 게이트 통과까지 진행 거부 + 차원 점수 표시 + spec 파일 산출 |
+| 040–049 ✅ | 워크플로 병합 ①: Interview | deep-interview + jaw I 장점 통합 (D3): 수학적 ambiguity 스코어 + topology gate + spec 핸드오프 ←→ 4차원 트래커 + negativity bias + known/unknown 누적. 단일 `jaw-interview` 스킬로 | 모호한 요청 → 게이트 통과까지 진행 거부 + 차원 점수 표시 + spec 파일 산출 |
 | 050–059 | 워크플로 병합 ②: Plan + PABCD 커맨드 | ralplan(Planner/Architect/Critic 합의, pending-approval 아티팩트, receipt-only) + jaw P/A(분리 게이트, 사용자 승인). **PABCD 범용 진입 커맨드** — 어떤 디렉토리의 jwc에서도 I→P→A→B→C→D 풀사이클 | `jwc`에서 `/pabcd` 진입 → P 산출물 pending-approval → A 감사 → B 게이트 풀사이클 1회 통과 |
 | 060–069 | 워크플로 병합 ③: Goal | ultragoal ↔ jaw goal 시스템 (체크포인트/evidence/pause-audit) 매핑 통합 | goal set→checkpoint→done 사이클이 jwc 단독에서 동작 |
 | 070–079 | 메모리 통합 | jwc memory 폴더 규약 (위치/포맷/확장 포인트, D 미세결정 — 이 밴드 착수 시 확정). cli-jaw memory 포맷과 호환 지향 | memory save/search가 jwc 단독에서 동작 + 규약 문서 |

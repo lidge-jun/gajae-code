@@ -1,6 +1,6 @@
 # 042 — jaw-interview 병합 diff 플랜 (P 산출물)
 
-> 상태: 🟡 P 검토 대기. 입력: [041 결정 14건](./041_plan_jaw_interview_merge.md).
+> 상태: ✅ 구현 완료 (B1~B5, 커밋 eb4273c~6ae52ac). 입력: [041 결정 14건](./041_plan_jaw_interview_merge.md).
 > 조사: sonnet 서브에이전트 3기 병렬 (B1 rename 인벤토리 / B3 ask·렌더러 / B4 settings·명령), 260612 08:55.
 > 컨트랙트: AGENTS.md — 번들 워크플로 정확히 4종 유지, `bun check` 사용(tsc 금지), rebrand 게이트 4종 통과 필수.
 
