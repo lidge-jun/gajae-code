@@ -89,3 +89,4 @@ python/robogjc/.env
 .release-040-artifacts/
 devlog/_reference/002_proxy/
 devlog/_upstream_gjc/
+devlog/_upstream_omp/
