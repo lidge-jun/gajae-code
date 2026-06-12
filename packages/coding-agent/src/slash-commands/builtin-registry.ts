@@ -454,7 +454,12 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 		},
 		handleTui: (command, runtime) => {
 			const raw = command.args.trim().toLowerCase();
-			if (!raw || raw === "status") {
+			if (!raw) {
+				runtime.ctx.showEffortSelector();
+				runtime.ctx.editor.setText("");
+				return;
+			}
+			if (raw === "status") {
 				runtime.ctx.showStatus(
 					`Reasoning effort: ${runtime.ctx.session.thinkingLevel ?? "off"} (off|minimal|low|medium|high|xhigh|max)`,
 				);
