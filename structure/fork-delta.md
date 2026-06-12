@@ -28,7 +28,7 @@
 
 | 경로 | 종류 | 밴드 | devlog | merge 지침 | 보존 경계 |
 |---|---|---|---|---|---|
-| `packages/coding-agent/src/prompts/system/system-prompt.md` | HARD-EDIT | 085.5-M2 | 085.5_plan_prompt_rebrand.md | CONFLICT-EXPECTED | `.jwc/`·`defaults/gjc` 리터럴 |
+| `packages/coding-agent/src/prompts/system/system-prompt.md` | HARD-EDIT | 085.5-M2 + 99.03-M1 | 085.5_plan_prompt_rebrand.md · 99.03.01_impl_workflow_surface.md | CONFLICT-EXPECTED | `.jwc/`·`defaults/gjc` 리터럴 + native-workflow orchestrate 블록 |
 | `packages/coding-agent/src/prompts/tools/{bash,skill,recall,reflect,retain}.md` | HARD-EDIT | 085.5-M2 | 동일 | CONFLICT-EXPECTED | — |
 | `packages/coding-agent/src/prompts/agents/{planner,architect,critic}.md` | HARD-EDIT+INVERTED-GUARD | 085.5-M1·M3 | 동일 | CONFLICT-EXPECTED | frontmatter는 jwc 접두 |
 | `packages/coding-agent/src/prompts/goals/goal-{continuation,mode-active}.md` | HARD-EDIT | 060-061 | 061_design_goal_merge.md | CONFLICT-EXPECTED | — |

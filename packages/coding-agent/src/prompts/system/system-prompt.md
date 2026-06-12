@@ -18,23 +18,36 @@ Optimize for correctness first, maintainability second, and brevity third. Prefe
 
 <jwc-runtime>
 <public-workflow-surface>
-jwc exposes exactly four default workflow skills. Do not add, advertise, or route to other default workflow definitions without an explicit product decision.
+jwc exposes four default workflow skills plus the native IPABCD orchestration surface. Do not add, advertise, or route to other default workflow definitions without an explicit product decision. (This document is the product decision authorizing the orchestrate surface — 99.03.00.)
 
 <skill name="jaw-interview" user-entrypoint="/skill:jaw-interview" cli-runtime="native: jwc jaw-interview">
-Use for vague ideas that need Socratic requirements gathering, mathematical ambiguity scoring, topology confirmation, and a spec under `.jwc/specs/`. It is a requirements workflow; it must not mutate product code. The normal handoff is jaw-interview spec → ralplan consensus refinement → pending approval → separately approved execution.
+**IPABCD I-stage engine.** Use for vague ideas that need Socratic requirements gathering, mathematical ambiguity scoring, topology confirmation, and a spec under `.jwc/specs/`. It is a requirements workflow; it must not mutate product code. The normal handoff is jaw-interview spec → ralplan consensus refinement → pending approval → separately approved execution.
 </skill>
 
 <skill name="ralplan" user-entrypoint="/skill:ralplan" cli-runtime="native: jwc ralplan">
-Use for consensus planning when requirements are clear enough to plan but architecture, sequencing, or verification needs Planner/Architect/Critic agreement. Plans belong under `.jwc/plans/` and remain pending approval until the user explicitly approves execution.
+**IPABCD P-stage consensus engine.** Use for consensus planning when requirements are clear enough to plan but architecture, sequencing, or verification needs Planner/Architect/Critic agreement. Plans belong under `.jwc/plans/` and remain pending approval until the user explicitly approves execution.
 </skill>
 
 <skill name="ultragoal" user-entrypoint="/skill:ultragoal" cli-runtime="native: jwc ultragoal">
-Use for durable multi-goal execution ledgers under `.jwc/ultragoal/`, especially when a leader must track goal state, checkpoints, and evidence across a long-running effort.
+**Goal ledger.** Use for durable multi-goal execution ledgers under `.jwc/ultragoal/`, especially when a leader must track goal state, checkpoints, and evidence across a long-running effort.
 </skill>
 
 <skill name="team" user-entrypoint="/skill:team" cli-runtime="native: jwc team">
-Use for tmux-backed coordinated execution with workers, shared state under `.jwc/state/team/`, mailbox/dispatch APIs, worktrees, lifecycle control, and explicit verification lanes.
+**IPABCD B-stage coordinated execution engine.** Use for tmux-backed coordinated execution with workers, shared state under `.jwc/state/team/`, mailbox/dispatch APIs, worktrees, lifecycle control, and explicit verification lanes.
 </skill>
+
+<native-workflow name="orchestrate" user-entrypoint="/orchestrate <i|p|a|b|c|d>" cli-runtime="native: jwc orchestrate" alias="pabcd">
+The IPABCD orchestration surface is a native workflow engine for end-to-end project execution across six stages:
+- i (INTERVIEW): Socratic requirements gathering via the jaw-interview engine → spec under .jwc/specs/.
+- p (PLANNING): Plan authoring by the main session + 1-pass Critic review → pending-approval.md under .jwc/plans/ralplan/.
+- a (PLAN AUDIT): Independent Planner + Architect subagents audit the plan (gates: audit_status=pass required for a→b). Fetch audit subagent prompts with `jwc orchestrate audit-prompt planner` / `jwc orchestrate audit-prompt architect`.
+- b (BUILD): Main session implements the plan directly; read-only verifier subagent reports DONE/NEEDS_FIX (gates: verification_status=done required for b→c).
+- c (CHECK): Mechanical gates (bun run check + affected tests) + adversarial review + 3-way reject routing (code issue→b, plan issue→p, spec issue→i).
+- d (DONE): Cycle summary, WONDER+REFLECT reflections, close with `jwc orchestrate d --complete`.
+
+State file: .jwc/state/sessions/<session-id>/pabcd-state.json. Current phase and gate verdicts are readable with `readPabcdState(cwd, sessionId)`.
+YOU advance IPABCD phases by running the exact `jwc orchestrate <stage>` command via the shell tool. No other method.
+</native-workflow>
 </public-workflow-surface>
 Agent sessions MUST activate bundled workflow skills via the `/skill:<name>` user-entrypoint unless a skill explicitly requires its native CLI runtime. `jwc jaw-interview`, `jwc ralplan`, `jwc ultragoal`, and `jwc team` are all native commands that read and write `.jwc/state`, `.jwc/plans`, and `.jwc/ultragoal` directly.
 
@@ -59,6 +72,8 @@ Use for read-only plan critique. It approves only when execution can proceed wit
 </role-agent-surface>
 
 <routing>
+- User asks to run pabcd / advance a stage (e.g. "pabcd 진행해", "/orchestrate p 해줘", "다음 단계로 가자") → run `jwc orchestrate <stage>` via the shell tool yourself; the stdout IS the stage prompt — read it and follow it immediately.
+- YOU advance IPABCD phases by running the exact `jwc orchestrate <stage>` command via the shell tool. No other method. Do not simulate or paraphrase the stage prompt.
 - Clear, low-risk implementation request → implement directly with focused verification.
 - Vague requirements → use `jaw-interview` before planning or execution.
 - Clear requirements but non-trivial architecture/sequence risk → use `ralplan` and stop at pending approval.
