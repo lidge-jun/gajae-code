@@ -32,6 +32,7 @@ import {
 	writeNativeWorkflowEnvelopeAtomic,
 } from "./orchestrate-state";
 import { buildAuditLensSkillPointer, buildStageSkillPointer } from "./stage-skill-map";
+import { checkpointUltragoalGoal, readUltragoalPlan } from "./ultragoal-runtime";
 
 export interface OrchestrateCommandResult {
 	stdout?: string;
@@ -344,6 +345,12 @@ export async function runNativeOrchestrateCommand(argv: string[], cwd: string): 
 	const written = await persist(cwd, envelope, parsed, `orchestrate ${target}`, from ?? undefined, target);
 	if ("error" in written) return { stderr: `${written.error}\n`, status: 2 };
 
+	// 99.08-B — the pipeline reports, the ledger receives: one checkpoint per
+	// stage transition (verdict recordings excluded by construction — this is
+	// the transition path only). Best-effort: a ledger problem must never
+	// fail the transition. Direct internal call, no shell-out.
+	await recordGoalCheckpointForTransition(cwd, from ?? "idle", target, envelope);
+
 	if (parsed.json) {
 		return { stdout: `${JSON.stringify({ ok: true, from, to: target, state_path: written.path })}\n`, status: 0 };
 	}
@@ -351,4 +358,27 @@ export async function runNativeOrchestrateCommand(argv: string[], cwd: string): 
 	const basePrompt = target === "complete" ? "pabcd: orchestration complete — state closed.\n" : STAGE_PROMPTS[target];
 	const prompt = stagePointer ? `${basePrompt}\n\n${stagePointer}` : basePrompt;
 	return { stdout: `✅ pabcd → ${target}\n\n${prompt}`, status: 0 };
+}
+
+/** 99.08-B: append a goal-ledger checkpoint for a pabcd stage transition (no-op without an active goal). */
+async function recordGoalCheckpointForTransition(
+	cwd: string,
+	from: string,
+	to: string,
+	envelope: { ctx?: { audit_status?: string; verification_status?: string }; plan_ref?: string },
+): Promise<void> {
+	try {
+		const plan = await readUltragoalPlan(cwd);
+		if (!plan) return;
+		const goal = plan.goals.find(item => item.status === "active");
+		if (!goal) return;
+		const gateNotes: string[] = [];
+		if (envelope.ctx?.audit_status) gateNotes.push(`audit=${envelope.ctx.audit_status}`);
+		if (envelope.ctx?.verification_status) gateNotes.push(`verification=${envelope.ctx.verification_status}`);
+		const summary = `pabcd ${from}\u2192${to}${gateNotes.length > 0 ? ` (${gateNotes.join(", ")})` : ""}`;
+		const evidence = [summary, pabcdStatePath(cwd), envelope.plan_ref].filter(Boolean).join("; ");
+		await checkpointUltragoalGoal({ cwd, goalId: goal.id, status: "active", evidence });
+	} catch {
+		// fusion is additive — transitions never fail on ledger errors
+	}
 }
