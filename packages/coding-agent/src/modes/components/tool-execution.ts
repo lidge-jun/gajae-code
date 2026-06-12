@@ -167,6 +167,8 @@ export class ToolExecutionComponent extends Container {
 	#argsComplete = false;
 	// One-line summary mode (083.1) — set when a newer tool starts
 	#minimized = false;
+	// Focus marker for the tool-focus mode (083.1 pattern B)
+	#focused = false;
 	#renderState: {
 		spinnerFrame?: number;
 		expanded: boolean;
@@ -414,6 +416,25 @@ export class ToolExecutionComponent extends Container {
 		return this.#minimized;
 	}
 
+	/** Focus marker for tool-focus mode (083.1 pattern B). Render-only — no layout change. */
+	setFocused(focused: boolean): void {
+		this.#focused = focused;
+	}
+
+	/** Individual expand state (read by tool-focus mode for toggling). */
+	get expanded(): boolean {
+		return this.#expanded;
+	}
+
+	/**
+	 * Replace the leading separator blank line with an accent focus marker.
+	 * Same line count, so toggling focus never reflows the chat.
+	 */
+	#applyFocusMarker(lines: string[]): string[] {
+		if (!this.#focused || lines.length === 0 || lines[0] !== "") return lines;
+		return [theme.fg("accent", " ❯"), ...lines.slice(1)];
+	}
+
 	override render(width: number): string[] {
 		if (this.#minimized && !this.#expanded) {
 			// Children still render (cheap — they cache); we need their height for
@@ -440,9 +461,9 @@ export class ToolExecutionComponent extends Container {
 				theme,
 			);
 			// Keep the leading blank line (block separation, 083.2) + pad like Box paddingX=1.
-			return ["", ` ${truncateToWidth(line, Math.max(1, width - 1))}`];
+			return this.#applyFocusMarker(["", ` ${truncateToWidth(line, Math.max(1, width - 1))}`]);
 		}
-		return super.render(width);
+		return this.#applyFocusMarker(super.render(width));
 	}
 
 	setShowImages(show: boolean): void {

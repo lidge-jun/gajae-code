@@ -48,6 +48,18 @@ describe("ToolExecutionComponent minimize", () => {
 		expect(tool.render(80).length).toBe(2);
 	});
 
+	it("focus marker replaces the separator line without changing height", () => {
+		const tool = makeTool("ls", "out");
+		tool.setMinimized(true);
+		const before = strip(tool.render(80));
+		tool.setFocused(true);
+		const after = strip(tool.render(80));
+		expect(after.length).toBe(before.length);
+		expect(after[0]).toContain("❯");
+		tool.setFocused(false);
+		expect(strip(tool.render(80))[0]).toBe("");
+	});
+
 	it("keeps the error icon and first error line when minimized", () => {
 		const tool = makeTool("false", "command failed: exit 1\ndetails follow", true);
 		tool.setMinimized(true);
