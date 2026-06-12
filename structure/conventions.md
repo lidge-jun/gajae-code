@@ -8,7 +8,7 @@
   가능한 한 새 패키지(`packages/jaw-*`) 또는 새 모듈 파일로
 - ⚠️ 업스트림 파일 수정: 해당 devlog 플랜에 경로·사유를 기록한 뒤에만
 - ❌ `AGENTS.md` 수정 금지 — 업스트림 운영 계약(워크플로 스킬 4종, 롤 에이전트 4종,
-  `.gjc/` 경로 계약)이며 리베이스 충돌 1순위. jawcode 컨텍스트는 `structure/`에 둔다
+  `.jwc/` 경로 계약 (upstream AGENTS.md는 legacy `.gjc/` 표기))이며 리베이스 충돌 1순위. jawcode 컨텍스트는 `structure/`에 둔다
 
 ### 커밋 트레일러 규약 (fork-delta 동기 — 067.1 §3.1)
 
@@ -39,7 +39,8 @@ Fork-Delta: <NEW|HARD-EDIT|REMOVED|INVERTED-GUARD|SOFT-EDIT> <저장소상대경
 | remote | `https://github.com/Yeachan-Heo/gajae-code` |
 | git 추적 | **gitignored** — jawcode 커밋에 upstream 트리를 넣지 않음 |
 | 용도 | file:line 근거, `diff -u` 대조, upstream-only 버그 재현 (081 등) |
-| 대조 문서 | `har_struct/gjc_origin/` (클론 @ HEAD) ↔ `har_struct/jwc_patched/` (worktree) |
+| 대조 문서 | `struct_har/gjc_origin/` (클론 @ HEAD) ↔ `struct_har/jwc_patched/` (worktree) |
+| omp 참조 클론 | `devlog/_upstream_omp/` — [struct_har/omp_origin/](../struct_har/omp_origin/README.md) (can1357/oh-my-pi, gitignored) |
 
 **최초 클론**
 
@@ -51,7 +52,7 @@ git clone https://github.com/Yeachan-Heo/gajae-code devlog/_upstream_gjc
 
 ```bash
 git -C devlog/_upstream_gjc fetch origin
-git -C devlog/_upstream_gjc log -1 --oneline    # HEAD를 devlog·har_struct에 기록
+git -C devlog/_upstream_gjc log -1 --oneline    # HEAD를 devlog·struct_har에 기록
 git fetch upstream && git rebase upstream/main    # worktree — 변경 정리 후
 ```
 
@@ -60,7 +61,8 @@ git fetch upstream && git rebase upstream/main    # worktree — 변경 정리 �
 - upstream baseline: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_upstream_gjc/<repo-relative-path>:<line>`
 - fork patched: `/Users/jun/Developer/new/700_projects/jawcode/<path>:<line>`
 
-클론 HEAD 갱신 후: `har_struct/gjc_origin/**/02_code_facts.md` path 인벤토리, `har_struct/README.md` 기준선, 필요 시 `structure/gitstructure.md` HEAD 표를 맞춘다.
+클론 HEAD 갱신 후: `struct_har/gjc_origin/**/02_code_facts.md`, `struct_har/README.md`, `structure/gitstructure.md`; omp fetch 시 `struct_har/omp_origin/**` 동기화.
+`bun struct_har/_scripts/struct-har-regenerate.ts` (+ architecture, overviews)로 밴드 스냅샷 일괄 갱신 가능 (2026-06-13).
 
 ## 3. 코드 컨벤션
 

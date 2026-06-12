@@ -1,19 +1,19 @@
 # Session / Storage
 
-> 현재 jwc/GJC storage는 `~/.gjc/agent` 중심이다. D6에 따라 TUI와 cli-jaw Web 세션은 공유하지 않고, 공유 대상은 스킬과 OAuth다.
+> 현재 jwc storage는 `~/.jwc/agent` 중심이다. D6에 따라 TUI와 cli-jaw Web 세션은 공유하지 않고, 공유 대상은 스킬과 OAuth다.
 
 ## 경로 소스
 
 | 함수/상수 | 경로 | 의미 | 근거 |
 |---|---|---|---|
-| `CONFIG_DIR_NAME` | `.gjc` | config root 기본 이름. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:22` |
-| `getConfigDirName()` | `GJC_CONFIG_DIR` 또는 `PI_CONFIG_DIR` 또는 `.gjc` | env override 가능. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:92` |
-| `getAgentDir()` | `~/.gjc/agent` | agent config dir. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:216` |
-| `getProjectAgentDir(cwd)` | `<cwd>/.gjc` | project-local runtime/config root. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:221` |
-| `getAgentDbPath(agentDir?)` | `~/.gjc/agent/agent.db` | settings/auth/model usage SQLite. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:380` |
-| `getHistoryDbPath(agentDir?)` | `~/.gjc/agent/history.db` | prompt history SQLite. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:385` |
-| `getSessionsDir(agentDir?)` | `~/.gjc/agent/sessions` | session files root. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:395` |
-| `getMemoriesDir(agentDir?)` | `~/.gjc/agent/memories` state dir | memory artifacts root. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:430` |
+| `CONFIG_DIR_NAME` | `.jwc` | config root 기본 이름. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:22` |
+| `getConfigDirName()` | `JWC_CONFIG_DIR` 또는 `GJC_CONFIG_DIR` 또는 `PI_CONFIG_DIR` 또는 `.jwc` | env override 가능. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:92` |
+| `getAgentDir()` | `~/.jwc/agent` | agent config dir. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:216` |
+| `getProjectAgentDir(cwd)` | `<cwd>/.jwc` | project-local runtime/config root. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:221` |
+| `getAgentDbPath(agentDir?)` | `~/.jwc/agent/agent.db` | settings/auth/model usage SQLite. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:380` |
+| `getHistoryDbPath(agentDir?)` | `~/.jwc/agent/history.db` | prompt history SQLite. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:385` |
+| `getSessionsDir(agentDir?)` | `~/.jwc/agent/sessions` | session files root. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:395` |
+| `getMemoriesDir(agentDir?)` | `~/.jwc/agent/memories` state dir | memory artifacts root. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:430` |
 
 ## `agent-storage.ts` (`agent.db`)
 
@@ -72,6 +72,6 @@
 
 | 결정 | 현재 코드 상태 | M2 판단 |
 |---|---|---|
-| TUI/Web 세션 비공유 | GJC has own sessions/history under `~/.gjc/agent`; D6은 cli-jaw Web 세션 정본을 jaw.db로 둔다. | session adapter는 search federation만 후순위로 붙인다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/05_interview_conclusions.md:15`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/05_interview_conclusions.md:18` |
+| TUI/Web 세션 비공유 | jwc has own sessions/history under `~/.jwc/agent`; D6은 cli-jaw Web 세션 정본을 jaw.db로 둔다. | session adapter는 search federation만 후순위로 붙인다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/05_interview_conclusions.md:15`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/05_interview_conclusions.md:18` |
 | OAuth 공유 | `AuthStorage` 주입이 SDK에 있다. | local token seeding bridge는 `discoverAuthStorage()` 또는 host-created `AuthStorage`로 들어간다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:225`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:409` |
-| memory 통합 | current memory root는 `~/.gjc/agent/memories/<encoded-cwd>`. | 070 밴드에서 jwc memory 폴더 규약을 확정한다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:1111`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/000_roadmap.md:19` |
+| memory 통합 | current memory root는 `~/.jwc/agent/memories/<encoded-cwd>`. | 070 밴드에서 jwc memory 폴더 규약을 확정한다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:1111`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/000_roadmap.md:19` |

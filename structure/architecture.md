@@ -1,7 +1,7 @@
 # Jawcode 아키텍처 (현재 형태)
 
-> 2026-06-12 기준. gajae-code 0.4.4 fork, HEAD `2654e6c`.
-> 미래 희망이 아닌 **현재 코드의 형태**를 기록한다. 로드맵은 devlog 참조.
+> 2026-06-13 기준. gajae-code 0.4.4 fork, worktree HEAD `81bcea96`.
+> **현재 코드 형태** 기록. 로드맵·밴드: `devlog/_plan/260612_jawcode_fork/`. 계보: [upstream_lineage.md](./upstream_lineage.md).
 
 ## 1. 정체
 
@@ -24,8 +24,7 @@ packages/
   stats/           @gajae-code/stats       — 사용량/통계
   natives/         @gajae-code/natives     — Rust napi 바인딩
   bridge-client/   @gajae-code/bridge-client — 원격 브리지
-  gajae-code/      gajae-code              — npm 설치 래퍼 (bin: gjc)
-  jwc/             jwc                     — jaw 표면 래퍼 (bin: jwc, export: ./sdk)
+  jwc/             jwc                     — jaw 표면 (bin: jwc, export: ./sdk)
 ```
 
 전체 package/crate 표는 [packages_overview.md](./packages_overview.md)가 정본이다.
@@ -80,7 +79,7 @@ packages/
 ### 3.5 세션/상태
 
 - `src/session/` — 세션 영속화 (agent db)
-- `.gjc/` — 런타임 상태, 플랜, 스펙, 원장 (업스트림 계약상 고정 경로)
+- `.jwc/` — 런타임 상태, 플랜, 스펙, 원장 (jwc 런타임 표준 경로)
 
 세부 storage 표는 [session_storage.md](./session_storage.md)가 정본이다.
 
@@ -98,8 +97,8 @@ packages/
 
 1. **호스팅 방식**: Node 포팅(`Bun.*` 치환) vs cli-jaw를 Bun으로 vs Bun 사이드카(rpc 모드).
    `Bun.*` 사용처: ai 계층 ~20지점, agent 4파일, tui 7파일 (tui는 TUI 바이너리에만 필요).
-2. **스킬 단일화**: cli-jaw 전역 스킬 vs gjc `.gjc` 디스커버리 — 어느 쪽으로 수렴할지.
-3. **세션 소유권**: jaw.db vs gjc agent db.
+2. **스킬 단일화**: cli-jaw 전역 스킬 vs legacy gajae-code `.jwc` 디스커버리 — 어느 쪽으로 수렴할지.
+3. **세션 소유권**: jaw.db vs jwc agent db.
 
 ## 6. M1/M2 로드맵 연결
 

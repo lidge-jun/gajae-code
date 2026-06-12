@@ -34,8 +34,7 @@ sdk.ts:1570 buildDeveloperInstructions
 ```
 
 - 리프레시 시점: 세션 부팅 풀 리빌드 + `refreshBaseSystemPrompt()` 호출처(startup 완료 후, `/memory clear`, `/memory enqueue`).
-- **검색 함수는 코드베이스 전체에 부재** — FTS 없음, LIKE 래퍼 없음. 읽기 주입은 consolidated summary 1파일만.
-  "Task Snapshot 상위 4건 주입"은 99.01 신규(M6·M7).
+- **검색/조회**: `memories/local-query.ts` + `memory-fts.ts` (FTS5/LIKE, synonym expansion) — `jwc memory *`, per-turn Task Snapshot (`buildLocalTaskSnapshot`). 밴드 **99.01** 마감·테스트·cli-jaw BM25/RRF 후속.
 
 ## 99.01 접합점 (신규 코드 vs 재사용)
 

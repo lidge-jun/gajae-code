@@ -28,7 +28,7 @@
 
 | 경로 | 종류 | 밴드 | devlog | merge 지침 | 보존 경계 |
 |---|---|---|---|---|---|
-| `packages/coding-agent/src/prompts/system/system-prompt.md` | HARD-EDIT | 085.5-M2 | 085.5_plan_prompt_rebrand.md | CONFLICT-EXPECTED | `.gjc/`·`defaults/gjc` 리터럴 |
+| `packages/coding-agent/src/prompts/system/system-prompt.md` | HARD-EDIT | 085.5-M2 | 085.5_plan_prompt_rebrand.md | CONFLICT-EXPECTED | `.jwc/`·`defaults/gjc` 리터럴 |
 | `packages/coding-agent/src/prompts/tools/{bash,skill,recall,reflect,retain}.md` | HARD-EDIT | 085.5-M2 | 동일 | CONFLICT-EXPECTED | — |
 | `packages/coding-agent/src/prompts/agents/{planner,architect,critic}.md` | HARD-EDIT+INVERTED-GUARD | 085.5-M1·M3 | 동일 | CONFLICT-EXPECTED | frontmatter는 jwc 접두 |
 | `packages/coding-agent/src/prompts/goals/goal-{continuation,mode-active}.md` | HARD-EDIT | 060-061 | 061_design_goal_merge.md | CONFLICT-EXPECTED | — |
@@ -38,7 +38,7 @@
 
 | 경로 | 종류 | 밴드 | merge 지침 | 보존 경계 |
 |---|---|---|---|---|
-| `…/defaults/gjc/skills/{jaw-interview,ralplan,team,ultragoal}/SKILL.md` | HARD-EDIT(+INVERTED-GUARD) | 085.5-M4, C13 | CONFLICT-EXPECTED | `GJC_TEAM_*` env·`.gjc/` 경로. jaw-interview는 설정 키 `jwc.interview.*` (c7c748ec) |
+| `…/defaults/gjc/skills/{jaw-interview,ralplan,team,ultragoal}/SKILL.md` | HARD-EDIT(+INVERTED-GUARD) | 085.5-M4, C13 | CONFLICT-EXPECTED | `GJC_TEAM_*` env·`.jwc/` 경로. jaw-interview는 설정 키 `jwc.interview.*` (c7c748ec) |
 | 부속 md (auto-answer-uncertain 등) | HARD-EDIT | 042/085.5 | MANUAL-REVIEW | — |
 
 ### 신규 런타임 (gjc-runtime/ 내 포크 전용) — NEW
@@ -94,7 +94,7 @@
 
 ### 포크 전용 디렉터리 (전체 NEW — 엔트리 불요)
 
-`structure/`, `devlog/`, `har_struct/`, `packages/jwc/`, `prompts/jaw/`, `prompts/goals/`(HARD-EDIT 2종 제외).
+`structure/`, `devlog/`, `struct_har/`, `packages/jwc/`, `prompts/jaw/`, `prompts/goals/`(HARD-EDIT 2종 제외).
 
 
 ### 풀 jwc 포팅 (P2~P12, 260612 16:4x~18:0x — goal 3f6989ac)
@@ -119,6 +119,9 @@
 | `packages/coding-agent/src/migrate-config-dir-startup.ts` | NEW | 061.1-M4 (P10 배선) | N/A | cli.ts 최우선 side-effect import — 로거 선행 생성 회피, 워크스페이스 import 금지 |
 | `packages/coding-agent/src/cli.ts` | HARD-EDIT | 061.1-M4 (P10 배선) | MANUAL-REVIEW | 1번째 import = migrate-config-dir-startup (순서 불변 계약) |
 | `scripts/verify-g002-gates.ts` | HARD-EDIT | 069.1 P9 (라운드-2 픽스업) | AUTO | bin 키 이행기 허용형 (jwc ?? gjc) |
+| `packages/tui/src/components/viewport-fill.ts` | NEW | 083.7 (컴포저 하단 고정) | N/A | 센티널 스페이서 — tui 코어는 센티널 부재 시 no-op (diff-0 보존) |
+| `packages/tui/src/tui.ts` | HARD-EDIT | 083.7 | MANUAL-REVIEW | `#expandViewportFill` 1메서드 + #doRender 호출 1줄 (오버레이 합성 이전 고정 계약) |
+| `packages/coding-agent/src/modes/interactive-mode.ts` | HARD-EDIT | 083.7 | MANUAL-REVIEW | chatContainer 직후 ViewportFill 마운트 + 브랜드 기본(jaw=on/gjc=off)·`tui.composerPin`·`PI_NO_COMPOSER_PIN` 해석 |
 
 ## 리베이스/체리픽 절차 (요약 — 상세: 067.1 §5)
 

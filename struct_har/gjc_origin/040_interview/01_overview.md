@@ -1,0 +1,18 @@
+# 040_interview — 01 overview (gjc_origin)
+
+> upstream `devlog/_upstream_gjc/` @ `67427c6`  
+> MOC: [`040_moc_interview_merge.md`](../../../devlog/_plan/260612_jawcode_fork/040_moc_interview_merge.md)
+
+## Interview 병합 (jaw-interview)
+
+| 문서 | 내용 |
+|---|---|
+| [02_code_facts.md](./02_code_facts.md) | 경로 앵커·fork-delta |
+| [02_logic_changes.md](./02_logic_changes.md) | **동작·런타임 변경** (git 히스토리 기반) |
+| [03_devlog_refs.md](./03_devlog_refs.md) | 플랜 링크 |
+
+횡단 정본: [structure/fork_logic_changelog.md](../../../structure/fork_logic_changelog.md)
+
+## 부록
+
+- struct_har · 밴드 `040_interview` · `gjc_origin` · 갱신 2026-06-13
