@@ -20,7 +20,7 @@
 - receipt.owner `"gjc-runtime"`/`"gjc-state-cli"`/`"gjc-hook"` → **절대 변경 금지** (퍼시스트 계약)
 - `ENGINE_NAME = "gjc"`(`packages/utils/src/dirs.ts:20`) → 보존 (065.1-H; XDG 경로는 061.1 Q2)
 - `@gajae-code/*` 내부 import 스코프 → 보존 (063.1 전략 B)
-- `.gjc/` 상태 경로 → 현행 보존, **060.1 Phase β(D-1a/b 승인) 시 `.jwc` 전환 예정**
+- `.gjc/` 상태 경로 → **`.jwc` 전환 완료 (260612 Phase β 본 적용, 0b603b05+d34097b8)** — legacy는 migrate-config-dir 원타임 rename + sentinel. 예외: migrate-config-dir.*·beta-jwc-sweep.ts는 ".gjc" 리터럴 의도 보존
 
 ## 델타 인덱스 (260612 C1~C13 기준)
 
@@ -115,7 +115,10 @@
 | `packages/jwc/package.json`·`packages/jwc/src/cli-entry.ts` | HARD-EDIT/NEW | 063.1 (P12, D-3) | MANUAL-REVIEW | 번들 퍼블리시 독립화 |
 | `scripts/ci-release-publish.ts` | HARD-EDIT | 063.1 | MANUAL-REVIEW | preBuild 선행 + jwc bundle |
 | `packages/coding-agent/src/migrate-config-dir.ts` | NEW | 061.1-M4 (β 키트) | N/A | .gjc→.jwc 원타임 마이그레이터 (".gjc" 리터럴 보존 — 스윕 제외 파일) |
-| `scripts/beta-jwc-sweep.ts` | NEW | 069.1 P9~P11 (β 키트) | N/A | 경계 안전 스윕 + 픽스업 일체형 (worktree 검증) |
+| `scripts/beta-jwc-sweep.ts` | NEW | 069.1 P9~P11 (β 키트·본 적용 260612) | N/A | 경계 안전 스윕 + 픽스업 14건 일체형 (.py/.ps1 포함, 멱등 재실행 가능) |
+| `packages/coding-agent/src/migrate-config-dir-startup.ts` | NEW | 061.1-M4 (P10 배선) | N/A | cli.ts 최우선 side-effect import — 로거 선행 생성 회피, 워크스페이스 import 금지 |
+| `packages/coding-agent/src/cli.ts` | HARD-EDIT | 061.1-M4 (P10 배선) | MANUAL-REVIEW | 1번째 import = migrate-config-dir-startup (순서 불변 계약) |
+| `scripts/verify-g002-gates.ts` | HARD-EDIT | 069.1 P9 (라운드-2 픽스업) | AUTO | bin 키 이행기 허용형 (jwc ?? gjc) |
 
 ## 리베이스/체리픽 절차 (요약 — 상세: 067.1 §5)
 
