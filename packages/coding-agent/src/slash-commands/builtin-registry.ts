@@ -11,6 +11,8 @@ import {
 } from "../config/model-registry";
 import { extractExplicitThinkingSelector, formatModelSelectorValue, parseModelPattern } from "../config/model-resolver";
 import { clearPluginRootsAndCaches, isJawBrand, resolveActiveProjectRegistryPath } from "../discovery/helpers.js";
+import { runNativeGoalCommand } from "../gjc-runtime/goal-runtime";
+import { runNativeJawInterviewCommand } from "../gjc-runtime/jaw-interview-runtime";
 import { runNativeOrchestrateCommand } from "../gjc-runtime/orchestrate-runtime";
 import { resolveMemoryBackend } from "../memory-backend";
 import type { InteractiveModeContext } from "../modes/types";
@@ -319,8 +321,9 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 			{ name: "c", description: "C-stage: check — mechanical gates + adversarial review" },
 			{ name: "d", description: "D-stage: done — summary + WONDER/REFLECT, close out" },
 			{ name: "status", description: "Show current orchestration state" },
+			{ name: "reset", description: "Abandon the state machine — return to idle from any stage" },
 		],
-		inlineHint: "<i|p|a|b|c|d|status>",
+		inlineHint: "<i|p|a|b|c|d|status|reset>",
 		allowArgs: true,
 		handle: async (command, runtime) => {
 			const args = (command.args ?? "").trim();
@@ -328,9 +331,64 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 			const result = await runNativeOrchestrateCommand(argv, process.cwd());
 			if (result.stderr) await runtime.output(result.stderr.trimEnd());
 			const sub = argv[0]?.toLowerCase();
-			const stageEntered = result.status === 0 && !!sub && sub !== "status" && sub !== "verdict";
+			const stageEntered =
+				result.status === 0 && !!sub && sub !== "status" && sub !== "verdict" && sub !== "reset";
 			if (stageEntered && result.stdout) {
 				// Stage prompts steer the session itself, not the transcript log.
+				await runtime.session.prompt(result.stdout);
+			} else if (result.stdout) {
+				await runtime.output(result.stdout.trimEnd());
+			}
+			return commandConsumed();
+		},
+	},
+	{
+		// 99.07 parity: /gd = `goal done --force` shortcut (cli-jaw semantics —
+		// plain `goal done` keeps the evidence gate; only this shortcut forces).
+		name: "gd",
+		description: "Force-complete the active goal (goal done --force)",
+		inlineHint: "[note]",
+		allowArgs: true,
+		handle: async (command, runtime) => {
+			const note = (command.args ?? "").trim();
+			const argv = note ? ["done", "--force", note] : ["done", "--force"];
+			const result = await runNativeGoalCommand(argv, process.cwd());
+			if (result.stderr) await runtime.output(result.stderr.trimEnd());
+			if (result.stdout) await runtime.output(result.stdout.trimEnd());
+			return commandConsumed();
+		},
+	},
+	{
+		// 99.07 parity: hint is directional guidance stored alongside the
+		// pending-refinement brief — it must NOT become the objective itself.
+		name: "goalplan",
+		description: "Start AI-driven goal planning (goal plan — AI decides the objective)",
+		inlineHint: "[hint]",
+		allowArgs: true,
+		handle: async (command, runtime) => {
+			const hint = (command.args ?? "").trim();
+			const argv = hint ? ["plan", hint] : ["plan"];
+			const result = await runNativeGoalCommand(argv, process.cwd());
+			if (result.stderr) await runtime.output(result.stderr.trimEnd());
+			if (result.stdout) await runtime.output(result.stdout.trimEnd());
+			return commandConsumed();
+		},
+	},
+	{
+		name: "interview",
+		description: "Clarify requirements before planning (jaw-interview seed)",
+		inlineHint: "<request>",
+		allowArgs: true,
+		handle: async (command, runtime) => {
+			const request = (command.args ?? "").trim();
+			if (!request) {
+				await runtime.output('Usage: /interview <request> — e.g. /interview "session switch UX"');
+				return commandConsumed();
+			}
+			const result = await runNativeJawInterviewCommand([request], process.cwd());
+			if (result.stderr) await runtime.output(result.stderr.trimEnd());
+			if (result.status === 0 && result.stdout) {
+				// Seed summary steers the session into interviewing, like /orchestrate i.
 				await runtime.session.prompt(result.stdout);
 			} else if (result.stdout) {
 				await runtime.output(result.stdout.trimEnd());
