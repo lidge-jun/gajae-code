@@ -147,6 +147,20 @@ ALL·CANONICAL 탭 가드), 힌트는 기존 힌트 라인(`model-selector.ts:23
 주입 — `reasoning: false`(reasoning_effort 거부, progrok이 프록시에서 strip하는 모델),
 메타 미공개라 보수적 256K/32K 캡. 플랫폼 API 키 경로엔 미주입. 라이브 200 재확인.
 
+### S10.1 — fast 변형 후보 라이브 검증 (260613, 사용자 요청 "되면 넣어놔" → 결과: 미추가)
+
+| 후보 | 결과 |
+|------|------|
+| grok-4.3-fast · grok-build-0.1-fast · grok-4.3-mini | **400 — 존재하지 않음** |
+| grok-composer-2.5 (non-fast) | 404 (progrok 조사와 일치: 팀 전용) |
+| grok-4-fast · grok-4-1-fast · grok-4-fast-(non-)reasoning | 200이지만 전부 **grok-4.3의 서버측 앨리어스** (응답 model=grok-4.3) |
+| grok-code-fast(-1) | 200, **grok-build-0.1 앨리어스** |
+
+판정: 동작하는 id는 전부 이미 listed인 모델의 중복 앨리어스 → 추가 시 99.30.04가 막 걷어낸
+앨리어스 노이즈를 픽커에 재도입하므로 **미추가**. 부수 발견: 라이브 `/v1/models`가 9종으로
+축소됨 (어제 캐시 26종 대비 — xAI가 레거시 앨리어스를 목록에서 제거, 서버 해석은 유지).
+캐시 갱신 시 unlisted 잔여는 번들 유래만 남는다.
+
 ### P4 — 검증
 
 - provider 4종 노출 스냅샷 테스트 (지원 셋/마킹/토글) + 스파크 reasoning 미전송 테스트.
