@@ -10,7 +10,8 @@
  */
 
 export interface HindsightMessage {
-	role: string;
+	/** extractMessages only ever yields user/assistant turns. */
+	role: "user" | "assistant";
 	content: string;
 }
 

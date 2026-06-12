@@ -190,6 +190,7 @@ import type { HindsightSessionState } from "../hindsight/state";
 import { ensureWorkflowSkillActivationState } from "../hooks/skill-state";
 import { type LocalProtocolOptions, resolveLocalUrlToPath } from "../internal-urls";
 import { shutdownAll as shutdownAllLspClients } from "../lsp/client";
+import type { Mem0SessionState } from "../mem0/state";
 import { resolveMemoryBackend } from "../memory-backend";
 import type { WorkflowGateEmitter } from "../modes/shared/agent-wire/unattended-session";
 import { getCurrentThemeName, theme } from "../modes/theme/theme";
@@ -1061,6 +1062,7 @@ export class AgentSession {
 	#promptGeneration = 0;
 	#providerSessionState = new Map<string, ProviderSessionState>();
 	#hindsightSessionState: HindsightSessionState | undefined = undefined;
+	#mem0SessionState: Mem0SessionState | undefined = undefined;
 	readonly rawSseDebugBuffer: RawSseDebugBuffer;
 
 	#acquirePowerAssertion(): void {
@@ -1489,6 +1491,16 @@ export class AgentSession {
 	setHindsightSessionState(state: HindsightSessionState | undefined): HindsightSessionState | undefined {
 		const previous = this.#hindsightSessionState;
 		this.#hindsightSessionState = state;
+		return previous;
+	}
+
+	getMem0SessionState(): Mem0SessionState | undefined {
+		return this.#mem0SessionState;
+	}
+
+	setMem0SessionState(state: Mem0SessionState | undefined): Mem0SessionState | undefined {
+		const previous = this.#mem0SessionState;
+		this.#mem0SessionState = state;
 		return previous;
 	}
 

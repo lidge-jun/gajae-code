@@ -1422,19 +1422,37 @@ export const SETTINGS_SCHEMA = {
 	// the local backend; see config/settings.ts migration for details.
 	"memory.backend": {
 		type: "enum",
-		values: ["off", "local", "hindsight"] as const,
+		values: ["off", "local", "hindsight", "mem0"] as const,
 		default: "off",
 		ui: {
 			tab: "memory",
 			label: "Memory Backend",
-			description: "Off, local memory pipeline, or Hindsight remote memory",
+			description: "Off, local memory pipeline, Hindsight, or Mem0 remote memory",
 			options: [
 				{ value: "off", label: "Off", description: "No memory subsystem runs" },
 				{ value: "local", label: "Local", description: "Local rollout summarisation pipeline (memory_summary.md)" },
 				{ value: "hindsight", label: "Hindsight", description: "Vectorize Hindsight remote memory service" },
+				{ value: "mem0", label: "Mem0", description: "Mem0 remote memory service (api.mem0.ai or self-hosted)" },
 			],
 		},
 	},
+
+	// Mem0 (https://mem0.ai) — read by mem0/config.ts loadMem0Config
+	"mem0.apiKey": { type: "string", default: undefined },
+	"mem0.apiUrl": { type: "string", default: "https://api.mem0.ai" },
+	"mem0.userId": { type: "string", default: undefined },
+	"mem0.userIdPrefix": { type: "string", default: undefined },
+	"mem0.agentId": { type: "string", default: undefined },
+	"mem0.scoping": {
+		type: "enum",
+		values: ["global", "per-project", "per-project-tagged"] as const,
+		default: "per-project-tagged",
+	},
+	"mem0.autoRecall": { type: "boolean", default: true },
+	"mem0.autoRetain": { type: "boolean", default: true },
+	"mem0.retainEveryNTurns": { type: "number", default: undefined },
+	"mem0.searchTopK": { type: "number", default: undefined },
+	"mem0.recallPreamble": { type: "string", default: undefined },
 
 	// Hindsight (https://hindsight.vectorize.io)
 	"hindsight.apiUrl": {

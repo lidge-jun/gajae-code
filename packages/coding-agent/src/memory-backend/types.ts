@@ -10,17 +10,20 @@ import type { AgentMessage } from "@gajae-code/agent-core";
 import type { ModelRegistry } from "../config/model-registry";
 import type { Settings } from "../config/settings";
 import type { HindsightSessionState } from "../hindsight/state";
+import type { Mem0SessionState } from "../mem0/state";
 import type { AgentSession } from "../session/agent-session";
 
-export type MemoryBackendId = "off" | "local" | "hindsight";
+export type MemoryBackendId = "off" | "local" | "hindsight" | "mem0";
 
 export interface MemoryBackendStartOptions {
 	session: AgentSession;
 	settings: Settings;
 	modelRegistry: ModelRegistry;
 	agentDir: string;
+	/** Sub-agent nesting depth — backends skip per-session bootstraps for nested tasks. */
 	taskDepth: number;
 	parentHindsightSessionState?: HindsightSessionState;
+	parentMem0SessionState?: Mem0SessionState;
 }
 
 export interface MemoryBackend {
