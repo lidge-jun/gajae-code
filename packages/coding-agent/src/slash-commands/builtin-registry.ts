@@ -222,6 +222,49 @@ const shutdownHandlerTui = (_command: ParsedSlashCommand, runtime: TuiSlashComma
 	return commandConsumed();
 };
 
+/**
+ * Adapt the interactive-mode context to the text/ACP runtime shape so a spec's
+ * `handle` body can run from the TUI dispatcher (or a TUI-specific override).
+ */
+function adaptTuiRuntime(ctx: InteractiveModeContext): SlashCommandRuntime {
+	return {
+		session: ctx.session,
+		sessionManager: ctx.sessionManager,
+		settings: ctx.settings,
+		cwd: ctx.sessionManager.getCwd(),
+		output: (text: string) => {
+			ctx.showStatus(text);
+		},
+		refreshCommands: () => ctx.refreshSlashCommandState(),
+		reloadPlugins: async () => {
+			const projectPath = await resolveActiveProjectRegistryPath(ctx.sessionManager.getCwd());
+			clearPluginRootsAndCaches(projectPath ? [projectPath] : undefined);
+			await ctx.refreshSlashCommandState();
+			await ctx.session.refreshSshTool({ activateIfAvailable: true });
+		},
+	};
+}
+
+/** Shared /orchestrate body — used by both the ACP `handle` and the TUI override. */
+async function executeOrchestrateSlashCommand(
+	command: ParsedSlashCommand,
+	runtime: SlashCommandRuntime,
+): Promise<SlashCommandResult> {
+	const args = (command.args ?? "").trim();
+	const argv = args.length > 0 ? args.split(/\s+/) : [];
+	const result = await runNativeOrchestrateCommand(argv, process.cwd());
+	if (result.stderr) await runtime.output(result.stderr.trimEnd());
+	const sub = argv[0]?.toLowerCase();
+	const stageEntered = result.status === 0 && !!sub && sub !== "status" && sub !== "verdict" && sub !== "reset";
+	if (stageEntered && result.stdout) {
+		// Stage prompts steer the session itself, not the transcript log.
+		await runtime.session.prompt(result.stdout);
+	} else if (result.stdout) {
+		await runtime.output(result.stdout.trimEnd());
+	}
+	return commandConsumed();
+}
+
 const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 	{
 		name: "settings",
@@ -325,21 +368,15 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 		],
 		inlineHint: "<i|p|a|b|c|d|status|reset>",
 		allowArgs: true,
-		handle: async (command, runtime) => {
-			const args = (command.args ?? "").trim();
-			const argv = args.length > 0 ? args.split(/\s+/) : [];
-			const result = await runNativeOrchestrateCommand(argv, process.cwd());
-			if (result.stderr) await runtime.output(result.stderr.trimEnd());
-			const sub = argv[0]?.toLowerCase();
-			const stageEntered =
-				result.status === 0 && !!sub && sub !== "status" && sub !== "verdict" && sub !== "reset";
-			if (stageEntered && result.stdout) {
-				// Stage prompts steer the session itself, not the transcript log.
-				await runtime.session.prompt(result.stdout);
-			} else if (result.stdout) {
-				await runtime.output(result.stdout.trimEnd());
-			}
-			return commandConsumed();
+		handle: executeOrchestrateSlashCommand,
+		handleTui: async (command, runtime) => {
+			const ctx = runtime.ctx;
+			await executeOrchestrateSlashCommand(command, adaptTuiRuntime(ctx));
+			ctx.editor.setText("");
+			// 99.00.03 P1-5: stage transitions must reflect in the status-line strip
+			// immediately, not after the 1s poll TTL.
+			ctx.statusLine.invalidatePabcd();
+			ctx.ui.requestRender();
 		},
 	},
 	{
@@ -1412,23 +1449,7 @@ export async function executeBuiltinSlashCommand(
 		// dispatcher without forcing every TUI test to construct the full
 		// `SlashCommandRuntime` shape.
 		const ctx = runtime.ctx;
-		const adapted: SlashCommandRuntime = {
-			session: ctx.session,
-			sessionManager: ctx.sessionManager,
-			settings: ctx.settings,
-			cwd: ctx.sessionManager.getCwd(),
-			output: (text: string) => {
-				ctx.showStatus(text);
-			},
-			refreshCommands: () => ctx.refreshSlashCommandState(),
-			reloadPlugins: async () => {
-				const projectPath = await resolveActiveProjectRegistryPath(ctx.sessionManager.getCwd());
-				clearPluginRootsAndCaches(projectPath ? [projectPath] : undefined);
-				await ctx.refreshSlashCommandState();
-				await ctx.session.refreshSshTool({ activateIfAvailable: true });
-			},
-		};
-		const result = await command.handle(parsed, adapted);
+		const result = await command.handle(parsed, adaptTuiRuntime(ctx));
 		ctx.editor.setText("");
 		if (result && typeof result === "object" && "prompt" in result) return result.prompt;
 		return true;
