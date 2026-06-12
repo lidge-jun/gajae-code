@@ -46,3 +46,22 @@ describe("xai OAuth model exposure", () => {
 		expect(models?.every(model => model.unlisted === undefined)).toBe(true);
 	});
 });
+
+describe("xai composer injection", () => {
+	it("injects grok-composer-2.5-fast when discovery omits it (hidden on the wire)", async () => {
+		mockModelsEndpoint(["grok-4.3", "grok-2"]);
+		const options = xaiModelManagerOptions({ apiKey: FAKE_JWT });
+		const models = await options.fetchDynamicModels?.();
+		const composer = models?.find(model => model.id === "grok-composer-2.5-fast");
+		expect(composer).toBeDefined();
+		expect(composer?.unlisted).toBeUndefined();
+		expect(composer?.reasoning).toBe(false);
+	});
+
+	it("does not inject on the platform API key path", async () => {
+		mockModelsEndpoint(["grok-4.3"]);
+		const options = xaiModelManagerOptions({ apiKey: "xai-platform-key" });
+		const models = await options.fetchDynamicModels?.();
+		expect(models?.some(model => model.id === "grok-composer-2.5-fast")).toBe(false);
+	});
+});

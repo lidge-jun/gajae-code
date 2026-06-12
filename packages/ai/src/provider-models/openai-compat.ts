@@ -607,6 +607,31 @@ function isXaiOAuthAccessToken(apiKey: string): boolean {
 	return apiKey.split(".").length === 3;
 }
 
+/**
+ * grok-composer-2.5-fast is served on the OAuth path (live-verified 200) but
+ * absent from /v1/models and /v1/language-models — hidden on the wire, not in
+ * practice (grok-cli/progrok treat it as a first-class code model). Inject it
+ * statically; metadata is unpublished, so the window/output caps are
+ * conservative. No reasoning: the model rejects reasoning_effort (progrok
+ * strips it at the proxy).
+ */
+const XAI_COMPOSER_MODEL_ID = "grok-composer-2.5-fast";
+
+function xaiComposerModel(baseUrl: string): Model<"openai-completions"> {
+	return {
+		id: XAI_COMPOSER_MODEL_ID,
+		name: "Grok Composer 2.5 Fast",
+		api: "openai-completions",
+		provider: "xai",
+		baseUrl,
+		reasoning: false,
+		input: ["text"],
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		contextWindow: 256000,
+		maxTokens: 32768,
+	};
+}
+
 export function xaiModelManagerOptions(config?: XaiModelManagerConfig): ModelManagerOptions<"openai-completions"> {
 	const apiKey = config?.apiKey;
 	// Platform API keys are gated server-side per key — expose the full
@@ -619,8 +644,8 @@ export function xaiModelManagerOptions(config?: XaiModelManagerConfig): ModelMan
 	return {
 		providerId: "xai",
 		markUnlistedOutsideDynamic: true,
-		fetchDynamicModels: () =>
-			fetchOpenAICompatibleModels({
+		fetchDynamicModels: async () => {
+			const models = await fetchOpenAICompatibleModels({
 				api: "openai-completions",
 				provider: "xai",
 				baseUrl,
@@ -631,7 +656,14 @@ export function xaiModelManagerOptions(config?: XaiModelManagerConfig): ModelMan
 					if (!mapped || XAI_OAUTH_LISTED_MODELS.has(mapped.id)) return mapped;
 					return { ...mapped, unlisted: true };
 				},
-			}),
+			});
+			if (!models) return models;
+			// Hidden-on-the-wire composer: inject when discovery omits it.
+			if (!models.some(model => model.id === XAI_COMPOSER_MODEL_ID)) {
+				return [...models, xaiComposerModel(baseUrl)];
+			}
+			return models;
+		},
 	};
 }
 
