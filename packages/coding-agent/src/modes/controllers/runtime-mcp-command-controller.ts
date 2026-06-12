@@ -4,7 +4,7 @@
  * Handles /mcp subcommands for managing MCP servers.
  */
 import * as path from "node:path";
-import { Spacer, Text } from "@gajae-code/tui";
+import { Loader, Spacer, Text } from "@gajae-code/tui";
 import { getMCPConfigPath, getProjectDir } from "@gajae-code/utils";
 import type { SourceMeta } from "../../capability/types";
 import { analyzeAuthError, discoverOAuthEndpoints, MCPManager } from "../../runtime-mcp";
@@ -762,19 +762,17 @@ export class MCPCommandController {
 	): Promise<"connected" | "connecting" | "disconnected"> {
 		if (!this.ctx.mcpManager) return "disconnected";
 
-		this.ctx.chatContainer.addChild(new Spacer(1));
-		const frames = theme.spinnerFrames;
-		const initialFrame = frames[0] ?? "|";
-		const statusText = new Text(theme.fg("muted", `${initialFrame} Connecting to "${name}"...`), 1, 0);
-		this.ctx.chatContainer.addChild(statusText);
+		// 99.20.07 P4: connection wait rides the status surface via the stock
+		// Loader (self-animating) instead of a hand-rolled chat-inline spinner.
+		const loader = new Loader(
+			this.ctx.ui,
+			spinner => theme.fg("muted", spinner),
+			text => theme.fg("muted", text),
+			`Connecting to "${name}"...`,
+			theme.spinnerFrames,
+		);
+		this.ctx.statusContainer.addChild(loader);
 		this.ctx.ui.requestRender();
-
-		let frame = 0;
-		const interval = setInterval(() => {
-			statusText.setText(theme.fg("muted", `${frames[frame % frames.length]} Connecting to "${name}"...`));
-			frame++;
-			this.ctx.ui.requestRender();
-		}, 80);
 
 		try {
 			try {
@@ -788,20 +786,19 @@ export class MCPCommandController {
 				await this.ctx.session.refreshMCPTools(this.ctx.mcpManager.getTools());
 			}
 			if (state === "connected") {
-				statusText.setText(theme.fg("success", `✓ Connected to "${name}"`));
+				this.ctx.showStatus(`✓ Connected to "${name}"`);
 			} else if (state === "connecting") {
-				statusText.setText(theme.fg("muted", `◌ "${name}" is still connecting...`));
+				this.ctx.showStatus(`◌ "${name}" is still connecting...`);
+			} else if (options?.suppressDisconnectedWarning) {
+				this.ctx.showStatus(`◌ Connection check complete for "${name}"`);
 			} else {
-				statusText.setText(
-					options?.suppressDisconnectedWarning
-						? theme.fg("muted", `◌ Connection check complete for "${name}"`)
-						: theme.fg("warning", `⚠ Could not connect to "${name}" yet`),
-				);
+				this.ctx.showWarning(`⚠ Could not connect to "${name}" yet`);
 			}
 			this.ctx.ui.requestRender();
 			return state;
 		} finally {
-			clearInterval(interval);
+			loader.stop();
+			this.ctx.statusContainer.clear();
 		}
 	}
 
