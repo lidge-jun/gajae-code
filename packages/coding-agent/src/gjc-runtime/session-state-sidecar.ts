@@ -5,6 +5,8 @@ import { logger } from "@gajae-code/utils";
 
 export const GJC_COORDINATOR_SESSION_STATE_FILE_ENV = "GJC_COORDINATOR_SESSION_STATE_FILE";
 export const GJC_COORDINATOR_SESSION_ID_ENV = "GJC_COORDINATOR_SESSION_ID";
+export const JWC_COORDINATOR_SESSION_STATE_FILE_ENV = "JWC_COORDINATOR_SESSION_STATE_FILE";
+export const JWC_COORDINATOR_SESSION_ID_ENV = "JWC_COORDINATOR_SESSION_ID";
 
 type RuntimeState = "ready_for_input" | "running" | "needs_user_input" | "completed" | "errored";
 

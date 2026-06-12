@@ -13,6 +13,9 @@ import { removeFileAudited, writeJsonAtomic } from "./state-writer";
 export const GJC_SESSION_FILE_ENV = "GJC_SESSION_FILE";
 export const GJC_SESSION_ID_ENV = "GJC_SESSION_ID";
 export const GJC_SESSION_CWD_ENV = "GJC_SESSION_CWD";
+export const JWC_SESSION_FILE_ENV = "JWC_SESSION_FILE";
+export const JWC_SESSION_ID_ENV = "JWC_SESSION_ID";
+export const JWC_SESSION_CWD_ENV = "JWC_SESSION_CWD";
 
 const REQUEST_VERSION = 1;
 export const DEFAULT_ULTRAGOAL_OBJECTIVE =
@@ -216,8 +219,19 @@ export function buildGjcRuntimeSessionEnv(input: {
 	cwd?: string | null;
 }): Record<string, string> {
 	const env: Record<string, string> = {};
-	if (input.sessionFile) env[GJC_SESSION_FILE_ENV] = input.sessionFile;
-	if (input.sessionId) env[GJC_SESSION_ID_ENV] = input.sessionId;
-	if (input.cwd) env[GJC_SESSION_CWD_ENV] = input.cwd;
+	// D-4 (062.1 M4): set both JWC_* (canonical) and GJC_* (legacy) so child
+	// processes work across the alias transition window.
+	if (input.sessionFile) {
+		env[GJC_SESSION_FILE_ENV] = input.sessionFile;
+		env[JWC_SESSION_FILE_ENV] = input.sessionFile;
+	}
+	if (input.sessionId) {
+		env[GJC_SESSION_ID_ENV] = input.sessionId;
+		env[JWC_SESSION_ID_ENV] = input.sessionId;
+	}
+	if (input.cwd) {
+		env[GJC_SESSION_CWD_ENV] = input.cwd;
+		env[JWC_SESSION_CWD_ENV] = input.cwd;
+	}
 	return env;
 }

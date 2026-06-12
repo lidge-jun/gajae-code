@@ -35,7 +35,7 @@ export function assertSafeBridgeBind(config: BridgeBindConfig): void {
 	if (!config.tlsConfigured) {
 		throw new Error(
 			`Refusing to start bridge on ${config.hostname}:${config.port} without TLS configured. ` +
-				"Set GJC_BRIDGE_TLS_CERT and GJC_BRIDGE_TLS_KEY.",
+				"Set JWC_BRIDGE_TLS_CERT and JWC_BRIDGE_TLS_KEY.",
 		);
 	}
 }

@@ -59,7 +59,7 @@ describe("GJC public CLI command surface", () => {
 		expect(jawOutput).toContain("interview");
 
 		// Fork default is the jaw brand (062.1 §4) — the engine surface needs an explicit opt-in.
-		const engineEnv = { ...process.env, GJC_BRAND_NAME: "gjc" };
+		const engineEnv: Record<string, string | undefined> = { ...process.env, GJC_BRAND_NAME: "gjc" };
 		delete engineEnv.JWC_BRAND_NAME;
 		const engine = Bun.spawnSync(["bun", cliEntry, "--help"], {
 			cwd: repoRoot,

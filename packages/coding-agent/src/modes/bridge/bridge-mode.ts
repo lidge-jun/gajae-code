@@ -1,4 +1,5 @@
 import * as path from "node:path";
+import { $resolveEnv } from "@gajae-code/utils";
 import type { ExtensionUIContext } from "../../extensibility/extensions";
 import type { AgentSession } from "../../session/agent-session";
 import type { ClientBridgePermissionOutcome } from "../../session/client-bridge";
@@ -511,19 +512,20 @@ export async function runBridgeMode(
 	session: AgentSession,
 	setToolUIContext?: (uiContext: ExtensionUIContext, hasUI: boolean) => void,
 ): Promise<never> {
-	const token = Bun.env.GJC_BRIDGE_TOKEN;
+	const token = $resolveEnv("GJC_BRIDGE_TOKEN");
 	if (!token) {
-		throw new Error("GJC_BRIDGE_TOKEN is required for --mode bridge");
+		throw new Error("JWC_BRIDGE_TOKEN (or legacy GJC_BRIDGE_TOKEN) is required for --mode bridge");
 	}
-	const hostname = Bun.env.GJC_BRIDGE_HOST ?? DEFAULT_BRIDGE_HOST;
-	const port = Bun.env.GJC_BRIDGE_PORT ? Number.parseInt(Bun.env.GJC_BRIDGE_PORT, 10) : DEFAULT_BRIDGE_PORT;
+	const hostname = $resolveEnv("GJC_BRIDGE_HOST") ?? DEFAULT_BRIDGE_HOST;
+	const bridgePortRaw = $resolveEnv("GJC_BRIDGE_PORT");
+	const port = bridgePortRaw ? Number.parseInt(bridgePortRaw, 10) : DEFAULT_BRIDGE_PORT;
 	if (!Number.isInteger(port) || port <= 0 || port > 65_535) {
-		throw new Error(`Invalid GJC_BRIDGE_PORT: ${Bun.env.GJC_BRIDGE_PORT}`);
+		throw new Error(`Invalid JWC_BRIDGE_PORT: ${bridgePortRaw}`);
 	}
-	const commandScopes = parseBridgeScopes(Bun.env.GJC_BRIDGE_SCOPES);
+	const commandScopes = parseBridgeScopes($resolveEnv("GJC_BRIDGE_SCOPES"));
 
-	const certPath = Bun.env.GJC_BRIDGE_TLS_CERT;
-	const keyPath = Bun.env.GJC_BRIDGE_TLS_KEY;
+	const certPath = $resolveEnv("GJC_BRIDGE_TLS_CERT");
+	const keyPath = $resolveEnv("GJC_BRIDGE_TLS_KEY");
 	const tlsConfigured = Boolean(certPath && keyPath);
 	assertSafeBridgeBind({ hostname, port, tlsConfigured });
 

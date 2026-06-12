@@ -12,6 +12,8 @@ import {
 import {
 	GJC_COORDINATOR_SESSION_ID_ENV,
 	GJC_COORDINATOR_SESSION_STATE_FILE_ENV,
+	JWC_COORDINATOR_SESSION_ID_ENV,
+	JWC_COORDINATOR_SESSION_STATE_FILE_ENV,
 } from "../gjc-runtime/session-state-sidecar";
 import {
 	assertCoordinatorArtifactPath,
@@ -157,15 +159,15 @@ function toolSchema(name: CoordinatorToolName): {
 	const allowMutation = { type: "boolean", description: "Required and must be true for mutating tools." };
 	const cwd = {
 		type: "string",
-		description: "Canonicalized GJC worktree or project directory inside configured roots.",
+		description: "Canonicalized jwc worktree or project directory inside configured roots.",
 	};
-	const sessionId = { type: "string", description: "GJC coordinator bridge session id." };
+	const sessionId = { type: "string", description: "jwc coordinator bridge session id." };
 	const pathField = { type: "string", description: "Artifact path inside configured safe roots." };
 	const common = { type: "object", properties: {} as Record<string, unknown> };
 	if (name === "gjc_coordinator_start_session") {
 		return {
 			name,
-			description: "Start a GJC worktree/tmux oriented session through the coordinator bridge.",
+			description: "Start a jwc worktree/tmux oriented session through the coordinator bridge.",
 			inputSchema: {
 				type: "object",
 				properties: { cwd, prompt: { type: "string" }, allow_mutation: allowMutation },
@@ -290,7 +292,7 @@ function toolSchema(name: CoordinatorToolName): {
 	if (name === "gjc_coordinator_read_coordination_status") {
 		return { name, description: "Read coordinator coordination reports.", inputSchema: common };
 	}
-	return { name, description: "List known scoped GJC coordinator bridge sessions.", inputSchema: common };
+	return { name, description: "List known scoped jwc coordinator bridge sessions.", inputSchema: common };
 }
 
 function normalizeSession(session: any): Record<string, unknown> {
@@ -592,8 +594,11 @@ async function startTmuxSession(
 	const runtimeStateFile = sessionStateFile(namespaceDir, sessionName);
 	const sessionCommand = [
 		"exec env",
+		// D-4 (062.1 M4): export both JWC_* (canonical) and GJC_* (legacy).
 		`${GJC_COORDINATOR_SESSION_STATE_FILE_ENV}=${shellQuote(runtimeStateFile)}`,
+		`${JWC_COORDINATOR_SESSION_STATE_FILE_ENV}=${shellQuote(runtimeStateFile)}`,
 		`${GJC_COORDINATOR_SESSION_ID_ENV}=${shellQuote(sessionName)}`,
+		`${JWC_COORDINATOR_SESSION_ID_ENV}=${shellQuote(sessionName)}`,
 		config.sessionCommand,
 	].join(" ");
 	const started = await runCommand([

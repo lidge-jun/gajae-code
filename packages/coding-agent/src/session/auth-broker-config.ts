@@ -16,7 +16,7 @@
  * boot without forcing a startup reorder.
  */
 import * as path from "node:path";
-import { getAgentDir, getConfigRootDir, isEnoent, logger } from "@gajae-code/utils";
+import { $resolveEnv, getAgentDir, getConfigRootDir, isEnoent, logger } from "@gajae-code/utils";
 import { YAML } from "bun";
 import { resolveConfigValue } from "../config/resolve-config-value";
 
@@ -72,8 +72,8 @@ async function readConfigYaml(): Promise<ConfigSnapshot> {
  * user explicitly asked to use the broker.
  */
 export async function resolveAuthBrokerConfig(): Promise<AuthBrokerClientConfig | null> {
-	const envUrl = process.env.GJC_AUTH_BROKER_URL;
-	const envToken = process.env.GJC_AUTH_BROKER_TOKEN;
+	const envUrl = $resolveEnv("GJC_AUTH_BROKER_URL");
+	const envToken = $resolveEnv("GJC_AUTH_BROKER_TOKEN");
 
 	let url = envUrl && envUrl.length > 0 ? envUrl : undefined;
 	let configToken: string | undefined;
