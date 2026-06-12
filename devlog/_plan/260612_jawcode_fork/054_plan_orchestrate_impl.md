@@ -2,7 +2,7 @@
 
 > 2026-06-12 10:17 초안 (Boss-author). 선행: [051](./051_design_command_port.md) §1–3, [053](./053_decisions_p_boss_author.md) D050-10~21.
 > 본 문서는 **D050-19~21 개정 topology 기준** — P = Boss+Critic 1-pass, A = Planner∥Architect 병렬 감사.
-> 상태: **v4 — A 2라운드 델타 재감사 반영, 3라운드 대기** (D050-20 도그푸딩: 1R 병렬 FAIL → v2 → 결정 3건 → v3 → 2R solo FAIL → v4).
+> 상태: **v5 — A 3라운드 PASS, B 착수 가능** (D050-20 도그푸딩: 1R 병렬 FAIL → v2 → 결정 3건 → v3 → 2R solo FAIL → v4 → **3R solo PASS** → wording 4건 정리 v5).
 
 ## 결정 입력 (요약)
 
@@ -35,7 +35,7 @@
 | 전이 모듈 | NEW native manifest — states `["i","p","a","b","c","d","complete"]`, forward-only + `i` 복귀 전이(cli-jaw `canTransition:563` 이식), terminal `["complete"]`, retention/hudFields (`workflow-manifest.ts:116-142` builder 패턴 차용) |
 | state 파일 | envelope `.gjc/state/pabcd-state.json` (+ session-scoped) — **052/050 문서의 `pabcd.json`은 논리 계약명, envelope 경로는 runtime 관례 `<skill>-state.json`을 따름** [기본값 수용]. 필드: `current_stage`, `spec_ref`, `plan_ref`, `ctx.a_audit_mode`, `a_round`(≤3), `p_round`(≤2), `p_review_passed` |
 | 쓰기 경로 | **[2R 검증 확정] native 전용 writer 분리가 유일 경로** — `state-schema.ts:32-33` `strictSkillEnum = z.enum([...CANONICAL_GJC_WORKFLOW_SKILLS])`이 `RequiredOnWriteEnvelopeSchema`(`:110-118`)에서 skill을 4종으로 강제하므로 `writeWorkflowEnvelopeAtomic()`(`state-writer.ts:391`)은 pabcd를 거부함 |
-| NEW native writer 3종 | ① `RequiredOnWriteNativeEnvelopeSchema` — `skill: "pabcd"` 허용, version/updated_at/current_phase/active/receipt 구조는 canonical과 동형 ② `writeNativeWorkflowEnvelopeAtomic()` — fail-closed 검증 + atomic write 게이트 유지 ③ `NativeWorkflowCommand` 타입 — `CanonicalGjcWorkflowSkill`과 분리(receipt 계약 `workflow-state-contract.ts:25`·`StateWriterReceiptContext.skill`(`state-writer.ts:41`)의 native 등가물 포함) |
+| NEW native writer 3종 | ① `RequiredOnWriteNativeEnvelopeSchema` — `skill: "pabcd"` 허용, version/updated_at/current_phase/active/receipt 구조는 canonical과 동형 ② `writeNativeWorkflowEnvelopeAtomic()` — fail-closed 검증 + atomic write 게이트 유지 ③ `NativeWorkflowCommand` 타입 — `CanonicalGjcWorkflowSkill`과 분리(receipt 계약 `skill-state/workflow-state-contract.ts:25`·`StateWriterReceiptContext.skill`(`state-writer.ts:41`)·`RequiredWorkflowStateReceiptSchema`(`state-schema.ts:93`)의 native 등가물 포함) |
 | 재생성 | **없음** — native manifest는 `workflow-manifest.generated.json` drift gate 대상이 아님(D050-22 무접촉 원칙). ~~generate-gjc-workflow-manifest 재실행~~ ~~generate-json-schemas~~ (2R 모순 정정) |
 
 ### B2 — 명령 표면
@@ -52,8 +52,8 @@
 | 파일 | 변경 |
 |------|------|
 | NEW `packages/coding-agent/src/prompts/jaw/orchestrate-{i,p,a,b,c,d}.md` | cli-jaw `state-machine.ts:240 getPrefix`/`:542 getStatePrompt` 사본 + jwc 어휘 손질(보스/직원 → 메인 세션/subagent). 디렉터리 신설. **단계 진입 프롬프트** — spawn용 audit 프롬프트와 별개(아래 행) |
-| NEW `prompts/jaw/orchestrate-audit-{planner,architect}.md` | **A spawn 전용 audit 프롬프트**(2R 지적 보강) — EMBEDDED `planner.md`/`architect.md`(ralplan 어휘 CLEAR/WATCH/BLOCK·APPROVE/COMMENT) 대신 이 파일을 임베드, 출력 형식을 `PASS\|FAIL` + finding(file:line·심각도·수정안)으로 고정(D050-23) |
-| NEW `prompts/jaw/orchestrate-critic.md` 여부 | P Critic은 EMBEDDED `critic.md`(OKAY\|ITERATE\|REJECT) **그대로 재사용** — 별도 파일 불필요(D050-23 단계별 소유권) |
+| NEW `packages/coding-agent/src/prompts/jaw/orchestrate-audit-{planner,architect}.md` | **A spawn 전용 audit 프롬프트**(2R 지적 보강) — EMBEDDED `planner.md`/`architect.md`(ralplan 어휘 CLEAR/WATCH/BLOCK·APPROVE/COMMENT) 대신 이 파일을 임베드, 출력 형식을 `PASS\|FAIL` + finding(file:line·심각도·수정안)으로 고정(D050-23) |
+| P Critic 프롬프트 | **신설 없음(확정)** — EMBEDDED `critic.md`(OKAY\|ITERATE\|REJECT) 그대로 재사용(D050-23 단계별 소유권) |
 | 로딩 | `task/agents.ts:9-19` 패턴 — `import ... with { type: "text" }` 임베드, stage 진입 시 주입 |
 | I 프롬프트 | 040 jaw-interview 산출물과 결합 — 엔진 호출만, 질문 정책은 SKILL이 소유 |
 
@@ -95,7 +95,7 @@
 - **두 lens 모두 FAIL** → Boss 수정 반영(본 문서 v2): B1 구조 경고·동기화 지점 보강, P/A 루프 종료 조건·trivial 판정 시점 명시, B6(B/C/D 런타임)·B7(문서 패치) 신설, Acceptance 확장
 - **사용자 결정 회수 → 확정**(053 속집 3): D050-22 native 레지스트리, D050-23 verdict 단계별 분리, D050-24 jaw 전용 등록 게이트 — 본 문서 v3에 반영
 - **2라운드 델타 재감사**(Architect solo — D050-21 첫 적용): FAIL — ① native writer 3종 명세 공백 ② A audit 프롬프트 B3 누락 ③ slash 무게이트 ④ 재생성/diff-0 stale 문구. **2R가 코드로 확정한 것**: `strictSkillEnum`(`state-schema.ts:32-33`)이 write 게이트에서 4종 강제 → native writer 분리가 유일 경로 / `jwc.js:2`가 cli import 전 `GJC_BRAND_NAME` 설정 → 조건부 등록 빌더 가능 → **v4에 전부 반영**
-- **3라운드 델타 재감사**(`a_round=3` — 한도 마지막): PASS 시 B 진입 준비 완료, FAIL 시 사용자 에스컬레이션(D050-20)
+- **3라운드 델타 재감사**(`a_round=3` — 한도 마지막, Architect solo): **PASS** — 2R 6건 전부 해소 확인, 신규 추측 공백 없음, 코드 앵커 spot-check 정확. 잔여 wording 4건(경로 접두사·앵커 모듈 경로·receipt sub-schema 명시·B3 제목)은 v5에서 정리 → **B 진입 준비 완료**
 
 ## Acceptance (M1)
 
