@@ -70,7 +70,7 @@ async function runHarness(args: string[]): Promise<{ code: number; json: Record<
 		env: {
 			...cliEnv.env,
 			GJC_HARNESS_STATE_ROOT: root,
-			// Drive the REAL GajaeCodeRpc against a protocol fixture (no shipped fake seam).
+			// Drive the REAL JawcodeRpc against a protocol fixture (no shipped fake seam).
 			GJC_HARNESS_RPC_COMMAND: rpcCommandEnv,
 			GJC_TMUX_COMMAND: tmuxCommand,
 		},

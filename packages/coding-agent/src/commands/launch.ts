@@ -6,8 +6,8 @@ import { THINKING_EFFORTS } from "@gajae-code/ai";
 import { APP_NAME, setProjectDir } from "@gajae-code/utils";
 import { Args, Command, Flags } from "@gajae-code/utils/cli";
 import { parseArgs } from "../cli/args";
-import { launchDefaultTmuxIfNeeded } from "../gjc-runtime/launch-tmux";
-import { prepareLaunchWorktree } from "../gjc-runtime/launch-worktree";
+import { launchDefaultTmuxIfNeeded } from "../jwc-runtime/launch-tmux";
+import { prepareLaunchWorktree } from "../jwc-runtime/launch-worktree";
 import { runRootCommand } from "../main";
 import { prepareAcpTerminalAuthArgs } from "../modes/acp/terminal-auth";
 

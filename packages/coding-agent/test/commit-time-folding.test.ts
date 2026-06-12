@@ -1,10 +1,10 @@
 import { afterAll, beforeAll, describe, expect, it } from "bun:test";
-import { Container } from "@gajae-code/tui";
 import { resetSettingsForTest, Settings, settings } from "@gajae-code/coding-agent/config/settings";
 import { EventController } from "@gajae-code/coding-agent/modes/controllers/event-controller";
 import * as themeModule from "@gajae-code/coding-agent/modes/theme/theme";
 import type { InteractiveModeContext } from "@gajae-code/coding-agent/modes/types";
 import type { AgentSessionEvent } from "@gajae-code/coding-agent/session/agent-session";
+import { Container } from "@gajae-code/tui";
 
 /**
  * 99.20.04 commit-time folding: in "commit" render mode an active tool

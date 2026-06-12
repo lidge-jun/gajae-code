@@ -631,8 +631,8 @@ export class Settings {
 		}
 
 		// gjc.deepInterview.ambiguityThreshold -> jwc.interview.ambiguityThreshold (nested, 042 D041-D)
-		const legacyGjc = raw.gjc as Record<string, unknown> | undefined;
-		const legacyDeepInterview = legacyGjc?.deepInterview as Record<string, unknown> | undefined;
+		const legacyJwc = raw.gjc as Record<string, unknown> | undefined;
+		const legacyDeepInterview = legacyJwc?.deepInterview as Record<string, unknown> | undefined;
 		if (legacyDeepInterview && "ambiguityThreshold" in legacyDeepInterview) {
 			raw.jwc ??= {};
 			const jwcRoot = raw.jwc as Record<string, unknown>;
@@ -642,8 +642,8 @@ export class Settings {
 				interviewRoot.ambiguityThreshold = legacyDeepInterview.ambiguityThreshold;
 			}
 			delete legacyDeepInterview.ambiguityThreshold;
-			if (Object.keys(legacyDeepInterview).length === 0) delete legacyGjc?.deepInterview;
-			if (legacyGjc && Object.keys(legacyGjc).length === 0) delete raw.gjc;
+			if (Object.keys(legacyDeepInterview).length === 0) delete legacyJwc?.deepInterview;
+			if (legacyJwc && Object.keys(legacyJwc).length === 0) delete raw.gjc;
 		}
 
 		// ask.timeout: ms -> seconds (if value > 1000, it's old ms format)

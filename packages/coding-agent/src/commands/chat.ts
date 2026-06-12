@@ -1,6 +1,6 @@
 import { APP_NAME } from "@gajae-code/utils";
 import { Command, Flags } from "@gajae-code/utils/cli";
-import { runNativeChatCommand } from "../gjc-runtime/memory-runtime";
+import { runNativeChatCommand } from "../jwc-runtime/memory-runtime";
 
 export default class Chat extends Command {
 	static description = `Search past ${APP_NAME} conversations across this project's sessions`;

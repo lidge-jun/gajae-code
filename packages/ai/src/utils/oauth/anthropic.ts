@@ -3,7 +3,7 @@
  */
 import { OAuthCallbackFlow } from "./callback-server";
 import { generatePKCE } from "./pkce";
-import type { OAuthController, OAuthCredentials } from "./types";
+import type { LocalTokenImportMode, OAuthController, OAuthCredentials } from "./types";
 
 const decode = (s: string) => atob(s);
 const CLIENT_ID = decode("OWQxYzI1MGEtZTYxYi00NGQ5LTg4ZWQtNTk0NGQxOTYyZjVl");
@@ -167,17 +167,28 @@ export class AnthropicOAuthFlow extends OAuthCallbackFlow {
 /**
  * Login with Anthropic OAuth
  */
-export async function loginAnthropic(ctrl: OAuthController): Promise<OAuthCredentials> {
-	const { detectClaudeCodeToken } = await import("./local-token-detect");
-	const local = detectClaudeCodeToken();
-	if (local) {
-		ctrl.onProgress?.("Found Claude Code token, importing automatically");
-		if (local.expires < Date.now() + 60_000) {
+export async function loginAnthropic(
+	ctrl: OAuthController,
+	opts?: { importLocal?: LocalTokenImportMode },
+): Promise<OAuthCredentials> {
+	const importLocal = opts?.importLocal ?? "off";
+	if (importLocal !== "off") {
+		const { detectClaudeCodeToken } = await import("./local-token-detect");
+		const local = detectClaudeCodeToken();
+		if (local) {
+			ctrl.onProgress?.("Found Claude Code token, importing automatically");
+			if (local.expires >= Date.now() + 60_000) return local;
 			try {
 				return await refreshAnthropicToken(local.refresh);
-			} catch {}
-		} else {
-			return local;
+			} catch (error) {
+				if (importLocal === "only") {
+					throw new Error(
+						`Claude Code token is expired and could not be refreshed: ${error instanceof Error ? error.message : String(error)}`,
+					);
+				}
+			}
+		} else if (importLocal === "only") {
+			throw new Error("No Claude Code token found in the system keychain. Run /login anthropic for browser OAuth.");
 		}
 	}
 

@@ -77,7 +77,7 @@ describe("gjc session command", () => {
 		const output = await runSessionCommand(["status", "missing", "--json"]);
 		const payload = JSON.parse(output);
 
-		expect(payload).toEqual({ ok: false, reason: "gjc_tmux_session_not_found" });
+		expect(payload).toEqual({ ok: false, reason: "jwc_tmux_session_not_found" });
 	});
 
 	it("creates and reports a detached managed session as exact JSON DTO", async () => {

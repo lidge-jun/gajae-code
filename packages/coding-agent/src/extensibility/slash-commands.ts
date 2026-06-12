@@ -91,6 +91,17 @@ function buildStaticInlineHint(hint: string): (argumentText: string) => string |
 }
 
 /**
+ * Native workflow entrypoints pin to the very top of `/` autocomplete —
+ * above the bundled GJC skill commands (priority 100, interactive-mode).
+ * 99.30.02: the cli-jaw workflow (/orchestrate IPABCD · /goal) superseded the
+ * ralplan/interview skill pipeline, so it owns the #1 slot.
+ */
+const WORKFLOW_COMMAND_PRIORITIES: Record<string, number> = {
+	orchestrate: 110,
+	goal: 105,
+};
+
+/**
  * Materialized builtin slash commands with completion functions derived from
  * declarative subcommand/hint definitions.
  */
@@ -98,6 +109,7 @@ export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<
 	BuiltinSlashCommand & {
 		getArgumentCompletions?: (prefix: string) => AutocompleteItem[] | null;
 		getInlineHint?: (argumentText: string) => string | null;
+		priority?: number;
 	}
 > = BUILTIN_SLASH_COMMAND_DEFS.flatMap(cmd => {
 	const decorate = (entry: BuiltinSlashCommand) => {
@@ -118,10 +130,12 @@ export const BUILTIN_SLASH_COMMANDS: ReadonlyArray<
 	};
 	// Aliases surface as their own autocomplete entries so they are discoverable;
 	// dispatch still resolves them to the primary command via the registry lookup.
+	// Pin priority stays on the primary entry only — alias rows rank normally.
 	const aliasEntries = (cmd.aliases ?? []).map(alias =>
 		decorate({ ...cmd, name: alias, aliases: undefined, description: `${cmd.description} (alias of /${cmd.name})` }),
 	);
-	return [decorate(cmd), ...aliasEntries];
+	const priority = WORKFLOW_COMMAND_PRIORITIES[cmd.name];
+	return [priority !== undefined ? { ...decorate(cmd), priority } : decorate(cmd), ...aliasEntries];
 });
 
 /**

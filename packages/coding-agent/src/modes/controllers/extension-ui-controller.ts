@@ -184,7 +184,10 @@ export class ExtensionUiController {
 				this.ctx.streamingMessage = undefined;
 				this.ctx.pendingTools.clear();
 
-				this.ctx.showStatus(`${theme.status.success} New session started`);
+				this.ctx.chatContainer.addChild(new Spacer(1));
+				this.ctx.chatContainer.addChild(
+					new Text(`${theme.fg("accent", `${theme.status.success} New session started`)}`, 1, 1),
+				);
 				await this.ctx.reloadTodos();
 				this.ctx.ui.requestRender();
 
@@ -289,7 +292,7 @@ export class ExtensionUiController {
 	}
 
 	#rebuildHookWidgets(): void {
-		this.#renderHookWidgetContainer(this.ctx.hookWidgetContainerAbove, this.#hookWidgetsAbove, true, true);
+		this.#renderHookWidgetContainer(this.ctx.hookWidgetContainerAbove, this.#hookWidgetsAbove, false, true);
 		this.#renderHookWidgetContainer(this.ctx.hookWidgetContainerBelow, this.#hookWidgetsBelow, false, false);
 		this.ctx.ui.requestRender();
 	}
@@ -420,7 +423,10 @@ export class ExtensionUiController {
 				this.ctx.streamingMessage = undefined;
 				this.ctx.pendingTools.clear();
 
-				this.ctx.showStatus(`${theme.status.success} New session started`);
+				this.ctx.chatContainer.addChild(new Spacer(1));
+				this.ctx.chatContainer.addChild(
+					new Text(`${theme.fg("accent", `${theme.status.success} New session started`)}`, 1, 1),
+				);
 				await this.ctx.reloadTodos();
 				this.ctx.ui.requestRender();
 

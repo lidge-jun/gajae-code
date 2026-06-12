@@ -29,11 +29,18 @@ import { githubCopilotUsageProvider } from "./usage/github-copilot";
 import { antigravityUsageProvider } from "./usage/google-antigravity";
 import { kimiUsageProvider } from "./usage/kimi";
 import { codexRankingStrategy, openaiCodexUsageProvider } from "./usage/openai-codex";
+import { xaiUsageProvider } from "./usage/xai";
 import { zaiUsageProvider } from "./usage/zai";
 import { getOAuthApiKey, getOAuthProvider, refreshOAuthToken } from "./utils/oauth";
 import { loginDeepSeek } from "./utils/oauth/deepseek";
 import { loginOpenAICodexDevice } from "./utils/oauth/openai-codex";
-import type { OAuthController, OAuthCredentials, OAuthProvider, OAuthProviderId } from "./utils/oauth/types";
+import type {
+	LocalTokenImportMode,
+	OAuthController,
+	OAuthCredentials,
+	OAuthProvider,
+	OAuthProviderId,
+} from "./utils/oauth/types";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Credential Types
@@ -370,6 +377,7 @@ const DEFAULT_USAGE_PROVIDERS: UsageProvider[] = [
 	claudeUsageProvider,
 	zaiUsageProvider,
 	githubCopilotUsageProvider,
+	xaiUsageProvider,
 ];
 
 const DEFAULT_USAGE_PROVIDER_MAP = new Map<Provider, UsageProvider>(
@@ -1344,21 +1352,34 @@ export class AuthStorage {
 			/** onPrompt is required for some providers (github-copilot, OpenAI code provider) */
 			onPrompt: (prompt: { message: string; placeholder?: string }) => Promise<string>;
 		},
+		opts?: {
+			/** Force local CLI token import (`/login <provider> local`) — no OAuth fallback. */
+			importLocal?: boolean;
+		},
 	): Promise<void> {
 		let credentials: OAuthCredentials;
 		const saveApiKeyCredential = async (apiKey: string): Promise<void> => {
 			const newCredential: ApiKeyCredential = { type: "api_key", key: apiKey };
 			await this.set(provider, newCredential);
 		};
+		// Local CLI token import policy: an explicit `local` request forces the
+		// import ("only"); otherwise a first-time login (nothing stored) may fall
+		// back to a detected token, while a re-login means "re-authenticate"
+		// (account switch / broken token) and goes straight to the real OAuth
+		// flow. Decided here, before the per-case remove() wipes the evidence.
+		const importLocal: LocalTokenImportMode = opts?.importLocal ? "only" : this.has(provider) ? "off" : "fallback";
 		const manualCodeInput = () => ctrl.onPrompt({ message: "Paste the authorization code (or full redirect URL):" });
 		switch (provider) {
 			case "anthropic": {
 				await this.remove(provider);
 				const { loginAnthropic } = await import("./utils/oauth/anthropic");
-				credentials = await loginAnthropic({
-					...ctrl,
-					onManualCodeInput: ctrl.onManualCodeInput ?? manualCodeInput,
-				});
+				credentials = await loginAnthropic(
+					{
+						...ctrl,
+						onManualCodeInput: ctrl.onManualCodeInput ?? manualCodeInput,
+					},
+					{ importLocal },
+				);
 				break;
 			}
 			case "alibaba-coding-plan": {
@@ -1396,10 +1417,13 @@ export class AuthStorage {
 			case "openai-codex": {
 				await this.remove(provider);
 				const { loginOpenAICodex } = await import("./utils/oauth/openai-codex");
-				credentials = await loginOpenAICodex({
-					...ctrl,
-					onManualCodeInput: ctrl.onManualCodeInput ?? manualCodeInput,
-				});
+				credentials = await loginOpenAICodex(
+					{
+						...ctrl,
+						onManualCodeInput: ctrl.onManualCodeInput ?? manualCodeInput,
+					},
+					{ importLocal },
+				);
 				break;
 			}
 			case "openai-codex-device": {
@@ -1495,10 +1519,13 @@ export class AuthStorage {
 			case "xai": {
 				await this.remove(provider);
 				const { loginXai } = await import("./utils/oauth/xai");
-				credentials = await loginXai({
-					...ctrl,
-					onManualCodeInput: ctrl.onManualCodeInput ?? manualCodeInput,
-				});
+				credentials = await loginXai(
+					{
+						...ctrl,
+						onManualCodeInput: ctrl.onManualCodeInput ?? manualCodeInput,
+					},
+					{ importLocal },
+				);
 				break;
 			}
 			case "fireworks": {

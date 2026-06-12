@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { applyCliJawDevVocabularyMap, isCliJawSkillPath } from "../../src/gjc-runtime/cli-jaw-vocab";
-import { buildAuditLensSkillPointer, buildStageSkillPointer } from "../../src/gjc-runtime/stage-skill-map";
+import { applyCliJawDevVocabularyMap, isCliJawSkillPath } from "../../src/jwc-runtime/cli-jaw-vocab";
+import { buildAuditLensSkillPointer, buildStageSkillPointer } from "../../src/jwc-runtime/stage-skill-map";
 
 const ORIGINAL_BRAND = process.env.GJC_BRAND_NAME;
 
@@ -57,7 +57,7 @@ describe("applyCliJawDevVocabularyMap (056 contract)", () => {
 
 	it("identifies cli-jaw skill paths", () => {
 		expect(isCliJawSkillPath(`${os.homedir()}/.cli-jaw/skills/dev/SKILL.md`)).toBe(true);
-		expect(isCliJawSkillPath("/repo/packages/coding-agent/src/defaults/gjc/skills/team/SKILL.md")).toBe(false);
+		expect(isCliJawSkillPath("/repo/packages/coding-agent/src/defaults/jwc/skills/team/SKILL.md")).toBe(false);
 	});
 });
 

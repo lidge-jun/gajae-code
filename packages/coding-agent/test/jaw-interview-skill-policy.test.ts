@@ -8,7 +8,7 @@ import * as path from "node:path";
  * These are content gates: if a rebase or edit drops a policy line, this fails.
  */
 
-const skillPath = path.resolve(import.meta.dir, "../src/defaults/gjc/skills/jaw-interview/SKILL.md");
+const skillPath = path.resolve(import.meta.dir, "../src/defaults/jwc/skills/jaw-interview/SKILL.md");
 
 let skill = "";
 

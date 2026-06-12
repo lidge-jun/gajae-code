@@ -4,12 +4,13 @@ import { type AgentMessage, ThinkingLevel } from "@gajae-code/agent-core";
 import type { AutocompleteProvider, SlashCommand } from "@gajae-code/tui";
 import { $env, sanitizeText } from "@gajae-code/utils";
 import { isSettingsInitialized, settings } from "../../config/settings";
-import { resolveSubskillActivationForSkillInvocation } from "../../extensibility/gjc-plugins";
+import { resolveSubskillActivationForSkillInvocation } from "../../extensibility/jwc-plugins";
 import { buildSkillPromptMessage, parseSkillInvocations } from "../../extensibility/skills";
 import { expandEmoticons } from "../../modes/emoji-autocomplete";
 import { createPromptActionAutocompleteProvider } from "../../modes/prompt-action-autocomplete";
 import { theme } from "../../modes/theme/theme";
 import type { InteractiveModeContext } from "../../modes/types";
+import { commitFinalizedBacklog } from "../../modes/utils/ui-helpers";
 import type { AgentSessionEvent } from "../../session/agent-session";
 import { SKILL_PROMPT_MESSAGE_TYPE, type SkillPromptDetails } from "../../session/messages";
 import { executeBuiltinSlashCommand } from "../../slash-commands/builtin-registry";
@@ -19,10 +20,8 @@ import { ensureSupportedImageInput, ImageInputTooLargeError, loadImageInput } fr
 import { resizeImage } from "../../utils/image-resize";
 import { generateSessionTitle, setSessionTerminalTitle } from "../../utils/title-generator";
 import { AssistantMessageComponent } from "../components/assistant-message";
+import { appKey } from "../components/keybinding-hints";
 import { ToolExecutionComponent } from "../components/tool-execution";
-
-/** 99.10: focus ring / transcript cells — tools and thinking-bearing assistant messages share the expand protocol. */
-type FocusableCell = ToolExecutionComponent | AssistantMessageComponent;
 import { ToolTranscriptOverlayComponent } from "../components/tool-transcript-overlay";
 
 interface Expandable {
@@ -33,6 +32,8 @@ const INTERACTIVE_ABORT_CLEANUP_TIMEOUT_MS = 5_000;
 // Hangul IME chord hint (devlog 082.1): hook-status key + how long the hint stays up.
 const HANGUL_IME_HINT_KEY = "ime-hangul-chord";
 const HANGUL_IME_HINT_DURATION_MS = 4_000;
+// Double-press exit window — aligned with Claude Code's 800ms (devlog 99.20.06 W1).
+const DOUBLE_PRESS_EXIT_WINDOW_MS = 800;
 const CLIPBOARD_TEMP_IMAGE_FILE_PATTERN = /^clipboard-\d{4}-\d{2}-\d{2}-\d{6}-[A-Za-z0-9]+\.(?:png|jpe?g|gif|webp)$/i;
 const MACOS_CLIPBOARD_TEMP_DIR_PATTERN = /^\/var\/folders\/[^/]+\/[^/]+\/T$/;
 
@@ -147,6 +148,22 @@ export class InputController {
 		this.ctx.editor.onClear = () => this.handleCtrlC();
 		this.ctx.editor.setActionKeys("app.exit", this.ctx.keybindings.getKeys("app.exit"));
 		this.ctx.editor.onExit = () => this.handleCtrlD();
+		// Double-Escape safety net (082.1) keeps its guaranteed immediate exit —
+		// decoupled from onExit, which is now a double-press chord (99.20.06 W2).
+		this.ctx.editor.onForcedExit = () => void this.ctx.shutdown();
+		this.ctx.editor.onExitPending = () => {
+			// Quiet contexts only: while streaming/loading or inside transient UI,
+			// the first Esc means interrupt/dismiss — an exit notice would mislead.
+			if (
+				this.ctx.session.isStreaming ||
+				this.ctx.loadingAnimation ||
+				this.ctx.hasActiveBtw() ||
+				this.ctx.editor.isShowingAutocomplete()
+			) {
+				return;
+			}
+			this.#showExitPendingNotice("esc");
+		};
 		this.ctx.editor.setActionKeys("app.suspend", this.ctx.keybindings.getKeys("app.suspend"));
 		this.ctx.editor.onSuspend = () => this.handleCtrlZ();
 		this.ctx.editor.setActionKeys("app.thinking.cycle", this.ctx.keybindings.getKeys("app.thinking.cycle"));
@@ -194,14 +211,6 @@ export class InputController {
 		this.ctx.editor.setActionKeys("app.message.dequeue", this.ctx.keybindings.getKeys("app.message.dequeue"));
 		this.ctx.editor.onDequeue = () => this.handleDequeue();
 		this.ctx.editor.onHangulCtrlChordHint = (_jamo, chord) => this.showHangulImeHint(chord);
-		// 99.20.03 surface 4: ESC-dismissed autocomplete dropdown leaves a
-		// transient-growth gap above the composer in the overflow zone — compact
-		// it like the slash-dispatch path does. Guarded: no repaint mid-stream.
-		this.ctx.editor.onAutocompleteCancel = () => {
-			if (!this.ctx.session.isStreaming) {
-				this.ctx.ui.compactViewportFill();
-			}
-		};
 
 		this.ctx.editor.clearCustomKeyHandlers();
 		// Wire up extension shortcuts
@@ -441,6 +450,15 @@ export class InputController {
 				const images = inputImages && inputImages.length > 0 ? [...inputImages] : undefined;
 				this.ctx.pendingImages = [];
 
+				// 083.9 P4: turn boundary — the finished turn's components freeze
+				// their pixels into the scrollback now (they stayed interactive
+				// until this moment), then the gap compacts.
+				commitFinalizedBacklog(this.ctx);
+				// 083.8 S2: collapse any post-overflow gap left by the previous turn
+				// HERE — the screen is about to change anyway (new user message), so
+				// the full rebuild is invisible. Doing this at agent_end made the
+				// final response visibly jump (devlog 083.8 ⑤).
+				this.ctx.ui.compactViewportFill();
 				// Render user message immediately, then let session events catch up
 				const submission = this.ctx.startPendingSubmission({ text, images });
 
@@ -457,11 +475,15 @@ export class InputController {
 	 * anything; it auto-clears shortly after.
 	 */
 	showHangulImeHint(chord: string): void {
+		const text = `${chord} needs the English layout — switch to English (한/A) or press esc esc to exit`;
+		// 99.20.06: the hint lives on the composer footer; the hook-status line
+		// above the editor stays as the legacy surface when the footer is off.
+		if (this.ctx.composerFooter.isEnabled()) {
+			this.ctx.composerFooter.setTransient(text, { durationMs: HANGUL_IME_HINT_DURATION_MS });
+			return;
+		}
 		// Plain text: hook-status lines pass through sanitizeStatusText, which strips ANSI.
-		this.ctx.statusLine.setHookStatus(
-			HANGUL_IME_HINT_KEY,
-			`${chord} needs the English layout — switch to English (한/A) or press esc esc to exit`,
-		);
+		this.ctx.statusLine.setHookStatus(HANGUL_IME_HINT_KEY, text);
 		this.ctx.ui.requestRender();
 		if (this.#hangulImeHintTimer) clearTimeout(this.#hangulImeHintTimer);
 		this.#hangulImeHintTimer = setTimeout(() => {
@@ -472,21 +494,48 @@ export class InputController {
 		this.#hangulImeHintTimer.unref?.();
 	}
 
+	/** Footer notice for an armed double-press exit (devlog 99.20.06 §2.4). */
+	#showExitPendingNotice(keyLabel: string): void {
+		if (!this.ctx.composerFooter.isEnabled()) return;
+		this.ctx.composerFooter.setTransient(`press ${keyLabel} again to exit`, {
+			durationMs: DOUBLE_PRESS_EXIT_WINDOW_MS,
+		});
+	}
+
 	handleCtrlC(): void {
 		const now = Date.now();
-		if (now - this.ctx.lastSigintTime < 500) {
+		if (now - this.ctx.lastSigintTime < DOUBLE_PRESS_EXIT_WINDOW_MS) {
 			void this.ctx.shutdown();
 		} else {
 			this.ctx.clearEditor();
 			this.ctx.lastSigintTime = now;
+			this.#showExitPendingNotice(appKey(this.ctx.keybindings, "app.clear"));
 		}
 	}
 
+	/** Timestamp of the last exit-chord press while armed (99.20.06 W2 double-press). */
+	#lastExitChordTime = 0;
+
 	handleCtrlD(): void {
-		// Editor text (if any) is snapshotted at the start of shutdown() and
-		// persisted as a draft for the next resume. Empty text is also fine —
-		// shutdown clears any stale sidecar in that case.
-		void this.ctx.shutdown();
+		// Legacy surface (footer off): single-press exit, unchanged — a silent
+		// double-press requirement without the footer notice would be confusing.
+		if (!this.ctx.composerFooter.isEnabled()) {
+			void this.ctx.shutdown();
+			return;
+		}
+		// CC parity (99.20.06 W2): the exit chord only acts on an empty editor;
+		// with text present it is a no-op (drafts are still snapshotted by
+		// shutdown() on the ctrl+c/esc paths).
+		if (this.ctx.editor.getText().length > 0) {
+			return;
+		}
+		const now = Date.now();
+		if (now - this.#lastExitChordTime < DOUBLE_PRESS_EXIT_WINDOW_MS) {
+			void this.ctx.shutdown();
+		} else {
+			this.#lastExitChordTime = now;
+			this.#showExitPendingNotice(appKey(this.ctx.keybindings, "app.exit"));
+		}
 	}
 
 	handleCtrlZ(): void {
@@ -922,14 +971,12 @@ export class InputController {
 
 	// =========================================================================
 	// Tool focus mode (083.1 pattern B): ctrl+up enters / moves up, ↑↓ navigate,
-	// enter toggles the focused cell's expansion, esc or typing exits.
-	// 99.10: the ring covers tool blocks AND thinking-bearing assistant cells —
-	// both share the duck-typed setFocused/expanded/setExpanded protocol.
+	// enter toggles the focused tool's expansion, esc or typing exits.
 	// =========================================================================
 
 	#toolFocus:
 		| {
-				tools: FocusableCell[];
+				tools: ToolExecutionComponent[];
 				index: number;
 				prevOnChange: ((text: string) => void) | undefined;
 				prevInterruptPriority: (() => boolean) | undefined;
@@ -941,11 +988,8 @@ export class InputController {
 			this.#moveToolFocus(-1);
 			return;
 		}
-		// 99.10: thinking-bearing assistant cells join the ring alongside tools.
 		const tools = this.ctx.chatContainer.children.filter(
-			(child): child is FocusableCell =>
-				child instanceof ToolExecutionComponent ||
-				(child instanceof AssistantMessageComponent && child.hasThinking),
+			(child): child is ToolExecutionComponent => !child.committed && child instanceof ToolExecutionComponent,
 		);
 		if (tools.length === 0) {
 			this.ctx.showStatus("No tool blocks to focus");
@@ -1010,13 +1054,11 @@ export class InputController {
 		this.ctx.ui.requestRender();
 	}
 
-	/** 083.1 pattern A: full tool transcript in a scrollable overlay (alt+t) — thinking cells included (99.10). */
+	/** 083.1 pattern A: full tool transcript in a scrollable overlay (alt+t). */
 	showToolTranscript(): void {
 		this.#exitToolFocus();
 		const tools = this.ctx.chatContainer.children.filter(
-			(child): child is FocusableCell =>
-				child instanceof ToolExecutionComponent ||
-				(child instanceof AssistantMessageComponent && child.hasThinking),
+			(child): child is ToolExecutionComponent => child instanceof ToolExecutionComponent,
 		);
 		if (tools.length === 0) {
 			this.ctx.showStatus("No tool blocks to show");

@@ -93,4 +93,4 @@ jobs:
           key: bun-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}
       - run: bun install --frozen-lockfile
       - name: Run GJC state gates
-        run: bun scripts/ci-gjc-state-gates.ts
+        run: bun scripts/ci-jwc-state-gates.ts

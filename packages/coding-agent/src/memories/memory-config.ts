@@ -95,19 +95,26 @@ function parsePositiveInt(value: unknown, fallback: number): number {
 export function loadMemoryConfig(settings: Settings): MemoryRuntimeConfig {
 	return {
 		enabled: settings.get("memory.backend") === "local" || settings.get("memories.enabled") === true,
-		maxRolloutsPerStartup: settings.get("memories.maxRolloutsPerStartup") ?? MEMORY_RUNTIME_DEFAULTS.maxRolloutsPerStartup,
+		maxRolloutsPerStartup:
+			settings.get("memories.maxRolloutsPerStartup") ?? MEMORY_RUNTIME_DEFAULTS.maxRolloutsPerStartup,
 		maxRolloutAgeDays: settings.get("memories.maxRolloutAgeDays") ?? MEMORY_RUNTIME_DEFAULTS.maxRolloutAgeDays,
 		minRolloutIdleHours: settings.get("memories.minRolloutIdleHours") ?? MEMORY_RUNTIME_DEFAULTS.minRolloutIdleHours,
 		threadScanLimit: settings.get("memories.threadScanLimit") ?? MEMORY_RUNTIME_DEFAULTS.threadScanLimit,
-		maxRawMemoriesForGlobal: settings.get("memories.maxRawMemoriesForGlobal") ?? MEMORY_RUNTIME_DEFAULTS.maxRawMemoriesForGlobal,
+		maxRawMemoriesForGlobal:
+			settings.get("memories.maxRawMemoriesForGlobal") ?? MEMORY_RUNTIME_DEFAULTS.maxRawMemoriesForGlobal,
 		stage1Concurrency: settings.get("memories.stage1Concurrency") ?? MEMORY_RUNTIME_DEFAULTS.stage1Concurrency,
 		stage1LeaseSeconds: settings.get("memories.stage1LeaseSeconds") ?? MEMORY_RUNTIME_DEFAULTS.stage1LeaseSeconds,
-		stage1RetryDelaySeconds: settings.get("memories.stage1RetryDelaySeconds") ?? MEMORY_RUNTIME_DEFAULTS.stage1RetryDelaySeconds,
+		stage1RetryDelaySeconds:
+			settings.get("memories.stage1RetryDelaySeconds") ?? MEMORY_RUNTIME_DEFAULTS.stage1RetryDelaySeconds,
 		phase2LeaseSeconds: settings.get("memories.phase2LeaseSeconds") ?? MEMORY_RUNTIME_DEFAULTS.phase2LeaseSeconds,
-		phase2RetryDelaySeconds: settings.get("memories.phase2RetryDelaySeconds") ?? MEMORY_RUNTIME_DEFAULTS.phase2RetryDelaySeconds,
-		phase2HeartbeatSeconds: settings.get("memories.phase2HeartbeatSeconds") ?? MEMORY_RUNTIME_DEFAULTS.phase2HeartbeatSeconds,
-		rolloutPayloadPercent: settings.get("memories.rolloutPayloadPercent") ?? MEMORY_RUNTIME_DEFAULTS.rolloutPayloadPercent,
-		phase1InputTokenLimit: settings.get("memories.phase1InputTokenLimit") ?? MEMORY_RUNTIME_DEFAULTS.phase1InputTokenLimit,
+		phase2RetryDelaySeconds:
+			settings.get("memories.phase2RetryDelaySeconds") ?? MEMORY_RUNTIME_DEFAULTS.phase2RetryDelaySeconds,
+		phase2HeartbeatSeconds:
+			settings.get("memories.phase2HeartbeatSeconds") ?? MEMORY_RUNTIME_DEFAULTS.phase2HeartbeatSeconds,
+		rolloutPayloadPercent:
+			settings.get("memories.rolloutPayloadPercent") ?? MEMORY_RUNTIME_DEFAULTS.rolloutPayloadPercent,
+		phase1InputTokenLimit:
+			settings.get("memories.phase1InputTokenLimit") ?? MEMORY_RUNTIME_DEFAULTS.phase1InputTokenLimit,
 		fallbackTokenLimit: settings.get("memories.fallbackTokenLimit") ?? MEMORY_RUNTIME_DEFAULTS.fallbackTokenLimit,
 		summaryInjectionTokenLimit:
 			settings.get("memories.summaryInjectionTokenLimit") ?? MEMORY_RUNTIME_DEFAULTS.summaryInjectionTokenLimit,
@@ -115,7 +122,10 @@ export function loadMemoryConfig(settings: Settings): MemoryRuntimeConfig {
 		searchMode: parseMemorySearchMode(settings.get("memories.searchMode")),
 		searchLimit: MEMORY_RUNTIME_DEFAULTS.searchLimit,
 		browseLimit: MEMORY_RUNTIME_DEFAULTS.browseLimit,
-		taskSnapshotTopN: parsePositiveInt(settings.get("memories.taskSnapshotTopN"), MEMORY_RUNTIME_DEFAULTS.taskSnapshotTopN),
+		taskSnapshotTopN: parsePositiveInt(
+			settings.get("memories.taskSnapshotTopN"),
+			MEMORY_RUNTIME_DEFAULTS.taskSnapshotTopN,
+		),
 		taskSnapshotEpisodeCap: parsePositiveInt(
 			settings.get("memories.taskSnapshotEpisodeCap"),
 			MEMORY_RUNTIME_DEFAULTS.taskSnapshotEpisodeCap,
@@ -129,7 +139,10 @@ export function loadMemoryConfig(settings: Settings): MemoryRuntimeConfig {
 			settings.get("memories.snapshotSnippetChars"),
 			MEMORY_RUNTIME_DEFAULTS.snapshotSnippetChars,
 		),
-		searchSnippetChars: parsePositiveInt(settings.get("memories.searchSnippetChars"), MEMORY_RUNTIME_DEFAULTS.searchSnippetChars),
+		searchSnippetChars: parsePositiveInt(
+			settings.get("memories.searchSnippetChars"),
+			MEMORY_RUNTIME_DEFAULTS.searchSnippetChars,
+		),
 		hitCountDedupThreshold: parsePositiveInt(
 			settings.get("memories.hitCountDedupThreshold"),
 			MEMORY_RUNTIME_DEFAULTS.hitCountDedupThreshold,

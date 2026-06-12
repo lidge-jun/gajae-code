@@ -76,14 +76,14 @@ export const MODEL_ROLES: Record<ModelRole, ModelRoleInfo> = {
 
 export const MODEL_ROLE_IDS: ModelRole[] = ["default"];
 
-export type GjcModelAssignmentTargetId = "default" | "executor" | "architect" | "planner" | "critic";
+export type JwcModelAssignmentTargetId = "default" | "executor" | "architect" | "planner" | "critic";
 
-export interface GjcModelAssignmentTargetInfo extends ModelRoleInfo {
-	id: GjcModelAssignmentTargetId;
+export interface JwcModelAssignmentTargetInfo extends ModelRoleInfo {
+	id: JwcModelAssignmentTargetId;
 	settingsPath: "modelRoles" | "task.agentModelOverrides";
 }
 
-export const GJC_MODEL_ASSIGNMENT_TARGET_IDS: GjcModelAssignmentTargetId[] = [
+export const JWC_MODEL_ASSIGNMENT_TARGET_IDS: JwcModelAssignmentTargetId[] = [
 	"default",
 	"executor",
 	"architect",
@@ -91,7 +91,7 @@ export const GJC_MODEL_ASSIGNMENT_TARGET_IDS: GjcModelAssignmentTargetId[] = [
 	"critic",
 ];
 
-export const GJC_MODEL_ASSIGNMENT_TARGETS: Record<GjcModelAssignmentTargetId, GjcModelAssignmentTargetInfo> = {
+export const JWC_MODEL_ASSIGNMENT_TARGETS: Record<JwcModelAssignmentTargetId, JwcModelAssignmentTargetInfo> = {
 	default: { id: "default", tag: "DEFAULT", name: "Default", color: "success", settingsPath: "modelRoles" },
 	executor: {
 		id: "executor",

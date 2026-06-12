@@ -1,6 +1,6 @@
 import { APP_NAME } from "@gajae-code/utils";
 import { Command, Flags } from "@gajae-code/utils/cli";
-import { runNativeGoalCommand } from "../gjc-runtime/goal-runtime";
+import { runNativeGoalCommand } from "../jwc-runtime/goal-runtime";
 
 export default class Goal extends Command {
 	static description = `Manage the durable ${APP_NAME} goal ledger (cli-jaw verb surface — goal-ledger engine)`;

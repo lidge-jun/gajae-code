@@ -4,7 +4,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import {
 	applyHandoffToActiveState,
-	CANONICAL_GJC_WORKFLOW_SKILLS,
+	CANONICAL_JWC_WORKFLOW_SKILLS,
 	getSkillActiveStatePaths,
 	listActiveSkills,
 	normalizeSkillActiveState,
@@ -270,7 +270,7 @@ describe("GJC skill-active state", () => {
 
 	it("keeps every active pipeline skill at the read layer (HUD pipeline collapse is render-only)", async () => {
 		await withTempCwd(async cwd => {
-			// `gjc ralplan` then `gjc ultragoal` each activate their own row without
+			// `jwc ralplan` then `jwc ultragoal` each activate their own row without
 			// demoting the other. The shared read keeps both so blocking consumers
 			// (jaw-interview mutation guard, handoff caller inference) still see the
 			// true active set; collapsing to the current stage is the HUD renderer's
@@ -379,6 +379,6 @@ describe("GJC skill-active state", () => {
 	});
 
 	it("keeps the canonical GJC workflow skill set intentionally small", () => {
-		expect(CANONICAL_GJC_WORKFLOW_SKILLS).toEqual(["jaw-interview", "ralplan", "ultragoal", "team"]);
+		expect(CANONICAL_JWC_WORKFLOW_SKILLS).toEqual(["jaw-interview", "ralplan", "ultragoal", "team"]);
 	});
 });

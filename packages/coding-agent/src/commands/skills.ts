@@ -27,9 +27,9 @@ export default class Skills extends Command {
 	};
 
 	static examples = [
-		"# List bundled workflow skills\n  gjc skills list",
-		"# Read an embedded workflow skill without requiring .jwc files\n  gjc skills read ultragoal",
-		"# Machine-readable embedded skill content\n  gjc skills read ralplan --json",
+		"# List bundled workflow skills\n  jwc skills list",
+		"# Read an embedded workflow skill without requiring .jwc files\n  jwc skills read ultragoal",
+		"# Machine-readable embedded skill content\n  jwc skills read ralplan --json",
 	];
 
 	async run(): Promise<void> {

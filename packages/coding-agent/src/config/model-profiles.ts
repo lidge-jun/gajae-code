@@ -1,7 +1,7 @@
-import type { GjcModelAssignmentTargetId } from "./model-registry";
+import type { JwcModelAssignmentTargetId } from "./model-registry";
 import type { ModelsConfig } from "./models-config-schema";
 
-export type ModelProfileRole = GjcModelAssignmentTargetId;
+export type ModelProfileRole = JwcModelAssignmentTargetId;
 
 export interface ModelProfileDefinition {
 	name: string;

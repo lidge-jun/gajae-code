@@ -1,12 +1,12 @@
 import { APP_NAME } from "@gajae-code/utils";
 import { Args, Command, Flags } from "@gajae-code/utils/cli";
 import {
-	attachGjcTmuxSession,
-	createGjcTmuxSession,
-	listGjcTmuxSessions,
-	removeGjcTmuxSession,
-	statusGjcTmuxSession,
-} from "../gjc-runtime/tmux-sessions";
+	attachJwcTmuxSession,
+	createJwcTmuxSession,
+	listJwcTmuxSessions,
+	removeJwcTmuxSession,
+	statusJwcTmuxSession,
+} from "../jwc-runtime/tmux-sessions";
 
 function writeJson(value: unknown): void {
 	process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
@@ -76,7 +76,7 @@ export default class Session extends Command {
 		const json = flags.json ?? false;
 		try {
 			if (action === "list") {
-				const sessions = listGjcTmuxSessions();
+				const sessions = listJwcTmuxSessions();
 				if (json) {
 					writeJson({ ok: true, sessions: sessions.map(sessionJson) });
 					return;
@@ -97,7 +97,7 @@ export default class Session extends Command {
 			}
 
 			if (action === "create") {
-				const session = createGjcTmuxSession();
+				const session = createJwcTmuxSession();
 				if (json) {
 					writeJson({ ok: true, session: sessionJson(session) });
 					return;
@@ -109,7 +109,7 @@ export default class Session extends Command {
 			if (!sessionName) throw new Error("missing_session_name");
 
 			if (action === "status") {
-				const session = statusGjcTmuxSession(sessionName);
+				const session = statusJwcTmuxSession(sessionName);
 				if (json) {
 					writeJson({ ok: true, session: sessionJson(session) });
 					return;
@@ -126,7 +126,7 @@ export default class Session extends Command {
 			}
 
 			if (action === "remove" || action === "rm" || action === "delete") {
-				const removed = removeGjcTmuxSession(sessionName);
+				const removed = removeJwcTmuxSession(sessionName);
 				if (json) {
 					writeJson({ ok: true, session: sessionJson(removed) });
 					return;
@@ -136,7 +136,7 @@ export default class Session extends Command {
 			}
 
 			if (action === "attach") {
-				attachGjcTmuxSession(sessionName);
+				attachJwcTmuxSession(sessionName);
 				return;
 			}
 			throw new Error(`unknown_session_action:${action}`);

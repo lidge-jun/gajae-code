@@ -49,9 +49,9 @@ for (const f of ROOT_FILES) {
 // still catches property accesses like `pkg.gjc ?? x` / `raw.gjc` — restore
 // the legacy identifiers and upgrade manifest keys to the jwc→gjc→pi chain.
 const POST_FIXES: ReadonlyArray<[string, string, string]> = [
-	["packages/coding-agent/src/gjc-runtime/jaw-interview-runtime.ts", "?? root?.jwc?.deepInterview?.ambiguityThreshold", "?? root?.gjc?.deepInterview?.ambiguityThreshold"],
-	["packages/coding-agent/src/config/settings.ts", "const legacyGjc = raw.jwc as Record<string, unknown> | undefined;", "const legacyGjc = raw.gjc as Record<string, unknown> | undefined;"],
-	["packages/coding-agent/src/config/settings.ts", "if (legacyGjc && Object.keys(legacyGjc).length === 0) delete raw.jwc;", "if (legacyGjc && Object.keys(legacyGjc).length === 0) delete raw.gjc;"],
+	["packages/coding-agent/src/jwc-runtime/jaw-interview-runtime.ts", "?? root?.jwc?.deepInterview?.ambiguityThreshold", "?? root?.gjc?.deepInterview?.ambiguityThreshold"],
+	["packages/coding-agent/src/config/settings.ts", "const legacyJwc = raw.jwc as Record<string, unknown> | undefined;", "const legacyJwc = raw.gjc as Record<string, unknown> | undefined;"],
+	["packages/coding-agent/src/config/settings.ts", "if (legacyJwc && Object.keys(legacyJwc).length === 0) delete raw.jwc;", "if (legacyJwc && Object.keys(legacyJwc).length === 0) delete raw.gjc;"],
 	["packages/coding-agent/src/discovery/helpers.ts", "const manifest = pkg?.jwc ?? pkg?.pi;", "const manifest = pkg?.jwc ?? pkg?.gjc ?? pkg?.pi;"],
 	["packages/coding-agent/src/extensibility/extensions/loader.ts", "const manifest = pkg.jwc ?? pkg.pi;", "const manifest = pkg.jwc ?? pkg.gjc ?? pkg.pi;"],
 	["packages/coding-agent/src/extensibility/plugins/installer.ts", "manifest: pkg.jwc || pkg.pi || { version: pkg.version },", "manifest: pkg.jwc || pkg.gjc || pkg.pi || { version: pkg.version },"],
@@ -62,7 +62,7 @@ const POST_FIXES: ReadonlyArray<[string, string, string]> = [
 	["packages/coding-agent/src/extensibility/plugins/manager.ts", "const manifest: PluginManifest = pluginPkg.jwc || pluginPkg.pi || { version: pluginPkg.version };", "const manifest: PluginManifest = pluginPkg.jwc || pluginPkg.gjc || pluginPkg.pi || { version: pluginPkg.version };"],
 	["packages/coding-agent/src/extensibility/plugins/manager.ts", "const hasManifest = !!(pluginPkg.jwc || pluginPkg.pi);", "const hasManifest = !!(pluginPkg.jwc || pluginPkg.gjc || pluginPkg.pi);"],
 	["packages/coding-agent/src/extensibility/plugins/manager.ts", "const manifest: PluginManifest | undefined = pluginPkg.jwc || pluginPkg.pi;", "const manifest: PluginManifest | undefined = pluginPkg.jwc || pluginPkg.gjc || pluginPkg.pi;"],
-	["scripts/verify-g002-gates.ts", 'const hasGjcBin = typeof bin.jwc === "string";', 'const hasGjcBin = typeof (bin.jwc ?? bin.gjc) === "string"; // transition: bin key renames with 065.1'],
+	["scripts/verify-g002-gates.ts", 'const hasJwcBin = typeof bin.jwc === "string";', 'const hasJwcBin = typeof (bin.jwc ?? bin.gjc) === "string"; // transition: bin key renames with 065.1'],
 ];
 for (const [rel, from, to] of POST_FIXES) {
 	const p = path.join(ROOT, rel);

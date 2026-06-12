@@ -1,6 +1,6 @@
 import { APP_NAME } from "@gajae-code/utils";
 import { Command, Flags } from "@gajae-code/utils/cli";
-import { runNativeMemoryCommand } from "../gjc-runtime/memory-runtime";
+import { runNativeMemoryCommand } from "../jwc-runtime/memory-runtime";
 
 export default class Memory extends Command {
 	static description =

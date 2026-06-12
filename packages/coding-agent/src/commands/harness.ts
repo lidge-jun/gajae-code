@@ -14,15 +14,14 @@ import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
 import { APP_NAME } from "@gajae-code/utils";
 import { Args, Command, Flags } from "@gajae-code/utils/cli";
-import { resolveGjcTmuxCommand, sanitizeTmuxToken } from "../gjc-runtime/tmux-common";
 import { classifyRecovery } from "../harness-control-plane/classifier";
 import { callEndpoint, EndpointUnreachableError } from "../harness-control-plane/control-endpoint";
 import { type ResolvedOwner, RuntimeOwner, resolveOwner } from "../harness-control-plane/owner";
 import { preserveDirtyWorktree } from "../harness-control-plane/preserve";
 import { buildReceipt, requiresVanishBeforeAction, type VanishEvidence } from "../harness-control-plane/receipts";
-import { GajaeCodeRpc } from "../harness-control-plane/rpc-adapter";
+import { JawcodeRpc } from "../harness-control-plane/rpc-adapter";
 import { classifyLeaseStatus, readLease } from "../harness-control-plane/session-lease";
-import { buildResponse, buildStateView } from "../harness-control-plane/state-machine";
+import { buildResponse, buildStateView, submitUnavailableReason } from "../harness-control-plane/state-machine";
 import {
 	canonicalWorkspacePath,
 	generateSessionId,
@@ -47,6 +46,7 @@ import {
 	type SessionHandle,
 	type SessionState,
 } from "../harness-control-plane/types";
+import { resolveJwcTmuxCommand, sanitizeTmuxToken } from "../jwc-runtime/tmux-common";
 
 function writeJson(value: unknown): void {
 	process.stdout.write(`${JSON.stringify(value, null, 2)}\n`);
@@ -555,7 +555,7 @@ export default class Harness extends Command {
 		// Optional rpc command override (tests / non-default hosts); defaults to `gjc --mode rpc`.
 		const override = process.env.GJC_HARNESS_RPC_COMMAND;
 		const command = override ? (JSON.parse(override) as string[]) : undefined;
-		const rpc = new GajaeCodeRpc({ sessionDir, command });
+		const rpc = new JawcodeRpc({ sessionDir, command });
 		const owner = new RuntimeOwner({ root, sessionId, rpc });
 		const info = await owner.start();
 		writeJson({ ok: true, owner: info });
@@ -604,7 +604,7 @@ export default class Harness extends Command {
 		sessionId: string,
 		cwd: string,
 	): { started: boolean; sessionName: string; reason: string | null } {
-		const tmuxCommand = resolveGjcTmuxCommand();
+		const tmuxCommand = resolveJwcTmuxCommand();
 		if (Bun.which(tmuxCommand) === null) {
 			return {
 				started: false,
@@ -911,8 +911,23 @@ export default class Harness extends Command {
 
 	async #submit(root: string, input: Record<string, unknown>, flagSession: string | undefined): Promise<void> {
 		const sessionId = requireSessionId(input, flagSession);
-		if (await this.#tryOwnerRoute(root, sessionId, "submit", { ...input, sessionId })) return;
-		const state = await loadState(root, sessionId);
+		let state = await loadState(root, sessionId);
+		// Only route to the owner when the lifecycle could accept a submit; a terminal/blocked
+		// session must not consume the prompt via a stale-but-live owner.
+		const noOwnerGate = submitUnavailableReason(state.lifecycle, false);
+		if (!noOwnerGate || noOwnerGate === "owner-not-live") {
+			if (await this.#tryOwnerRoute(root, sessionId, "submit", { ...input, sessionId })) return;
+			state = await loadState(root, sessionId);
+		}
+		// Lifecycle gates (terminal/blocked/not-idle) outrank the owner-liveness gate, except when
+		// the block itself is owner liveness — then the owner-not-live response below is the truth.
+		const blockedByOwnerLiveness = state.blockers.some(blocker => isOwnerLivenessBlocker(blocker));
+		const lifecycleGate = submitUnavailableReason(state.lifecycle, false);
+		if (lifecycleGate && lifecycleGate !== "owner-not-live" && !blockedByOwnerLiveness) {
+			writeJson(buildResponse(state, false, { accepted: false, submitted: false, reason: lifecycleGate }, false));
+			process.exitCode = 1;
+			return;
+		}
 		// No live owner: submission is blocked (never echoed-as-accepted).
 		writeJson(buildResponse(state, false, { accepted: false, submitted: false, reason: "owner-not-live" }, false));
 		process.exitCode = 1;

@@ -8,7 +8,7 @@
  *
  * The acceptance logic ({@link singleFlightAccept}) is decoupled from the transport via
  * the {@link HarnessRpc} interface so it is unit-testable with a fake, while
- * {@link GajaeCodeRpc} provides the real `gjc --mode rpc` subprocess implementation
+ * {@link JawcodeRpc} provides the real `gjc --mode rpc` subprocess implementation
  * (exercised by the M10 e2e suite).
  */
 import { type ChildProcessWithoutNullStreams, spawn } from "node:child_process";
@@ -109,7 +109,7 @@ interface PendingResponse {
  * Real adapter: spawns `gjc --mode rpc --session-dir <dir>` and speaks the JSONL
  * protocol from docs/rpc.md. Verified end-to-end in the M10 suite.
  */
-export class GajaeCodeRpc implements HarnessRpc {
+export class JawcodeRpc implements HarnessRpc {
 	#proc: ChildProcessWithoutNullStreams;
 	#buffer = "";
 	#cursor = 0;
@@ -125,7 +125,7 @@ export class GajaeCodeRpc implements HarnessRpc {
 	#alive = true;
 
 	constructor(opts: { sessionDir: string; command?: string[]; cwd?: string; env?: NodeJS.ProcessEnv }) {
-		const base = opts.command ?? ["gjc", "--mode", "rpc"];
+		const base = opts.command ?? ["jwc", "--mode", "rpc"];
 		const args = [...base.slice(1), "--session-dir", opts.sessionDir];
 		this.#proc = spawn(base[0], args, {
 			cwd: opts.cwd,

@@ -5,15 +5,13 @@ import { type Model, modelsAreEqual } from "@gajae-code/ai";
 import { getOAuthProviders } from "@gajae-code/ai/utils/oauth";
 import { APP_NAME, getAgentDir, setProjectDir } from "@gajae-code/utils";
 import {
-	GJC_MODEL_ASSIGNMENT_TARGET_IDS,
-	GJC_MODEL_ASSIGNMENT_TARGETS,
-	type GjcModelAssignmentTargetId,
+	JWC_MODEL_ASSIGNMENT_TARGET_IDS,
+	JWC_MODEL_ASSIGNMENT_TARGETS,
+	type JwcModelAssignmentTargetId,
 } from "../config/model-registry";
 import { extractExplicitThinkingSelector, formatModelSelectorValue, parseModelPattern } from "../config/model-resolver";
 import { clearPluginRootsAndCaches, isJawBrand, resolveActiveProjectRegistryPath } from "../discovery/helpers.js";
-import { runNativeGoalCommand } from "../gjc-runtime/goal-runtime";
-import { runNativeJawInterviewCommand } from "../gjc-runtime/jaw-interview-runtime";
-import { runNativeOrchestrateCommand } from "../gjc-runtime/orchestrate-runtime";
+import { runNativeOrchestrateCommand } from "../jwc-runtime/orchestrate-runtime";
 import { resolveMemoryBackend } from "../memory-backend";
 import type { InteractiveModeContext } from "../modes/types";
 import { formatModelOnboardingGuidance } from "../setup/model-onboarding-guidance";
@@ -133,8 +131,8 @@ function providerSetupUsage(): string {
 function formatModelAssignmentSummary(runtime: SlashCommandRuntime): string {
 	const agentModelOverrides = runtime.settings.get("task.agentModelOverrides");
 	const lines = ["Model assignments:"];
-	for (const targetId of GJC_MODEL_ASSIGNMENT_TARGET_IDS) {
-		const target = GJC_MODEL_ASSIGNMENT_TARGETS[targetId];
+	for (const targetId of JWC_MODEL_ASSIGNMENT_TARGET_IDS) {
+		const target = JWC_MODEL_ASSIGNMENT_TARGETS[targetId];
 		const modelSelector =
 			target.settingsPath === "modelRoles" ? runtime.settings.getModelRole(targetId) : agentModelOverrides[targetId];
 		lines.push(`  ${target.tag ?? target.id.toUpperCase()} (${target.name}): ${modelSelector ?? "(unset)"}`);
@@ -142,19 +140,19 @@ function formatModelAssignmentSummary(runtime: SlashCommandRuntime): string {
 	return lines.join("\n");
 }
 
-function parseModelCommandArgs(args: string): { targetId: GjcModelAssignmentTargetId; selector: string } {
+function parseModelCommandArgs(args: string): { targetId: JwcModelAssignmentTargetId; selector: string } {
 	const tokens = args.trim().split(/\s+/).filter(Boolean);
 	const first = tokens[0]?.toLowerCase();
-	const explicitTarget = GJC_MODEL_ASSIGNMENT_TARGET_IDS.includes(first as GjcModelAssignmentTargetId)
-		? (first as GjcModelAssignmentTargetId)
+	const explicitTarget = JWC_MODEL_ASSIGNMENT_TARGET_IDS.includes(first as JwcModelAssignmentTargetId)
+		? (first as JwcModelAssignmentTargetId)
 		: undefined;
 	if (explicitTarget) {
 		return { targetId: explicitTarget, selector: tokens.slice(1).join(" ") };
 	}
 	if (first === "set") {
 		const second = tokens[1]?.toLowerCase();
-		if (GJC_MODEL_ASSIGNMENT_TARGET_IDS.includes(second as GjcModelAssignmentTargetId)) {
-			return { targetId: second as GjcModelAssignmentTargetId, selector: tokens.slice(2).join(" ") };
+		if (JWC_MODEL_ASSIGNMENT_TARGET_IDS.includes(second as JwcModelAssignmentTargetId)) {
+			return { targetId: second as JwcModelAssignmentTargetId, selector: tokens.slice(2).join(" ") };
 		}
 	}
 	return { targetId: "default", selector: args.trim() };
@@ -222,53 +220,8 @@ const shutdownHandlerTui = (_command: ParsedSlashCommand, runtime: TuiSlashComma
 	return commandConsumed();
 };
 
-/**
- * Adapt the interactive-mode context to the text/ACP runtime shape so a spec's
- * `handle` body can run from the TUI dispatcher (or a TUI-specific override).
- */
-function adaptTuiRuntime(ctx: InteractiveModeContext): SlashCommandRuntime {
-	return {
-		session: ctx.session,
-		sessionManager: ctx.sessionManager,
-		settings: ctx.settings,
-		cwd: ctx.sessionManager.getCwd(),
-		output: (text: string) => {
-			ctx.showStatus(text);
-		},
-		refreshCommands: () => ctx.refreshSlashCommandState(),
-		reloadPlugins: async () => {
-			const projectPath = await resolveActiveProjectRegistryPath(ctx.sessionManager.getCwd());
-			clearPluginRootsAndCaches(projectPath ? [projectPath] : undefined);
-			await ctx.refreshSlashCommandState();
-			await ctx.session.refreshSshTool({ activateIfAvailable: true });
-		},
-	};
-}
-
-/** Shared /orchestrate body — used by both the ACP `handle` and the TUI override. */
-async function executeOrchestrateSlashCommand(
-	command: ParsedSlashCommand,
-	runtime: SlashCommandRuntime,
-): Promise<SlashCommandResult> {
-	const args = (command.args ?? "").trim();
-	const argv = args.length > 0 ? args.split(/\s+/) : [];
-	// A-F1 (99.00.04): the TUI main process has no JWC_SESSION_ID env, so the
-	// session scope must ride the argv for session-scoped state and receipts.
-	if (!argv.includes("--session-id") && runtime.session.sessionId) {
-		argv.push("--session-id", runtime.session.sessionId);
-	}
-	const result = await runNativeOrchestrateCommand(argv, process.cwd());
-	if (result.stderr) await runtime.output(result.stderr.trimEnd());
-	const sub = argv[0]?.toLowerCase();
-	const stageEntered = result.status === 0 && !!sub && sub !== "status" && sub !== "verdict" && sub !== "reset";
-	if (stageEntered && result.stdout) {
-		// Stage prompts steer the session itself, not the transcript log.
-		await runtime.session.prompt(result.stdout);
-	} else if (result.stdout) {
-		await runtime.output(result.stdout.trimEnd());
-	}
-	return commandConsumed();
-}
+/** Providers with a local CLI token detector (`/login <provider> local`). */
+const LOCAL_IMPORT_PROVIDERS = new Set<string>(["anthropic", "openai-codex", "xai"]);
 
 const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 	{
@@ -369,68 +322,18 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 			{ name: "c", description: "C-stage: check — mechanical gates + adversarial review" },
 			{ name: "d", description: "D-stage: done — summary + WONDER/REFLECT, close out" },
 			{ name: "status", description: "Show current orchestration state" },
-			{ name: "reset", description: "Abandon the state machine — return to idle from any stage" },
 		],
-		inlineHint: "<i|p|a|b|c|d|status|reset>",
-		allowArgs: true,
-		handle: executeOrchestrateSlashCommand,
-		handleTui: async (command, runtime) => {
-			const ctx = runtime.ctx;
-			await executeOrchestrateSlashCommand(command, adaptTuiRuntime(ctx));
-			ctx.editor.setText("");
-			// 99.00.03 P1-5: stage transitions must reflect in the status-line strip
-			// immediately, not after the 1s poll TTL.
-			ctx.statusLine.invalidatePabcd();
-			ctx.ui.requestRender();
-		},
-	},
-	{
-		// 99.07 parity: /gd = `goal done --force` shortcut (cli-jaw semantics —
-		// plain `goal done` keeps the evidence gate; only this shortcut forces).
-		name: "gd",
-		description: "Force-complete the active goal (goal done --force)",
-		inlineHint: "[note]",
+		inlineHint: "<i|p|a|b|c|d|status>",
 		allowArgs: true,
 		handle: async (command, runtime) => {
-			const note = (command.args ?? "").trim();
-			const argv = note ? ["done", "--force", note] : ["done", "--force"];
-			const result = await runNativeGoalCommand(argv, process.cwd());
+			const args = (command.args ?? "").trim();
+			const argv = args.length > 0 ? args.split(/\s+/) : [];
+			const result = await runNativeOrchestrateCommand(argv, process.cwd());
 			if (result.stderr) await runtime.output(result.stderr.trimEnd());
-			if (result.stdout) await runtime.output(result.stdout.trimEnd());
-			return commandConsumed();
-		},
-	},
-	{
-		// 99.07 parity: hint is directional guidance stored alongside the
-		// pending-refinement brief — it must NOT become the objective itself.
-		name: "goalplan",
-		description: "Start AI-driven goal planning (goal plan — AI decides the objective)",
-		inlineHint: "[hint]",
-		allowArgs: true,
-		handle: async (command, runtime) => {
-			const hint = (command.args ?? "").trim();
-			const argv = hint ? ["plan", hint] : ["plan"];
-			const result = await runNativeGoalCommand(argv, process.cwd());
-			if (result.stderr) await runtime.output(result.stderr.trimEnd());
-			if (result.stdout) await runtime.output(result.stdout.trimEnd());
-			return commandConsumed();
-		},
-	},
-	{
-		name: "interview",
-		description: "Clarify requirements before planning (jaw-interview seed)",
-		inlineHint: "<request>",
-		allowArgs: true,
-		handle: async (command, runtime) => {
-			const request = (command.args ?? "").trim();
-			if (!request) {
-				await runtime.output('Usage: /interview <request> — e.g. /interview "session switch UX"');
-				return commandConsumed();
-			}
-			const result = await runNativeJawInterviewCommand([request], process.cwd());
-			if (result.stderr) await runtime.output(result.stderr.trimEnd());
-			if (result.status === 0 && result.stdout) {
-				// Seed summary steers the session into interviewing, like /orchestrate i.
+			const sub = argv[0]?.toLowerCase();
+			const stageEntered = result.status === 0 && !!sub && sub !== "status" && sub !== "verdict";
+			if (stageEntered && result.stdout) {
+				// Stage prompts steer the session itself, not the transcript log.
 				await runtime.session.prompt(result.stdout);
 			} else if (result.stdout) {
 				await runtime.output(result.stdout.trimEnd());
@@ -848,6 +751,24 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 		},
 	},
 	{
+		name: "help",
+		description: "Show usage help and all available commands",
+		acpDescription: "List available commands",
+		// Text/ACP path: plain command catalog (builtin only — file/skill
+		// commands are advertised separately via available_commands_update).
+		handle: async (_command, runtime) => {
+			const lines = ACTIVE_BUILTIN_SLASH_COMMAND_REGISTRY.map(
+				cmd => `/${cmd.name} — ${cmd.acpDescription ?? cmd.description}`,
+			);
+			await runtime.output(lines.join("\n"));
+			return commandConsumed();
+		},
+		handleTui: (_command, runtime) => {
+			runtime.ctx.handleHelpCommand();
+			runtime.ctx.editor.setText("");
+		},
+	},
+	{
 		name: "hotkeys",
 		description: "Show all keyboard shortcuts",
 		handleTui: (_command, runtime) => {
@@ -1003,14 +924,30 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 	{
 		name: "login",
 		description: "Login with OAuth provider",
-		inlineHint: "[provider|redirect URL]",
+		inlineHint: "[provider [local]|redirect URL]",
 		allowArgs: true,
 		handleTui: (command, runtime) => {
 			const manualInput = runtime.ctx.oauthManualInput;
 			const args = command.args.trim();
 			if (args.length > 0) {
-				const matchedProvider = getOAuthProviders().find(provider => provider.id === args);
+				const [providerArg = "", modifier = ""] = args.split(/\s+/, 2);
+				const matchedProvider = getOAuthProviders().find(provider => provider.id === providerArg);
 				if (matchedProvider) {
+					const importLocal = modifier === "local";
+					if (modifier && !importLocal) {
+						runtime.ctx.showWarning(
+							`Unknown /login option "${modifier}". Did you mean: /login ${providerArg} local`,
+						);
+						runtime.ctx.editor.setText("");
+						return;
+					}
+					if (importLocal && !LOCAL_IMPORT_PROVIDERS.has(matchedProvider.id)) {
+						runtime.ctx.showWarning(
+							`Local token import is not supported for ${matchedProvider.id}. Supported: ${[...LOCAL_IMPORT_PROVIDERS].join(", ")}.`,
+						);
+						runtime.ctx.editor.setText("");
+						return;
+					}
 					if (manualInput.hasPending()) {
 						const pendingProvider = manualInput.pendingProviderId;
 						const message = pendingProvider
@@ -1020,7 +957,11 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 						runtime.ctx.editor.setText("");
 						return;
 					}
-					void runtime.ctx.showOAuthSelector("login", matchedProvider.id);
+					void runtime.ctx.showOAuthSelector(
+						"login",
+						matchedProvider.id,
+						importLocal ? { importLocal } : undefined,
+					);
 					runtime.ctx.editor.setText("");
 					return;
 				}
@@ -1454,7 +1395,23 @@ export async function executeBuiltinSlashCommand(
 		// dispatcher without forcing every TUI test to construct the full
 		// `SlashCommandRuntime` shape.
 		const ctx = runtime.ctx;
-		const result = await command.handle(parsed, adaptTuiRuntime(ctx));
+		const adapted: SlashCommandRuntime = {
+			session: ctx.session,
+			sessionManager: ctx.sessionManager,
+			settings: ctx.settings,
+			cwd: ctx.sessionManager.getCwd(),
+			output: (text: string) => {
+				ctx.showStatus(text);
+			},
+			refreshCommands: () => ctx.refreshSlashCommandState(),
+			reloadPlugins: async () => {
+				const projectPath = await resolveActiveProjectRegistryPath(ctx.sessionManager.getCwd());
+				clearPluginRootsAndCaches(projectPath ? [projectPath] : undefined);
+				await ctx.refreshSlashCommandState();
+				await ctx.session.refreshSshTool({ activateIfAvailable: true });
+			},
+		};
+		const result = await command.handle(parsed, adapted);
 		ctx.editor.setText("");
 		if (result && typeof result === "object" && "prompt" in result) return result.prompt;
 		return true;

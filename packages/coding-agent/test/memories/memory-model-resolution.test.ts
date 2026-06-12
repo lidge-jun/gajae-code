@@ -2,8 +2,8 @@ import { describe, expect, it } from "bun:test";
 import { mkdtempSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { setAgentDir } from "@gajae-code/utils";
 import type { Model } from "@gajae-code/ai";
+import { setAgentDir } from "@gajae-code/utils";
 import { Settings } from "../../src/config/settings";
 import {
 	persistMemoryModelResolution,
@@ -31,7 +31,7 @@ describe("memory-model-resolution (99.01)", () => {
 	it("resolveMemoryModelPattern prefers memories.modelRolePattern", () => {
 		const settings = Settings.isolated({
 			"memories.modelRolePattern": "openai/gpt-4.1-mini",
-			"modelRoles": { memory: "anthropic/claude-sonnet-4", default: "openai/gpt-4o" },
+			modelRoles: { memory: "anthropic/claude-sonnet-4", default: "openai/gpt-4o" },
 		});
 		const picked = resolveMemoryModelPattern(settings, "default");
 		expect(picked.pattern).toBe("openai/gpt-4.1-mini");

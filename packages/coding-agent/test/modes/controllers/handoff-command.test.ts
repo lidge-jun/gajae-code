@@ -112,8 +112,7 @@ describe("/handoff command", () => {
 		expect(ctx.rebuildChatFromMessages).not.toHaveBeenCalled();
 		expect(ctx.statusLine.invalidate).not.toHaveBeenCalled();
 		expect(ctx.showStatus).toHaveBeenCalledWith(expect.stringContaining("Manifest: /tmp/prep/manifest.json"));
-		// 99.20.07 P3: the success notice rides showStatus only — no transcript insertion.
-		expect(chatContainer.children).toHaveLength(0);
+		expect(chatContainer.children).toHaveLength(1);
 		expect(requestRender).toHaveBeenCalled();
 	});
 });

@@ -4,6 +4,7 @@
  */
 import {
 	Container,
+	CURSOR_MARKER,
 	Editor,
 	Markdown,
 	matchesKey,
@@ -24,11 +25,10 @@ import {
 	matchesSelectCancel,
 } from "../../modes/utils/keybinding-matchers";
 import { getEditorCommand, openInEditor } from "../../utils/external-editor";
-import { CountdownTimer } from "./countdown-timer";
-import { DynamicBorder } from "./dynamic-border";
 import { createAskOutputPanelEditor } from "./composer-chrome";
+import { CountdownTimer } from "./countdown-timer";
 import type { CustomEditor } from "./custom-editor";
-
+import { DynamicBorder } from "./dynamic-border";
 
 const SGR_MOUSE_PRESS_PATTERN = /^\x1b\[<(\d+);\d+;\d+M$/;
 const MOUSE_WHEEL_TITLE_SCROLL_ROWS = 3;
@@ -99,6 +99,37 @@ export interface HookSelectorOptions {
 	};
 }
 
+/**
+ * Pad/truncate one outline content row to `innerWidth`, measuring without the
+ * zero-width cursor marker the embedded slot editor emits — `Bun.stringWidth`
+ * counts the APC payload (`\x1b_pi:c\x07`) as 5 visible columns, which used to
+ * shave real columns off the editor row and append a spurious "…" before the
+ * right border.
+ */
+/**
+ * Box chrome for the selector outline. Corners join the horizontal and
+ * vertical strokes into one connected box (matching the composer's closed
+ * border box) — corner-less full-width rules read as three detached lines
+ * in most terminal fonts.
+ */
+function outlineBoxChrome(innerWidth: number): { top: string; bottom: string; vertical: string } {
+	const borderColor = (text: string) => theme.fg("border", text);
+	const h = theme.boxSharp.horizontal.repeat(innerWidth);
+	return {
+		top: borderColor(`${theme.boxSharp.topLeft}${h}${theme.boxSharp.topRight}`),
+		bottom: borderColor(`${theme.boxSharp.bottomLeft}${h}${theme.boxSharp.bottomRight}`),
+		vertical: borderColor(theme.boxSharp.vertical),
+	};
+}
+
+function fitOutlineRow(line: string, innerWidth: number): string {
+	const normalized = replaceTabs(line);
+	const markerFree = normalized.includes(CURSOR_MARKER) ? normalized.replaceAll(CURSOR_MARKER, "") : normalized;
+	const width = visibleWidth(markerFree);
+	if (width <= innerWidth) return normalized + padding(innerWidth - width);
+	return truncateToWidth(markerFree, innerWidth);
+}
+
 class OutlinedList extends Container {
 	#lines: string[] = [];
 	#footerLines: string[] = [];
@@ -110,17 +141,11 @@ class OutlinedList extends Container {
 	}
 
 	render(width: number): string[] {
-		const borderColor = (text: string) => theme.fg("border", text);
-		const horizontal = borderColor(theme.boxSharp.horizontal.repeat(Math.max(1, width)));
 		const innerWidth = Math.max(1, width - 2);
+		const { top, bottom, vertical } = outlineBoxChrome(innerWidth);
 		const all = [...this.#lines, ...this.#footerLines];
-		const content = all.map(line => {
-			const normalized = replaceTabs(line);
-			const fitted = truncateToWidth(normalized, innerWidth);
-			const pad = Math.max(0, innerWidth - visibleWidth(fitted));
-			return `${borderColor(theme.boxSharp.vertical)}${fitted}${padding(pad)}${borderColor(theme.boxSharp.vertical)}`;
-		});
-		return [horizontal, ...content, horizontal];
+		const content = all.map(line => `${vertical}${fitOutlineRow(line, innerWidth)}${vertical}`);
+		return [top, ...content, bottom];
 	}
 }
 
@@ -331,16 +356,10 @@ class FocusAwareList extends Container {
 		// rows passed in are already constrained to `innerWidth` by
 		// `wrapTextWithAnsi`, so we only normalize tabs and pad — no further
 		// truncation, which would clip wrapped focused labels.
-		const borderColor = (text: string) => theme.fg("border", text);
-		const horizontal = borderColor(theme.boxSharp.horizontal.repeat(Math.max(1, width)));
 		const innerWidth = Math.max(1, width - 2);
-		const content = rows.map(line => {
-			const normalized = replaceTabs(line);
-			const fitted = truncateToWidth(normalized, innerWidth);
-			const pad = Math.max(0, innerWidth - visibleWidth(fitted));
-			return `${borderColor(theme.boxSharp.vertical)}${fitted}${padding(pad)}${borderColor(theme.boxSharp.vertical)}`;
-		});
-		return [horizontal, ...content, horizontal];
+		const { top, bottom, vertical } = outlineBoxChrome(innerWidth);
+		const content = rows.map(line => `${vertical}${fitOutlineRow(line, innerWidth)}${vertical}`);
+		return [top, ...content, bottom];
 	}
 }
 
@@ -521,7 +540,6 @@ export class HookSelectorComponent extends Container {
 		}
 	}
 
-
 	#stopCountdownForTyping(): void {
 		if (this.#countdown) {
 			this.#countdown.dispose();
@@ -531,7 +549,9 @@ export class HookSelectorComponent extends Container {
 	}
 
 	#inputModeHelpText(): string {
-		const scrollHint = this.#scrollTitleRows === undefined ? "" : "  wheel/PgUp/PgDn scroll question";
+		// 99.20.05: the wheel belongs to the terminal (native scrollback) — only
+		// keyboard paging scrolls the question.
+		const scrollHint = this.#scrollTitleRows === undefined ? "" : "  PgUp/PgDn scroll question";
 		return `enter submit  esc back to options  ctrl+g external editor${scrollHint}`;
 	}
 
@@ -576,8 +596,12 @@ export class HookSelectorComponent extends Container {
 		const prefix = onPanel ? theme.fg("accent", `${theme.nav.cursor} `) : "  ";
 		const headingLine =
 			prefix + renderInlineMarkdown(heading, mdTheme, t => (onPanel ? theme.fg("accent", t) : theme.fg("dim", t)));
+		// The editor row renders focused or not (unfocused emits no cursor
+		// marker) so the selector keeps a constant height — toggling rows on
+		// slot focus fed the scrollback-artifact differ path (086 family) and
+		// could eat the box's top border mid-interaction.
 		const footer: string[] = [headingLine];
-		if (onPanel && this.#listSlotEditor) {
+		if (this.#listSlotEditor) {
 			for (const line of this.#listSlotEditor.render(inner)) {
 				footer.push(`  ${line}`);
 			}
@@ -632,9 +656,7 @@ export class HookSelectorComponent extends Container {
 		this.#inputArea.addChild(new Spacer(1));
 		this.#inputArea.addChild(editor);
 		const dockedHint = "  tab type own answer";
-		this.#helpTextComponent.setText(
-			theme.fg("dim", `${this.#baseHelpText}${dockedHint}`),
-		);
+		this.#helpTextComponent.setText(theme.fg("dim", `${this.#baseHelpText}${dockedHint}`));
 		this.invalidate();
 	}
 
@@ -650,9 +672,7 @@ export class HookSelectorComponent extends Container {
 		if (!this.#customInputDocked) return;
 		this.#editorFocused = false;
 		const dockedHint = "  tab type own answer";
-		this.#helpTextComponent.setText(
-			theme.fg("dim", `${this.#baseHelpText}${dockedHint}`),
-		);
+		this.#helpTextComponent.setText(theme.fg("dim", `${this.#baseHelpText}${dockedHint}`));
 		this.invalidate();
 	}
 
@@ -719,24 +739,26 @@ export class HookSelectorComponent extends Container {
 			}
 		}
 		if (matchesKey(keyData, "up") || keyData === "k") {
-			const wasSlot = this.#onOutputPanelFocus();
-			// Wraps to bottom at the top (nav grammar 99.20.02 ②)
-			this.#selectedIndex = this.#selectedIndex === 0 ? this.#selectionMaxIndex() : this.#selectedIndex - 1;
-			if (wasSlot) this.#blurOutputPanelEditor();
-			if (this.#onOutputPanelFocus()) this.#focusOutputPanelEditor();
-			this.#updateList();
+			if (this.#selectedIndex > 0) {
+				const wasSlot = this.#onOutputPanelFocus();
+				this.#selectedIndex = Math.max(0, this.#selectedIndex - 1);
+				if (wasSlot) this.#blurOutputPanelEditor();
+				if (this.#onOutputPanelFocus()) this.#focusOutputPanelEditor();
+				this.#updateList();
+			}
 		} else if (matchesKey(keyData, "down") || keyData === "j") {
 			const atLast = this.#selectedIndex >= this.#selectionMaxIndex();
 			if (this.#customInputDocked && this.#inlineEditor && atLast && !this.#customInputListSlot) {
 				this.#focusDockedEditor();
 				return;
 			}
-			const wasSlot = this.#onOutputPanelFocus();
-			// Wraps to top at the bottom
-			this.#selectedIndex = atLast ? 0 : this.#selectedIndex + 1;
-			if (wasSlot) this.#blurOutputPanelEditor();
-			if (this.#onOutputPanelFocus()) this.#focusOutputPanelEditor();
-			this.#updateList();
+			if (!atLast) {
+				const wasSlot = this.#onOutputPanelFocus();
+				this.#selectedIndex = Math.min(this.#selectionMaxIndex(), this.#selectedIndex + 1);
+				if (wasSlot) this.#blurOutputPanelEditor();
+				if (this.#onOutputPanelFocus()) this.#focusOutputPanelEditor();
+				this.#updateList();
+			}
 		} else if (matchesKey(keyData, "enter") || matchesKey(keyData, "return") || keyData === "\n") {
 			if (this.#onOutputPanelFocus()) {
 				const editor = this.#listSlotEditor;
@@ -842,7 +864,6 @@ export class HookSelectorComponent extends Container {
 			this.#tui.requestRender(true);
 		}
 	}
-
 
 	override render(width: number): string[] {
 		if (this.#customInputListSlot) {

@@ -1,4 +1,4 @@
-import { Editor, type KeyId, matchesKey, parseKittySequence } from "@gajae-code/tui";
+import { Editor, isKittyProtocolActive, type KeyId, matchesKey, parseKittySequence } from "@gajae-code/tui";
 import { BracketedPasteHandler } from "@gajae-code/tui/bracketed-paste";
 import type { AppKeybinding } from "../../config/keybindings";
 
@@ -44,7 +44,16 @@ const DEFAULT_ACTION_KEYS: Record<ConfigurableEditorAction, KeyId[]> = {
 const PASTE_DECISION_TIMEOUT_MS = 5_000;
 const PENDING_PASTE_INPUT_MAX = 64;
 // Two Escapes within this window trigger the IME-independent exit safety net.
-const DOUBLE_ESCAPE_EXIT_WINDOW_MS = 500;
+// 800ms aligns with Claude Code's double-press window (devlog 99.20.06 W1).
+const DOUBLE_ESCAPE_EXIT_WINDOW_MS = 800;
+
+// A bare jamo only counts as a swallowed Ctrl chord when it arrives ISOLATED:
+// nothing typed in the preceding window (mid-word Hangul typing produces a
+// steady keystroke stream) and nothing in the following window (the deferred
+// hint is cancelled by any further input). A chord attempt is a lone keypress;
+// ordinary typing is not.
+const HANGUL_HINT_ISOLATION_MS = 400;
+const HANGUL_HINT_DEFER_MS = 250;
 
 // Dubeolsik (two-set) Hangul layout: compatibility jamo → the QWERTY key on the
 // same physical position. Used to detect a likely Ctrl-chord attempt while the
@@ -106,6 +115,18 @@ export class CustomEditor extends Editor {
 	shouldBypassAutocompleteOnEscape?: () => boolean;
 	onClear?: () => void;
 	onExit?: () => void;
+	/**
+	 * Immediate-exit consumer for the double-Escape safety net (082.1). Kept
+	 * separate from `onExit` so the configured exit chord (ctrl+d) can adopt
+	 * double-press semantics (99.20.06 W2) without breaking the net's
+	 * guaranteed single-step exit. Falls back to `onExit` when unset.
+	 */
+	onForcedExit?: () => void;
+	/**
+	 * Fired when the first Escape arms the double-press exit net (99.20.06).
+	 * Advisory only — the host may surface a "press esc again to exit" notice.
+	 */
+	onExitPending?: () => void;
 	onCycleThinkingLevel?: () => void;
 	onCycleModelForward?: () => void;
 	onCycleModelBackward?: () => void;
@@ -145,6 +166,8 @@ export class CustomEditor extends Editor {
 	#pasteHandler = new BracketedPasteHandler();
 	/** Timestamp of the last lone-Escape press, for the double-Escape exit safety net. */
 	#lastEscapeAt = 0;
+	#lastInputAt = 0;
+	#hangulHintTimer: NodeJS.Timeout | undefined;
 	#pasteDecisionPending = false;
 	#pasteDecisionToken = 0;
 	#pasteDecisionTimeout: NodeJS.Timeout | undefined;
@@ -275,6 +298,15 @@ export class CustomEditor extends Editor {
 	}
 
 	handleInput(data: string): void {
+		// Any further keystroke means a pending jamo hint was ordinary typing,
+		// not a swallowed chord — cancel it before it surfaces.
+		if (this.#hangulHintTimer) {
+			clearTimeout(this.#hangulHintTimer);
+			this.#hangulHintTimer = undefined;
+		}
+		const prevInputAt = this.#lastInputAt;
+		this.#lastInputAt = Date.now();
+
 		if (this.#pasteDecisionPending) {
 			this.#pendingPasteInput.push(data);
 			if (this.#pendingPasteInput.length > PENDING_PASTE_INPUT_MAX) {
@@ -373,12 +405,14 @@ export class CustomEditor extends Editor {
 		// behavior below; only the second within the window exits.
 		if (matchesKey(data, "escape")) {
 			const now = Date.now();
-			if (this.#lastEscapeAt !== 0 && now - this.#lastEscapeAt <= DOUBLE_ESCAPE_EXIT_WINDOW_MS && this.onExit) {
+			const exitNow = this.onForcedExit ?? this.onExit;
+			if (this.#lastEscapeAt !== 0 && now - this.#lastEscapeAt <= DOUBLE_ESCAPE_EXIT_WINDOW_MS && exitNow) {
 				this.#lastEscapeAt = 0;
-				this.onExit();
+				exitNow();
 				return;
 			}
 			this.#lastEscapeAt = now;
+			this.onExitPending?.();
 		} else {
 			this.#lastEscapeAt = 0;
 		}
@@ -447,10 +481,23 @@ export class CustomEditor extends Editor {
 		// jamo is indistinguishable from ordinary Hangul typing — but let the
 		// parent surface a "switch to English / esc" hint. The jamo still falls
 		// through and is inserted as text.
-		if (this.onHangulCtrlChordHint) {
+		//
+		// Kitty-protocol terminals don't need the heuristic at all: flag 4
+		// (report alternate keys) delivers Ctrl+ㅊ as CSI-u with the base-layout
+		// key, so the real ctrl+c chord already matched above.
+		//
+		// On legacy terminals, only an ISOLATED jamo qualifies: a quiet window
+		// before it (see prevInputAt) and a deferred fire that any follow-up
+		// keystroke cancels — mid-sentence Hangul typing never surfaces the hint.
+		if (this.onHangulCtrlChordHint && !isKittyProtocolActive()) {
 			const chord = this.#hangulCtrlChordFor(data);
-			if (chord) {
-				this.onHangulCtrlChordHint(data, chord);
+			if (chord && this.#lastInputAt - prevInputAt > HANGUL_HINT_ISOLATION_MS) {
+				const surfaceHint = this.onHangulCtrlChordHint;
+				this.#hangulHintTimer = setTimeout(() => {
+					this.#hangulHintTimer = undefined;
+					surfaceHint(data, chord);
+				}, HANGUL_HINT_DEFER_MS);
+				this.#hangulHintTimer.unref?.();
 			}
 		}
 

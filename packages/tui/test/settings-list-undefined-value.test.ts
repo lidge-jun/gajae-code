@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, it } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { SettingsList, type SettingsListTheme } from "@gajae-code/tui";
 
 // 260613 00:08 crash: an unset setting (default: undefined) leaked a

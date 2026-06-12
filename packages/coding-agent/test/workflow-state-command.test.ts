@@ -31,7 +31,7 @@ function runState(cwd: string, args: string[]) {
 	});
 }
 
-describe("gjc state workflow command", () => {
+describe("jwc state workflow command", () => {
 	it("writes readable canonical state and receipt for workflow skills through documented invocation", async () => {
 		await withTempCwd(async cwd => {
 			for (const skill of workflowSkills) {
@@ -67,7 +67,7 @@ describe("gjc state workflow command", () => {
 					current_phase: initialPhases[skill],
 					blocked_reason: "execution approval missing",
 				});
-				expect(modeState.receipt.command).toBe(`gjc state ${skill} write`);
+				expect(modeState.receipt.command).toBe(`jwc state ${skill} write`);
 
 				const activeState = await Bun.file(
 					path.join(cwd, ".jwc", "state", "sessions", `session-${skill}`, "skill-active-state.json"),
@@ -75,7 +75,7 @@ describe("gjc state workflow command", () => {
 				expect(activeState.active_skills[0]).toMatchObject({
 					skill,
 					phase: initialPhases[skill],
-					receipt: { owner: "gjc-state-cli" },
+					receipt: { owner: "jwc-state-cli" },
 				});
 			}
 		});

@@ -308,9 +308,12 @@ describe("ViewportFill gap compaction (083.7 §10)", () => {
 		// viewport already shows content hugging the composer…
 		expect(term.getViewport()[11]).toBe("[footer]");
 		expect(term.getViewport()[8]).toBe("chat-24");
-		// …but the buffer carries blank fill rows between old and new content.
+		// …and the gap stays logical-only (083.8 S3): the shrink repaints just the
+		// viewport, so scrollback keeps the pre-shrink rows instead of being
+		// rewritten with blank fill rows.
 		const blanksBefore = term.getScrollBuffer().filter(line => line.trim() === "").length;
-		expect(blanksBefore).toBeGreaterThan(0);
+		expect(blanksBefore).toBe(0);
+		expect(term.getScrollBuffer().some(line => line === "chat-0")).toBeTrue();
 
 		// Turn end: compact — buffer rebuilt without the dead blank region.
 		tui.compactViewportFill();

@@ -1,18 +1,18 @@
-import { normalizeWorkflowSkillSlug } from "../gjc-runtime/state-schema";
-import { CANONICAL_GJC_WORKFLOW_SKILLS, type CanonicalGjcWorkflowSkill } from "../skill-state/active-state";
+import { normalizeWorkflowSkillSlug } from "../jwc-runtime/state-schema";
+import { CANONICAL_JWC_WORKFLOW_SKILLS, type CanonicalJwcWorkflowSkill } from "../skill-state/active-state";
 
 export interface SkillKeywordDefinition {
 	keyword: string;
-	skill: GjcWorkflowSkill;
+	skill: JwcWorkflowSkill;
 	priority: number;
 	guidance: string;
 }
 
-export const GJC_WORKFLOW_SKILLS = CANONICAL_GJC_WORKFLOW_SKILLS;
+export const GJC_WORKFLOW_SKILLS = CANONICAL_JWC_WORKFLOW_SKILLS;
 
-export type GjcWorkflowSkill = CanonicalGjcWorkflowSkill;
+export type JwcWorkflowSkill = CanonicalJwcWorkflowSkill;
 
-export const GJC_SKILL_KEYWORD_DEFINITIONS: readonly SkillKeywordDefinition[] = [
+export const JWC_SKILL_KEYWORD_DEFINITIONS: readonly SkillKeywordDefinition[] = [
 	{
 		keyword: "$jaw-interview",
 		skill: "jaw-interview",
@@ -75,7 +75,7 @@ export const GJC_SKILL_KEYWORD_DEFINITIONS: readonly SkillKeywordDefinition[] = 
 	},
 ] as const;
 
-export function isGjcWorkflowSkill(value: string): value is GjcWorkflowSkill {
+export function isJwcWorkflowSkill(value: string): value is JwcWorkflowSkill {
 	return (GJC_WORKFLOW_SKILLS as readonly string[]).includes(normalizeWorkflowSkillSlug(value));
 }
 

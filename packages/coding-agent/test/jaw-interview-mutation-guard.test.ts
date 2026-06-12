@@ -104,7 +104,7 @@ describe("jaw-interview mutation guard", () => {
 				args: { path: rawPath, content: "x" },
 			});
 			expect(decision.blocked).toBe(true);
-			expect(decision.reason).toBe("gjc-target");
+			expect(decision.reason).toBe("jwc-target");
 			expect(decision.message).toContain("runtime-owned");
 		}
 
@@ -150,7 +150,7 @@ describe("jaw-interview mutation guard", () => {
 				args,
 			});
 			expect(decision.blocked).toBe(true);
-			if (decision.reason === "workflow-state-target" || decision.reason === "gjc-target") {
+			if (decision.reason === "workflow-state-target" || decision.reason === "jwc-target") {
 				expect(decision.message).toContain("runtime-owned");
 			} else {
 				expect(decision.message).toBe(JAW_INTERVIEW_MUTATION_BLOCK_MESSAGE);
@@ -240,7 +240,7 @@ describe("jaw-interview mutation guard", () => {
 			});
 			expect(decision.blocked).toBe(true);
 			expect(decision.message).toContain("runtime-owned");
-			expect(["gjc-target", "workflow-state-target"]).toContain(decision.reason ?? "");
+			expect(["jwc-target", "workflow-state-target"]).toContain(decision.reason ?? "");
 		}
 	});
 
@@ -292,7 +292,7 @@ describe("jaw-interview mutation guard", () => {
 			});
 			expect(decision.blocked).toBe(false);
 			expect(warn).toHaveBeenCalledTimes(1);
-			expect(String(warn.mock.calls[0]?.[0] ?? "")).toContain("gjc skill-state: invalid mode-state at");
+			expect(String(warn.mock.calls[0]?.[0] ?? "")).toContain("jwc skill-state: invalid mode-state at");
 		} finally {
 			warn.mockRestore();
 		}

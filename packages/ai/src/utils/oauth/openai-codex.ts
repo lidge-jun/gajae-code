@@ -3,7 +3,7 @@
  */
 import { OAuthCallbackFlow, type OAuthCallbackFlowOptions } from "./callback-server";
 import { generatePKCE } from "./pkce";
-import type { OAuthController, OAuthCredentials } from "./types";
+import type { LocalTokenImportMode, OAuthController, OAuthCredentials } from "./types";
 
 const CLIENT_ID = "app_EMoamEEZ73f0CkXaXp7hrann";
 const AUTHORIZE_URL = "https://auth.openai.com/oauth/authorize";
@@ -157,17 +157,28 @@ export type OpenAICodexLoginOptions = OAuthController & {
 	originator?: string;
 };
 
-export async function loginOpenAICodex(options: OpenAICodexLoginOptions): Promise<OAuthCredentials> {
-	const { detectCodexCliToken } = await import("./local-token-detect");
-	const local = detectCodexCliToken();
-	if (local) {
-		options.onProgress?.("Found Codex CLI token, importing automatically");
-		if (local.expires < Date.now() + 60_000) {
+export async function loginOpenAICodex(
+	options: OpenAICodexLoginOptions,
+	opts?: { importLocal?: LocalTokenImportMode },
+): Promise<OAuthCredentials> {
+	const importLocal = opts?.importLocal ?? "off";
+	if (importLocal !== "off") {
+		const { detectCodexCliToken } = await import("./local-token-detect");
+		const local = detectCodexCliToken();
+		if (local) {
+			options.onProgress?.("Found Codex CLI token, importing automatically");
+			if (local.expires >= Date.now() + 60_000) return local;
 			try {
 				return await refreshOpenAICodexToken(local.refresh);
-			} catch {}
-		} else {
-			return local;
+			} catch (error) {
+				if (importLocal === "only") {
+					throw new Error(
+						`Codex CLI token is expired and could not be refreshed: ${error instanceof Error ? error.message : String(error)}`,
+					);
+				}
+			}
+		} else if (importLocal === "only") {
+			throw new Error("No Codex CLI token found at ~/.codex/auth.json. Run /login openai-codex for browser OAuth.");
 		}
 	}
 

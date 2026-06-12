@@ -4,8 +4,8 @@ import os from "node:os";
 import path from "node:path";
 import { setAgentDir } from "@gajae-code/utils";
 import { Settings } from "../src/config/settings";
-import { localBackend } from "../src/memory-backend/local-backend";
 import { saveLocalMemoryManual } from "../src/memories/local-query";
+import { localBackend } from "../src/memory-backend/local-backend";
 import type { AgentSession } from "../src/session/agent-session";
 
 function tempAgentDir(): string {

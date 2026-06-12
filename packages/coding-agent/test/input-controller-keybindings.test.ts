@@ -146,6 +146,8 @@ async function createContext() {
 		showStatus,
 		hasActiveBtw: vi.fn(() => false),
 		statusLine: { setHookStatus } as unknown as InteractiveModeContext["statusLine"],
+		// 99.20.06: footer disabled in this harness — exercises the legacy hook-status fallback path.
+		composerFooter: { isEnabled: () => false } as unknown as InteractiveModeContext["composerFooter"],
 	} as unknown as InteractiveModeContext;
 
 	return {

@@ -28,7 +28,7 @@ export interface HermesSetupFlags {
 	mutation?: string[];
 	artifactByteCap?: string;
 	serverKey?: string;
-	gjcCommand?: string;
+	jwcCommand?: string;
 	target?: string;
 	profileDir?: string;
 }
@@ -39,7 +39,7 @@ export interface CoordinatorSetupSpec {
 	serverKey: string;
 	serverName: typeof COORDINATOR_MCP_SERVER_NAME;
 	protocolVersion: typeof COORDINATOR_MCP_PROTOCOL_VERSION;
-	gjcCommand: string;
+	jwcCommand: string;
 	args: ["mcp-serve", "coordinator"];
 	roots: string[];
 	namespace: {
@@ -175,7 +175,7 @@ export function buildHermesSetupSpec(flags: HermesSetupFlags): CoordinatorSetupS
 		serverKey: optionalTrim(flags.serverKey) ?? DEFAULT_SERVER_KEY,
 		serverName: COORDINATOR_MCP_SERVER_NAME,
 		protocolVersion: COORDINATOR_MCP_PROTOCOL_VERSION,
-		gjcCommand: optionalTrim(flags.gjcCommand) ?? DEFAULT_GJC_COMMAND,
+		jwcCommand: optionalTrim(flags.jwcCommand) ?? DEFAULT_GJC_COMMAND,
 		args: ["mcp-serve", "coordinator"],
 		roots,
 		namespace: {
@@ -210,7 +210,7 @@ function signaturePayload(spec: CoordinatorSetupSpec): Record<string, unknown> {
 	return {
 		args: spec.args,
 		artifactByteCap: spec.artifactByteCap,
-		command: spec.gjcCommand,
+		command: spec.jwcCommand,
 		contractDocVersion: spec.contractDocVersion,
 		coordinator: spec.coordinator,
 		mutationClasses: spec.mutationPolicy.classes,
@@ -244,7 +244,7 @@ export function renderHermesServerBlock(spec: CoordinatorSetupSpec): Record<stri
 	if (spec.artifactByteCap !== undefined) env.GJC_COORDINATOR_MCP_ARTIFACT_BYTE_CAP = String(spec.artifactByteCap);
 	if (spec.sessionCommand) env.GJC_COORDINATOR_MCP_SESSION_COMMAND = spec.sessionCommand;
 	return {
-		command: spec.gjcCommand,
+		command: spec.jwcCommand,
 		args: spec.args,
 		env,
 		timeout: DEFAULT_TIMEOUT,

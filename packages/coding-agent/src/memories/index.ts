@@ -13,6 +13,14 @@ import stageOneInputTemplate from "../prompts/memories/stage_one_input.md" with 
 import stageOneSystemTemplate from "../prompts/memories/stage_one_system.md" with { type: "text" };
 import unavailableTemplate from "../prompts/memories/unavailable.md" with { type: "text" };
 import type { AgentSession } from "../session/agent-session";
+import { syncArtifactFilesToFts } from "./local-query";
+import { loadMemoryConfig, type MemoryRuntimeConfig } from "./memory-config";
+import { removeMemoryArtifactFtsRow } from "./memory-fts";
+import {
+	persistMemoryModelResolution,
+	resolveMemoryModelFromPattern,
+	resolveMemoryModelPattern,
+} from "./memory-model-resolution";
 import {
 	claimStage1Jobs,
 	clearMemoryData as clearMemoryDataInDb,
@@ -33,15 +41,6 @@ import {
 	tryClaimGlobalPhase2Job,
 	upsertThreads,
 } from "./storage";
-import { syncArtifactFilesToFts } from "./local-query";
-import { removeMemoryArtifactFtsRow } from "./memory-fts";
-import {
-	persistMemoryModelResolution,
-	resolveMemoryModelFromPattern,
-	resolveMemoryModelPattern,
-} from "./memory-model-resolution";
-import { loadMemoryConfig, type MemoryRuntimeConfig } from "./memory-config";
-
 
 interface Stage1Stats {
 	claimed: number;

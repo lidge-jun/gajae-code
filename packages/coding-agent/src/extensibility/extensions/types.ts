@@ -155,7 +155,6 @@ export interface ExtensionUIDialogOptions {
 		label?: string;
 		onSubmit: (text: string) => void;
 	};
-
 }
 
 /** Raw terminal input listener for extensions. */

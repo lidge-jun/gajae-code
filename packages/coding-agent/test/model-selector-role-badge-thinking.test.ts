@@ -1,7 +1,7 @@
 import { beforeAll, describe, expect, test, vi } from "bun:test";
 import { ThinkingLevel } from "@gajae-code/agent-core";
 import { Effort, getBundledModel, type Model } from "@gajae-code/ai";
-import type { GjcModelAssignmentTargetId, ModelRegistry } from "@gajae-code/coding-agent/config/model-registry";
+import type { JwcModelAssignmentTargetId, ModelRegistry } from "@gajae-code/coding-agent/config/model-registry";
 import { Settings } from "@gajae-code/coding-agent/config/settings";
 import { ModelSelectorComponent } from "@gajae-code/coding-agent/modes/components/model-selector";
 import { getThemeByName, setThemeInstance } from "@gajae-code/coding-agent/modes/theme/theme";
@@ -20,7 +20,7 @@ function normalizeRenderedText(text: string): string {
 
 interface SelectionCapture {
 	model: Model;
-	role: GjcModelAssignmentTargetId | null;
+	role: JwcModelAssignmentTargetId | null;
 	thinkingLevel?: ThinkingLevel;
 	selector?: string;
 }
@@ -29,14 +29,14 @@ interface PresetCapture {
 	kind: "preset";
 	model: Model;
 	selector: string;
-	assignments: Record<GjcModelAssignmentTargetId, ThinkingLevel>;
+	assignments: Record<JwcModelAssignmentTargetId, ThinkingLevel>;
 }
 
 type TestModelSelectorSelection =
 	| {
 			kind: "assignment";
 			model: Model;
-			role: GjcModelAssignmentTargetId | null;
+			role: JwcModelAssignmentTargetId | null;
 			thinkingLevel?: ThinkingLevel;
 			selector?: string;
 	  }

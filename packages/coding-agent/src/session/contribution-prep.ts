@@ -4,7 +4,7 @@ import * as path from "node:path";
 import type { AgentMessage } from "@gajae-code/agent-core";
 import type { AssistantMessage, ToolResultMessage, UserMessage } from "@gajae-code/ai";
 import { $ } from "bun";
-import { resolveGjcCommand } from "../task/gjc-command";
+import { resolveJwcCommand } from "../task/jwc-command";
 import { shortenPath } from "../tools/render-utils";
 
 export const CONTRIBUTION_PREP_SCHEMA_VERSION = 1;
@@ -307,7 +307,7 @@ export async function prepareContributionPrep(
 				}
 				Bun.spawn(args, { cwd, stdout: "inherit", stderr: "inherit", stdin: "inherit" });
 			});
-		const command = resolveGjcCommand();
+		const command = resolveJwcCommand();
 		await spawn(
 			[command.cmd, ...command.args, "--no-skills", "--", `@${workerPromptPath}`],
 			context.cwd,

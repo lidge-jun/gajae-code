@@ -213,7 +213,8 @@ async function askSingleQuestion(
 	multi: boolean,
 	options: AskSingleQuestionOptions = {},
 ): Promise<SelectionResult> {
-	const { recommended, timeout, signal, initialSelection, navigation, scrollTitleRows, useDockedCustomInput } = options;
+	const { recommended, timeout, signal, initialSelection, navigation, scrollTitleRows, useDockedCustomInput } =
+		options;
 	const doneLabel = getDoneOptionLabel();
 	const otherOptionLabel = options.otherOptionLabel ?? OTHER_OPTION;
 	let selectedOptions = [...(initialSelection?.selectedOptions ?? [])];
@@ -244,8 +245,7 @@ async function askSingleQuestion(
 			: "up/down navigate  enter select  esc cancel";
 		// 99.20.05: the wheel stays with the terminal (native scrollback) — only
 		// keyboard paging scrolls the question.
-		const helpText =
-			scrollTitleRows === undefined ? baseHelpText : `${baseHelpText}  PgUp/PgDn scroll question`;
+		const helpText = scrollTitleRows === undefined ? baseHelpText : `${baseHelpText}  PgUp/PgDn scroll question`;
 		const useDockedCustomInput = options.useDockedCustomInput === true;
 		const dialogOptions = {
 			initialIndex,
@@ -388,9 +388,7 @@ async function askSingleQuestion(
 		selectedOptions = Array.from(selected);
 	} else {
 		const displayLabels = addRecommendedSuffix(optionLabels, recommended);
-		const optionsWithNavigation = options.useDockedCustomInput
-			? displayLabels
-			: [...displayLabels, otherOptionLabel];
+		const optionsWithNavigation = options.useDockedCustomInput ? displayLabels : [...displayLabels, otherOptionLabel];
 
 		let initialIndex = recommended;
 		const previouslySelected = selectedOptions[0];

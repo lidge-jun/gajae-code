@@ -18,7 +18,6 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { getAgentDbPath } from "@gajae-code/utils";
 import { getMemoryRoot } from "./index";
-import { closeMemoryDb, enqueueGlobalWatermark, openMemoryDb, upsertThreads } from "./storage";
 import { MEMORY_RUNTIME_DEFAULTS, type MemorySearchMode } from "./memory-config";
 import {
 	buildStage1FtsMatchQuery,
@@ -28,6 +27,7 @@ import {
 	syncMemoryArtifactFtsRow,
 	syncStage1FtsRow,
 } from "./memory-fts";
+import { closeMemoryDb, enqueueGlobalWatermark, openMemoryDb, upsertThreads } from "./storage";
 
 export type LocalMemoryKind = "profile" | "shared" | "episode";
 
@@ -103,14 +103,19 @@ function memoryPathMatchesScope(pathValue: string, specValue: string): boolean {
 
 function loadRolloutPathByThreadId(agentDir: string, cwd: string): Map<string, string> {
 	return withDb(agentDir, db => {
-		const rows = db
-			.prepare("SELECT id, rollout_path FROM threads WHERE cwd = ?")
-			.all(cwd) as Array<{ id: string; rollout_path: string }>;
+		const rows = db.prepare("SELECT id, rollout_path FROM threads WHERE cwd = ?").all(cwd) as Array<{
+			id: string;
+			rollout_path: string;
+		}>;
 		return new Map(rows.map(r => [r.id, r.rollout_path]));
 	});
 }
 
-function hitMatchesMemoryScope(hit: LocalMemoryHit, rolloutByThread: Map<string, string>, scopePaths: string[]): boolean {
+function hitMatchesMemoryScope(
+	hit: LocalMemoryHit,
+	rolloutByThread: Map<string, string>,
+	scopePaths: string[],
+): boolean {
 	if (scopePaths.length === 0) return true;
 	if (hit.ref === "memory" || hit.ref === "summary") return true;
 	if (hit.ref.startsWith("stage1:")) {
@@ -126,7 +131,11 @@ function hitMatchesMemoryScope(hit: LocalMemoryHit, rolloutByThread: Map<string,
 	return scopePaths.some(spec => memoryPathMatchesScope(hit.ref, spec));
 }
 
-export function filterScopePaths(hits: LocalMemoryHit[], scopePaths: string[] | undefined, rolloutByThread: Map<string, string>): LocalMemoryHit[] {
+export function filterScopePaths(
+	hits: LocalMemoryHit[],
+	scopePaths: string[] | undefined,
+	rolloutByThread: Map<string, string>,
+): LocalMemoryHit[] {
 	const specs = scopePaths?.map(s => s.trim()).filter(Boolean) ?? [];
 	if (specs.length === 0) return hits;
 	return hits.filter(h => hitMatchesMemoryScope(h, rolloutByThread, specs));
@@ -140,7 +149,6 @@ function dedupeHitsByRef(hits: LocalMemoryHit[]): LocalMemoryHit[] {
 	}
 	return [...best.values()];
 }
-
 
 /** Expand query terms with the seeded synonym groups (both directions). */
 export function expandQueryTerms(query: string): string[] {
@@ -161,7 +169,6 @@ function recencyBoost(generatedAt: number | undefined, nowSec: number): number {
 	const daysAgo = Math.max(0, (nowSec - generatedAt) / 86_400);
 	return -Math.max(0, 2 - daysAgo / 7);
 }
-
 
 function clip(text: string, limit = SNIPPET_LIMIT): string {
 	const collapsed = text.replace(/\s+/g, " ").trim();
@@ -234,7 +241,6 @@ function searchStage1Rows(
 	if (searchMode === "fts") return [];
 	return searchStage1RowsLike(db, cwd, terms, limit);
 }
-
 
 const ARTIFACT_FTS_REF: Record<string, { ref: string; kind: LocalMemoryKind }> = {
 	memory: { ref: "memory", kind: "profile" },
@@ -532,7 +538,11 @@ export interface LocalMemoryBrowseRow {
 }
 
 /** Recent memory index for `memory browse` (99.01 M7): artifacts + stage1 rows, newest first. */
-export function browseLocalMemories(agentDir: string, cwd: string, limit = MEMORY_RUNTIME_DEFAULTS.browseLimit): LocalMemoryBrowseRow[] {
+export function browseLocalMemories(
+	agentDir: string,
+	cwd: string,
+	limit = MEMORY_RUNTIME_DEFAULTS.browseLimit,
+): LocalMemoryBrowseRow[] {
 	const memoryRoot = getMemoryRoot(agentDir, cwd);
 	const rows: LocalMemoryBrowseRow[] = [];
 	const pushArtifact = (file: string, ref: string, kind: LocalMemoryKind) => {
@@ -607,7 +617,11 @@ export interface LocalMemoryStatus {
 }
 
 /** Compact ref listing for `memory list` (99.01 M8). */
-export function listLocalMemoryRefs(agentDir: string, cwd: string, limit = MEMORY_RUNTIME_DEFAULTS.browseLimit): string[] {
+export function listLocalMemoryRefs(
+	agentDir: string,
+	cwd: string,
+	limit = MEMORY_RUNTIME_DEFAULTS.browseLimit,
+): string[] {
 	return browseLocalMemories(agentDir, cwd, limit).map(r => r.ref);
 }
 
@@ -627,7 +641,8 @@ LEFT JOIN threads t ON t.id = o.thread_id WHERE t.cwd = ?`,
 		let ftsArtifactIndexedCount = 0;
 		try {
 			ftsStage1IndexedCount = (db.prepare("SELECT count(*) AS c FROM stage1_outputs_fts").get() as { c: number }).c;
-			ftsArtifactIndexedCount = (db.prepare("SELECT count(*) AS c FROM memory_artifacts_fts").get() as { c: number }).c;
+			ftsArtifactIndexedCount = (db.prepare("SELECT count(*) AS c FROM memory_artifacts_fts").get() as { c: number })
+				.c;
 		} catch {
 			ftsStage1IndexedCount = 0;
 			ftsArtifactIndexedCount = 0;
@@ -668,7 +683,10 @@ export function syncArtifactFilesToFts(db: Database, memoryRoot: string): void {
 	syncMemoryArtifactFtsRow(db, { ref: "summary", body: read("memory_summary.md") });
 }
 
-export function reindexLocalMemoryFts(agentDir: string, memoryRoot?: string): { indexedStage1: number; indexedArtifacts: number } {
+export function reindexLocalMemoryFts(
+	agentDir: string,
+	memoryRoot?: string,
+): { indexedStage1: number; indexedArtifacts: number } {
 	return withDb(agentDir, db => {
 		rebuildAllMemoryFts(db);
 		if (memoryRoot) {

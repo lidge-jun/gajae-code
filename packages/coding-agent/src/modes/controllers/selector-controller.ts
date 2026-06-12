@@ -17,7 +17,8 @@ import {
 	MarketplaceManager,
 } from "../../extensibility/plugins/marketplace";
 import { DynamicBorder } from "../../modes/components/dynamic-border";
-import { ScrollablePanelComponent } from "../components/scrollable-panel";
+import { type HelpCatalogEntry, HelpSelectorComponent } from "../../modes/components/help-selector";
+import { QuotaPanelComponent } from "../../modes/components/quota-panel";
 import {
 	getAvailableThemes,
 	getCurrentThemeName,
@@ -40,6 +41,7 @@ import {
 	MODEL_ONBOARDING_SETUP_COMMAND,
 } from "../../setup/model-onboarding-guidance";
 import { addApiCompatibleProvider, formatProviderSetupResult } from "../../setup/provider-onboarding";
+import { BUILTIN_SLASH_COMMANDS_INTERNAL } from "../../slash-commands/builtin-registry";
 import { isSearchProviderPreference, setPreferredImageProvider, setPreferredSearchProvider } from "../../tools";
 import { setSessionTerminalTitle } from "../../utils/title-generator";
 import { AgentDashboard } from "../components/agent-dashboard";
@@ -48,7 +50,6 @@ import { CustomProviderWizardComponent, type CustomProviderWizardSubmit } from "
 import { ExtensionDashboard } from "../components/extensions";
 import { HistorySearchComponent } from "../components/history-search";
 import { JobsOverlayComponent } from "../components/jobs-overlay";
-import { LoginDialogComponent } from "../components/login-dialog";
 import { ModelSelectorComponent, type ModelSelectorSelection } from "../components/model-selector";
 import { OAuthSelectorComponent } from "../components/oauth-selector";
 import { PluginSelectorComponent } from "../components/plugin-selector";
@@ -119,32 +120,6 @@ export class SelectorController {
 		this.ctx.editorContainer.addChild(component);
 		this.ctx.ui.setFocus(focus);
 		this.ctx.ui.requestRender();
-	}
-
-	/** 99.20.07 P2: docked read-once report panel (loading -> content/message). */
-	showReadOncePanel(title: string, load: () => Promise<((width: number) => string[]) | string>): void {
-		this.showSelector(done => {
-			const container = new Container();
-			container.addChild(new DynamicBorder());
-			const panel = new ScrollablePanelComponent(title, {
-				close: () => {
-					done();
-					this.ctx.ui.requestRender();
-				},
-				requestRender: () => this.ctx.ui.requestRender(),
-			});
-			container.addChild(panel);
-			container.addChild(new DynamicBorder());
-			void load()
-				.then(result => {
-					if (typeof result === "string") panel.setMessage(result);
-					else panel.setContent(result);
-				})
-				.catch(error => {
-					panel.setMessage(`Failed to load: ${error instanceof Error ? error.message : String(error)}`);
-				});
-			return { component: container, focus: panel };
-		});
 	}
 
 	showProviderOnboarding(): void {
@@ -309,6 +284,80 @@ export class SelectorController {
 			container.addChild(list);
 			container.addChild(new DynamicBorder());
 			return { component: container, focus: list };
+		});
+	}
+
+	/**
+	 * Docked usage/quota report panel — renders on the editor surface like the
+	 * settings selector instead of inserting into the chat transcript. `load`
+	 * resolves to a width-aware line renderer on success or a status message
+	 * string (e.g. "No quota data available") on empty/soft-failure.
+	 */
+	showUsageReportPanel(title: string, load: () => Promise<((width: number) => string[]) | string>): void {
+		this.showSelector(done => {
+			const container = new Container();
+			container.addChild(new DynamicBorder());
+			const panel = new QuotaPanelComponent(title, {
+				close: () => {
+					done();
+					this.ctx.ui.requestRender();
+				},
+				requestRender: () => this.ctx.ui.requestRender(),
+			});
+			container.addChild(panel);
+			container.addChild(new DynamicBorder());
+			void load()
+				.then(result => {
+					if (typeof result === "string") panel.setMessage(result);
+					else panel.setContent(result);
+				})
+				.catch(error => {
+					panel.setMessage(
+						`Failed to fetch usage data: ${error instanceof Error ? error.message : String(error)}`,
+					);
+				});
+			return { component: container, focus: panel };
+		});
+	}
+
+	/**
+	 * 99.20.08 (나): docked /help catalog — model-selector grammar (tab bar
+	 * Built-in/Skills/Custom + search + list). Enter inserts the command into
+	 * the editor; the transcript stays untouched (99.20.07 read-once).
+	 */
+	showHelpSelector(): void {
+		const builtinSpecs = new Map(BUILTIN_SLASH_COMMANDS_INTERNAL.map(spec => [spec.name, spec]));
+		const seen = new Set<string>();
+		const entries: HelpCatalogEntry[] = [];
+		for (const command of this.ctx.allSlashCommands) {
+			if (seen.has(command.name)) continue;
+			seen.add(command.name);
+			const spec = builtinSpecs.get(command.name);
+			const skill = this.ctx.skillCommands.get(command.name);
+			entries.push({
+				name: command.name,
+				description: command.description,
+				origin: spec ? "builtin" : skill ? "skill" : "custom",
+				aliases: spec?.aliases,
+				inlineHint: spec?.inlineHint,
+				subcommands: spec?.subcommands,
+				sourceLabel: skill ? `source: ${skill.source}` : undefined,
+			});
+		}
+		this.showSelector(done => {
+			const selector = new HelpSelectorComponent(
+				entries,
+				commandName => {
+					done();
+					this.ctx.editor.setText(`/${commandName} `);
+					this.ctx.ui.requestRender();
+				},
+				() => {
+					done();
+					this.ctx.ui.requestRender();
+				},
+			);
+			return { component: selector, focus: selector };
 		});
 	}
 
@@ -1157,53 +1206,68 @@ export class SelectorController {
 		await this.showSessionSelector();
 	}
 
-	async #handleOAuthLogin(providerId: string): Promise<void> {
+	async #handleOAuthLogin(providerId: string, opts?: { importLocal?: boolean }): Promise<void> {
+		this.ctx.showStatus(`Logging in to ${providerId}…`);
 		const manualInput = this.ctx.oauthManualInput;
 		const useManualInput = CALLBACK_SERVER_PROVIDERS.has(providerId as OAuthProvider);
-		// 99.20.07 P1: the whole login flow docks in place of the editor via
-		// LoginDialogComponent; only the final outcome rides showStatus/showError.
-		let closeDock: () => void = () => {};
-		let dialog!: LoginDialogComponent;
-		let cancelled = false;
-		const dockCancelled = new Promise<never>((_, reject) => {
-			this.showSelector(done => {
-				closeDock = done;
-				dialog = new LoginDialogComponent(this.ctx.ui, providerId, (_success, message) => {
-					// esc/ctrl+c inside the dialog — close the dock and abandon the wait.
-					cancelled = true;
-					done();
-					this.ctx.ui.requestRender();
-					reject(new Error(message ?? "Login cancelled"));
-				});
-				return { component: dialog, focus: dialog };
-			});
-		});
 		try {
-			await Promise.race([
-				this.ctx.session.modelRegistry.authStorage.login(providerId as OAuthProvider, {
-					// showAuth opens the browser itself (best-effort openPath).
+			await this.ctx.session.modelRegistry.authStorage.login(
+				providerId as OAuthProvider,
+				{
 					onAuth: (info: { url: string; instructions?: string }) => {
-						const instructions = useManualInput
-							? [info.instructions, MANUAL_LOGIN_TIP].filter(Boolean).join("\n")
-							: info.instructions;
-						dialog.showAuth(info.url, instructions || undefined);
+						this.ctx.chatContainer.addChild(new Spacer(1));
+						this.ctx.chatContainer.addChild(new Text(theme.fg("dim", info.url), 1, 0));
+						const hyperlink = `\x1b]8;;${info.url}\x07Click here to login\x1b]8;;\x07`;
+						this.ctx.chatContainer.addChild(new Text(theme.fg("accent", hyperlink), 1, 0));
+						if (info.instructions) {
+							this.ctx.chatContainer.addChild(new Spacer(1));
+							this.ctx.chatContainer.addChild(new Text(theme.fg("warning", info.instructions), 1, 0));
+						}
+						if (useManualInput) {
+							this.ctx.chatContainer.addChild(new Spacer(1));
+							this.ctx.chatContainer.addChild(new Text(theme.fg("dim", MANUAL_LOGIN_TIP), 1, 0));
+						}
+						this.ctx.ui.requestRender();
+						this.ctx.openInBrowser(info.url);
 					},
-					onPrompt: (prompt: { message: string; placeholder?: string }) =>
-						dialog.showPrompt(prompt.message, prompt.placeholder),
+					onPrompt: async (prompt: { message: string; placeholder?: string }) => {
+						this.ctx.chatContainer.addChild(new Spacer(1));
+						this.ctx.chatContainer.addChild(new Text(theme.fg("warning", prompt.message), 1, 0));
+						if (prompt.placeholder) {
+							this.ctx.chatContainer.addChild(new Text(theme.fg("dim", prompt.placeholder), 1, 0));
+						}
+						this.ctx.ui.requestRender();
+						const { promise, resolve } = Promise.withResolvers<string>();
+						const codeInput = new Input();
+						codeInput.onSubmit = () => {
+							const code = codeInput.getValue();
+							this.ctx.editorContainer.clear();
+							this.ctx.editorContainer.addChild(this.ctx.editor);
+							this.ctx.ui.setFocus(this.ctx.editor);
+							resolve(code);
+						};
+						this.ctx.editorContainer.clear();
+						this.ctx.editorContainer.addChild(codeInput);
+						this.ctx.ui.setFocus(codeInput);
+						this.ctx.ui.requestRender();
+						return promise;
+					},
 					onProgress: (message: string) => {
-						dialog.showProgress(message);
+						this.ctx.chatContainer.addChild(new Text(theme.fg("dim", message), 1, 0));
+						this.ctx.ui.requestRender();
 					},
 					onManualCodeInput: useManualInput ? () => manualInput.waitForInput(providerId) : undefined,
-				}),
-				dockCancelled,
-			]);
-			await this.ctx.session.modelRegistry.refresh();
-			closeDock();
-			this.ctx.showStatus(
-				`${theme.status.success} Successfully logged in to ${providerId}\nCredentials saved to ${getAgentDbPath()}`,
+				},
+				opts,
 			);
+			await this.ctx.session.modelRegistry.refresh();
+			this.ctx.chatContainer.addChild(new Spacer(1));
+			this.ctx.chatContainer.addChild(
+				new Text(theme.fg("success", `${theme.status.success} Successfully logged in to ${providerId}`), 1, 0),
+			);
+			this.ctx.chatContainer.addChild(new Text(theme.fg("dim", `Credentials saved to ${getAgentDbPath()}`), 1, 0));
+			this.ctx.ui.requestRender();
 		} catch (error: unknown) {
-			if (!cancelled) closeDock();
 			this.ctx.showError(`Login failed: ${error instanceof Error ? error.message : String(error)}`);
 		} finally {
 			if (useManualInput) {
@@ -1216,9 +1280,12 @@ export class SelectorController {
 		try {
 			await this.ctx.session.modelRegistry.authStorage.logout(providerId);
 			await this.ctx.session.modelRegistry.refresh();
-			// 99.20.07 P3: one-line success notices ride the status surface.
-			this.ctx.showStatus(
-				`${theme.status.success} Successfully logged out of ${providerId}\nCredentials removed from ${getAgentDbPath()}`,
+			this.ctx.chatContainer.addChild(new Spacer(1));
+			this.ctx.chatContainer.addChild(
+				new Text(theme.fg("success", `${theme.status.success} Successfully logged out of ${providerId}`), 1, 0),
+			);
+			this.ctx.chatContainer.addChild(
+				new Text(theme.fg("dim", `Credentials removed from ${getAgentDbPath()}`), 1, 0),
 			);
 			this.ctx.ui.requestRender();
 		} catch (error: unknown) {
@@ -1226,7 +1293,11 @@ export class SelectorController {
 		}
 	}
 
-	async showOAuthSelector(mode: "login" | "logout", providerId?: string): Promise<void> {
+	async showOAuthSelector(
+		mode: "login" | "logout",
+		providerId?: string,
+		opts?: { importLocal?: boolean },
+	): Promise<void> {
 		if (providerId) {
 			const oauthProvider = getOAuthProviders().find(provider => provider.id === providerId);
 			if (!oauthProvider) {
@@ -1234,7 +1305,7 @@ export class SelectorController {
 				return;
 			}
 			if (mode === "login") {
-				await this.#handleOAuthLogin(providerId);
+				await this.#handleOAuthLogin(providerId, opts);
 			} else {
 				await this.#handleOAuthLogout(providerId);
 			}

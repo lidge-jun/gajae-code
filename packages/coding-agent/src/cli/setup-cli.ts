@@ -7,11 +7,11 @@ import * as path from "node:path";
 import { $which, APP_NAME, getPythonEnvDir } from "@gajae-code/utils";
 import { $ } from "bun";
 import chalk from "chalk";
-import { installDefaultGjcDefinitions } from "../defaults/gjc-defaults";
+import { installDefaultJwcDefinitions } from "../defaults/jwc-defaults";
 import {
 	getDefaultCodexHooksPath,
-	mergeGjcManagedCodexHooksConfig,
-	readGjcManagedCodexHooksStatus,
+	mergeJwcManagedCodexHooksConfig,
+	readJwcManagedCodexHooksStatus,
 } from "../hooks/codex-native-hooks-config";
 import { theme } from "../modes/theme/theme";
 import {
@@ -52,7 +52,7 @@ export interface SetupCommandArgs {
 		mutation?: string[];
 		artifactByteCap?: string;
 		serverKey?: string;
-		gjcCommand?: string;
+		jwcCommand?: string;
 		target?: string;
 		profileDir?: string;
 	};
@@ -128,7 +128,7 @@ export function parseSetupArgs(args: string[]): SetupCommandArgs | undefined {
 		} else if (arg === "--server-key") {
 			flags.serverKey = args[++i];
 		} else if (arg === "--jwc-command" || arg === "--gjc-command") {
-			flags.gjcCommand = args[++i];
+			flags.jwcCommand = args[++i];
 		} else if (arg === "--target") {
 			flags.target = args[++i];
 		} else if (arg === "--profile-dir") {
@@ -318,7 +318,7 @@ async function handleHooksSetup(flags: { json?: boolean; check?: boolean }): Pro
 	const existingContent = await Bun.file(hooksPath)
 		.text()
 		.catch(() => null);
-	const status = readGjcManagedCodexHooksStatus(existingContent, hooksPath);
+	const status = readJwcManagedCodexHooksStatus(existingContent, hooksPath);
 
 	if (flags.check) {
 		if (flags.json) {
@@ -337,9 +337,9 @@ async function handleHooksSetup(flags: { json?: boolean; check?: boolean }): Pro
 		return;
 	}
 
-	const merged = mergeGjcManagedCodexHooksConfig(existingContent);
+	const merged = mergeJwcManagedCodexHooksConfig(existingContent);
 	await Bun.write(hooksPath, merged.content);
-	const installed = readGjcManagedCodexHooksStatus(merged.content, hooksPath);
+	const installed = readJwcManagedCodexHooksStatus(merged.content, hooksPath);
 
 	if (flags.json) {
 		process.stdout.write(`${JSON.stringify({ ...installed, changed: merged.changed }, null, 2)}\n`);
@@ -353,7 +353,7 @@ async function handleHooksSetup(flags: { json?: boolean; check?: boolean }): Pro
 	);
 }
 async function handleDefaultsSetup(flags: { json?: boolean; check?: boolean; force?: boolean }): Promise<void> {
-	const result = await installDefaultGjcDefinitions({ check: flags.check, force: flags.force });
+	const result = await installDefaultJwcDefinitions({ check: flags.check, force: flags.force });
 	const hasCheckFailure = result.missing > 0 || result.different > 0;
 
 	if (flags.json) {

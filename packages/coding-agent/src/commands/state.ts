@@ -1,6 +1,6 @@
 import { APP_NAME } from "@gajae-code/utils";
 import { Command } from "@gajae-code/utils/cli";
-import { runNativeStateCommand } from "../gjc-runtime/state-runtime";
+import { runNativeStateCommand } from "../jwc-runtime/state-runtime";
 
 export default class State extends Command {
 	static description = `Read or update ${APP_NAME.toUpperCase()} workflow state receipts under .jwc/state`;

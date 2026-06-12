@@ -49,16 +49,19 @@ const BASELINE_LONG_NON_FOCUSED =
 	"Zulu yankee xray whiskey victor uniform tango sierra romeo quebec papa oscar november mike lima kilo juliet india hotel golf";
 const BASELINE_SHORT = "short option";
 
+// (99.20.01) Box corners join the outline into one connected box — the
+// corner-less full-width rules of the original capture read as three detached
+// lines. Only the box top/bottom rows changed vs the pre-fork capture.
 const BASELINE_OUTLINED_RENDER_80_STRIPPED = [
 	"────────────────────────────────────────────────────────────────────────────────",
 	"",
 	" Choose an option                                                               ",
 	"",
-	"────────────────────────────────────────────────────────────────────────────────",
+	"┌──────────────────────────────────────────────────────────────────────────────┐",
 	"│❯ Alpha bravo charlie delta echo foxtrot golf hotel india juliet kilo lima mi…│",
 	"│  Zulu yankee xray whiskey victor uniform tango sierra romeo quebec papa osca…│",
 	"│  short option                                                                │",
-	"────────────────────────────────────────────────────────────────────────────────",
+	"└──────────────────────────────────────────────────────────────────────────────┘",
 	"",
 	" up/down navigate  enter select  esc cancel                                     ",
 	"",

@@ -74,7 +74,7 @@ export default class Setup extends Command {
 				mutation: flags.mutation,
 				artifactByteCap: flags["artifact-byte-cap"],
 				serverKey: flags["server-key"],
-				gjcCommand: flags["jwc-command"] ?? flags["gjc-command"],
+				jwcCommand: flags["jwc-command"] ?? flags["gjc-command"],
 				target: flags.target,
 				profileDir: flags["profile-dir"],
 			},

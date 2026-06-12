@@ -16,8 +16,9 @@ describe("OpenAI Codex defaults", () => {
 			maxLevel: Effort.XHigh,
 			defaultLevel: Effort.XHigh,
 		});
-		// gpt-5.5 is a 400K-context model and must not demote to the smaller gpt-5.4.
-		expect(model.contextWindow).toBe(400000);
+		// OpenAI code backend enforces a 272K window for gpt-5.5 (the 1M capacity
+		// is gpt-5.4-only per backend discovery max_context_window).
+		expect(model.contextWindow).toBe(272000);
 		expect(model.contextPromotionTarget).toBeUndefined();
 	});
 });

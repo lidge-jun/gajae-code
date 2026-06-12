@@ -1,7 +1,7 @@
 import type { AgentMessage } from "@gajae-code/agent-core";
 import type { CompactionOutcome } from "@gajae-code/agent-core/compaction";
 import type { AssistantMessage, ImageContent, Message, UsageReport } from "@gajae-code/ai";
-import type { Component, Container, EditorTheme, Loader, Spacer, Text, TUI } from "@gajae-code/tui";
+import type { Component, Container, EditorTheme, Loader, SlashCommand, Spacer, Text, TUI } from "@gajae-code/tui";
 import type { KeybindingsManager } from "../config/keybindings";
 import type { Settings } from "../config/settings";
 import type {
@@ -20,6 +20,7 @@ import type { SessionContext, SessionManager } from "../session/session-manager"
 import type { LspStartupServerInfo } from "../tools";
 import type { AssistantMessageComponent } from "./components/assistant-message";
 import type { BashExecutionComponent } from "./components/bash-execution";
+import type { ComposerFooter } from "./components/composer-footer";
 import type { CustomEditor } from "./components/custom-editor";
 import type { EvalExecutionComponent } from "./components/eval-execution";
 import type { HookEditorComponent } from "./components/hook-editor";
@@ -73,6 +74,8 @@ export interface InteractiveModeContext {
 	hookWidgetContainerAbove: Container;
 	hookWidgetContainerBelow: Container;
 	statusLine: StatusLineComponent;
+	/** 99.20.06 composer footer — persistent 1-row notice/hint line below the editor. */
+	composerFooter: ComposerFooter;
 
 	// Session access
 	session: AgentSession;
@@ -129,6 +132,8 @@ export interface InteractiveModeContext {
 	lastStatusSpacer: Spacer | undefined;
 	lastStatusText: Text | undefined;
 	fileSlashCommands: Set<string>;
+	/** Combined command list as advertised to autocomplete (builtin + hooks + custom + skills + file). 99.20.08. */
+	allSlashCommands: SlashCommand[];
 	skillCommands: Map<string, Skill>;
 	oauthManualInput: OAuthManualInputManager;
 	todoPhases: TodoPhase[];
@@ -212,6 +217,7 @@ export interface InteractiveModeContext {
 	handleJobsCommand(): Promise<void>;
 	handleUsageCommand(reports?: UsageReport[] | null): Promise<void>;
 	handleChangelogCommand(showFull?: boolean): Promise<void>;
+	handleHelpCommand(): void;
 	handleHotkeysCommand(): void;
 	handleToolsCommand(): void;
 	handleContextCommand(): void;
@@ -247,17 +253,17 @@ export interface InteractiveModeContext {
 	showModelSelector(options?: { temporaryOnly?: boolean }): void;
 	showEffortSelector(): void;
 	showQuotaSelector(): void;
+	showUsageReportPanel(title: string, load: () => Promise<((width: number) => string[]) | string>): void;
 	handleQuotaForProvider(providerId: string): Promise<void>;
 	showProviderOnboarding(): void;
 	showPluginSelector(mode?: "install" | "uninstall"): void;
 	showUserMessageSelector(): void;
 	showTreeSelector(): void;
 	showSessionSelector(): void;
-	showReadOncePanel(title: string, load: () => Promise<((width: number) => string[]) | string>): void;
 	handleResumeSession(sessionPath: string): Promise<void>;
 	handleResumeByIdCommand(sessionArg: string): Promise<void>;
 	handleSessionDeleteCommand(): Promise<void>;
-	showOAuthSelector(mode: "login" | "logout", providerId?: string): Promise<void>;
+	showOAuthSelector(mode: "login" | "logout", providerId?: string, opts?: { importLocal?: boolean }): Promise<void>;
 	showHookConfirm(title: string, message: string): Promise<boolean>;
 	showDebugSelector(): void;
 	showSessionObserver(): void;

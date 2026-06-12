@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "bun:test";
 import * as path from "node:path";
-import type { InteractiveModeContext } from "@gajae-code/coding-agent/modes/types";
 import { BUILTIN_SLASH_COMMANDS } from "@gajae-code/coding-agent/extensibility/slash-commands";
+import type { InteractiveModeContext } from "@gajae-code/coding-agent/modes/types";
 import {
 	BUILTIN_SLASH_COMMAND_DEFS,
 	executeBuiltinSlashCommand,

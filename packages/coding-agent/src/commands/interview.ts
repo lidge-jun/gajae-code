@@ -1,6 +1,6 @@
 import { APP_NAME } from "@gajae-code/utils";
 import { Command, Flags } from "@gajae-code/utils/cli";
-import { runNativeJawInterviewCommand } from "../gjc-runtime/jaw-interview-runtime";
+import { runNativeJawInterviewCommand } from "../jwc-runtime/jaw-interview-runtime";
 
 export default class JawInterview extends Command {
 	static description = `Run native ${APP_NAME.toUpperCase()} I-stage interview workflow (jaw-interview engine)`;
@@ -18,7 +18,9 @@ export default class JawInterview extends Command {
 		stage: Flags.string({ description: 'Spec stage for --write (currently "final")' }),
 		slug: Flags.string({ description: "Safe slug for .jwc/specs/jaw-interview-<slug>.md" }),
 		spec: Flags.string({ description: "Final spec markdown or a path to the final spec markdown" }),
-		handoff: Flags.string({ description: 'After --write, hand off to a P-stage workflow target (currently "ralplan")' }),
+		handoff: Flags.string({
+			description: 'After --write, hand off to a P-stage workflow target (currently "ralplan")',
+		}),
 		deliberate: Flags.boolean({
 			description: "Shortcut for --write handoff to ralplan in deliberate consensus mode",
 		}),

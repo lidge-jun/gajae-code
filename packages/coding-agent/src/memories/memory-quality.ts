@@ -21,10 +21,7 @@ export function sessionIsCompactionAware(entries: SessionEntry[]): boolean {
 	return getLatestCompactionEntry(entries) !== null;
 }
 
-export function resolveSnapshotLimits(
-	config: MemoryRuntimeConfig,
-	isCompacted: boolean,
-): MemorySnapshotLimits {
+export function resolveSnapshotLimits(config: MemoryRuntimeConfig, isCompacted: boolean): MemorySnapshotLimits {
 	if (isCompacted) {
 		return {
 			topN: config.compactedTaskSnapshotTopN,
@@ -46,7 +43,11 @@ export function resolveSearchSnippetLimit(config: MemoryRuntimeConfig, isCompact
 }
 
 /** Apply hit-count penalty so over-recalled refs sink in ranking (M9 dedup). */
-export function applyHitCountDedup(hits: LocalMemoryHit[], hitCounts: Map<string, number>, threshold: number): LocalMemoryHit[] {
+export function applyHitCountDedup(
+	hits: LocalMemoryHit[],
+	hitCounts: Map<string, number>,
+	threshold: number,
+): LocalMemoryHit[] {
 	if (threshold <= 0) return hits;
 	return hits
 		.map(hit => {

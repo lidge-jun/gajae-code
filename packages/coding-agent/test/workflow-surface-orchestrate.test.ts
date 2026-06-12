@@ -40,9 +40,15 @@ describe("workflow surface — orchestrate discovery (99.03 M1)", () => {
 
 	it("system-prompt skill attributes unchanged (re-facing only)", async () => {
 		const source = await read();
-		expect(source).toContain('<skill name="jaw-interview" user-entrypoint="/skill:jaw-interview" cli-runtime="native: jwc jaw-interview">');
-		expect(source).toContain('<skill name="ralplan" user-entrypoint="/skill:ralplan" cli-runtime="native: jwc ralplan">');
-		expect(source).toContain('<skill name="ultragoal" user-entrypoint="/skill:ultragoal" cli-runtime="native: jwc ultragoal">');
+		expect(source).toContain(
+			'<skill name="jaw-interview" user-entrypoint="/skill:jaw-interview" cli-runtime="native: jwc jaw-interview">',
+		);
+		expect(source).toContain(
+			'<skill name="ralplan" user-entrypoint="/skill:ralplan" cli-runtime="native: jwc ralplan">',
+		);
+		expect(source).toContain(
+			'<skill name="ultragoal" user-entrypoint="/skill:ultragoal" cli-runtime="native: jwc ultragoal">',
+		);
 		expect(source).toContain('<skill name="team" user-entrypoint="/skill:team" cli-runtime="native: jwc team">');
 	});
 

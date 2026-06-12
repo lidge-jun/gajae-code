@@ -4,7 +4,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { resetSettingsForTest, Settings, settings } from "@gajae-code/coding-agent/config/settings";
 import { renderIdentityBlock } from "@gajae-code/coding-agent/system-prompt";
-import { resolveAgentDisplayName } from "../src/gjc-runtime/agent-identity";
+import { resolveAgentDisplayName } from "../src/jwc-runtime/agent-identity";
 import { cleanupTempHome } from "./helpers/temp-home-cleanup";
 
 const repoRoot = path.resolve(import.meta.dir, "..");

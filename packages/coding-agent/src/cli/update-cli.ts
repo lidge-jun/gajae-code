@@ -112,7 +112,7 @@ export function resolveUpdateMethodForTest(ompPath: string, bunBinDir: string | 
 }
 async function resolveUpdateTarget(): Promise<UpdateTarget> {
 	const bunBinDir = await getBunGlobalBinDir();
-	const ompPath = resolveGjcPath();
+	const ompPath = resolveJwcPath();
 
 	if (ompPath) {
 		const method = resolveUpdateMethod(ompPath, bunBinDir);
@@ -203,7 +203,7 @@ function getBinaryName(platform: NodeJS.Platform = process.platform, arch: strin
 /**
  * Resolve the path that `gjc` maps to in the user's PATH.
  */
-function resolveGjcPath(): string | undefined {
+function resolveJwcPath(): string | undefined {
 	return $which(APP_NAME) ?? undefined;
 }
 
@@ -211,7 +211,7 @@ function resolveGjcPath(): string | undefined {
  * Run the resolved gjc binary and check if it reports the expected version.
  */
 async function verifyInstalledVersion(expectedVersion: string): Promise<InstalledVersionVerification> {
-	const ompPath = resolveGjcPath();
+	const ompPath = resolveJwcPath();
 	if (!ompPath) return { ok: false };
 	try {
 		const result = await $`${ompPath} --version`.quiet().nothrow();

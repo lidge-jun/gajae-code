@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "bun:test";
+import { setKittyProtocolActive } from "@gajae-code/tui";
 import { defaultEditorTheme } from "../../tui/test/test-themes";
 import { CustomEditor } from "../src/modes/components/custom-editor";
 
@@ -89,14 +90,44 @@ describe("CustomEditor double-Escape exit safety net", () => {
 		editor.onExit = onExit;
 
 		editor.handleInput(ESC);
-		vi.advanceTimersByTime(600); // beyond the 500ms window
+		vi.advanceTimersByTime(900); // beyond the 800ms window (99.20.06 W1)
 		editor.handleInput(ESC);
 		expect(onExit).toHaveBeenCalledTimes(0); // treated as a fresh first Escape
+	});
+
+	it("prefers onForcedExit over onExit for the net's immediate exit (99.20.06 W2 decoupling)", () => {
+		const editor = createEditor();
+		const onExit = vi.fn();
+		const onForcedExit = vi.fn();
+		editor.onExit = onExit;
+		editor.onForcedExit = onForcedExit;
+
+		editor.handleInput(ESC);
+		editor.handleInput(ESC);
+		expect(onForcedExit).toHaveBeenCalledTimes(1);
+		expect(onExit).toHaveBeenCalledTimes(0); // chord handler (double-press) must not fire
+	});
+
+	it("fires onExitPending when the first Escape arms the net (99.20.06 footer notice)", () => {
+		const editor = createEditor();
+		const onExitPending = vi.fn();
+		editor.onForcedExit = vi.fn();
+		editor.onExitPending = onExitPending;
+
+		editor.handleInput(ESC);
+		expect(onExitPending).toHaveBeenCalledTimes(1);
+
+		editor.handleInput(ESC); // exiting press does not re-arm
+		expect(onExitPending).toHaveBeenCalledTimes(1);
 	});
 });
 
 describe("CustomEditor Hangul IME Ctrl-chord hint", () => {
-	it("hints on a bare jamo sitting on a bound Ctrl key without firing the action", () => {
+	// The hint is deferred so a follow-up keystroke can cancel it; tests must
+	// wait out the window before asserting it fired.
+	const HINT_DEFER_WAIT_MS = 300;
+
+	it("hints on an isolated bare jamo sitting on a bound Ctrl key without firing the action", async () => {
 		const editor = createEditor();
 		const onClear = vi.fn();
 		const onHint = vi.fn();
@@ -104,13 +135,14 @@ describe("CustomEditor Hangul IME Ctrl-chord hint", () => {
 		editor.onHangulCtrlChordHint = onHint;
 
 		editor.handleInput("ㅊ"); // dubeolsik position of "c" → ctrl+c (app.clear)
+		await Bun.sleep(HINT_DEFER_WAIT_MS);
 
 		expect(onClear).toHaveBeenCalledTimes(0); // never misfires the action
 		expect(onHint).toHaveBeenCalledWith("ㅊ", "ctrl+c");
 		expect(editor.getText()).toBe("ㅊ"); // jamo still inserted as ordinary text
 	});
 
-	it("hints for the exit chord position (ㅇ → ctrl+d)", () => {
+	it("hints for the exit chord position (ㅇ → ctrl+d)", async () => {
 		const editor = createEditor();
 		const onExit = vi.fn();
 		const onHint = vi.fn();
@@ -118,23 +150,25 @@ describe("CustomEditor Hangul IME Ctrl-chord hint", () => {
 		editor.onHangulCtrlChordHint = onHint;
 
 		editor.handleInput("ㅇ");
+		await Bun.sleep(HINT_DEFER_WAIT_MS);
 
 		expect(onExit).toHaveBeenCalledTimes(0);
 		expect(onHint).toHaveBeenCalledWith("ㅇ", "ctrl+d");
 	});
 
-	it("follows remapped action keys", () => {
+	it("follows remapped action keys", async () => {
 		const editor = createEditor();
 		const onHint = vi.fn();
 		editor.onHangulCtrlChordHint = onHint;
 		editor.setActionKeys("app.model.selectTemporary", ["ctrl+y"]);
 
 		editor.handleInput("ㅛ"); // dubeolsik position of "y"
+		await Bun.sleep(HINT_DEFER_WAIT_MS);
 
 		expect(onHint).toHaveBeenCalledWith("ㅛ", "ctrl+y");
 	});
 
-	it("stays silent for jamo on unbound keys, syllables, latin letters, and multi-char chunks", () => {
+	it("stays silent for jamo on unbound keys, syllables, latin letters, and multi-char chunks", async () => {
 		const editor = createEditor();
 		const onHint = vi.fn();
 		editor.onHangulCtrlChordHint = onHint;
@@ -143,8 +177,49 @@ describe("CustomEditor Hangul IME Ctrl-chord hint", () => {
 		editor.handleInput("차"); // composed syllable, not a bare jamo
 		editor.handleInput("c"); // plain latin letter
 		editor.handleInput("ㅊㅏ"); // multi-char chunk (committed composition)
+		await Bun.sleep(HINT_DEFER_WAIT_MS);
 
 		expect(onHint).toHaveBeenCalledTimes(0);
+	});
+
+	it("suppresses the hint when the jamo arrives mid-typing (preceding keystroke)", async () => {
+		const editor = createEditor();
+		const onHint = vi.fn();
+		editor.onHangulCtrlChordHint = onHint;
+
+		editor.handleInput("차"); // recent keystroke → next jamo is not isolated
+		editor.handleInput("ㅊ");
+		await Bun.sleep(HINT_DEFER_WAIT_MS);
+
+		expect(onHint).toHaveBeenCalledTimes(0);
+	});
+
+	it("cancels a pending hint when a follow-up keystroke arrives", async () => {
+		const editor = createEditor();
+		const onHint = vi.fn();
+		editor.onHangulCtrlChordHint = onHint;
+
+		editor.handleInput("ㅊ"); // isolated → hint scheduled
+		editor.handleInput("ㅏ"); // follow-up within the defer window → typing
+		await Bun.sleep(HINT_DEFER_WAIT_MS);
+
+		expect(onHint).toHaveBeenCalledTimes(0);
+	});
+
+	it("never hints when the Kitty keyboard protocol is active (real chords already match)", async () => {
+		setKittyProtocolActive(true);
+		try {
+			const editor = createEditor();
+			const onHint = vi.fn();
+			editor.onHangulCtrlChordHint = onHint;
+
+			editor.handleInput("ㅊ");
+			await Bun.sleep(HINT_DEFER_WAIT_MS);
+
+			expect(onHint).toHaveBeenCalledTimes(0);
+		} finally {
+			setKittyProtocolActive(false);
+		}
 	});
 });
 

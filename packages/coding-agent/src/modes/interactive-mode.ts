@@ -27,12 +27,22 @@ import {
 	ViewportFill,
 	visibleWidth,
 } from "@gajae-code/tui";
-import { $flag, APP_NAME, adjustHsv, getProjectDir, hsvToRgb, isEnoent, logger, postmortem, prompt } from "@gajae-code/utils";
+import {
+	$flag,
+	APP_NAME,
+	adjustHsv,
+	getProjectDir,
+	hsvToRgb,
+	isEnoent,
+	logger,
+	postmortem,
+	prompt,
+} from "@gajae-code/utils";
 import chalk from "chalk";
 import { AsyncJobManager } from "../async";
 import { KeybindingsManager } from "../config/keybindings";
 import { isSettingsInitialized, type Settings, settings } from "../config/settings";
-import { DEFAULT_GJC_DEFINITION_NAMES } from "../defaults/gjc-defaults";
+import { DEFAULT_JWC_DEFINITION_NAMES } from "../defaults/jwc-defaults";
 import { isJawBrand } from "../discovery/helpers";
 import type {
 	ExtensionUIContext,
@@ -43,9 +53,9 @@ import type {
 import type { CompactOptions } from "../extensibility/extensions/types";
 import { resolveSkillSlashCommands, type Skill } from "../extensibility/skills";
 import { BUILTIN_SLASH_COMMANDS, loadSlashCommands } from "../extensibility/slash-commands";
-import { consumePendingGoalModeRequest } from "../gjc-runtime/goal-mode-request";
 import { type Goal, type GoalModeState, normalizeGoal } from "../goals/state";
 import { resolveLocalUrlToPath } from "../internal-urls";
+import { consumePendingGoalModeRequest } from "../jwc-runtime/goal-mode-request";
 import { LSP_STARTUP_EVENT_CHANNEL, type LspStartupEvent } from "../lsp/startup-events";
 import {
 	humanizePlanTitle,
@@ -79,6 +89,7 @@ import { getSessionAccentAnsi, getSessionAccentHex } from "../utils/session-colo
 import { popTerminalTitle, pushTerminalTitle, setSessionTerminalTitle } from "../utils/title-generator";
 import type { AssistantMessageComponent } from "./components/assistant-message";
 import type { BashExecutionComponent } from "./components/bash-execution";
+import { ComposerFooter } from "./components/composer-footer";
 import { CustomEditor } from "./components/custom-editor";
 import { DynamicBorder } from "./components/dynamic-border";
 import type { EvalExecutionComponent } from "./components/eval-execution";
@@ -256,6 +267,8 @@ export class InteractiveMode implements InteractiveModeContext {
 	hookWidgetContainerAbove: Container;
 	hookWidgetContainerBelow: Container;
 	statusLine: StatusLineComponent;
+	/** 99.20.06 — persistent 1-row notice/hint line below the editor (CC footer model). */
+	composerFooter: ComposerFooter;
 
 	isInitialized = false;
 	isBackgrounded = false;
@@ -309,6 +322,8 @@ export class InteractiveMode implements InteractiveModeContext {
 	lastStatusSpacer: Spacer | undefined = undefined;
 	lastStatusText: Text | undefined = undefined;
 	fileSlashCommands: Set<string> = new Set();
+	/** Combined command list as advertised to autocomplete — /help renders from this (99.20.08). */
+	allSlashCommands: SlashCommand[] = [];
 	skillCommands: Map<string, Skill> = new Map();
 	oauthManualInput: OAuthManualInputManager = new OAuthManualInputManager();
 
@@ -410,12 +425,12 @@ export class InteractiveMode implements InteractiveModeContext {
 			logger.warn("History storage unavailable", { error: String(error) });
 		}
 		this.hookWidgetContainerAbove = new Container();
-		this.hookWidgetContainerAbove.addChild(new Spacer(1));
 		this.hookWidgetContainerBelow = new Container();
 		this.editorContainer = new Container();
 		this.editorContainer.addChild(this.editor);
 		this.statusLine = new StatusLineComponent(session);
 		this.statusLine.setAutoCompactEnabled(session.autoCompactionEnabled);
+		this.composerFooter = new ComposerFooter(() => this.ui.requestRender());
 
 		this.hideThinkingBlock = settings.get("hideThinkingBlock");
 
@@ -538,10 +553,18 @@ export class InteractiveMode implements InteractiveModeContext {
 		this.ui.addChild(this.statusContainer);
 		this.ui.addChild(this.todoContainer);
 		this.ui.addChild(this.btwContainer);
-		this.ui.addChild(this.statusLine); // Main status rail + hook statuses; composer chrome is rendered by the editor.
+		this.ui.addChild(new Spacer(1)); // Breathing room between the last response and the composer cluster.
+		this.ui.addChild(this.statusLine); // Main status rail + hook statuses; composer chrome is rendered by the editor — attached directly below the rail, no gap.
 		this.ui.addChild(this.hookWidgetContainerAbove);
 		this.ui.addChild(this.editorContainer);
 		this.ui.addChild(this.hookWidgetContainerBelow);
+		// 99.20.06 composer footer — always the frame's last line (F1). Reserves
+		// one constant row (transient ▸ mode ▸ hint) so notices never move the
+		// composer. Unset setting = brand default (jwc on / engine brand off).
+		const composerFooterSetting = settings.get("tui.composerFooter");
+		this.composerFooter.setEnabled(!$flag("PI_NO_COMPOSER_FOOTER") && (composerFooterSetting ?? isJawBrand()));
+		this.composerFooter.setHint("? for shortcuts · /help for commands");
+		this.ui.addChild(this.composerFooter);
 		this.ui.setFocus(this.editor);
 
 		this.#inputController.setupKeyHandlers();
@@ -669,10 +692,8 @@ export class InteractiveMode implements InteractiveModeContext {
 		}));
 		const skillCommands = this.#rebuildSkillSlashCommands(fileCommandNames);
 		const slashCommands = [...this.#baseSlashCommands, ...skillCommands];
-		const autocompleteProvider = this.#inputController.createAutocompleteProvider(
-			[...slashCommands, ...fileSlashCommands],
-			basePath,
-		);
+		this.allSlashCommands = [...slashCommands, ...fileSlashCommands];
+		const autocompleteProvider = this.#inputController.createAutocompleteProvider(this.allSlashCommands, basePath);
 		this.editor.setAutocompleteProvider(autocompleteProvider);
 		this.session.setSlashCommands(fileCommands);
 	}
@@ -690,12 +711,16 @@ export class InteractiveMode implements InteractiveModeContext {
 		for (const command of resolvedCommands) {
 			this.skillCommands.set(command.name, command.skill);
 		}
-		const defaultGjcNames = new Set<string>(DEFAULT_GJC_DEFINITION_NAMES);
+		const defaultJwcNames = new Set<string>(DEFAULT_JWC_DEFINITION_NAMES);
+		// 99.30.02: ralplan is superseded by the native /orchestrate workflow —
+		// the skill stays invocable but no longer pins to the top of autocomplete.
+		defaultJwcNames.delete("ralplan");
 		return resolvedCommands.map(command => ({
 			name: command.name,
 			description: command.description,
-			// Pin the bundled GJC workflow skills above generic commands in autocomplete.
-			...(defaultGjcNames.has(command.skill.name) ? { priority: 100 } : {}),
+			// Pin the bundled GJC workflow skills above generic commands in autocomplete
+			// (below the native workflow entrypoints at 105-110, slash-commands.ts).
+			...(defaultJwcNames.has(command.skill.name) ? { priority: 100 } : {}),
 		}));
 	}
 
@@ -956,12 +981,6 @@ export class InteractiveMode implements InteractiveModeContext {
 		return active ?? nonEmpty[nonEmpty.length - 1];
 	}
 
-	/** 99.30.01 M2: every task reached a terminal status (completed/abandoned). */
-	#allTodoTasksTerminal(phases: TodoPhase[]): boolean {
-		const tasks = phases.flatMap(phase => phase.tasks);
-		return tasks.length > 0 && tasks.every(task => task.status === "completed" || task.status === "abandoned");
-	}
-
 	#renderTodoList(): void {
 		this.todoContainer.clear();
 		const phases = this.todoPhases.filter(phase => phase.tasks.length > 0);
@@ -971,18 +990,6 @@ export class InteractiveMode implements InteractiveModeContext {
 
 		const indent = "  ";
 		const hook = theme.tree.hook;
-
-		// 99.30.01 M2: all tasks terminal → one-line receipt unless the user
-		// manually expanded. todo_auto_clear stays off — collapse is UI-only.
-		if (!this.todoExpanded && this.#allTodoTasksTerminal(phases)) {
-			const tasks = phases.flatMap(phase => phase.tasks);
-			const completed = tasks.filter(task => task.status === "completed").length;
-			this.todoContainer.addChild(
-				new Text(`\n${indent}${theme.fg("muted", `▸ Todos (${completed}/${tasks.length}) · complete`)}`, 1, 0),
-			);
-			return;
-		}
-
 		const lines = ["", indent + theme.bold(theme.fg("accent", "Todos"))];
 
 		if (!this.todoExpanded) {
@@ -1930,6 +1937,7 @@ export class InteractiveMode implements InteractiveModeContext {
 		this.#observerRegistry.dispose();
 		this.#eventController.dispose();
 		this.statusLine.dispose();
+		this.composerFooter.dispose();
 		this.#jobsObserver?.dispose();
 		this.editor.dispose();
 		if (this.#resizeHandler) {
@@ -2273,6 +2281,12 @@ export class InteractiveMode implements InteractiveModeContext {
 		await this.#commandController.handleChangelogCommand(showFull);
 	}
 
+	handleHelpCommand(): void {
+		// 99.20.08 (나) 확정: docked catalog selector (model-selector grammar)
+		// — replaced the v1 markdown panel.
+		this.#selectorController.showHelpSelector();
+	}
+
 	handleHotkeysCommand(): void {
 		this.#commandController.handleHotkeysCommand();
 	}
@@ -2489,6 +2503,10 @@ export class InteractiveMode implements InteractiveModeContext {
 		this.#selectorController.showQuotaSelector();
 	}
 
+	showUsageReportPanel(title: string, load: () => Promise<((width: number) => string[]) | string>): void {
+		this.#selectorController.showUsageReportPanel(title, load);
+	}
+
 	handleQuotaForProvider(providerId: string): Promise<void> {
 		return this.#commandController.handleQuotaForProvider(providerId);
 	}
@@ -2517,10 +2535,6 @@ export class InteractiveMode implements InteractiveModeContext {
 		this.#selectorController.showSessionSelector();
 	}
 
-	showReadOncePanel(title: string, load: () => Promise<((width: number) => string[]) | string>): void {
-		this.#selectorController.showReadOncePanel(title, load);
-	}
-
 	handleResumeSession(sessionPath: string): Promise<void> {
 		this.#btwController.dispose();
 		this.resetObserverRegistry();
@@ -2536,8 +2550,8 @@ export class InteractiveMode implements InteractiveModeContext {
 		return this.#selectorController.handleSessionDeleteCommand();
 	}
 
-	showOAuthSelector(mode: "login" | "logout", providerId?: string): Promise<void> {
-		return this.#selectorController.showOAuthSelector(mode, providerId);
+	showOAuthSelector(mode: "login" | "logout", providerId?: string, opts?: { importLocal?: boolean }): Promise<void> {
+		return this.#selectorController.showOAuthSelector(mode, providerId, opts);
 	}
 
 	showHookConfirm(title: string, message: string): Promise<boolean> {
@@ -2618,21 +2632,12 @@ export class InteractiveMode implements InteractiveModeContext {
 				},
 			];
 		}
-		// 99.30.01 M2: a fresh all-terminal update collapses the panel even if
-		// previously expanded; the user can re-expand via the toggle.
-		if (this.#allTodoTasksTerminal(this.todoPhases)) {
-			this.todoExpanded = false;
-		}
 		this.#renderTodoList();
 		this.ui.requestRender();
 	}
 
 	async reloadTodos(): Promise<void> {
 		await this.#loadTodoList();
-		if (this.#allTodoTasksTerminal(this.todoPhases)) {
-			this.todoExpanded = false;
-			this.#renderTodoList();
-		}
 		this.ui.requestRender();
 	}
 

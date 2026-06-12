@@ -3,7 +3,7 @@ import * as path from "node:path";
 
 export const GJC_MANAGED_CODEX_HOOK_EVENTS = ["UserPromptSubmit", "Stop"] as const;
 
-export type GjcManagedCodexHookEvent = (typeof GJC_MANAGED_CODEX_HOOK_EVENTS)[number];
+export type JwcManagedCodexHookEvent = (typeof GJC_MANAGED_CODEX_HOOK_EVENTS)[number];
 
 type JsonObject = Record<string, unknown>;
 
@@ -18,20 +18,20 @@ export interface CodexHookEntry {
 	hooks: CodexCommandHook[];
 }
 
-export interface GjcManagedCodexHooksConfig {
-	hooks: Record<GjcManagedCodexHookEvent, CodexHookEntry[]>;
+export interface JwcManagedCodexHooksConfig {
+	hooks: Record<JwcManagedCodexHookEvent, CodexHookEntry[]>;
 }
 
-export interface MergeGjcManagedCodexHooksResult {
+export interface MergeJwcManagedCodexHooksResult {
 	content: string;
 	changed: boolean;
 	managedHookCount: number;
 }
 
-export interface GjcCodexHooksStatus {
+export interface JwcCodexHooksStatus {
 	hooksPath: string;
 	installed: boolean;
-	missingEvents: GjcManagedCodexHookEvent[];
+	missingEvents: JwcManagedCodexHookEvent[];
 	managedHookCount: number;
 }
 
@@ -51,21 +51,21 @@ function normalizeHooksMap(root: JsonObject): Record<string, unknown> {
 	return hooks;
 }
 
-function commandIsGjcManaged(value: unknown): boolean {
+function commandIsJwcManaged(value: unknown): boolean {
 	if (typeof value !== "string") return false;
 	return /\b(?:gjc|jwc)(?:\.exe)?\b/.test(value) && /\bcodex-native-hook\b/.test(value);
 }
 
-function entryContainsGjcManagedHook(value: unknown): boolean {
+function entryContainsJwcManagedHook(value: unknown): boolean {
 	if (!isJsonObject(value) || !Array.isArray(value.hooks)) return false;
-	return value.hooks.some(hook => isJsonObject(hook) && commandIsGjcManaged(hook.command));
+	return value.hooks.some(hook => isJsonObject(hook) && commandIsJwcManaged(hook.command));
 }
 
 function managedCommand(): string {
 	return "jwc codex-native-hook";
 }
 
-function managedEntry(event: GjcManagedCodexHookEvent): CodexHookEntry {
+function managedEntry(event: JwcManagedCodexHookEvent): CodexHookEntry {
 	const hook: CodexCommandHook = {
 		type: "command",
 		command: managedCommand(),
@@ -75,7 +75,7 @@ function managedEntry(event: GjcManagedCodexHookEvent): CodexHookEntry {
 	return { hooks: [hook] };
 }
 
-export function buildGjcManagedCodexHooksConfig(): GjcManagedCodexHooksConfig {
+export function buildJwcManagedCodexHooksConfig(): JwcManagedCodexHooksConfig {
 	return {
 		hooks: {
 			UserPromptSubmit: [managedEntry("UserPromptSubmit")],
@@ -88,7 +88,7 @@ export function getDefaultCodexHooksPath(homeDir = os.homedir()): string {
 	return path.join(homeDir, ".codex", "hooks.json");
 }
 
-export function mergeGjcManagedCodexHooksConfig(existingContent: string | null): MergeGjcManagedCodexHooksResult {
+export function mergeJwcManagedCodexHooksConfig(existingContent: string | null): MergeJwcManagedCodexHooksResult {
 	let root = normalizeHooksRoot(null);
 	if (existingContent?.trim()) {
 		try {
@@ -99,12 +99,12 @@ export function mergeGjcManagedCodexHooksConfig(existingContent: string | null):
 	}
 
 	const hooks = normalizeHooksMap(root);
-	const managed = buildGjcManagedCodexHooksConfig();
+	const managed = buildJwcManagedCodexHooksConfig();
 	let managedHookCount = 0;
 
 	for (const event of GJC_MANAGED_CODEX_HOOK_EVENTS) {
 		const existingEntries = Array.isArray(hooks[event]) ? hooks[event] : [];
-		const userEntries = existingEntries.filter(entry => !entryContainsGjcManagedHook(entry));
+		const userEntries = existingEntries.filter(entry => !entryContainsJwcManagedHook(entry));
 		const nextEntries = [...managed.hooks[event], ...userEntries];
 		managedHookCount += managed.hooks[event].length;
 		hooks[event] = nextEntries;
@@ -114,8 +114,8 @@ export function mergeGjcManagedCodexHooksConfig(existingContent: string | null):
 	return { content, changed: content !== (existingContent ?? ""), managedHookCount };
 }
 
-export function readGjcManagedCodexHooksStatus(content: string | null, hooksPath: string): GjcCodexHooksStatus {
-	const missingEvents: GjcManagedCodexHookEvent[] = [];
+export function readJwcManagedCodexHooksStatus(content: string | null, hooksPath: string): JwcCodexHooksStatus {
+	const missingEvents: JwcManagedCodexHookEvent[] = [];
 	let managedHookCount = 0;
 	let hooks: Record<string, unknown> = {};
 	if (content?.trim()) {
@@ -129,7 +129,7 @@ export function readGjcManagedCodexHooksStatus(content: string | null, hooksPath
 
 	for (const event of GJC_MANAGED_CODEX_HOOK_EVENTS) {
 		const entries = Array.isArray(hooks[event]) ? hooks[event] : [];
-		const eventManagedCount = entries.filter(entryContainsGjcManagedHook).length;
+		const eventManagedCount = entries.filter(entryContainsJwcManagedHook).length;
 		managedHookCount += eventManagedCount;
 		if (eventManagedCount === 0) missingEvents.push(event);
 	}

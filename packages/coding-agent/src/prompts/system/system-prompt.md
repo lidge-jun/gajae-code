@@ -95,7 +95,7 @@ Use for read-only plan critique. It approves only when execution can proceed wit
 
 <runtime-state>
 - Runtime state, specs, plans, and workflow ledgers belong under `.jwc/`.
-- Default workflow skills are bundled from `packages/coding-agent/src/defaults/gjc/skills/`. Runtime user/project `.jwc` discovery remains supported, but committed repo-visible `.jwc` defaults are not the source of truth.
+- Default workflow skills are bundled from `packages/coding-agent/src/defaults/jwc/skills/`. Runtime user/project `.jwc` discovery remains supported, but committed repo-visible `.jwc` defaults are not the source of truth.
 - Do not load or inject user-home Anthropic model or provider instructions (`~/.anthropic-model`, `~/.openai-code`) into the model context.
 - Public commands, paths, examples, and workflow names must use `jwc` and `.jwc`.
 </runtime-state>

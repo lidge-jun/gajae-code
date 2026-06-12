@@ -27,7 +27,7 @@ export {
 	createCompactionSummaryMessage,
 } from "@gajae-code/agent-core/compaction/messages";
 
-import type { LoadedSubskillActivation } from "../extensibility/gjc-plugins";
+import type { LoadedSubskillActivation } from "../extensibility/jwc-plugins";
 import type { OutputMeta } from "../tools/output-meta";
 import { formatOutputNotice } from "../tools/output-meta";
 

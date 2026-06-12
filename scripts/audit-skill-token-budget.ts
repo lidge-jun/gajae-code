@@ -3,8 +3,8 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-import { listCommandRefBlocks } from "../packages/coding-agent/src/gjc-runtime/workflow-command-ref";
-import { CANONICAL_GJC_WORKFLOW_SKILLS } from "../packages/coding-agent/src/skill-state/active-state";
+import { listCommandRefBlocks } from "../packages/coding-agent/src/jwc-runtime/workflow-command-ref";
+import { CANONICAL_JWC_WORKFLOW_SKILLS } from "../packages/coding-agent/src/skill-state/active-state";
 
 interface SectionBudget {
 	blockId: string;
@@ -21,7 +21,7 @@ interface SkillBudget {
 }
 
 const repoRoot = path.join(import.meta.dir, "..");
-const skillsRoot = path.join(repoRoot, "packages", "coding-agent", "src", "defaults", "gjc", "skills");
+const skillsRoot = path.join(repoRoot, "packages", "coding-agent", "src", "defaults", "jwc", "skills");
 
 function usage(): never {
 	console.error("Usage: bun scripts/audit-skill-token-budget.ts [--json]");
@@ -41,7 +41,7 @@ function markerBlock(content: string, start: string, end: string): string | unde
 }
 
 export function auditSkillTokenBudget(): SkillBudget[] {
-	return CANONICAL_GJC_WORKFLOW_SKILLS.map(skill => {
+	return CANONICAL_JWC_WORKFLOW_SKILLS.map(skill => {
 		const sourcePath = path.join(skillsRoot, skill, "SKILL.md");
 		const content = fs.readFileSync(sourcePath, "utf8");
 		const sections = listCommandRefBlocks(skill).flatMap(block => {

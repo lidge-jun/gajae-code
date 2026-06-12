@@ -12,16 +12,16 @@ import {
 	recordSkillActivation,
 } from "./skill-state";
 
-export type GjcNativeHookEventName = "UserPromptSubmit" | "Stop";
+export type JwcNativeHookEventName = "UserPromptSubmit" | "Stop";
 
-export interface GjcNativeHookDispatchResult {
-	hookEventName: GjcNativeHookEventName | null;
+export interface JwcNativeHookDispatchResult {
+	hookEventName: JwcNativeHookEventName | null;
 	outputJson: Record<string, unknown> | null;
 }
 
 type HookPayload = Record<string, unknown>;
 
-interface GjcNativeHookDispatchOptions {
+interface JwcNativeHookDispatchOptions {
 	cwd?: string;
 	stateDir?: string;
 	effectiveSkillConfig?: EffectiveSkillConfigInput;
@@ -131,7 +131,7 @@ function safeString(value: unknown): string {
 	return typeof value === "string" ? value : "";
 }
 
-function readHookEventName(payload: HookPayload): GjcNativeHookEventName | null {
+function readHookEventName(payload: HookPayload): JwcNativeHookEventName | null {
 	const raw = safeString(payload.hook_event_name ?? payload.hookEventName ?? payload.event ?? payload.name).trim();
 	return raw === "UserPromptSubmit" || raw === "Stop" ? raw : null;
 }
@@ -162,10 +162,10 @@ function readSessionFile(payload: HookPayload): string | undefined {
 	);
 }
 
-export async function dispatchGjcNativeSkillHook(
+export async function dispatchJwcNativeSkillHook(
 	payload: HookPayload,
-	options: GjcNativeHookDispatchOptions = {},
-): Promise<GjcNativeHookDispatchResult> {
+	options: JwcNativeHookDispatchOptions = {},
+): Promise<JwcNativeHookDispatchResult> {
 	const hookEventName = readHookEventName(payload);
 	const cwd = (options.cwd ?? safeString(payload.cwd).trim()) || process.cwd();
 	if (hookEventName === "UserPromptSubmit") {
@@ -261,7 +261,7 @@ async function logHookError(cwd: string, type: string, error: unknown): Promise<
 	).catch(() => {});
 }
 
-export async function runGjcNativeSkillHookCli(): Promise<void> {
+export async function runJwcNativeSkillHookCli(): Promise<void> {
 	const { payload, parseError } = await readStdinJson();
 	if (parseError) {
 		await logHookError(process.cwd(), "native_hook_stdin_parse_error", parseError);
@@ -279,7 +279,7 @@ export async function runGjcNativeSkillHookCli(): Promise<void> {
 	}
 
 	try {
-		const result = await dispatchGjcNativeSkillHook(payload);
+		const result = await dispatchJwcNativeSkillHook(payload);
 		if (result.outputJson) {
 			process.stdout.write(`${JSON.stringify(result.outputJson)}\n`);
 		} else if (result.hookEventName === "Stop") {

@@ -281,11 +281,12 @@ describe("generated model policies", () => {
 		linkOpenAIPromotionTargets(models);
 
 		expect(models[0]?.contextPromotionTarget).toBe("openai-codex/gpt-5.5");
-		// gpt-5.5 is a 400K model and must not demote to the smaller gpt-5.4.
+		// gpt-5.5 has no automatic promotion target (switching to the 1M gpt-5.4
+		// is a different model line — a user decision, not an auto-promote).
 		expect(models[1]?.contextPromotionTarget).toBeUndefined();
 	});
 
-	it("treats gpt-5.5 as a 400K-context model so it is not over-cap at ~272K", () => {
+	it("pins codex gpt-5.5 to the backend-enforced 272K even when stale catalogs say 400K", () => {
 		const models: Model<Api>[] = [
 			{
 				...createModel({
@@ -293,15 +294,16 @@ describe("generated model policies", () => {
 					api: "openai-codex-responses",
 					provider: "openai-codex",
 				}),
-				// OpenAI code discovery can fall back to the stale 272K default.
-				contextWindow: 272000,
+				// Stale caches / older bundles carried a 400K figure; the backend
+				// enforces max_context_window 272000 for gpt-5.5.
+				contextWindow: 400000,
 				maxTokens: 128000,
 			},
 		];
 
 		applyGeneratedModelPolicies(models);
 
-		expect(models[0]?.contextWindow).toBe(400000);
+		expect(models[0]?.contextWindow).toBe(272000);
 	});
 
 	it("sets freeform apply_patch metadata for first-party GPT-5 Responses models", () => {

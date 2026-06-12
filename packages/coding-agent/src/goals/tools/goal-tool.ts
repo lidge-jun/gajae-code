@@ -4,7 +4,7 @@ import { Text } from "@gajae-code/tui";
 import { formatNumber, prompt } from "@gajae-code/utils";
 import * as z from "zod/v4";
 import type { RenderResultOptions } from "../../extensibility/custom-tools/types";
-import { assertCanCompleteCurrentGoal } from "../../gjc-runtime/ultragoal-guard";
+import { assertCanCompleteCurrentGoal } from "../../jwc-runtime/ultragoal-guard";
 import type { Theme, ThemeColor } from "../../modes/theme/theme";
 import goalDescription from "../../prompts/tools/goal.md" with { type: "text" };
 import { formatDuration } from "../../slash-commands/helpers/format";

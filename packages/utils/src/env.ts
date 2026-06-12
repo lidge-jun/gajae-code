@@ -197,12 +197,12 @@ for (const key of Object.keys(Bun.env)) {
  * `JWC_X ?? GJC_X`. Pass the legacy GJC_* key; the JWC_* canonical name is
  * derived. Non-GJC keys resolve as-is.
  */
-export function $resolveEnv(gjcKey: string): string | undefined {
-	if (gjcKey.startsWith("GJC_")) {
-		const jwcValue = Bun.env[`JWC_${gjcKey.slice(4)}`];
+export function $resolveEnv(jwcKey: string): string | undefined {
+	if (jwcKey.startsWith("GJC_")) {
+		const jwcValue = Bun.env[`JWC_${jwcKey.slice(4)}`];
 		if (jwcValue !== undefined) return jwcValue;
 	}
-	return Bun.env[gjcKey];
+	return Bun.env[jwcKey];
 }
 
 /**

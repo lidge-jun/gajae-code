@@ -12,14 +12,14 @@ import {
 
 let previousAgentDir: string | undefined;
 let previousPiConfigDir: string | undefined;
-let previousGjcConfigDir: string | undefined;
+let previousJwcConfigDir: string | undefined;
 let tempAgentDir: string | undefined;
 let tempConfigRoot: string | undefined;
 
 async function useTempAgentDir(): Promise<string> {
 	previousAgentDir = getConfigRootDir();
 	previousPiConfigDir = process.env.PI_CONFIG_DIR;
-	previousGjcConfigDir = process.env.GJC_CONFIG_DIR;
+	previousJwcConfigDir = process.env.GJC_CONFIG_DIR;
 	tempConfigRoot = await fs.mkdtemp(path.join(os.tmpdir(), "gjc-http-inspector-"));
 	process.env.PI_CONFIG_DIR = path.relative(os.homedir(), tempConfigRoot);
 	delete process.env.GJC_CONFIG_DIR;
@@ -35,12 +35,12 @@ afterEach(async () => {
 		process.env.PI_CONFIG_DIR = previousPiConfigDir;
 	}
 	previousPiConfigDir = undefined;
-	if (previousGjcConfigDir === undefined) {
+	if (previousJwcConfigDir === undefined) {
 		delete process.env.GJC_CONFIG_DIR;
 	} else {
-		process.env.GJC_CONFIG_DIR = previousGjcConfigDir;
+		process.env.GJC_CONFIG_DIR = previousJwcConfigDir;
 	}
-	previousGjcConfigDir = undefined;
+	previousJwcConfigDir = undefined;
 	if (previousAgentDir) {
 		setAgentDir(previousAgentDir);
 		previousAgentDir = undefined;
@@ -139,8 +139,8 @@ describe("HTTP 400 error message safety (issue #438)", () => {
 		const message = await finalizeErrorMessage(error, unavailableModelDump());
 
 		expect(message).toContain("not available");
-		expect(message).toContain("gjc --list-models");
-		expect(message).toContain("gjc setup provider");
+		expect(message).toContain("jwc --list-models");
+		expect(message).toContain("jwc setup provider");
 		expect(message).toContain("codex-mini-latest");
 	});
 
@@ -161,7 +161,7 @@ describe("HTTP 400 error message safety (issue #438)", () => {
 	it("omits model/provider names from guidance when the dump is absent", () => {
 		const guidance = formatModelUnavailableGuidance(undefined);
 		expect(guidance).toContain("not available");
-		expect(guidance).toContain("gjc --list-models");
+		expect(guidance).toContain("jwc --list-models");
 		expect(guidance).not.toContain("''");
 	});
 });

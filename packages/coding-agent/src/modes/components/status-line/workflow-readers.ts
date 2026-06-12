@@ -7,7 +7,7 @@
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { readPabcdStateWithFallback } from "../../../gjc-runtime/orchestrate-state";
+import { readPabcdStateWithFallback } from "../../../jwc-runtime/orchestrate-state";
 
 /** Shared objective summary rule (99.08 확정 #3): single helper, max varies per surface. */
 export function truncateObjective(text: string, max: number): string {

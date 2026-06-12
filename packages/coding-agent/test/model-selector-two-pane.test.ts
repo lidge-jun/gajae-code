@@ -124,4 +124,15 @@ describe("ModelSelector ALL-tab split view (99.30.04)", () => {
 		const rendered = stripAnsi(selector.render(220).join("\n"));
 		expect(rendered).toContain("space to switch pane");
 	});
+
+	test("space toggles keep the rendered height constant (no scrollback ghosting)", async () => {
+		const selector = await createSelector(MODELS);
+		const heightProfiles = selector.render(220).length;
+		selector.handleInput(" "); // → models
+		const heightModels = selector.render(220).length;
+		selector.handleInput(" "); // → profiles again
+		const heightBack = selector.render(220).length;
+		expect(heightModels).toBe(heightProfiles);
+		expect(heightBack).toBe(heightProfiles);
+	});
 });

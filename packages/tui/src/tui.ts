@@ -6,6 +6,7 @@ import * as path from "node:path";
 import { performance } from "node:perf_hooks";
 import { $flag, getDebugLogPath } from "@gajae-code/utils";
 import { VIEWPORT_FILL_SENTINEL } from "./components/viewport-fill";
+import { buildInsertHistorySequence, detectHistoryLaneMode, type HistoryLaneMode } from "./insert-history";
 import { isKeyRelease, matchesKey } from "./keys";
 import { renderMetrics } from "./metrics";
 import type { Terminal } from "./terminal";
@@ -59,6 +60,13 @@ export interface Component {
 	 * Called when theme changes or when component needs to re-render from scratch.
 	 */
 	invalidate(): void;
+
+	/**
+	 * 083.9 P4: set once the component's pixels were committed to the terminal
+	 * scrollback (commit lane). Frame assembly skips committed components — they
+	 * remain in their container for data consumers (transcript overlay, sweeps).
+	 */
+	committed?: boolean;
 }
 
 /**
@@ -222,6 +230,9 @@ export class Container implements Component {
 		width = Math.max(1, width);
 		const lines: string[] = [];
 		for (const child of this.children) {
+			// Commit lane (083.9 P4): committed pixels live in the scrollback —
+			// the frame must not carry a second copy.
+			if (child.committed) continue;
 			lines.push(...child.render(width));
 		}
 		return lines;
@@ -242,6 +253,15 @@ export class TUI extends Container {
 	/** Global callback for debug key (Shift+Ctrl+D). Called before input is forwarded to focused component. */
 	onDebug?: () => void;
 	#renderRequested = false;
+	// ── History commit lane (devlog 083.9 P2) ──────────────────────────
+	/** How committed lines reach the scrollback for this terminal. */
+	#historyLane: HistoryLaneMode = "unsupported";
+	/** Committed pixel rows sitting directly above the live zone, not yet scrolled into scrollback. */
+	#committedScreenRows = 0;
+	/** True once any line was committed — the scrollback is then canonical and 3J is forbidden. */
+	#hasCommittedHistory = false;
+	/** Fill rows at the top of the frame as last painted (= history region height). */
+	#lastFillRows = 0;
 	#renderTimer: NodeJS.Timeout | undefined;
 	#lastRenderAt = 0;
 	static readonly #MIN_RENDER_INTERVAL_MS = 16;
@@ -414,6 +434,7 @@ export class TUI extends Container {
 	start(): void {
 		this.#stopped = false;
 		this.#terminalUnavailable = false;
+		this.#historyLane = detectHistoryLaneMode();
 		this.terminal.start(
 			data => this.#handleInput(data),
 			() => this.requestRender(),
@@ -1127,6 +1148,61 @@ export class TUI extends Container {
 	 * entire frame, so terminal scrollback is rebuilt consistently. Call at
 	 * quiet points (turn end) — no-op when there is no gap.
 	 */
+	/**
+	 * Scroll the history region (screen rows 1..regionBottom, 1-based) up by
+	 * `count` rows: its top rows enter the scrollback and `count` blank rows
+	 * open at the region bottom (devlog 083.9 §3b-3). The live zone below the
+	 * region is untouched.
+	 */
+	#scrollOutCommittedRows(count: number, regionBottom: number): void {
+		if (count <= 0 || regionBottom < 1) return;
+		const height = this.terminal.rows;
+		let buffer = "\x1b[?2026h";
+		buffer += `\x1b[1;${regionBottom}r`;
+		buffer += `\x1b[${regionBottom};1H`;
+		buffer += "\r\n".repeat(count);
+		buffer += "\x1b[r";
+		const screenCursorRow = Math.max(0, Math.min(height - 1, this.#hardwareCursorRow - this.#viewportTopRow));
+		buffer += `\x1b[${screenCursorRow + 1};1H`;
+		buffer += "\x1b[?2026l";
+		this.#writeTerminal(buffer);
+	}
+
+	/**
+	 * Commit finalized lines into the terminal scrollback above the live zone
+	 * (devlog 083.9 P2). The lines never enter the diff-rendered frame — they
+	 * become immutable pixels. Returns false when the commit lane is
+	 * unavailable (no fill region, overlay open, unsupported terminal); the
+	 * caller falls back to virtual-lane behavior (chatContainer append).
+	 */
+	commitLines(lines: string[]): boolean {
+		if (this.#historyLane !== "standard" || this.#stopped || !this.terminalAvailable) return false;
+		if (this.overlayStack.length > 0) return false;
+		const liveZoneTop = this.#lastFillRows;
+		if (liveZoneTop <= 0 || lines.length === 0) return false;
+		const width = this.terminal.columns;
+		const height = this.terminal.rows;
+		let prepared = this.#applyLineResets([...lines]);
+		prepared = this.#truncateLinesToWidth(prepared, width);
+		const screenCursorRow = Math.max(0, Math.min(height - 1, this.#hardwareCursorRow - this.#viewportTopRow));
+		const seq = buildInsertHistorySequence(prepared, {
+			liveZoneTop,
+			liveZoneBottom: height,
+			screenRows: height,
+			cursor: { row: screenCursorRow, col: 0 },
+		});
+		if (!seq) return false;
+		if (!this.#writeTerminal(`\x1b[?2026h${seq}\x1b[?2026l`)) return false;
+		this.#committedScreenRows = Math.min(this.#committedScreenRows + prepared.length, liveZoneTop);
+		this.#hasCommittedHistory = true;
+		return true;
+	}
+
+	/** Fill rows at the frame top as last painted (083.9 P3: 0 = live zone overflowing). */
+	get viewportFillRows(): number {
+		return this.#lastFillRows;
+	}
+
 	compactViewportFill(): void {
 		if (this.#viewportFillGap === 0) return;
 		this.#viewportFillFloor = 0;
@@ -1144,6 +1220,7 @@ export class TUI extends Container {
 		const first = lines.indexOf(VIEWPORT_FILL_SENTINEL);
 		if (first === -1) {
 			this.#viewportFillFloor = 0;
+			this.#lastFillRows = 0;
 			return lines;
 		}
 		const expandStart = renderMetrics.now();
@@ -1175,6 +1252,9 @@ export class TUI extends Container {
 			const blanks = new Array<string>(fill).fill("");
 			result.splice(first, 0, ...blanks);
 		}
+		// 083.9 P2: the fill region doubles as the history region — record its
+		// painted height so commitLines/growth scroll-out know the region bottom.
+		this.#lastFillRows = first === 0 ? fill : 0;
 		// Track the final frame length (shrink detection baseline).
 		this.#viewportFillFloor = result.length > height ? result.length : 0;
 		if (renderMetrics.enabled) renderMetrics.recordHelper("viewportFill", renderMetrics.now() - expandStart);
@@ -1204,6 +1284,7 @@ export class TUI extends Container {
 		// against the final frame) and before cursor extraction (absolute rows
 		// must be final). No sentinel present → input returned untouched, so the
 		// legacy path stays byte-identical.
+		const prevFillRows = this.#lastFillRows;
 		newLines = this.#expandViewportFill(newLines, height);
 
 		// Composite overlays into the rendered lines (before differential compare)
@@ -1221,17 +1302,37 @@ export class TUI extends Container {
 		newLines = this.#applyLineResets(newLines);
 		newLines = this.#truncateLinesToWidth(newLines, width);
 
+		// 083.9 §3b-3: live-zone growth shrinks the fill region. The committed
+		// pixel block sits at the BOTTOM of the old fill — scroll the history
+		// region up by the full shrinkage so the block lands exactly at the new
+		// fill bottom, BEFORE the diff paints content over its old rows.
+		if (this.#committedScreenRows > 0 && this.#lastFillRows < prevFillRows) {
+			this.#scrollOutCommittedRows(prevFillRows - this.#lastFillRows, prevFillRows);
+			this.#committedScreenRows = Math.min(this.#committedScreenRows, this.#lastFillRows);
+		}
+
 		// Width changed - need full re-render (line wrapping changes)
 		const widthChanged = this.#previousWidth !== 0 && this.#previousWidth !== width;
 		const heightChanged = this.#previousHeight !== 0 && this.#previousHeight !== height;
 
 		// Helper to clear scrollback and viewport and render all new lines
 		const fullRender = (clear: boolean, reason = "full render"): void => {
+			// 083.9 P2: a clearing render would erase committed pixels that have
+			// not scrolled into the scrollback yet — push the whole history
+			// region out first (the bottom committed row needs regionBottom
+			// scrolls to cross row 1 into the scrollback).
+			if (clear && this.#committedScreenRows > 0) {
+				this.#scrollOutCommittedRows(prevFillRows, prevFillRows);
+				this.#committedScreenRows = 0;
+			}
 			this.#fullRedrawCount += 1;
 			if (renderMetrics.enabled) renderMetrics.recordFullRedraw(reason);
 			let buffer = "\x1b[?2026h"; // Begin synchronized output
-			// Skip clearing scrollback (3J) in multiplexers — users actively navigate scrollback history
-			if (clear) buffer += isMultiplexerSession() ? "\x1b[2J\x1b[H" : "\x1b[2J\x1b[H\x1b[3J";
+			// Skip clearing scrollback (3J) in multiplexers (users navigate it) and
+			// once the commit lane has written history — scrollback is then the
+			// CANONICAL transcript and must never be erased (083.9 P2).
+			if (clear)
+				buffer += isMultiplexerSession() || this.#hasCommittedHistory ? "\x1b[2J\x1b[H" : "\x1b[2J\x1b[H\x1b[3J";
 			for (let i = 0; i < newLines.length; i++) {
 				if (i > 0) buffer += "\r\n";
 				// Lines were pre-terminated/normalized by #applyLineResets; image
@@ -1256,7 +1357,10 @@ export class TUI extends Container {
 			this.#previousHeight = height;
 		};
 
-		const multiplexerViewportRepaint = (reason: string): void => {
+		// Viewport-only repaint without 2J/3J: replays the visible rows in place and
+		// leaves scrollback pixels untouched. Originally multiplexer-only; now the
+		// default for every above-viewport change (devlog 083.8 S3).
+		const viewportRepaint = (reason: string): void => {
 			this.#fullRedrawCount += 1;
 			if (renderMetrics.enabled) renderMetrics.recordFullRedraw(reason);
 			const nextViewportTop = Math.max(0, newLines.length - height);
@@ -1297,13 +1401,12 @@ export class TUI extends Container {
 
 			if ($flag("PI_DEBUG_REDRAW")) {
 				const logPath = getDebugLogPath();
-				const msg = `[${new Date().toISOString()}] multiplexerViewportRepaint: ${reason} (prev=${this.#previousLines.length}, new=${newLines.length}, height=${height}, viewportTop=${nextViewportTop})\n`;
+				const msg = `[${new Date().toISOString()}] viewportRepaint: ${reason} (prev=${this.#previousLines.length}, new=${newLines.length}, height=${height}, viewportTop=${nextViewportTop})\n`;
 				fs.appendFileSync(logPath, msg);
 			}
-			// In multiplexers this deliberately prioritizes the live viewport over
-			// historical scrollback repair. After offscreen changes, #previousLines
-			// tracks the desired logical transcript, not every byte emitted into the
-			// multiplexer scrollback.
+			// Deliberately prioritizes the live viewport over historical scrollback
+			// repair. After offscreen changes, #previousLines tracks the desired
+			// logical transcript, not every byte emitted into the scrollback.
 			this.#cursorRow = Math.max(0, newLines.length - 1);
 			this.#maxLinesRendered = newLines.length;
 			this.#viewportTopRow = nextViewportTop;
@@ -1339,7 +1442,7 @@ export class TUI extends Container {
 		// In that environment, a full redraw causes the entire history to replay on every toggle.
 		if (heightChanged) {
 			if (isMultiplexerSession() && !useLegacyMultiplexerFullRender()) {
-				multiplexerViewportRepaint(`terminal height changed (${this.#previousHeight} -> ${height})`);
+				viewportRepaint(`terminal height changed (${this.#previousHeight} -> ${height})`);
 				return;
 			}
 			if (!isTermuxSession() && !isMultiplexerSession()) {
@@ -1403,10 +1506,10 @@ export class TUI extends Container {
 				const extraLines = this.#previousLines.length - newLines.length;
 				if (extraLines > height) {
 					logRedraw(`extraLines > height (${extraLines} > ${height})`);
-					if (isMultiplexerSession() && !useLegacyMultiplexerFullRender()) {
-						multiplexerViewportRepaint(`extraLines > height (${extraLines} > ${height})`);
-					} else {
+					if (useLegacyMultiplexerFullRender()) {
 						fullRender(true, "extraLines > height");
+					} else {
+						viewportRepaint(`extraLines > height (${extraLines} > ${height})`);
 					}
 					return;
 				}
@@ -1438,14 +1541,26 @@ export class TUI extends Container {
 		}
 
 		// Differential rendering can only touch what was actually visible.
-		// Any change above the previous viewport requires a full redraw so terminal
-		// scrollback ends up consistent with the new transcript state.
+		// A change above the previous viewport used to force fullRender(true) —
+		// 2J+3J wipes the terminal scrollback and repaints, which reads as the
+		// screen being "sucked upward" right when a trailing thinking block
+		// collapses at message_end (devlog 083.8 ④). Codex-parity policy instead:
+		// repaint only the live viewport and leave scrollback pixels alone —
+		// #previousLines tracks the desired logical transcript, and the next
+		// deliberate full rebuild (width change, /redraw, compactViewportFill)
+		// reconciles scrollback.
+		//
+		// Exception: when the frame GREW in the same pass (append + offscreen
+		// change together), the repaint path would skip the physical scroll-out
+		// and appended rows would never reach scrollback (content loss). Growth
+		// keeps the legacy full rebuild outside multiplexers.
 		if (firstChanged < prevViewportTop) {
 			logRedraw(`firstChanged < viewportTop (${firstChanged} < ${prevViewportTop})`);
-			if (isMultiplexerSession() && !useLegacyMultiplexerFullRender()) {
-				multiplexerViewportRepaint(`firstChanged < viewportTop (${firstChanged} < ${prevViewportTop})`);
-			} else {
+			const grew = newLines.length > this.#previousLines.length;
+			if (useLegacyMultiplexerFullRender() || (grew && !isMultiplexerSession())) {
 				fullRender(true, "firstChanged < viewportTop");
+			} else {
+				viewportRepaint(`firstChanged < viewportTop (${firstChanged} < ${prevViewportTop})`);
 			}
 			return;
 		}

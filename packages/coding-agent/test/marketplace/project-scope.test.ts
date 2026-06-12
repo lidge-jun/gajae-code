@@ -111,8 +111,8 @@ describe("resolveActiveProjectRegistryPath", () => {
 			// Start from a tmpDir that has no .jwc/ or .git/ of its own.
 			const result = await resolveActiveProjectRegistryPath(tmpDir);
 			// Must not resolve to the home-dir GJC registry.
-			const homeGjcPath = path.join(homeDir, ".jwc", "plugins", "installed_plugins.json");
-			expect(result).not.toBe(homeGjcPath);
+			const homeJwcPath = path.join(homeDir, ".jwc", "plugins", "installed_plugins.json");
+			expect(result).not.toBe(homeJwcPath);
 		} finally {
 			if (!hadGit) await fs.promises.rm(fakeHomeGit, { recursive: true, force: true });
 		}

@@ -1173,10 +1173,10 @@ describe("github tool", () => {
 			expect(text).toContain(`Worktree: ${wt200}`);
 			expect(runGit(wt100, ["branch", "--show-current"])).toBe("pr-100");
 			expect(runGit(wt200, ["branch", "--show-current"])).toBe("pr-200");
-			expect(runGit(fixture.repoRoot, ["config", "--get", "branch.pr-100.gjcPrUrl"])).toBe(
+			expect(runGit(fixture.repoRoot, ["config", "--get", "branch.pr-100.jwcPrUrl"])).toBe(
 				"https://github.com/owner/repo/pull/100",
 			);
-			expect(runGit(fixture.repoRoot, ["config", "--get", "branch.pr-200.gjcPrUrl"])).toBe(
+			expect(runGit(fixture.repoRoot, ["config", "--get", "branch.pr-200.jwcPrUrl"])).toBe(
 				"https://github.com/owner/repo/pull/200",
 			);
 

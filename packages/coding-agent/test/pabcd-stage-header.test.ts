@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import type { NativePabcdEnvelopeParsed } from "../src/gjc-runtime/orchestrate-state";
+import type { NativePabcdEnvelopeParsed } from "../src/jwc-runtime/orchestrate-state";
 import { buildPabcdStageContent } from "../src/session/pabcd-stage-header";
 
 function envelope(overrides: Partial<NativePabcdEnvelopeParsed>): NativePabcdEnvelopeParsed {

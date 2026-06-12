@@ -6,15 +6,14 @@ import { afterEach, describe, expect, it, vi } from "bun:test";
 import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { setAgentDir } from "@gajae-code/utils";
-import { getAgentDbPath } from "@gajae-code/utils";
+import { getAgentDbPath, setAgentDir } from "@gajae-code/utils";
 import { Settings } from "../../src/config/settings";
 import { HindsightApi } from "../../src/hindsight/client";
+import { runNativeMemoryCommand } from "../../src/jwc-runtime/memory-runtime";
 import { getMemoryRoot } from "../../src/memories";
 import { saveLocalMemoryManual, searchLocalMemories } from "../../src/memories/local-query";
-import { localBackend } from "../../src/memory-backend/local-backend";
-import { runNativeMemoryCommand } from "../../src/gjc-runtime/memory-runtime";
 import { closeMemoryDb, openMemoryDb, upsertThreads } from "../../src/memories/storage";
+import { localBackend } from "../../src/memory-backend/local-backend";
 import type { AgentSession } from "../../src/session/agent-session";
 
 function tempAgentDir(): string {

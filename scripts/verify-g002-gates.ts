@@ -90,7 +90,7 @@ const REQUIRED_PRIVATE_EXPORT_BLOCKS = [
 	"./mcp/*",
 	"./runtime-mcp",
 	"./runtime-mcp/*",
-	"./commands/gjc-runtime-bridge",
+	"./commands/jwc-runtime-bridge",
 	"./capability/mcp",
 	"./config/mcp-schema",
 	"./discovery/mcp-json",
@@ -106,7 +106,7 @@ const FORBIDDEN_PACKAGE_IMPORTS = [
 	"@gajae-code/coding-agent/mcp",
 	"@gajae-code/coding-agent/runtime-mcp/index",
 	"@gajae-code/coding-agent/runtime-mcp/manager",
-	"@gajae-code/coding-agent/commands/gjc-runtime-bridge",
+	"@gajae-code/coding-agent/commands/jwc-runtime-bridge",
 	"@gajae-code/coding-agent/capability/mcp",
 	"@gajae-code/coding-agent/config/mcp-schema",
 	"@gajae-code/coding-agent/discovery/mcp-json",
@@ -181,7 +181,7 @@ async function verifyRebrandSurface(): Promise<GateResult> {
 
 	const rootName = typeof rootPackage.name === "string" ? rootPackage.name : "<missing>";
 	const codingName = typeof codingPackage.name === "string" ? codingPackage.name : "<missing>";
-	const hasGjcBin = typeof (bin.jwc ?? bin.gjc) === "string"; // transition: bin key renames with 065.1
+	const hasJwcBin = typeof (bin.jwc ?? bin.gjc) === "string"; // transition: bin key renames with 065.1
 	const hasLegacyBin = ("om" + "p") in bin;
 
 	details.push(`root package name: ${rootName}`);
@@ -190,7 +190,7 @@ async function verifyRebrandSurface(): Promise<GateResult> {
 
 	return {
 		name: "rebrand CLI/package surface",
-		passed: rootName === "gajae-code" && codingName.includes("gajae") && hasGjcBin && !hasLegacyBin,
+		passed: rootName === "gajae-code" && codingName.includes("gajae") && hasJwcBin && !hasLegacyBin,
 		details,
 	};
 }
@@ -271,8 +271,8 @@ async function verifyVisibleDefinitions(): Promise<GateResult> {
 	const otherDefinitionRoots = [".jwc/skills", ".jwc/agents", ".jwc/commands", ".jwc/rules"];
 	const otherDefinitions: string[] = [];
 	const details: string[] = [];
-	const bundledSkills = readVisibleEntries("packages/coding-agent/src/defaults/gjc/skills").filter(entry =>
-		fs.existsSync(path.join(repoRoot, "packages/coding-agent/src/defaults/gjc/skills", entry, "SKILL.md")),
+	const bundledSkills = readVisibleEntries("packages/coding-agent/src/defaults/jwc/skills").filter(entry =>
+		fs.existsSync(path.join(repoRoot, "packages/coding-agent/src/defaults/jwc/skills", entry, "SKILL.md")),
 	);
 	const bundledRoleAgents = readVisibleEntries("packages/coding-agent/src/prompts/agents").filter(entry =>
 		EXPECTED_ROLE_AGENTS.includes(entry as (typeof EXPECTED_ROLE_AGENTS)[number]),
@@ -289,7 +289,7 @@ async function verifyVisibleDefinitions(): Promise<GateResult> {
 	const skills = [...bundledSkills].sort();
 	const roleAgents = [...bundledRoleAgents].sort();
 	const ignoredDefinitions = getIgnoredDefinitionPaths([
-		...expectedSkills.map(name => `packages/coding-agent/src/defaults/gjc/skills/${name}/SKILL.md`),
+		...expectedSkills.map(name => `packages/coding-agent/src/defaults/jwc/skills/${name}/SKILL.md`),
 		...expectedRoleAgents.map(name => `packages/coding-agent/src/prompts/agents/${name}.md`),
 	]);
 	details.push(`expected bundled workflow skills: ${expectedSkills.join(", ")}`);
@@ -332,7 +332,7 @@ function getIgnoredDefinitionPaths(paths: readonly string[]): string[] {
 async function verifyPublicDefinitionContent(): Promise<GateResult> {
 	const findings: string[] = [];
 	for (const definition of EXPECTED_DEFINITIONS) {
-		const relativePath = `packages/coding-agent/src/defaults/gjc/skills/${definition}/SKILL.md`;
+		const relativePath = `packages/coding-agent/src/defaults/jwc/skills/${definition}/SKILL.md`;
 		const text = await readText(relativePath);
 		for (const pattern of FORBIDDEN_SKILL_PATTERNS) {
 			if (pattern.test(text)) findings.push(`${relativePath}: ${pattern.source}`);
@@ -373,7 +373,7 @@ async function verifyBroadWorkflowExposure(): Promise<GateResult> {
 	}
 
 	const activeSkillTexts = EXPECTED_DEFINITIONS.map(definition => {
-		const relativePath = `packages/coding-agent/src/defaults/gjc/skills/${definition}/SKILL.md`;
+		const relativePath = `packages/coding-agent/src/defaults/jwc/skills/${definition}/SKILL.md`;
 		return [relativePath, fs.readFileSync(path.join(repoRoot, relativePath), "utf8")] as const;
 	});
 	for (const [relativePath, text] of activeSkillTexts) {
@@ -393,7 +393,7 @@ async function verifyBroadWorkflowExposure(): Promise<GateResult> {
 async function verifyMcpQuarantine(): Promise<GateResult> {
 	const codingPackage = await readJson("packages/coding-agent/package.json");
 	const exportsRecord = isRecord(codingPackage.exports) ? codingPackage.exports : {};
-	const mcpExportKeys = Object.keys(exportsRecord).filter(key => key === "./mcp" || key.startsWith("./mcp/") || key === "./runtime-mcp" || key.startsWith("./runtime-mcp/") || key === "./commands/gjc-runtime-bridge");
+	const mcpExportKeys = Object.keys(exportsRecord).filter(key => key === "./mcp" || key.startsWith("./mcp/") || key === "./runtime-mcp" || key.startsWith("./runtime-mcp/") || key === "./commands/jwc-runtime-bridge");
 	const exposedMcpKeys = mcpExportKeys.filter(key => exportsRecord[key] !== null);
 	const blockedMcpKeys = REQUIRED_PRIVATE_EXPORT_BLOCKS.filter(key => exportsRecord[key] === null);
 	const missingPrivateBlocks = REQUIRED_PRIVATE_EXPORT_BLOCKS.filter(key => exportsRecord[key] !== null);

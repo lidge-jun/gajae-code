@@ -49,7 +49,7 @@ import { Settings, type SkillsSettings } from "./config/settings";
 import { CursorExecHandlers } from "./cursor";
 import "./discovery";
 import { resolveConfigValue } from "./config/resolve-config-value";
-import { getEmbeddedDefaultGjcSkills } from "./defaults/gjc-defaults";
+import { getEmbeddedDefaultJwcSkills } from "./defaults/jwc-defaults";
 import { initializeWithSettings } from "./discovery";
 import { disposeAllKernelSessions, disposeKernelSessionsByOwner } from "./eval/py/executor";
 import { TtsrManager } from "./export/ttsr";
@@ -68,8 +68,8 @@ import {
 	wrapRegisteredTools,
 } from "./extensibility/extensions";
 import { ExtensionRuntime } from "./extensibility/extensions/loader";
-import { resolveCurrentPhaseForParent } from "./extensibility/gjc-plugins/injection";
-import { loadActiveSubskillTools } from "./extensibility/gjc-plugins/tools";
+import { resolveCurrentPhaseForParent } from "./extensibility/jwc-plugins/injection";
+import { loadActiveSubskillTools } from "./extensibility/jwc-plugins/tools";
 import { loadSkills, type Skill, type SkillWarning, setActiveSkills } from "./extensibility/skills";
 import type { FileSlashCommand } from "./extensibility/slash-commands";
 import type { HindsightSessionState } from "./hindsight/state";
@@ -783,9 +783,9 @@ function buildMCPPromptCommands(manager: MCPManager): LoadedCustomCommand[] {
  * ```
  */
 
-function withEmbeddedDefaultGjcSkills(skills: Skill[]): Skill[] {
+function withEmbeddedDefaultJwcSkills(skills: Skill[]): Skill[] {
 	const byName = new Map(skills.map(skill => [skill.name, skill]));
-	for (const defaultSkill of getEmbeddedDefaultGjcSkills()) {
+	for (const defaultSkill of getEmbeddedDefaultJwcSkills()) {
 		if (!byName.has(defaultSkill.name)) {
 			byName.set(defaultSkill.name, defaultSkill);
 		}
@@ -1005,7 +1005,7 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 		// ordinary filesystem-discovered skills. Keep them available even for
 		// explicit SDK skill lists so startup and command routing survive
 		// accidental `.jwc` deletion or overzealous caller filtering.
-		skills = withEmbeddedDefaultGjcSkills(options.skills);
+		skills = withEmbeddedDefaultJwcSkills(options.skills);
 		skillWarnings = [];
 	} else if (settings.get("skills.enabled")) {
 		const skillsResult = await logger.time("loadSkills", loadSkills, {
@@ -1013,13 +1013,13 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 			cwd,
 			disabledExtensions: settings.get("disabledExtensions"),
 		});
-		skills = withEmbeddedDefaultGjcSkills(skillsResult.skills);
+		skills = withEmbeddedDefaultJwcSkills(skillsResult.skills);
 		skillWarnings = skillsResult.warnings;
 	} else {
 		// GJC's four public workflow skills are bundled into the binary so the
 		// default workflow surface survives accidental .jwc deletion. Arbitrary
 		// filesystem skill discovery remains gated by skills.enabled above.
-		skills = getEmbeddedDefaultGjcSkills();
+		skills = getEmbeddedDefaultJwcSkills();
 		skillWarnings = [];
 	}
 

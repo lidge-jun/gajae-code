@@ -121,7 +121,7 @@ export class LoginDialogComponent extends Container {
 		if (!this.#contentContainer.children.includes(this.#input)) {
 			this.#contentContainer.addChild(this.#input);
 		}
-		this.#contentContainer.addChild(new Text(theme.fg("dim", "  esc cancel  enter submit"), 1, 0));
+		this.#contentContainer.addChild(new Text(theme.fg("dim", "(Escape to cancel, Enter to submit)"), 1, 0));
 
 		this.#input.setValue("");
 		this.#tui.requestRender();

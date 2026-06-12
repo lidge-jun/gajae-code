@@ -27,7 +27,7 @@ import {
 	Snowflake,
 	toError,
 } from "@gajae-code/utils";
-import { writeTextAtomic } from "../gjc-runtime/state-writer";
+import { writeTextAtomic } from "../jwc-runtime/state-writer";
 import { ArtifactManager } from "./artifacts";
 import {
 	type BlobPutResult,
@@ -61,7 +61,7 @@ import type { SessionStorage, SessionStorageWriter } from "./session-storage";
 import { FileSessionStorage, MemorySessionStorage } from "./session-storage";
 
 export const CURRENT_SESSION_VERSION = 3;
-function isUnderProjectGjc(cwd: string, targetPath: string): boolean {
+function isUnderProjectJwc(cwd: string, targetPath: string): boolean {
 	const relative = path.relative(path.join(path.resolve(cwd), ".jwc"), path.resolve(targetPath));
 	return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
 }
@@ -762,10 +762,10 @@ function writeTerminalBreadcrumb(cwd: string, sessionFile: string): void {
 	const breadcrumbFile = path.join(breadcrumbDir, terminalId);
 	const content = `${cwd}\n${sessionFile}\n`;
 	// Best-effort — don't break session creation if breadcrumb fails
-	const write = isUnderProjectGjc(cwd, breadcrumbFile)
+	const write = isUnderProjectJwc(cwd, breadcrumbFile)
 		? writeTextAtomic(breadcrumbFile, content, {
 				cwd,
-				audit: { category: "artifact", verb: "write", owner: "gjc-runtime" },
+				audit: { category: "artifact", verb: "write", owner: "jwc-runtime" },
 			})
 		: Bun.write(breadcrumbFile, content);
 	write.catch(() => {});

@@ -5,6 +5,7 @@ import { getThinkingLevelMetadata } from "../thinking";
 import { EDIT_MODES } from "../utils/edit-mode";
 import {
 	DEFAULT_DISABLED_EXTENSIONS,
+	DEFAULT_DISABLED_PROVIDERS,
 	DEFAULT_SKILL_DISCOVERY_SETTINGS,
 	type SkillDiscoverySettings,
 } from "./skill-settings-defaults";
@@ -355,7 +356,7 @@ export const SETTINGS_SCHEMA = {
 
 	enabledModels: { type: "array", default: EMPTY_STRING_ARRAY },
 
-	disabledProviders: { type: "array", default: EMPTY_STRING_ARRAY },
+	disabledProviders: { type: "array", default: DEFAULT_DISABLED_PROVIDERS },
 
 	disabledExtensions: { type: "array", default: DEFAULT_DISABLED_EXTENSIONS },
 
@@ -678,6 +679,17 @@ export const SETTINGS_SCHEMA = {
 			label: "Pin Composer to Bottom",
 			description:
 				"Keep the input composer pinned to the terminal bottom, filling the gap above with blank space (default: on for jwc)",
+		},
+	},
+	// Unset = brand default (jwc: on, engine brand: off). Devlog 99.20.06.
+	"tui.composerFooter": {
+		type: "boolean",
+		default: undefined,
+		ui: {
+			tab: "appearance",
+			label: "Composer Footer Line",
+			description:
+				"Persistent one-row line below the input composer for transient notices (double-press exit, IME hints) and idle shortcuts (default: on for jwc)",
 		},
 	},
 	// Unset = brand default (jwc: commit, engine brand: verbose). Devlog 99.20.04.

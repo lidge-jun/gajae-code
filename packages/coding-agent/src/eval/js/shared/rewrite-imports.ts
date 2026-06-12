@@ -77,7 +77,7 @@ function parseProgram(code: string): { program: { body: ReadonlyArray<BabelProgr
 	}
 }
 
-function buildGjcImportCall(sourceLiteral: string, optionsLiteral: string | undefined): string {
+function buildJwcImportCall(sourceLiteral: string, optionsLiteral: string | undefined): string {
 	// Route every static import through the worker-injected `__gjc_import__` helper so the
 	// specifier resolves against the session cwd (and `with`-attribute imports keep working).
 	return optionsLiteral ? `__gjc_import__(${sourceLiteral}, ${optionsLiteral})` : `__gjc_import__(${sourceLiteral})`;
@@ -120,7 +120,7 @@ function buildOptionsLiteral(node: BabelImportDeclaration): string | undefined {
 function rewriteImportNode(node: BabelImportDeclaration): string {
 	const sourceLiteral = JSON.stringify(node.source.value);
 	const optionsLiteral = buildOptionsLiteral(node);
-	const importCall = buildGjcImportCall(sourceLiteral, optionsLiteral);
+	const importCall = buildJwcImportCall(sourceLiteral, optionsLiteral);
 
 	let defaultName: string | undefined;
 	let namespaceName: string | undefined;

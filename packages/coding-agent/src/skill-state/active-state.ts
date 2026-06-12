@@ -1,18 +1,18 @@
 import * as path from "node:path";
-import { normalizeWorkflowSkillSlug } from "../gjc-runtime/state-schema";
+import { normalizeWorkflowSkillSlug } from "../jwc-runtime/state-schema";
 import {
 	type ActiveSessionScope,
 	rebuildActiveSnapshot,
 	removeActiveEntry,
 	writeActiveEntry,
-} from "../gjc-runtime/state-writer";
+} from "../jwc-runtime/state-writer";
 import type { WorkflowStateReceipt } from "./workflow-state-contract";
 
 export const SKILL_ACTIVE_STATE_FILE = "skill-active-state.json";
 
-export const CANONICAL_GJC_WORKFLOW_SKILLS = ["jaw-interview", "ralplan", "ultragoal", "team"] as const;
+export const CANONICAL_JWC_WORKFLOW_SKILLS = ["jaw-interview", "ralplan", "ultragoal", "team"] as const;
 
-export type CanonicalGjcWorkflowSkill = (typeof CANONICAL_GJC_WORKFLOW_SKILLS)[number];
+export type CanonicalJwcWorkflowSkill = (typeof CANONICAL_JWC_WORKFLOW_SKILLS)[number];
 export type WorkflowHudSeverity = "info" | "warning" | "blocked" | "error" | "success";
 
 export interface WorkflowHudChip {
@@ -74,7 +74,7 @@ export interface SkillActiveState {
 	session_id?: string;
 	thread_id?: string;
 	turn_id?: string;
-	initialized_mode?: CanonicalGjcWorkflowSkill;
+	initialized_mode?: CanonicalJwcWorkflowSkill;
 	initialized_state_path?: string;
 	active_skills?: SkillActiveEntry[];
 	active_subskills?: ActiveSubskillEntry[];
@@ -179,9 +179,10 @@ function normalizeWorkflowStateReceipt(raw: unknown): WorkflowStateReceipt | und
 	const record = raw as Record<string, unknown>;
 	if (record.version !== 1) return undefined;
 	const skill = safeString(record.skill).trim();
-	if (!isCanonicalGjcWorkflowSkill(skill)) return undefined;
-	const owner = safeString(record.owner).trim();
-	if (owner !== "gjc-state-cli" && owner !== "gjc-runtime" && owner !== "gjc-hook") return undefined;
+	if (!isCanonicalJwcWorkflowSkill(skill)) return undefined;
+	// 260613 flip: accept legacy gjc-era owners on read, normalize to jwc-*.
+	const owner = safeString(record.owner).trim().replace(/^gjc-/, "jwc-");
+	if (owner !== "jwc-state-cli" && owner !== "jwc-runtime" && owner !== "jwc-hook") return undefined;
 	const command = sanitizeHudString(record.command, 120);
 	const statePath = sanitizeHudString(record.state_path, 240);
 	const storagePath = sanitizeHudString(record.storage_path, 240);
@@ -282,8 +283,8 @@ function normalizeEntry(raw: unknown): SkillActiveEntry | null {
 	};
 }
 
-export function isCanonicalGjcWorkflowSkill(skill: string): skill is CanonicalGjcWorkflowSkill {
-	return (CANONICAL_GJC_WORKFLOW_SKILLS as readonly string[]).includes(normalizeWorkflowSkillSlug(skill));
+export function isCanonicalJwcWorkflowSkill(skill: string): skill is CanonicalJwcWorkflowSkill {
+	return (CANONICAL_JWC_WORKFLOW_SKILLS as readonly string[]).includes(normalizeWorkflowSkillSlug(skill));
 }
 
 export function listActiveSkills(raw: unknown): SkillActiveEntry[] {
@@ -504,7 +505,7 @@ function dedupeVisibleBySkill(entries: SkillActiveEntry[], sessionId?: string): 
 /**
  * The planning pipeline advances one stage at a time: `jaw-interview →
  * ralplan → ultragoal`. Each stage is activated through its own command path
- * (`gjc jaw-interview`, `gjc ralplan`, `gjc ultragoal`), and those activations
+ * (`gjc jaw-interview`, `jwc ralplan`, `jwc ultragoal`), and those activations
  * do not demote the previous stage's row — only the explicit `handoff` verb
  * does. Without this collapse, activating ultragoal while ralplan is still
  * `active:true` would render both stages and keep showing a workflow that has
@@ -577,7 +578,7 @@ export async function readVisibleSkillActiveState(cwd: string, sessionId?: strin
 }
 
 function activeStateWriterAudit(verb: string) {
-	return { category: "state" as const, verb, owner: "gjc-runtime" as const };
+	return { category: "state" as const, verb, owner: "jwc-runtime" as const };
 }
 
 async function persistActiveEntry(

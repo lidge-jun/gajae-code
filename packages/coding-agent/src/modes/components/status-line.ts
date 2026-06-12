@@ -444,11 +444,6 @@ export class StatusLineComponent implements Component {
 	#pabcdInFlight = false;
 	#pabcdLastFetch = 0;
 
-	/** 99.00.03 P1-5: drop the 1s TTL so the next render re-reads pabcd state immediately (stage transitions). */
-	invalidatePabcd(): void {
-		this.#pabcdLastFetch = 0;
-	}
-
 	/** 99.04: 1s-TTL background poll for the pabcd envelope (skill-HUD rail twin). */
 	#refreshPabcdInBackground(): void {
 		const now = Date.now();

@@ -39,6 +39,46 @@ type QueuedMessages = {
 	followUp: string[];
 };
 
+/**
+ * 083.9 P2-b → 083.10 §1: commit render lane gate. DEFAULT ON — finalized
+ * cells are written once into the real terminal scrollback instead of living
+ * in the diff-rendered frame. JWC_COMMIT_LANE=0 opts out (virtual lane only);
+ * unsupported terminals/zellij/overlays fall back per-call inside
+ * TUI.commitLines regardless of this gate.
+ */
+export function commitLaneEnabled(): boolean {
+	const env = process.env.JWC_COMMIT_LANE;
+	if (env !== undefined) return env !== "0" && env !== "false";
+	return true;
+}
+
+/**
+ * 083.9 P4 — turn-boundary commit sweep. Called right before the next prompt
+ * submit: every finalized chat component commits its pixels into the
+ * scrollback and is flagged `committed` (frame assembly skips it; the object
+ * stays in chatContainer for alt+t transcript and sweeps). The just-finished
+ * turn therefore stays FULLY interactive (ctrl+o/t, focus mode, Enter
+ * expand) until the user moves on — pixels freeze only at the turn boundary.
+ *
+ * Commits must form a contiguous prefix of the frame, so the walk stops at
+ * the first non-committable child (streaming component, pending tool awaiting
+ * a result, or a commitLines fallback).
+ */
+export function commitFinalizedBacklog(ctx: InteractiveModeContext): void {
+	// The typeof guard doubles as a harness escape hatch: partial UI fixtures
+	// (and any non-TUI surface) simply stay on the virtual lane.
+	if (!commitLaneEnabled() || typeof ctx.ui.commitLines !== "function") return;
+	const width = Math.max(1, ctx.ui.terminal?.columns ?? 80);
+	const pending = new Set(ctx.pendingTools.values());
+	for (const child of ctx.chatContainer.children) {
+		if (child.committed) continue;
+		if (child === ctx.streamingComponent || pending.has(child as never)) return;
+		const lines = child.render(width);
+		if (lines.length > 0 && !ctx.ui.commitLines(lines)) return;
+		child.committed = true;
+	}
+}
+
 export class UiHelpers {
 	constructor(private ctx: InteractiveModeContext) {}
 

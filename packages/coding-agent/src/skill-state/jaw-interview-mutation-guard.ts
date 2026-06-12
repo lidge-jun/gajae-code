@@ -1,13 +1,13 @@
 import * as path from "node:path";
 import type { AgentTool } from "@gajae-code/agent-core";
 import { expandApplyPatchToEntries } from "../edit/modes/apply-patch";
-import { ModeStateSchema, normalizeWorkflowSkillSlug } from "../gjc-runtime/state-schema";
 import { LocalProtocolHandler, resolveLocalUrlToPath } from "../internal-urls/local-protocol";
+import { ModeStateSchema, normalizeWorkflowSkillSlug } from "../jwc-runtime/state-schema";
 import { resolveToCwd } from "../tools/path-utils";
 import { ToolError } from "../tools/tool-errors";
 import { listActiveSkills, readVisibleSkillActiveState, type SkillActiveEntry } from "./active-state";
 import {
-	type CanonicalGjcWorkflowSkill,
+	type CanonicalJwcWorkflowSkill,
 	sanctionedWorkflowStateCommand,
 	workflowModeStateFileName,
 } from "./workflow-state-contract";
@@ -78,7 +78,7 @@ function modeStatePath(cwd: string, skill: string, sessionId?: string): string {
 }
 
 function warnInvalidModeState(filePath: string, error: string): void {
-	console.warn(`gjc skill-state: invalid mode-state at ${filePath}: ${error}`);
+	console.warn(`jwc skill-state: invalid mode-state at ${filePath}: ${error}`);
 }
 
 async function readValidatedModeState(filePath: string): Promise<ModeState | null> {
@@ -344,7 +344,7 @@ function resolveRawPath(cwd: string, rawPath: string): { absolutePath?: string; 
 	}
 }
 
-function relativeGjcSegments(cwd: string, rawPath: string): string[] | null {
+function relativeJwcSegments(cwd: string, rawPath: string): string[] | null {
 	const { absolutePath, unknown } = resolveRawPath(cwd, rawPath);
 	if (unknown || !absolutePath) return null;
 	const relative = path.relative(path.resolve(cwd), path.resolve(absolutePath));
@@ -352,8 +352,8 @@ function relativeGjcSegments(cwd: string, rawPath: string): string[] | null {
 	return normalizePosix(relative).split("/").filter(Boolean);
 }
 
-function blockedWorkflowStateSkill(cwd: string, rawPath: string): CanonicalGjcWorkflowSkill | null {
-	const segments = relativeGjcSegments(cwd, rawPath);
+function blockedWorkflowStateSkill(cwd: string, rawPath: string): CanonicalJwcWorkflowSkill | null {
+	const segments = relativeJwcSegments(cwd, rawPath);
 	if (segments?.[0] !== ".jwc") return null;
 	if (segments[1] === "specs" || segments[1] === "plans") return null;
 	if (segments[1] !== "state") return null;
@@ -365,7 +365,7 @@ function blockedWorkflowStateSkill(cwd: string, rawPath: string): CanonicalGjcWo
 	return null;
 }
 
-function firstBlockedWorkflowStateSkill(cwd: string, targets: ExtractedTargets): CanonicalGjcWorkflowSkill | null {
+function firstBlockedWorkflowStateSkill(cwd: string, targets: ExtractedTargets): CanonicalJwcWorkflowSkill | null {
 	for (const rawPath of targets.paths) {
 		const skill = blockedWorkflowStateSkill(cwd, rawPath);
 		if (skill) return skill;
@@ -374,17 +374,17 @@ function firstBlockedWorkflowStateSkill(cwd: string, targets: ExtractedTargets):
 }
 
 function isAllowlistedPath(cwd: string, rawPath: string): boolean {
-	const segments = relativeGjcSegments(cwd, rawPath);
+	const segments = relativeJwcSegments(cwd, rawPath);
 	if (segments?.[0] !== ".jwc") return false;
 	return segments[1] === "specs" || segments[1] === "plans";
 }
-function isBlockedGjcPath(cwd: string, rawPath: string): boolean {
-	const segments = relativeGjcSegments(cwd, rawPath);
+function isBlockedJwcPath(cwd: string, rawPath: string): boolean {
+	const segments = relativeJwcSegments(cwd, rawPath);
 	return segments?.[0] === ".jwc";
 }
 
-function hasBlockedGjcTarget(cwd: string, targets: ExtractedTargets): boolean {
-	return targets.paths.some(rawPath => isBlockedGjcPath(cwd, rawPath));
+function hasBlockedJwcTarget(cwd: string, targets: ExtractedTargets): boolean {
+	return targets.paths.some(rawPath => isBlockedJwcPath(cwd, rawPath));
 }
 
 function allTargetsAllowlisted(cwd: string, targets: ExtractedTargets): boolean {
@@ -412,14 +412,14 @@ export async function getJawInterviewMutationDecision(
 ): Promise<JawInterviewMutationDecision> {
 	if (!BLOCKED_TOOL_NAMES.has(input.tool.name)) return { blocked: false, targets: [] };
 	const targets = extractTargets(input.tool, input.args);
-	if (input.enforceWorkflowState !== false && hasBlockedGjcTarget(input.cwd, targets)) {
+	if (input.enforceWorkflowState !== false && hasBlockedJwcTarget(input.cwd, targets)) {
 		const stateSkill = firstBlockedWorkflowStateSkill(input.cwd, targets);
 		const command = stateSkill ? sanctionedWorkflowStateCommand(stateSkill) : "jwc <workflow-command>";
 		return {
 			blocked: true,
 			message: `${WORKFLOW_STATE_MUTATION_BLOCK_MESSAGE}\nUse: ${command}`,
 			targets: targets.paths,
-			reason: stateSkill ? "workflow-state-target" : "gjc-target",
+			reason: stateSkill ? "workflow-state-target" : "jwc-target",
 			command,
 		};
 	}

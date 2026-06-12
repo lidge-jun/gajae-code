@@ -250,6 +250,16 @@ const pathSegment: StatusLineSegment = {
 	},
 };
 
+// Branch names up to 6 chars render in full (covers "agent"/"main"); longer
+// ones collapse to a 3-char stem + ellipsis to keep the segment compact.
+const BRANCH_FULL_MAX = 6;
+const BRANCH_STEM_LEN = 3;
+
+function truncateBranch(branch: string): string {
+	if (branch.length <= BRANCH_FULL_MAX) return branch;
+	return `${branch.slice(0, BRANCH_STEM_LEN)}…`;
+}
+
 const gitSegment: StatusLineSegment = {
 	id: "git",
 	render(ctx) {
@@ -263,7 +273,7 @@ const gitSegment: StatusLineSegment = {
 		const showBranch = opts.showBranch !== false;
 		let content = "";
 		if (showBranch && branch) {
-			content = withIcon(theme.icon.branch, branch);
+			content = withIcon(theme.icon.branch, truncateBranch(branch));
 		}
 
 		// Add status indicators

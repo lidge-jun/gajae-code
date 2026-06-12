@@ -196,8 +196,9 @@ export function applyGeneratedModelPolicies(models: ApiModel<Api>[]): void {
  * model with a larger context window on the same provider:
  * - `OpenAI code backend-spark` variants promote to `gpt-5.5`.
  *
- * `gpt-5.5` itself is a 400K-context model and is not demoted to `gpt-5.4`
- * (which has a smaller window), so it has no promotion target.
+ * `gpt-5.5` (272K) has no automatic promotion target: the 1M-window
+ * `gpt-5.4` is a different model line, so switching to it is a user
+ * decision, not an auto-promote.
  */
 export function linkOpenAIPromotionTargets(models: ApiModel<Api>[]): void {
 	for (const candidate of models) {
@@ -431,12 +432,18 @@ function inferGeneratedApplyPatchToolType(
 }
 
 function applyGpt55ContextWindow(model: ApiModel<Api>, parsedModel: OpenAIModel): boolean {
-	// gpt-5.5 is a 400K-context model. OpenAI code backend discovery can omit the
-	// context window, falling back to the 272K default, which incorrectly trips
-	// context-cap / auto-promote thresholds (a ~272K session would look over-cap
-	// and demote to gpt-5.4). Pin gpt-5.5 to its true 400K window.
-	if (parsedModel.variant === "base" && semverEqual(parsedModel.version, "5.5")) {
-		model.contextWindow = 400000;
+	// OpenAI code backend enforces a hard 272K window for gpt-5.5
+	// (`max_context_window: 272000` per backend discovery — the 1M capacity is
+	// gpt-5.4-only). Stale caches and older bundles carry a 400K figure, which
+	// hides the real cap: sessions blow past 272K before compaction triggers.
+	// Pin the backend transport to the enforced 272K; other providers (e.g. the
+	// OpenAI API at 1.05M) keep their catalog values.
+	if (
+		model.api === "openai-codex-responses" &&
+		parsedModel.variant === "base" &&
+		semverEqual(parsedModel.version, "5.5")
+	) {
+		model.contextWindow = 272000;
 		return true;
 	}
 	return false;

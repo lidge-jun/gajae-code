@@ -1,6 +1,6 @@
 import * as path from "node:path";
-import { normalizeWorkflowSkillSlug } from "../gjc-runtime/state-schema";
-import { CANONICAL_GJC_WORKFLOW_SKILLS, type CanonicalGjcWorkflowSkill, SKILL_ACTIVE_STATE_FILE } from "./active-state";
+import { normalizeWorkflowSkillSlug } from "../jwc-runtime/state-schema";
+import { CANONICAL_JWC_WORKFLOW_SKILLS, type CanonicalJwcWorkflowSkill, SKILL_ACTIVE_STATE_FILE } from "./active-state";
 import { WORKFLOW_STATE_RECEIPT_FRESH_MS, WORKFLOW_STATE_RECEIPT_VERSION } from "./workflow-state-version";
 
 export {
@@ -9,8 +9,23 @@ export {
 	WORKFLOW_STATE_VERSION,
 } from "./workflow-state-version";
 
-export type { CanonicalGjcWorkflowSkill };
-export type WorkflowStateMutationOwner = "gjc-state-cli" | "gjc-runtime" | "gjc-hook";
+export type { CanonicalJwcWorkflowSkill };
+export type WorkflowStateMutationOwner = "jwc-state-cli" | "jwc-runtime" | "jwc-hook";
+
+/** gjc-era receipts persist legacy owner strings — normalize on read (260613 flip, read-both). */
+export const LEGACY_WORKFLOW_STATE_OWNER_ALIASES: Record<string, WorkflowStateMutationOwner> = {
+	"jwc-state-cli": "jwc-state-cli",
+	"jwc-runtime": "jwc-runtime",
+	"jwc-hook": "jwc-hook",
+};
+
+export function normalizeWorkflowStateOwner(value: unknown): WorkflowStateMutationOwner | undefined {
+	if (typeof value !== "string") return undefined;
+	const aliased = LEGACY_WORKFLOW_STATE_OWNER_ALIASES[value] ?? value;
+	return aliased === "jwc-state-cli" || aliased === "jwc-runtime" || aliased === "jwc-hook"
+		? (aliased as WorkflowStateMutationOwner)
+		: undefined;
+}
 export type WorkflowStateReceiptStatus = "fresh" | "stale";
 
 export interface WorkflowStateContentChecksum {
@@ -22,7 +37,7 @@ export interface WorkflowStateContentChecksum {
 
 export interface WorkflowStateReceipt {
 	version: 1;
-	skill: CanonicalGjcWorkflowSkill;
+	skill: CanonicalJwcWorkflowSkill;
 	owner: WorkflowStateMutationOwner;
 	command: string;
 	state_path: string;
@@ -60,11 +75,11 @@ function encodePathSegment(value: string): string {
 	return encodeURIComponent(value).replaceAll(".", "%2E");
 }
 
-export function workflowModeStateFileName(skill: CanonicalGjcWorkflowSkill): string {
+export function workflowModeStateFileName(skill: CanonicalJwcWorkflowSkill): string {
 	return `${skill}-state.json`;
 }
 
-export function workflowStateStoragePath(cwd: string, skill: CanonicalGjcWorkflowSkill, sessionId?: string): string {
+export function workflowStateStoragePath(cwd: string, skill: CanonicalJwcWorkflowSkill, sessionId?: string): string {
 	const normalizedSessionId = safeString(sessionId).trim();
 	if (normalizedSessionId) {
 		return path.join(
@@ -96,7 +111,7 @@ export function workflowActiveStatePath(cwd: string, sessionId?: string): string
 
 export function buildWorkflowStateReceipt(input: {
 	cwd: string;
-	skill: CanonicalGjcWorkflowSkill;
+	skill: CanonicalJwcWorkflowSkill;
 	owner: WorkflowStateMutationOwner;
 	command: string;
 	sessionId?: string;
@@ -129,18 +144,18 @@ export function workflowReceiptStatus(
 	return nowMs <= freshUntilMs ? "fresh" : "stale";
 }
 
-export function canonicalWorkflowSkill(value: string): CanonicalGjcWorkflowSkill | null {
+export function canonicalWorkflowSkill(value: string): CanonicalJwcWorkflowSkill | null {
 	const normalized = normalizeWorkflowSkillSlug(value);
-	return (CANONICAL_GJC_WORKFLOW_SKILLS as readonly string[]).includes(normalized)
-		? (normalized as CanonicalGjcWorkflowSkill)
+	return (CANONICAL_JWC_WORKFLOW_SKILLS as readonly string[]).includes(normalized)
+		? (normalized as CanonicalJwcWorkflowSkill)
 		: null;
 }
 
-export function sanctionedWorkflowStateCommand(skill: CanonicalGjcWorkflowSkill): string {
+export function sanctionedWorkflowStateCommand(skill: CanonicalJwcWorkflowSkill): string {
 	return `jwc state ${skill} write --input '<json>'`;
 }
 
-export function describeWorkflowStateContract(skill: CanonicalGjcWorkflowSkill): string[] {
+export function describeWorkflowStateContract(skill: CanonicalJwcWorkflowSkill): string[] {
 	return [
 		`Sanctioned mutation path: jwc state ${skill} read|write --input '<json>'`,
 		`Canonical active HUD state: .jwc/state/${SKILL_ACTIVE_STATE_FILE} and .jwc/state/sessions/<session>/${SKILL_ACTIVE_STATE_FILE}`,

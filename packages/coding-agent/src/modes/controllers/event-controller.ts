@@ -4,6 +4,7 @@ import type { AssistantMessage, ImageContent } from "@gajae-code/ai";
 import { parseRateLimitReason } from "@gajae-code/ai";
 import { type Component, Loader, TERMINAL, Text } from "@gajae-code/tui";
 import { settings } from "../../config/settings";
+import { isJawBrand } from "../../discovery/helpers";
 import { AssistantMessageComponent } from "../../modes/components/assistant-message";
 import {
 	ReadToolGroupComponent,
@@ -14,8 +15,8 @@ import { TodoReminderComponent } from "../../modes/components/todo-reminder";
 import { ToolExecutionComponent } from "../../modes/components/tool-execution";
 import { TtsrNotificationComponent } from "../../modes/components/ttsr-notification";
 import { getSymbolTheme, theme } from "../../modes/theme/theme";
-import { isJawBrand } from "../../discovery/helpers";
 import type { InteractiveModeContext, TodoPhase } from "../../modes/types";
+import { commitLaneEnabled } from "../../modes/utils/ui-helpers";
 import type { PlanApprovalDetails } from "../../plan-mode/approved-plan";
 import type { AgentSessionEvent } from "../../session/agent-session";
 import { isSilentAbort, readPendingDisplayTag } from "../../session/messages";
@@ -128,6 +129,8 @@ export class EventController {
 		this.#liveToolComponents.delete(component);
 		this.ctx.liveToolContainer.removeChild(component);
 		component.setMinimized?.(true);
+		// 083.9 P4: stays interactive in the chat until the next prompt submit —
+		// the turn-boundary backlog sweep (commitFinalizedBacklog) commits it.
 		this.ctx.chatContainer.addChild(component);
 	}
 
@@ -380,6 +383,28 @@ export class EventController {
 					this.ctx.streamingComponent.setThinkingExpanded(this.ctx.thinkingExpanded);
 					this.ctx.streamingComponent.setStreaming(true);
 					this.ctx.chatContainer.addChild(this.ctx.streamingComponent);
+				}
+			}
+			// 083.9 P3: under live-zone overflow, shed settled blocks (everything
+			// before the currently streaming block) from the frame — their pixels
+			// stay on screen/scrollback via the viewport repaint (083.8 S3), a
+			// de-facto commit. The component then renders only the active tail,
+			// keeping the frame near viewport size (Codex stable-line parity).
+			if (
+				commitLaneEnabled() &&
+				this.ctx.ui.viewportFillRows === 0 &&
+				typeof this.ctx.ui.commitLines === "function"
+			) {
+				let lastVisible = -1;
+				for (let i = content.length - 1; i >= this.#segmentStartIndex; i--) {
+					const c = content[i];
+					if ((c.type === "text" && c.text.trim()) || (c.type === "thinking" && c.thinking.trim())) {
+						lastVisible = i;
+						break;
+					}
+				}
+				if (lastVisible > this.#segmentStartIndex) {
+					this.#segmentStartIndex = lastVisible;
 				}
 			}
 			this.ctx.streamingComponent.updateContent(this.#segmentSlice(this.ctx.streamingMessage));
@@ -712,9 +737,9 @@ export class EventController {
 		this.ctx.lastToolComponent?.setMinimized?.(true);
 		this.ctx.lastToolComponent = undefined;
 		this.ctx.ui.requestRender();
-		// 083.7 §10: collapse the post-overflow gap above the composer so the
-		// last response hugs the input again (no-op when there is no gap).
-		this.ctx.ui.compactViewportFill();
+		// 083.8 S2: the post-overflow gap is NOT compacted here — the forced full
+		// rebuild made the final response visibly jump. It collapses at the next
+		// prompt submit instead (input-controller), where the screen changes anyway.
 		this.#scheduleIdleCompaction();
 		this.sendCompletionNotification();
 	}

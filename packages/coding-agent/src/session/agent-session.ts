@@ -173,23 +173,23 @@ import type {
 } from "../extensibility/extensions";
 import type { CompactOptions, ContextUsage } from "../extensibility/extensions/types";
 import { ExtensionToolWrapper } from "../extensibility/extensions/wrapper";
-import type { LoadedSubskillActivation } from "../extensibility/gjc-plugins";
-import { resolveCurrentPhaseForParent } from "../extensibility/gjc-plugins/injection";
-import { readActiveSubskillsForParent, toActiveSubskillEntry } from "../extensibility/gjc-plugins/state";
-import { loadActiveSubskillTools } from "../extensibility/gjc-plugins/tools";
 import type { HookCommandContext } from "../extensibility/hooks/types";
+import type { LoadedSubskillActivation } from "../extensibility/jwc-plugins";
+import { resolveCurrentPhaseForParent } from "../extensibility/jwc-plugins/injection";
+import { readActiveSubskillsForParent, toActiveSubskillEntry } from "../extensibility/jwc-plugins/state";
+import { loadActiveSubskillTools } from "../extensibility/jwc-plugins/tools";
 import type { Skill, SkillWarning } from "../extensibility/skills";
 import { expandSlashCommand, type FileSlashCommand } from "../extensibility/slash-commands";
-import { buildGjcRuntimeSessionEnv, consumePendingGoalModeRequest } from "../gjc-runtime/goal-mode-request";
-import { readPabcdStateWithFallback } from "../gjc-runtime/orchestrate-state";
-import { persistCoordinatorRuntimeStateFromEvent } from "../gjc-runtime/session-state-sidecar";
-import { writeArtifact } from "../gjc-runtime/state-writer";
-import { requestGjcWorkerIntegrationAttempt } from "../gjc-runtime/team-runtime";
 import { GoalRuntime } from "../goals/runtime";
 import type { Goal, GoalModeState } from "../goals/state";
 import type { HindsightSessionState } from "../hindsight/state";
 import { ensureWorkflowSkillActivationState } from "../hooks/skill-state";
 import { type LocalProtocolOptions, resolveLocalUrlToPath } from "../internal-urls";
+import { buildJwcRuntimeSessionEnv, consumePendingGoalModeRequest } from "../jwc-runtime/goal-mode-request";
+import { readPabcdStateWithFallback } from "../jwc-runtime/orchestrate-state";
+import { persistCoordinatorRuntimeStateFromEvent } from "../jwc-runtime/session-state-sidecar";
+import { writeArtifact } from "../jwc-runtime/state-writer";
+import { requestJwcWorkerIntegrationAttempt } from "../jwc-runtime/team-runtime";
 import { shutdownAll as shutdownAllLspClients } from "../lsp/client";
 import type { Mem0SessionState } from "../mem0/state";
 import { resolveMemoryBackend } from "../memory-backend";
@@ -220,7 +220,7 @@ import { MCPManager } from "../runtime-mcp/manager";
 import { deobfuscateSessionContext, type SecretObfuscator } from "../secrets/obfuscator";
 import { formatNoCredentialOnboardingError, formatNoModelOnboardingError } from "../setup/model-onboarding-guidance";
 import {
-	isCanonicalGjcWorkflowSkill,
+	isCanonicalJwcWorkflowSkill,
 	readVisibleSkillActiveState,
 	syncSkillActiveState,
 } from "../skill-state/active-state";
@@ -318,7 +318,7 @@ export type AgentSessionEvent =
  */
 const SAFE_PATH_COMPONENT = /^[A-Za-z0-9_-][A-Za-z0-9._-]{0,63}$/;
 
-function isUnderProjectGjc(cwd: string, targetPath: string): boolean {
+function isUnderProjectJwc(cwd: string, targetPath: string): boolean {
 	const relative = path.relative(path.join(path.resolve(cwd), ".jwc"), path.resolve(targetPath));
 	return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
 }
@@ -1351,7 +1351,7 @@ export class AgentSession {
 		// interprets undefined as a non-terminal phase, so chaining is
 		// refused — there is no risk of bypassing the guard via a custom
 		// skill name with `..` or a session-id with separators.
-		if (!isCanonicalGjcWorkflowSkill(active.skill)) return undefined;
+		if (!isCanonicalJwcWorkflowSkill(active.skill)) return undefined;
 		if (active.sessionId !== undefined && !SAFE_PATH_COMPONENT.test(active.sessionId)) {
 			return undefined;
 		}
@@ -1791,7 +1791,7 @@ export class AgentSession {
 				await this.#goalRuntime.onToolCompleted(event.toolName);
 			}
 			if (event.toolName === "bash" && !event.isError) {
-				await this.#activatePendingGjcGoalModeRequest();
+				await this.#activatePendingJwcGoalModeRequest();
 			}
 		}
 		if (event.type === "tool_execution_end" && event.toolName === "yield" && !event.isError) {
@@ -2953,7 +2953,7 @@ export class AgentSession {
 	/** Emit extension events based on session events */
 	async #emitExtensionEvent(event: AgentSessionEvent): Promise<void> {
 		if (event.type === "turn_end") {
-			await requestGjcWorkerIntegrationAttempt(this.sessionManager.getCwd(), process.env).catch(error => {
+			await requestJwcWorkerIntegrationAttempt(this.sessionManager.getCwd(), process.env).catch(error => {
 				logger.warn("jwc team worker integration request failed", { error: String(error) });
 			});
 		}
@@ -4019,7 +4019,7 @@ export class AgentSession {
 		);
 	}
 
-	async #hasActiveGjcSubskillTools(parent: string, sessionId: string | undefined): Promise<boolean> {
+	async #hasActiveJwcSubskillTools(parent: string, sessionId: string | undefined): Promise<boolean> {
 		if (!parent.trim()) return false;
 		const cwd = this.sessionManager.getCwd();
 		const phase = await resolveCurrentPhaseForParent({ cwd, sessionId, parent });
@@ -4040,7 +4040,7 @@ export class AgentSession {
 		};
 	}
 
-	#computeGjcSubskillToolSignature(tools: CustomTool[]): string {
+	#computeJwcSubskillToolSignature(tools: CustomTool[]): string {
 		return tools
 			.map(tool => `${tool.name}\u0000${tool.description}\u0000${JSON.stringify(tool.parameters)}`)
 			.sort()
@@ -4050,7 +4050,7 @@ export class AgentSession {
 	/**
 	 * Refresh plugin sub-skill tools after workflow/sub-skill activation or phase changes.
 	 */
-	async refreshGjcSubskillTools(): Promise<void> {
+	async refreshJwcSubskillTools(): Promise<void> {
 		const activeState = await readVisibleSkillActiveState(
 			this.sessionManager.getCwd(),
 			this.sessionManager.getSessionId(),
@@ -4062,15 +4062,15 @@ export class AgentSession {
 		const parent = activeSkill?.trim();
 		if (!parent) {
 			if (this.#gjcSubskillToolNames.size === 0) return;
-			const previousGjcSubskillToolNames = new Set(this.#gjcSubskillToolNames);
+			const previousJwcSubskillToolNames = new Set(this.#gjcSubskillToolNames);
 			const previousActiveToolNames = this.getActiveToolNames();
-			for (const name of previousGjcSubskillToolNames) {
+			for (const name of previousJwcSubskillToolNames) {
 				this.#toolRegistry.delete(name);
 			}
 			this.#gjcSubskillToolNames.clear();
 			this.#invalidateDiscoveryCaches();
 			await this.#applyActiveToolsByName(
-				previousActiveToolNames.filter(name => !previousGjcSubskillToolNames.has(name)),
+				previousActiveToolNames.filter(name => !previousJwcSubskillToolNames.has(name)),
 			);
 			return;
 		}
@@ -4078,7 +4078,7 @@ export class AgentSession {
 		const cwd = this.sessionManager.getCwd();
 		const sessionId =
 			this.#activeSkillState?.sessionId ?? activeState?.session_id ?? this.sessionManager.getSessionId();
-		if (this.#gjcSubskillToolNames.size === 0 && !(await this.#hasActiveGjcSubskillTools(parent, sessionId))) return;
+		if (this.#gjcSubskillToolNames.size === 0 && !(await this.#hasActiveJwcSubskillTools(parent, sessionId))) return;
 
 		const phase = await resolveCurrentPhaseForParent({ cwd, sessionId, parent });
 		const reservedToolNames = Array.from(this.#toolRegistry.keys()).filter(
@@ -4091,14 +4091,14 @@ export class AgentSession {
 			throw new Error("jwc sub-skill tool names must be unique");
 		}
 
-		const previousGjcSubskillToolNames = new Set(this.#gjcSubskillToolNames);
-		const nextSignature = this.#computeGjcSubskillToolSignature(customTools);
+		const previousJwcSubskillToolNames = new Set(this.#gjcSubskillToolNames);
+		const nextSignature = this.#computeJwcSubskillToolSignature(customTools);
 		if (this.#gjcSubskillToolSignature === nextSignature) {
 			return;
 		}
 
 		const previousActiveToolNames = this.getActiveToolNames();
-		for (const name of previousGjcSubskillToolNames) {
+		for (const name of previousJwcSubskillToolNames) {
 			this.#toolRegistry.delete(name);
 		}
 		this.#gjcSubskillToolNames.clear();
@@ -4116,21 +4116,21 @@ export class AgentSession {
 		this.#gjcSubskillToolSignature = nextSignature;
 
 		this.#invalidateDiscoveryCaches();
-		const activeNonGjcSubskillToolNames = previousActiveToolNames.filter(
-			name => !previousGjcSubskillToolNames.has(name),
+		const activeNonJwcSubskillToolNames = previousActiveToolNames.filter(
+			name => !previousJwcSubskillToolNames.has(name),
 		);
-		const preservedGjcSubskillToolNames = previousActiveToolNames.filter(
-			name => previousGjcSubskillToolNames.has(name) && this.#gjcSubskillToolNames.has(name),
+		const preservedJwcSubskillToolNames = previousActiveToolNames.filter(
+			name => previousJwcSubskillToolNames.has(name) && this.#gjcSubskillToolNames.has(name),
 		);
-		const autoActivatedGjcSubskillToolNames = customTools
-			.filter(tool => !tool.hidden && !previousGjcSubskillToolNames.has(tool.name))
+		const autoActivatedJwcSubskillToolNames = customTools
+			.filter(tool => !tool.hidden && !previousJwcSubskillToolNames.has(tool.name))
 			.map(tool => tool.name);
 		await this.#applyActiveToolsByName(
 			Array.from(
 				new Set([
-					...activeNonGjcSubskillToolNames,
-					...preservedGjcSubskillToolNames,
-					...autoActivatedGjcSubskillToolNames,
+					...activeNonJwcSubskillToolNames,
+					...preservedJwcSubskillToolNames,
+					...autoActivatedJwcSubskillToolNames,
 				]),
 			),
 		);
@@ -4391,7 +4391,7 @@ export class AgentSession {
 		);
 	}
 
-	async #activatePendingGjcGoalModeRequest(): Promise<boolean> {
+	async #activatePendingJwcGoalModeRequest(): Promise<boolean> {
 		if (!this.settings.get("goal.enabled")) return false;
 		const pendingGoal = await consumePendingGoalModeRequest(
 			this.sessionManager.getCwd(),
@@ -4641,7 +4641,7 @@ export class AgentSession {
 		const message = options?.synthetic
 			? { role: "developer" as const, content: userContent, attribution: promptAttribution, timestamp: Date.now() }
 			: { role: "user" as const, content: userContent, attribution: promptAttribution, timestamp: Date.now() };
-		await this.refreshGjcSubskillTools();
+		await this.refreshJwcSubskillTools();
 
 		if (eagerTodoPrelude) {
 			this.#toolChoiceQueue.pushOnce(eagerTodoPrelude.toolChoice, {
@@ -4677,7 +4677,7 @@ export class AgentSession {
 		const sessionId = this.sessionManager.getSessionId();
 		// Canonical GJC workflow skills (jaw-interview, ralplan, ultragoal, team)
 		// own their `.jwc/state/skill-active-state.json` row through the
-		// `gjc state handoff` and `gjc state clear` runtime verbs. The prompt
+		// `jwc state handoff` and `jwc state clear` runtime verbs. The prompt
 		// observer must not overwrite an existing row (that clobbered handoff
 		// lineage `handoff_from`/`handoff_at` and desynced the HUD). But a fresh
 		// `/skill:<name>` invocation has no row yet, so seed `.jwc/state`
@@ -4712,7 +4712,7 @@ export class AgentSession {
 		// In-memory tracking keeps `getActiveSkillState` accurate for the chain guard.
 		this.#activeSkillState = active ? { skill, sessionId } : undefined;
 		if (active) {
-			await this.refreshGjcSubskillTools();
+			await this.refreshJwcSubskillTools();
 		}
 	}
 
@@ -6470,10 +6470,10 @@ export class AgentSession {
 				if (artifactsDir) {
 					const handoffFilePath = path.join(artifactsDir, createHandoffFileName());
 					try {
-						if (isUnderProjectGjc(this.sessionManager.getCwd(), handoffFilePath)) {
+						if (isUnderProjectJwc(this.sessionManager.getCwd(), handoffFilePath)) {
 							await writeArtifact(handoffFilePath, `${handoffText}\n`, {
 								cwd: this.sessionManager.getCwd(),
-								audit: { category: "artifact", verb: "write", owner: "gjc-runtime" },
+								audit: { category: "artifact", verb: "write", owner: "jwc-runtime" },
 							});
 						} else {
 							await Bun.write(handoffFilePath, `${handoffText}\n`);
@@ -8411,7 +8411,7 @@ export class AgentSession {
 			if (hookResult?.result) {
 				this.recordBashResult(command, hookResult.result, options);
 				if (hookResult.result.exitCode === 0 && !hookResult.result.cancelled) {
-					await this.#activatePendingGjcGoalModeRequest();
+					await this.#activatePendingJwcGoalModeRequest();
 				}
 				return hookResult.result;
 			}
@@ -8426,7 +8426,7 @@ export class AgentSession {
 				signal: abortController.signal,
 				sessionKey: this.sessionId,
 				timeout: clampTimeout("bash") * 1000,
-				env: buildGjcRuntimeSessionEnv({
+				env: buildJwcRuntimeSessionEnv({
 					sessionFile: this.sessionManager.getSessionFile(),
 					sessionId: this.sessionId,
 					cwd,
@@ -8436,7 +8436,7 @@ export class AgentSession {
 
 			this.recordBashResult(command, result, options);
 			if (result.exitCode === 0 && !result.cancelled) {
-				await this.#activatePendingGjcGoalModeRequest();
+				await this.#activatePendingJwcGoalModeRequest();
 			}
 			return result;
 		} finally {

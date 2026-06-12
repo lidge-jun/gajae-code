@@ -18,9 +18,9 @@
 import type { AgentTool, AgentToolResult } from "@gajae-code/agent-core";
 import { prompt, untilAborted } from "@gajae-code/utils";
 import * as z from "zod/v4";
-import { resolveSubskillActivationForSkillInvocation } from "../extensibility/gjc-plugins";
+import { resolveSubskillActivationForSkillInvocation } from "../extensibility/jwc-plugins";
 import { buildSkillPromptMessage } from "../extensibility/skills";
-import { runNativeStateCommand } from "../gjc-runtime/state-runtime";
+import { runNativeStateCommand } from "../jwc-runtime/state-runtime";
 import skillDescription from "../prompts/tools/skill.md" with { type: "text" };
 import { SKILL_PROMPT_MESSAGE_TYPE } from "../session/messages";
 import type { ToolSession } from ".";

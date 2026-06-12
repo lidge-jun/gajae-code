@@ -8,11 +8,11 @@ import type { SourceMeta } from "../capability/types";
 import type { SkillsSettings } from "../config/settings";
 import { type Skill as CapabilitySkill, loadCapability } from "../discovery";
 import { compareSkillOrder, isJawBrand, scanSkillsFromDir } from "../discovery/helpers";
-import { applyCliJawDevVocabularyMap, isCliJawSkillPath } from "../gjc-runtime/cli-jaw-vocab";
+import { applyCliJawDevVocabularyMap, isCliJawSkillPath } from "../jwc-runtime/cli-jaw-vocab";
 import type { SkillPromptDetails } from "../session/messages";
 import { expandTilde } from "../tools/path-utils";
-import type { LoadedSubskillActivation } from "./gjc-plugins";
-import { buildSubskillInjection } from "./gjc-plugins/injection";
+import type { LoadedSubskillActivation } from "./jwc-plugins";
+import { buildSubskillInjection } from "./jwc-plugins/injection";
 export interface Skill {
 	name: string;
 	description: string;

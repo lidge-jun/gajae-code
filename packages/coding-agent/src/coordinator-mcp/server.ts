@@ -14,7 +14,7 @@ import {
 	GJC_COORDINATOR_SESSION_STATE_FILE_ENV,
 	JWC_COORDINATOR_SESSION_ID_ENV,
 	JWC_COORDINATOR_SESSION_STATE_FILE_ENV,
-} from "../gjc-runtime/session-state-sidecar";
+} from "../jwc-runtime/session-state-sidecar";
 import {
 	assertCoordinatorArtifactPath,
 	assertCoordinatorWorkdir,

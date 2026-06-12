@@ -822,11 +822,11 @@ export async function listClaudePluginRoots(
 	// same XDG-aware path the marketplace writer uses (reads and writes always agree).
 	// Tests pass a temp dir, which short-circuits the resolver for deterministic isolation.
 	const gjcRegistryPath = path.join(getPluginsDir(home), "installed_plugins.json");
-	const gjcContent = await readFile(gjcRegistryPath);
-	if (gjcContent) {
-		const gjcRegistry = parseClaudePluginsRegistry(gjcContent);
-		if (gjcRegistry) {
-			for (const [pluginId, entries] of Object.entries(gjcRegistry.plugins)) {
+	const jwcContent = await readFile(gjcRegistryPath);
+	if (jwcContent) {
+		const jwcRegistry = parseClaudePluginsRegistry(jwcContent);
+		if (jwcRegistry) {
+			for (const [pluginId, entries] of Object.entries(jwcRegistry.plugins)) {
 				if (!Array.isArray(entries) || entries.length === 0) continue;
 
 				const atIndex = pluginId.lastIndexOf("@");

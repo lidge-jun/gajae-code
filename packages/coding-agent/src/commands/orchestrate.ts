@@ -1,6 +1,6 @@
 import { APP_NAME } from "@gajae-code/utils";
 import { Command, Flags } from "@gajae-code/utils/cli";
-import { runNativeOrchestrateCommand } from "../gjc-runtime/orchestrate-runtime";
+import { runNativeOrchestrateCommand } from "../jwc-runtime/orchestrate-runtime";
 
 export default class Orchestrate extends Command {
 	static description = `Run the native ${APP_NAME.toUpperCase()} IPABCD orchestration (i|p|a|b|c|d)`;

@@ -116,3 +116,17 @@ describe("ModelSelector unlisted exposure (99.30.04)", () => {
 		expect(rendered).not.toContain("ctrl+o");
 	});
 });
+
+describe("onboarding hint gating (99.30.04 S8)", () => {
+	test("configured installs do not see the onboarding blurb", async () => {
+		const selector = await createSelector(MODELS);
+		const rendered = normalizeRenderedText(selector.render(220).join("\n"));
+		expect(rendered).not.toContain("Add MiniMax/GLM presets");
+	});
+
+	test("plain installs (no models) still see it", async () => {
+		const selector = await createSelector([]);
+		const rendered = normalizeRenderedText(selector.render(220).join("\n"));
+		expect(rendered).toContain("Add MiniMax/GLM presets");
+	});
+});

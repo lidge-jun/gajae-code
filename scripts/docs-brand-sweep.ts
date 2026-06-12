@@ -1,6 +1,6 @@
 /**
  * Align structure/ + struct_har/ prose with jwc runtime branding (.jwc paths, jwc CLI).
- * Does NOT rename upstream axis (gjc_origin/, chase/10_gjc_*, code paths like defaults/gjc/).
+ * Does NOT rename upstream axis (gjc_origin/, chase/10_gjc_*, code paths like defaults/jwc/).
  */
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import * as path from "node:path";

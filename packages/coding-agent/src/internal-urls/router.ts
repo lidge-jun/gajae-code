@@ -7,8 +7,8 @@
  */
 import { AgentProtocolHandler } from "./agent-protocol";
 import { ArtifactProtocolHandler } from "./artifact-protocol";
-import { GjcProtocolHandler, LegacyGjcProtocolAliasHandler } from "./gjc-protocol";
 import { IssueProtocolHandler, PrProtocolHandler } from "./issue-pr-protocol";
+import { JwcProtocolHandler, LegacyJwcProtocolAliasHandler } from "./jwc-protocol";
 import { LocalProtocolHandler } from "./local-protocol";
 import { MemoryProtocolHandler } from "./memory-protocol";
 import { parseInternalUrl } from "./parse";
@@ -21,8 +21,8 @@ export class InternalUrlRouter {
 	#handlers = new Map<string, ProtocolHandler>();
 
 	constructor() {
-		this.register(new GjcProtocolHandler());
-		this.register(new LegacyGjcProtocolAliasHandler());
+		this.register(new JwcProtocolHandler());
+		this.register(new LegacyJwcProtocolAliasHandler());
 		this.register(new AgentProtocolHandler());
 		this.register(new ArtifactProtocolHandler());
 		this.register(new MemoryProtocolHandler());

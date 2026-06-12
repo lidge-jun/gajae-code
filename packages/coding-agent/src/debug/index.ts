@@ -177,9 +177,12 @@ export class DebugSelectorComponent extends Container {
 			loader.stop();
 			this.ctx.statusContainer.clear();
 
-			this.ctx.showStatus(
-				`${theme.status.success} Performance report saved\n${formatFileHyperlink(result.path)}\nFiles: ${result.files.length}`,
+			this.ctx.chatContainer.addChild(new Spacer(1));
+			this.ctx.chatContainer.addChild(
+				new Text(theme.fg("success", `${theme.status.success} Performance report saved`), 1, 0),
 			);
+			this.ctx.chatContainer.addChild(new Text(theme.fg("dim", formatFileHyperlink(result.path)), 1, 0));
+			this.ctx.chatContainer.addChild(new Text(theme.fg("dim", `Files: ${result.files.length}`), 1, 0));
 		} catch (err) {
 			loader.stop();
 			this.ctx.statusContainer.clear();
@@ -204,7 +207,10 @@ export class DebugSelectorComponent extends Container {
 
 			openPath(tmpPath);
 
-			this.ctx.showStatus(`Opened flamegraph (${workProfile.sampleCount} samples)`);
+			this.ctx.chatContainer.addChild(new Spacer(1));
+			this.ctx.chatContainer.addChild(
+				new Text(theme.fg("dim", `Opened flamegraph (${workProfile.sampleCount} samples)`), 1, 0),
+			);
 		} catch (err) {
 			this.ctx.showError(`Failed to open profile: ${err instanceof Error ? err.message : String(err)}`);
 		}
@@ -232,9 +238,12 @@ export class DebugSelectorComponent extends Container {
 			loader.stop();
 			this.ctx.statusContainer.clear();
 
-			this.ctx.showStatus(
-				`${theme.status.success} Report bundle saved\n${formatFileHyperlink(result.path)}\nFiles: ${result.files.length}`,
+			this.ctx.chatContainer.addChild(new Spacer(1));
+			this.ctx.chatContainer.addChild(
+				new Text(theme.fg("success", `${theme.status.success} Report bundle saved`), 1, 0),
 			);
+			this.ctx.chatContainer.addChild(new Text(theme.fg("dim", formatFileHyperlink(result.path)), 1, 0));
+			this.ctx.chatContainer.addChild(new Text(theme.fg("dim", `Files: ${result.files.length}`), 1, 0));
 		} catch (err) {
 			loader.stop();
 			this.ctx.statusContainer.clear();
@@ -268,9 +277,12 @@ export class DebugSelectorComponent extends Container {
 			loader.stop();
 			this.ctx.statusContainer.clear();
 
-			this.ctx.showStatus(
-				`${theme.status.success} Memory report saved\n${formatFileHyperlink(result.path)}\nFiles: ${result.files.length}`,
+			this.ctx.chatContainer.addChild(new Spacer(1));
+			this.ctx.chatContainer.addChild(
+				new Text(theme.fg("success", `${theme.status.success} Memory report saved`), 1, 0),
 			);
+			this.ctx.chatContainer.addChild(new Text(theme.fg("dim", formatFileHyperlink(result.path)), 1, 0));
+			this.ctx.chatContainer.addChild(new Text(theme.fg("dim", `Files: ${result.files.length}`), 1, 0));
 		} catch (err) {
 			loader.stop();
 			this.ctx.statusContainer.clear();
@@ -409,7 +421,14 @@ export class DebugSelectorComponent extends Container {
 			loader.stop();
 			this.ctx.statusContainer.clear();
 
-			this.ctx.showStatus(`${theme.status.success} Cleared ${result.removed} artifact directories`);
+			this.ctx.chatContainer.addChild(new Spacer(1));
+			this.ctx.chatContainer.addChild(
+				new Text(
+					theme.fg("success", `${theme.status.success} Cleared ${result.removed} artifact directories`),
+					1,
+					0,
+				),
+			);
 		} catch (err) {
 			loader.stop();
 			this.ctx.statusContainer.clear();

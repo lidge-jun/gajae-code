@@ -47,11 +47,14 @@ import { copyToClipboard } from "../../utils/clipboard";
 import { openPath } from "../../utils/open";
 import { setSessionTerminalTitle } from "../../utils/title-generator";
 
-// 99.20.07 P2: read-once markdown reports dock in place of the editor.
 function showMarkdownPanel(ctx: InteractiveModeContext, title: string, markdown: string): void {
-	ctx.showReadOncePanel(title, async () => (width: number) =>
-		new Markdown(markdown.trim(), 1, 1, getMarkdownTheme()).render(width),
-	);
+	ctx.chatContainer.addChild(new Spacer(1));
+	ctx.chatContainer.addChild(new DynamicBorder());
+	ctx.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", title)), 1, 0));
+	ctx.chatContainer.addChild(new Spacer(1));
+	ctx.chatContainer.addChild(new Markdown(markdown.trim(), 1, 1, getMarkdownTheme()));
+	ctx.chatContainer.addChild(new DynamicBorder());
+	ctx.ui.requestRender();
 }
 
 export class CommandController {
@@ -447,7 +450,9 @@ export class CommandController {
 			}
 		}
 
-		this.ctx.showReadOncePanel("Session", async () => (width: number) => new Text(info, 0, 0).render(width));
+		this.ctx.chatContainer.addChild(new Spacer(1));
+		this.ctx.chatContainer.addChild(new Text(info, 1, 0));
+		this.ctx.ui.requestRender();
 	}
 
 	async handleJobsCommand(): Promise<void> {
@@ -464,10 +469,9 @@ export class CommandController {
 
 		if (snapshot.running.length === 0 && snapshot.recent.length === 0) {
 			info += `\n${theme.fg("dim", "No async jobs yet.")}\n`;
-			const emptyInfo = info;
-			this.ctx.showReadOncePanel("Background Jobs", async () => (width: number) =>
-				new Text(emptyInfo.trimEnd(), 0, 0).render(width),
-			);
+			this.ctx.chatContainer.addChild(new Spacer(1));
+			this.ctx.chatContainer.addChild(new Text(info, 1, 0));
+			this.ctx.ui.requestRender();
 			return;
 		}
 
@@ -487,38 +491,25 @@ export class CommandController {
 			}
 		}
 
-		const jobsInfo = info;
-		this.ctx.showReadOncePanel("Background Jobs", async () => (width: number) =>
-			new Text(jobsInfo.trimEnd(), 0, 0).render(width),
-		);
+		this.ctx.chatContainer.addChild(new Spacer(1));
+		this.ctx.chatContainer.addChild(new Text(info.trimEnd(), 1, 0));
+		this.ctx.ui.requestRender();
 	}
 
 	async handleUsageCommand(reports?: UsageReport[] | null): Promise<void> {
-		let usageReports = reports ?? null;
-		if (!usageReports) {
-			const provider = this.ctx.session as { fetchUsageReports?: () => Promise<UsageReport[] | null> };
-			if (!provider.fetchUsageReports) {
-				this.ctx.showWarning("Usage reporting is not configured for this session.");
-				return;
-			}
-			try {
-				usageReports = await provider.fetchUsageReports();
-			} catch (error) {
-				this.ctx.showError(`Failed to fetch usage data: ${error instanceof Error ? error.message : String(error)}`);
-				return;
-			}
-		}
-
-		if (!usageReports || usageReports.length === 0) {
-			this.ctx.showWarning("No usage data available.");
+		const provider = this.ctx.session as { fetchUsageReports?: () => Promise<UsageReport[] | null> };
+		if (!reports && !provider.fetchUsageReports) {
+			this.ctx.showWarning("Usage reporting is not configured for this session.");
 			return;
 		}
-
-		const availableWidth = Math.max(40, (this.ctx.ui.terminal.columns ?? 100) - 2);
-		const output = renderUsageReports(usageReports, theme, Date.now(), availableWidth);
-		this.ctx.chatContainer.addChild(new Spacer(1));
-		this.ctx.chatContainer.addChild(new Text(output, 1, 0));
-		this.ctx.ui.requestRender();
+		this.ctx.showUsageReportPanel("Usage", async () => {
+			const usageReports = reports ?? (await provider.fetchUsageReports?.()) ?? null;
+			if (!usageReports || usageReports.length === 0) {
+				return "No usage data available.";
+			}
+			return (width: number) =>
+				renderUsageReports(usageReports, theme, Date.now(), Math.max(40, width - 2)).split("\n");
+		});
 	}
 
 	/** 094.4: fetch + render quota for a single OAuth provider. */
@@ -535,23 +526,14 @@ export class CommandController {
 			this.ctx.showWarning("Usage reporting is not configured for this session.");
 			return;
 		}
-		let reports: UsageReport[] | null;
-		try {
-			reports = await fetcher.fetchUsageReports();
-		} catch (error) {
-			this.ctx.showError(`Failed to fetch quota: ${error instanceof Error ? error.message : String(error)}`);
-			return;
-		}
-		const filtered = reports?.filter(report => report.provider === providerId) ?? [];
-		if (filtered.length === 0) {
-			this.ctx.showWarning(`No quota data available for ${providerId}.`);
-			return;
-		}
-		const availableWidth = Math.max(40, (this.ctx.ui.terminal.columns ?? 100) - 2);
-		const output = renderUsageReports(filtered, theme, Date.now(), availableWidth);
-		this.ctx.chatContainer.addChild(new Spacer(1));
-		this.ctx.chatContainer.addChild(new Text(output, 1, 0));
-		this.ctx.ui.requestRender();
+		this.ctx.showUsageReportPanel(`Quota — ${providerId}`, async () => {
+			const reports = await fetcher.fetchUsageReports?.();
+			const filtered = reports?.filter(report => report.provider === providerId) ?? [];
+			if (filtered.length === 0) {
+				return `No quota data available for ${providerId}.`;
+			}
+			return (width: number) => renderUsageReports(filtered, theme, Date.now(), Math.max(40, width - 2)).split("\n");
+		});
 	}
 
 	async handleChangelogCommand(showFull = false): Promise<void> {
@@ -571,9 +553,13 @@ export class CommandController {
 			? ""
 			: `\n\n${theme.fg("dim", "Use")} ${theme.bold("/changelog full")} ${theme.fg("dim", "to view the complete changelog.")}`;
 
-		this.ctx.showReadOncePanel(title, async () => (width: number) =>
-			new Markdown(changelogMarkdown + hint, 1, 1, getMarkdownTheme()).render(width),
-		);
+		this.ctx.chatContainer.addChild(new Spacer(1));
+		this.ctx.chatContainer.addChild(new DynamicBorder());
+		this.ctx.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", title)), 1, 0));
+		this.ctx.chatContainer.addChild(new Spacer(1));
+		this.ctx.chatContainer.addChild(new Markdown(changelogMarkdown + hint, 1, 1, getMarkdownTheme()));
+		this.ctx.chatContainer.addChild(new DynamicBorder());
+		this.ctx.ui.requestRender();
 	}
 
 	handleHotkeysCommand(): void {
@@ -593,7 +579,13 @@ export class CommandController {
 			return;
 		}
 		const output = renderContextUsage(breakdown, theme);
-		this.ctx.showReadOncePanel("Context Usage", async () => (width: number) => new Text(output, 0, 0).render(width));
+		this.ctx.chatContainer.addChild(new Spacer(1));
+		this.ctx.chatContainer.addChild(new DynamicBorder());
+		this.ctx.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "Context Usage")), 1, 0));
+		this.ctx.chatContainer.addChild(new Spacer(1));
+		this.ctx.chatContainer.addChild(new Text(output, 1, 0));
+		this.ctx.chatContainer.addChild(new DynamicBorder());
+		this.ctx.ui.requestRender();
 	}
 
 	async handleMemoryCommand(text: string): Promise<void> {
@@ -608,9 +600,12 @@ export class CommandController {
 				this.ctx.showWarning("Memory payload is empty; durable memory is unavailable or unconfirmed.");
 				return;
 			}
-			this.ctx.showReadOncePanel("Memory Injection Payload", async () => (width: number) =>
-				new Markdown(payload, 1, 1, getMarkdownTheme()).render(width),
-			);
+			this.ctx.chatContainer.addChild(new Spacer(1));
+			this.ctx.chatContainer.addChild(new DynamicBorder());
+			this.ctx.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "Memory Injection Payload")), 1, 0));
+			this.ctx.chatContainer.addChild(new Spacer(1));
+			this.ctx.chatContainer.addChild(new Markdown(payload, 1, 1, getMarkdownTheme()));
+			this.ctx.chatContainer.addChild(new DynamicBorder());
 			this.ctx.ui.requestRender();
 			return;
 		}
@@ -919,8 +914,8 @@ export class CommandController {
 		this.ctx.streamingMessage = undefined;
 		this.ctx.pendingTools.clear();
 
-		// 99.20.07 P3: one-line success notices ride the status surface, not the transcript.
-		this.ctx.showStatus(`${theme.status.success} ${label}`);
+		this.ctx.chatContainer.addChild(new Spacer(1));
+		this.ctx.chatContainer.addChild(new Text(`${theme.fg("accent", `${theme.status.success} ${label}`)}`, 1, 1));
 		await this.ctx.reloadTodos();
 		this.ctx.ui.requestRender();
 	}
@@ -1028,7 +1023,10 @@ export class CommandController {
 			this.ctx.statusLine.invalidate();
 			this.ctx.updateEditorTopBorder();
 
-			this.ctx.showStatus(`${theme.status.success} Session moved to ${resolvedPath}`);
+			this.ctx.chatContainer.addChild(new Spacer(1));
+			this.ctx.chatContainer.addChild(
+				new Text(`${theme.fg("accent", `${theme.status.success} Session moved to ${resolvedPath}`)}`, 1, 1),
+			);
 			this.ctx.ui.requestRender();
 		} catch (err) {
 			this.ctx.showError(`Move failed: ${err instanceof Error ? err.message : String(err)}`);
@@ -1266,7 +1264,10 @@ export class CommandController {
 			this.ctx.updateEditorBorderColor();
 			await this.ctx.reloadTodos();
 
-			this.ctx.showStatus(`${theme.status.success} New session started with handoff context`);
+			this.ctx.chatContainer.addChild(new Spacer(1));
+			this.ctx.chatContainer.addChild(
+				new Text(`${theme.fg("accent", `${theme.status.success} New session started with handoff context`)}`, 1, 1),
+			);
 			if (result.savedPath) {
 				this.ctx.showStatus(`Handoff document saved to: ${result.savedPath}`);
 			}
@@ -1294,6 +1295,13 @@ export class CommandController {
 					`Manifest: ${result.manifestPath}`,
 					`Worker prompt: ${result.workerPromptPath}`,
 				].join("\n"),
+			);
+			this.ctx.chatContainer.addChild(
+				new Text(
+					`${theme.fg("accent", `${theme.status.success} Contribution prep ready`)}\nManifest: ${result.manifestPath}`,
+					1,
+					1,
+				),
 			);
 			this.ctx.ui.requestRender();
 		} catch (error) {

@@ -17,8 +17,8 @@ import {
 	visibleWidth,
 } from "@gajae-code/tui";
 import type { ModelProfileDefinition } from "../../config/model-profiles";
-import type { GjcModelAssignmentTargetId, ModelRegistry } from "../../config/model-registry";
-import { GJC_MODEL_ASSIGNMENT_TARGET_IDS, GJC_MODEL_ASSIGNMENT_TARGETS } from "../../config/model-registry";
+import type { JwcModelAssignmentTargetId, ModelRegistry } from "../../config/model-registry";
+import { JWC_MODEL_ASSIGNMENT_TARGET_IDS, JWC_MODEL_ASSIGNMENT_TARGETS } from "../../config/model-registry";
 import {
 	formatModelSelectorValue,
 	resolveModelRoleValue,
@@ -96,14 +96,14 @@ export interface ModelAssignmentPreset {
 	id: "openai-codex";
 	label: string;
 	description: string;
-	assignments: Partial<Record<GjcModelAssignmentTargetId, ThinkingLevel>>;
+	assignments: Partial<Record<JwcModelAssignmentTargetId, ThinkingLevel>>;
 }
 
 export type ModelSelectorSelection =
 	| {
 			kind: "assignment";
 			model: Model;
-			role: GjcModelAssignmentTargetId | null;
+			role: JwcModelAssignmentTargetId | null;
 			thinkingLevel?: ThinkingLevel;
 			selector?: string;
 	  }
@@ -112,7 +112,7 @@ export type ModelSelectorSelection =
 			model: Model;
 			selector: string;
 			preset: ModelAssignmentPreset;
-			assignments: Record<GjcModelAssignmentTargetId, ThinkingLevel>;
+			assignments: Record<JwcModelAssignmentTargetId, ThinkingLevel>;
 	  }
 	| {
 			kind: "profile";
@@ -122,7 +122,7 @@ export type ModelSelectorSelection =
 
 interface PendingThinkingChoice {
 	item: ModelItem | CanonicalModelItem;
-	role: GjcModelAssignmentTargetId | null;
+	role: JwcModelAssignmentTargetId | null;
 	levels: ThinkingLevel[];
 }
 
@@ -252,11 +252,26 @@ export class ModelSelectorComponent extends Container {
 		this.addChild(new DynamicBorder());
 		this.addChild(new Spacer(1));
 
-		// Add hint about model filtering
+		// Scope notice always shows; the onboarding blurb only belongs to a
+		// plain install — with providers already configured it is four lines
+		// of noise on every /model open (99.30.04 S8).
+		const hasModels = (() => {
+			try {
+				return this.#modelRegistry.getAvailable().length > 0;
+			} catch {
+				return false;
+			}
+		})();
 		const hintText =
-			scopedModels.length > 0 ? "Showing models from --models scope" : formatModelOnboardingInlineHint();
-		this.addChild(new Text(theme.fg("warning", hintText), 0, 0));
-		this.addChild(new Spacer(1));
+			scopedModels.length > 0
+				? "Showing models from --models scope"
+				: hasModels
+					? undefined
+					: formatModelOnboardingInlineHint();
+		if (hintText) {
+			this.addChild(new Text(theme.fg("warning", hintText), 0, 0));
+			this.addChild(new Spacer(1));
+		}
 
 		// Create header container for tab bar
 		this.#headerContainer = new Container();
@@ -313,8 +328,8 @@ export class ModelSelectorComponent extends Container {
 		const allModels = this.#modelRegistry.getAll();
 		const matchPreferences = { usageOrder: this.#settings.getStorage()?.getModelUsageOrder() };
 		const agentModelOverrides = this.#settings.get("task.agentModelOverrides");
-		for (const role of GJC_MODEL_ASSIGNMENT_TARGET_IDS) {
-			const target = GJC_MODEL_ASSIGNMENT_TARGETS[role];
+		for (const role of JWC_MODEL_ASSIGNMENT_TARGET_IDS) {
+			const target = JWC_MODEL_ASSIGNMENT_TARGETS[role];
 			const roleValue =
 				target.settingsPath === "modelRoles" ? this.#settings.getModelRole(role) : agentModelOverrides[role];
 			if (!roleValue) continue;
@@ -766,8 +781,8 @@ export class ModelSelectorComponent extends Container {
 
 		// Build role badges (inverted: color as background, black text)
 		const roleBadgeTokens: string[] = [];
-		for (const role of GJC_MODEL_ASSIGNMENT_TARGET_IDS) {
-			const roleInfo = GJC_MODEL_ASSIGNMENT_TARGETS[role];
+		for (const role of JWC_MODEL_ASSIGNMENT_TARGET_IDS) {
+			const roleInfo = JWC_MODEL_ASSIGNMENT_TARGETS[role];
 			const assigned = this.#roles[role];
 			if (roleInfo.tag && assigned && modelsAreEqual(assigned.model, item.model)) {
 				const badge = makeInvertedBadge(roleInfo.tag, roleInfo.color ?? "muted");
@@ -927,6 +942,12 @@ export class ModelSelectorComponent extends Container {
 			const selectedProfile = visibleProfiles[this.#profileSelectedIndex];
 			if (selectedProfile && this.#pendingActionItem) {
 				this.#renderProfileActionMenu(selectedProfile);
+			} else if (selectedProfile) {
+				// Mirror the Model Name footer so the docked height stays constant
+				// across space toggles — a varying height makes the renderer leave
+				// ghost frames (duplicate tab bars) in scrollback (99.30.04 S7.2).
+				this.#listContainer.addChild(new Spacer(1));
+				this.#listContainer.addChild(new Text(theme.fg("muted", `  Profile: ${selectedProfile.name}`), 0, 0));
 			}
 		} else {
 			const selected = visibleItems[modelSelectedIndex];
@@ -955,9 +976,9 @@ export class ModelSelectorComponent extends Container {
 		const actionCount = this.#getActionCount(item.model);
 		for (let i = 0; i < actionCount; i++) {
 			const prefix = i === this.#selectedActionIndex ? theme.fg("accent", `${theme.nav.cursor} `) : "  ";
-			const role = GJC_MODEL_ASSIGNMENT_TARGET_IDS[i];
+			const role = JWC_MODEL_ASSIGNMENT_TARGET_IDS[i];
 			const label = role
-				? `Set as ${GJC_MODEL_ASSIGNMENT_TARGETS[role].tag ?? role.toUpperCase()} (${GJC_MODEL_ASSIGNMENT_TARGETS[role].name})`
+				? `Set as ${JWC_MODEL_ASSIGNMENT_TARGETS[role].tag ?? role.toUpperCase()} (${JWC_MODEL_ASSIGNMENT_TARGETS[role].name})`
 				: `${OPENAI_CODE_PROFILE_PRESET.label} (${OPENAI_CODE_PROFILE_PRESET.description})`;
 			this.#listContainer.addChild(
 				new Text(`${prefix}${i === this.#selectedActionIndex ? theme.fg("accent", label) : label}`, 0, 0),
@@ -966,7 +987,7 @@ export class ModelSelectorComponent extends Container {
 	}
 
 	#renderThinkingMenu(choice: PendingThinkingChoice): void {
-		const targetLabel = choice.role === null ? "temporary model" : GJC_MODEL_ASSIGNMENT_TARGETS[choice.role].name;
+		const targetLabel = choice.role === null ? "temporary model" : JWC_MODEL_ASSIGNMENT_TARGETS[choice.role].name;
 		this.#listContainer.addChild(new Spacer(1));
 		this.#listContainer.addChild(
 			new Text(theme.fg("muted", `  Reasoning for ${targetLabel}: ${choice.item.model.id}`), 0, 0),
@@ -1001,7 +1022,7 @@ export class ModelSelectorComponent extends Container {
 		return this.#roles[role]?.thinkingLevel ?? ThinkingLevel.Inherit;
 	}
 	#getActionCount(model: Model): number {
-		return GJC_MODEL_ASSIGNMENT_TARGET_IDS.length + (supportsOpenAICodexPreset(model) ? 1 : 0);
+		return JWC_MODEL_ASSIGNMENT_TARGET_IDS.length + (supportsOpenAICodexPreset(model) ? 1 : 0);
 	}
 
 	#getSelectedItem(): ModelItem | CanonicalModelItem | ProfileItem | undefined {
@@ -1131,7 +1152,7 @@ export class ModelSelectorComponent extends Container {
 					setDefault: this.#selectedActionIndex === 1,
 				});
 			} else {
-				const role = GJC_MODEL_ASSIGNMENT_TARGET_IDS[this.#selectedActionIndex];
+				const role = JWC_MODEL_ASSIGNMENT_TARGET_IDS[this.#selectedActionIndex];
 				if (role) {
 					this.#handleSelect(item, role);
 				} else {
@@ -1171,7 +1192,7 @@ export class ModelSelectorComponent extends Container {
 			this.#pendingThinkingChoice = undefined;
 			if (choice.role !== null) {
 				this.#pendingActionItem = choice.item;
-				this.#selectedActionIndex = Math.max(0, GJC_MODEL_ASSIGNMENT_TARGET_IDS.indexOf(choice.role));
+				this.#selectedActionIndex = Math.max(0, JWC_MODEL_ASSIGNMENT_TARGET_IDS.indexOf(choice.role));
 			}
 			this.#updateList();
 		}
@@ -1180,7 +1201,7 @@ export class ModelSelectorComponent extends Container {
 		const selectorValue = item.selector;
 		const assignments = resolvePresetAssignments(item.model, preset);
 		for (const [role, thinkingLevel] of Object.entries(assignments) as [
-			GjcModelAssignmentTargetId,
+			JwcModelAssignmentTargetId,
 			ThinkingLevel,
 		][]) {
 			this.#roles[role] = { model: item.model, thinkingLevel };
@@ -1191,7 +1212,7 @@ export class ModelSelectorComponent extends Container {
 
 	#handleSelect(
 		item: ModelItem | CanonicalModelItem,
-		role: GjcModelAssignmentTargetId | null,
+		role: JwcModelAssignmentTargetId | null,
 		thinkingLevel?: ThinkingLevel,
 	): void {
 		const itemThinkingLevel = thinkingLevel ?? item.thinkingLevel;
@@ -1254,10 +1275,10 @@ function supportsOpenAICodexPreset(model: Model): boolean {
 function resolvePresetAssignments(
 	model: Model,
 	preset: ModelAssignmentPreset,
-): Record<GjcModelAssignmentTargetId, ThinkingLevel> {
-	const resolved = {} as Record<GjcModelAssignmentTargetId, ThinkingLevel>;
+): Record<JwcModelAssignmentTargetId, ThinkingLevel> {
+	const resolved = {} as Record<JwcModelAssignmentTargetId, ThinkingLevel>;
 	for (const [role, requestedLevel] of Object.entries(preset.assignments) as [
-		GjcModelAssignmentTargetId,
+		JwcModelAssignmentTargetId,
 		ThinkingLevel,
 	][]) {
 		const clampedLevel =

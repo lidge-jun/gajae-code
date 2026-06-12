@@ -4,8 +4,8 @@ import {
 	enqueueMemoryConsolidation,
 	startMemoryStartupTask,
 } from "../memories";
-import { loadMemoryConfig } from "../memories/memory-config";
 import { buildLocalTaskSnapshot } from "../memories/local-query";
+import { loadMemoryConfig } from "../memories/memory-config";
 import type { MemoryBackend } from "./types";
 
 /**

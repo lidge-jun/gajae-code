@@ -46,7 +46,9 @@ function envInt(value: string | undefined): number | undefined {
 }
 
 function pickScoping(value: unknown): Mem0Scoping | undefined {
-	return typeof value === "string" && (VALID_SCOPINGS as string[]).includes(value) ? (value as Mem0Scoping) : undefined;
+	return typeof value === "string" && (VALID_SCOPINGS as string[]).includes(value)
+		? (value as Mem0Scoping)
+		: undefined;
 }
 
 const DEFAULT_PREAMBLE =

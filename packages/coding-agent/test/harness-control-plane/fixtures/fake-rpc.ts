@@ -3,7 +3,7 @@
  * Minimal `gjc --mode rpc` protocol emulator — a TEST FIXTURE (never shipped).
  *
  * It speaks the real JSONL protocol from docs/rpc.md so the harness e2e exercises the
- * genuine `GajaeCodeRpc` adapter (ready frame, prompt ack + agent_start, get_state) against
+ * genuine `JawcodeRpc` adapter (ready frame, prompt ack + agent_start, get_state) against
  * a real subprocess, without a live model. It does NOT fake acceptance/completion inside
  * shipped code — the control plane drives this exactly as it would drive real gjc.
  */

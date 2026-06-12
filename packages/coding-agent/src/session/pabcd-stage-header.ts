@@ -6,7 +6,7 @@
  * Pure function over the lenient pabcd envelope so it can be unit-tested
  * without an AgentSession; the session wires it via `#buildPabcdStageMessage`.
  */
-import type { NativePabcdEnvelopeParsed } from "../gjc-runtime/orchestrate-state";
+import type { NativePabcdEnvelopeParsed } from "../jwc-runtime/orchestrate-state";
 import { truncateObjective } from "../modes/components/status-line/workflow-readers";
 
 /** 99.08-A: goal context for header co-display (objective only — full text stays in goal-mode-context). */

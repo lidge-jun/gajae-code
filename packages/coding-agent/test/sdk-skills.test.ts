@@ -3,7 +3,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { Settings } from "@gajae-code/coding-agent/config/settings";
-import { DEFAULT_GJC_DEFINITION_NAMES } from "@gajae-code/coding-agent/defaults/gjc-defaults";
+import { DEFAULT_JWC_DEFINITION_NAMES } from "@gajae-code/coding-agent/defaults/jwc-defaults";
 import type { Skill } from "@gajae-code/coding-agent/sdk";
 import { createAgentSession } from "@gajae-code/coding-agent/sdk";
 import { SessionManager } from "@gajae-code/coding-agent/session/session-manager";
@@ -78,10 +78,10 @@ Loaded via symbolic link.
 			sessionManager: SessionManager.inMemory(),
 			settings: Settings.isolated({ "skills.enabled": false }),
 		});
-		const expected = [...DEFAULT_GJC_DEFINITION_NAMES].sort();
+		const expected = [...DEFAULT_JWC_DEFINITION_NAMES].sort();
 
 		expect(session.skills.map(skill => skill.name).sort()).toEqual(expected);
-		expect(session.skills.every(skill => skill.filePath.startsWith("embedded:gjc/skills/"))).toBe(true);
+		expect(session.skills.every(skill => skill.filePath.startsWith("embedded:jwc/skills/"))).toBe(true);
 	}, 15_000);
 
 	it("should discover skills by default and expose them on session.skills", async () => {
@@ -131,7 +131,7 @@ Loaded via symbolic link.
 			settings: createIsolatedSkillsSettings(),
 		});
 
-		expect(session.skills.map(skill => skill.name).sort()).toEqual([...DEFAULT_GJC_DEFINITION_NAMES].sort());
+		expect(session.skills.map(skill => skill.name).sort()).toEqual([...DEFAULT_JWC_DEFINITION_NAMES].sort());
 		expect(session.skillWarnings).toEqual([]);
 	});
 
@@ -153,7 +153,7 @@ Loaded via symbolic link.
 		});
 
 		expect(session.skills).toContainEqual(customSkill);
-		for (const name of DEFAULT_GJC_DEFINITION_NAMES) {
+		for (const name of DEFAULT_JWC_DEFINITION_NAMES) {
 			expect(session.skills.some(skill => skill.name === name)).toBe(true);
 		}
 		expect(session.skillWarnings).toEqual([]);

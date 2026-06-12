@@ -1,7 +1,7 @@
 /** xAI OAuth flow (Grok account login). */
 import { OAuthCallbackFlow, type OAuthCallbackFlowOptions } from "./callback-server";
 import { generatePKCE } from "./pkce";
-import type { OAuthController, OAuthCredentials } from "./types";
+import type { LocalTokenImportMode, OAuthController, OAuthCredentials } from "./types";
 
 const XAI_OAUTH_ISSUER = "https://auth.x.ai";
 export const XAI_OAUTH_DISCOVERY_URL = `${XAI_OAUTH_ISSUER}/.well-known/openid-configuration`;
@@ -188,17 +188,28 @@ export class XaiOAuthFlow extends OAuthCallbackFlow {
 	}
 }
 
-export async function loginXai(ctrl: OAuthController): Promise<OAuthCredentials> {
-	const { detectGrokCliToken } = await import("./local-token-detect");
-	const local = detectGrokCliToken();
-	if (local) {
-		ctrl.onProgress?.("Found Grok CLI token, importing automatically");
-		if (local.expires < Date.now() + 60_000) {
+export async function loginXai(
+	ctrl: OAuthController,
+	opts?: { importLocal?: LocalTokenImportMode },
+): Promise<OAuthCredentials> {
+	const importLocal = opts?.importLocal ?? "off";
+	if (importLocal !== "off") {
+		const { detectGrokCliToken } = await import("./local-token-detect");
+		const local = detectGrokCliToken();
+		if (local) {
+			ctrl.onProgress?.("Found Grok CLI token, importing automatically");
+			if (local.expires >= Date.now() + 60_000) return local;
 			try {
 				return await refreshXaiToken(local.refresh, ctrl.signal);
-			} catch {}
-		} else {
-			return local;
+			} catch (error) {
+				if (importLocal === "only") {
+					throw new Error(
+						`Grok CLI token is expired and could not be refreshed: ${error instanceof Error ? error.message : String(error)}`,
+					);
+				}
+			}
+		} else if (importLocal === "only") {
+			throw new Error("No Grok CLI token found at ~/.grok/auth.json. Run /login xai for browser OAuth.");
 		}
 	}
 

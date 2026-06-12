@@ -164,7 +164,10 @@ describe("model selector profile red-team", () => {
 		const selector = createSelector(() => {}, { profiles: [builtinProfile, overriddenProfile] });
 		const rendered = await renderSelector(selector);
 
-		expect(rendered.match(/profile-a/g) ?? []).toHaveLength(1);
+		// The height-stabilizing footer (99.30.04 S7.2) echoes the focused
+		// profile name — exclude it; this asserts catalog dedup, not rendering.
+		const listOnly = rendered.replace(/Profile: profile-a/g, "");
+		expect(listOnly.match(/profile-a/g) ?? []).toHaveLength(1);
 	});
 
 	test("profile actions wire Apply for this session to persistDefault false and Set as default to true", async () => {

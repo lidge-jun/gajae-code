@@ -91,7 +91,7 @@
     "check:schemas": "bun scripts/generate-json-schemas.ts --check",
     "test:rs": "bun scripts/run-rs-task.ts test:rs",
     "check": "bun run --parallel check:ts check:rs",
-    "check:ts": "bun run check:tools && bun run check:node20-baseline && bun run check:schemas && bun run check:gjc-ui && bun run --workspaces --if-present check",
+    "check:ts": "bun run check:tools && bun run check:node20-baseline && bun run check:schemas && bun run check:jwc-ui && bun run --workspaces --if-present check",
     "check:tools": "biome check . --no-errors-on-unmatched",
     "check:node20-baseline": "bun scripts/check-node20-baseline.ts",
     "check:rs": "bun scripts/run-rs-task.ts check:rs",
@@ -152,7 +152,7 @@
     "generate-docs-index": "bun --cwd=packages/coding-agent run generate-docs-index",
     "generate-template": "bun --cwd=packages/coding-agent run generate-template",
     "check-spoofed-versions": "bun scripts/check-spoofed-versions.ts",
-    "check:gjc-ui": "bun scripts/verify-gjc-ui-redesign.ts && bun scripts/rebrand-inventory.ts --strict"
+    "check:jwc-ui": "bun scripts/verify-jwc-ui-redesign.ts && bun scripts/rebrand-inventory.ts --strict"
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",

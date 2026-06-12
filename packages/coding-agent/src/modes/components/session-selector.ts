@@ -176,7 +176,7 @@ class SessionList implements Component {
 
 		// Add keybinding hint
 		lines.push("");
-		lines.push(theme.fg("muted", "  del delete  enter select  esc cancel"));
+		lines.push(theme.fg("muted", "  [Del to delete, Enter to select, Esc to cancel]"));
 
 		return lines;
 	}
@@ -191,20 +191,14 @@ class SessionList implements Component {
 			return;
 		}
 
-		// Up arrow (wraps to bottom at the top — nav grammar 99.20.02 ②)
+		// Up arrow
 		if (matchesKey(keyData, "up")) {
-			const last = this.#filteredSessions.length - 1;
-			if (last >= 0) {
-				this.#selectedIndex = this.#selectedIndex === 0 ? last : this.#selectedIndex - 1;
-			}
+			this.#selectedIndex = Math.max(0, this.#selectedIndex - 1);
 			return;
 		}
-		// Down arrow (wraps to top at the bottom)
+		// Down arrow
 		if (matchesKey(keyData, "down")) {
-			const last = this.#filteredSessions.length - 1;
-			if (last >= 0) {
-				this.#selectedIndex = this.#selectedIndex >= last ? 0 : this.#selectedIndex + 1;
-			}
+			this.#selectedIndex = Math.min(this.#filteredSessions.length - 1, this.#selectedIndex + 1);
 			return;
 		}
 		// Page up - jump up by maxVisible items
@@ -225,12 +219,10 @@ class SessionList implements Component {
 			}
 			return;
 		}
-		// Escape - cancel (falls back to exit when no cancel handler — esc/ctrl+c grammar 99.20.02 ④)
+		// Escape - cancel
 		if (matchesAppInterrupt(keyData)) {
 			if (this.onCancel) {
 				this.onCancel();
-			} else {
-				this.onExit();
 			}
 			return;
 		}

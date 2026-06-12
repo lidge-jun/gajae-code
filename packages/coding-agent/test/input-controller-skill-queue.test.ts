@@ -23,7 +23,7 @@ import { Agent } from "@gajae-code/agent-core";
 import { getBundledModel } from "@gajae-code/ai/models";
 import { ModelRegistry } from "@gajae-code/coding-agent/config/model-registry";
 import { Settings } from "@gajae-code/coding-agent/config/settings";
-import { getEmbeddedDefaultGjcSkills } from "@gajae-code/coding-agent/defaults/gjc-defaults";
+import { getEmbeddedDefaultJwcSkills } from "@gajae-code/coding-agent/defaults/jwc-defaults";
 import { resolveSkillSlashCommands, type Skill } from "@gajae-code/coding-agent/extensibility/skills";
 import { EventController } from "@gajae-code/coding-agent/modes/controllers/event-controller";
 import { InputController } from "@gajae-code/coding-agent/modes/controllers/input-controller";
@@ -199,7 +199,7 @@ describe("InputController #invokeSkillCommand (E1-E3)", () => {
 	});
 
 	it("E3b: embedded default skill command does not require .jwc on disk", async () => {
-		const embedded = getEmbeddedDefaultGjcSkills().find(skill => skill.name === "jaw-interview");
+		const embedded = getEmbeddedDefaultJwcSkills().find(skill => skill.name === "jaw-interview");
 		if (!embedded) throw new Error("expected embedded jaw-interview skill");
 		const { ctx, editor, promptCustomMessage } = createStubInputControllerContext({
 			skillCommands: new Map<string, Skill>([["skill:jaw-interview", embedded]]),
@@ -217,7 +217,7 @@ describe("InputController #invokeSkillCommand (E1-E3)", () => {
 		if (!firstCall) throw new Error("expected promptCustomMessage to be called");
 		const messageArg = firstCall[0];
 		expect(messageArg.content).toContain("Jaw Interview");
-		expect(messageArg.details.path).toBe("embedded:gjc/skills/jaw-interview/SKILL.md");
+		expect(messageArg.details.path).toBe("embedded:jwc/skills/jaw-interview/SKILL.md");
 		expect(ctx.showError).not.toHaveBeenCalled();
 	});
 
@@ -319,7 +319,7 @@ describe("skill slash command resolution", () => {
 	});
 
 	it("exposes only namespaced skill commands", () => {
-		const jawInterview = getEmbeddedDefaultGjcSkills().find(skill => skill.name === "jaw-interview");
+		const jawInterview = getEmbeddedDefaultJwcSkills().find(skill => skill.name === "jaw-interview");
 		if (!jawInterview) throw new Error("expected embedded jaw-interview skill");
 
 		const withFileCollision = resolveSkillSlashCommands([jawInterview], new Set(["jaw-interview"]));

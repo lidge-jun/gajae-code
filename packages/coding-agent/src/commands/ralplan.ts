@@ -1,6 +1,6 @@
 import { APP_NAME } from "@gajae-code/utils";
 import { Command } from "@gajae-code/utils/cli";
-import { runNativeRalplanCommand } from "../gjc-runtime/ralplan-runtime";
+import { runNativeRalplanCommand } from "../jwc-runtime/ralplan-runtime";
 
 export default class Ralplan extends Command {
 	static description = `Run native ${APP_NAME.toUpperCase()} P-stage consensus planning workflow (ralplan engine)`;

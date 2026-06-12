@@ -7,9 +7,9 @@ import * as z from "zod/v4";
 import { AsyncJobManager } from "../async";
 import { type BashResult, executeBash } from "../exec/bash-executor";
 import type { RenderResultOptions } from "../extensibility/custom-tools/types";
-import { buildGjcRuntimeSessionEnv } from "../gjc-runtime/goal-mode-request";
-import { GJC_RESTRICTED_ROLE_AGENT_BASH_ENV } from "../gjc-runtime/restricted-role-agent-bash";
 import { InternalUrlRouter } from "../internal-urls";
+import { buildJwcRuntimeSessionEnv } from "../jwc-runtime/goal-mode-request";
+import { GJC_RESTRICTED_ROLE_AGENT_BASH_ENV } from "../jwc-runtime/restricted-role-agent-bash";
 import { truncateToVisualLines } from "../modes/components/visual-truncate";
 import { highlightCode, type Theme } from "../modes/theme/theme";
 import bashDescription from "../prompts/tools/bash.md" with { type: "text" };
@@ -570,7 +570,7 @@ export class BashTool implements AgentTool<BashToolSchema, BashToolDetails> {
 				)
 			: undefined;
 		const resolvedEnv = {
-			...buildGjcRuntimeSessionEnv({
+			...buildJwcRuntimeSessionEnv({
 				sessionFile,
 				sessionId: this.session.getSessionId?.(),
 				cwd: this.session.cwd,

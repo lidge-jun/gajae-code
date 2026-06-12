@@ -109,7 +109,10 @@ export const KEYBINDINGS = {
 		description: "Expand tools",
 	},
 	"app.tools.focus": {
-		defaultKeys: "ctrl+up",
+		// macOS reserves plain ctrl+up for Mission Control (same as the
+		// three-finger swipe-up gesture), so it never reaches the terminal —
+		// lead with ctrl+shift+up there and keep ctrl+up for remapped setups.
+		defaultKeys: process.platform === "darwin" ? ["ctrl+shift+up", "ctrl+up"] : ["ctrl+up", "ctrl+shift+up"],
 		description: "Focus tool blocks (↑↓ move, enter toggle, esc exit)",
 	},
 	"app.tools.transcript": {

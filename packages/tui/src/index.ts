@@ -24,6 +24,7 @@ export * from "./fuzzy";
 // Keybindings
 export * from "./keybindings";
 // Kitty keyboard protocol helpers
+export * from "./insert-history";
 export * from "./keys";
 // Renderer/runtime observability metrics (opt-in)
 export * from "./metrics";

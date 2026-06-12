@@ -6,7 +6,7 @@ import {
 	formatAvailableProfileNames,
 	resolveProfileBindings,
 } from "./model-profiles";
-import { type GjcModelAssignmentTargetId, isAuthenticated, type ModelRegistry } from "./model-registry";
+import { isAuthenticated, type JwcModelAssignmentTargetId, type ModelRegistry } from "./model-registry";
 import { resolveModelRoleValue } from "./model-resolver";
 import type { Settings } from "./settings";
 
@@ -79,7 +79,7 @@ export async function prepareModelProfileActivation(
 
 	const agentModelOverrides: Record<string, string> = {};
 	for (const [role, selector] of Object.entries(bindings.agentModelOverrides) as [
-		GjcModelAssignmentTargetId,
+		JwcModelAssignmentTargetId,
 		string,
 	][]) {
 		const resolved = resolveModelRoleValue(selector, availableModels, {

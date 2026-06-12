@@ -4,11 +4,11 @@ import {
 	GJC_SESSION_FILE_ENV,
 	GJC_SESSION_ID_ENV,
 	isUltragoalCreateGoalsInvocation,
-	readUltragoalGjcObjective,
+	readUltragoalJwcObjective,
 	writeCurrentSessionGoalModeState,
 	writePendingGoalModeRequest,
-} from "../gjc-runtime/goal-mode-request";
-import { runNativeUltragoalCommand } from "../gjc-runtime/ultragoal-runtime";
+} from "../jwc-runtime/goal-mode-request";
+import { runNativeUltragoalCommand } from "../jwc-runtime/ultragoal-runtime";
 
 export default class Ultragoal extends Command {
 	static description = `Run native ${APP_NAME.toUpperCase()} goal-ledger (ultragoal) workflow commands`;
@@ -25,7 +25,7 @@ export default class Ultragoal extends Command {
 		if (result.status !== 0 || !shouldActivateGoalMode) return;
 
 		const cwd = process.cwd();
-		const { objective, goalsPath } = await readUltragoalGjcObjective(cwd);
+		const { objective, goalsPath } = await readUltragoalJwcObjective(cwd);
 		await writeCurrentSessionGoalModeState({
 			sessionFile: process.env[GJC_SESSION_FILE_ENV],
 			objective,

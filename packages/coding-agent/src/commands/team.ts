@@ -1,20 +1,20 @@
 import { APP_NAME } from "@gajae-code/utils";
 import { Args, Command, Flags } from "@gajae-code/utils/cli";
-import { renderCliWriteReceipt } from "../gjc-runtime/cli-write-receipt";
-import { renderTeamStatusMarkdown } from "../gjc-runtime/state-renderer";
+import { renderCliWriteReceipt } from "../jwc-runtime/cli-write-receipt";
+import { renderTeamStatusMarkdown } from "../jwc-runtime/state-renderer";
 import {
 	buildTeamHudSummary,
-	executeGjcTeamApiOperation,
-	type GjcTeamSnapshot,
-	listGjcTeams,
-	monitorGjcTeamSnapshot,
+	executeJwcTeamApiOperation,
+	type JwcTeamSnapshot,
+	listJwcTeams,
+	monitorJwcTeamSnapshot,
 	parseTeamLaunchArgs,
-	persistGjcTeamModeStateSummary,
-	readGjcTeamEvents,
-	readGjcTeamSnapshot,
-	shutdownGjcTeam,
-	startGjcTeam,
-} from "../gjc-runtime/team-runtime";
+	persistJwcTeamModeStateSummary,
+	readJwcTeamEvents,
+	readJwcTeamSnapshot,
+	shutdownJwcTeam,
+	startJwcTeam,
+} from "../jwc-runtime/team-runtime";
 import { syncSkillActiveState } from "../skill-state/active-state";
 
 function writeJson(value: unknown): void {
@@ -24,9 +24,9 @@ function writeJson(value: unknown): void {
 function writeText(lines: string[]): void {
 	process.stdout.write(`${lines.join("\n")}\n`);
 }
-async function syncTeamHud(snapshot: GjcTeamSnapshot): Promise<void> {
+async function syncTeamHud(snapshot: JwcTeamSnapshot): Promise<void> {
 	try {
-		const events = await readGjcTeamEvents(snapshot.team_name);
+		const events = await readJwcTeamEvents(snapshot.team_name);
 		await syncSkillActiveState({
 			cwd: process.cwd(),
 			skill: "team",
@@ -35,7 +35,7 @@ async function syncTeamHud(snapshot: GjcTeamSnapshot): Promise<void> {
 			hud: await buildTeamHudSummary(snapshot, events.at(-1)),
 			source: "gjc-team",
 		});
-		await persistGjcTeamModeStateSummary(snapshot, process.cwd());
+		await persistJwcTeamModeStateSummary(snapshot, process.cwd());
 	} catch {
 		// HUD sync is best-effort and must not change command semantics.
 	}
@@ -47,7 +47,7 @@ function formatTaskCounts(counts: Record<string, number>): string {
 		.join(" ");
 }
 
-function snapshotWriteReceipt(snapshot: GjcTeamSnapshot): Record<string, unknown> {
+function snapshotWriteReceipt(snapshot: JwcTeamSnapshot): Record<string, unknown> {
 	return {
 		ok: true,
 		team_name: snapshot.team_name,
@@ -112,7 +112,7 @@ export default class Team extends Command {
 		const dryRun = flags["dry-run"] ?? this.argv.includes("--dry-run");
 
 		if (action === "list") {
-			const teams = await listGjcTeams();
+			const teams = await listJwcTeams();
 			if (json) {
 				writeJson({ teams });
 				return;
@@ -124,7 +124,7 @@ export default class Team extends Command {
 		if (action === "status") {
 			const teamName = rest.find(arg => !arg.startsWith("--"));
 			if (!teamName) throw new Error("missing_team_name");
-			const snapshot = await readGjcTeamSnapshot(teamName);
+			const snapshot = await readJwcTeamSnapshot(teamName);
 			if (json) {
 				writeJson(snapshot);
 				return;
@@ -140,7 +140,7 @@ export default class Team extends Command {
 		if (action === "monitor" || action === "resume") {
 			const teamName = rest.find(arg => !arg.startsWith("--"));
 			if (!teamName) throw new Error("missing_team_name");
-			const snapshot = await monitorGjcTeamSnapshot(teamName);
+			const snapshot = await monitorJwcTeamSnapshot(teamName);
 			await syncTeamHud(snapshot);
 			if (json) {
 				writeReceipt(snapshotWriteReceipt(snapshot));
@@ -157,7 +157,7 @@ export default class Team extends Command {
 		if (action === "shutdown") {
 			const teamName = rest.find(arg => !arg.startsWith("--"));
 			if (!teamName) throw new Error("missing_team_name");
-			const snapshot = await shutdownGjcTeam(teamName);
+			const snapshot = await shutdownJwcTeam(teamName);
 			await syncTeamHud(snapshot);
 			if (json) {
 				writeReceipt(snapshotWriteReceipt(snapshot));
@@ -177,18 +177,18 @@ export default class Team extends Command {
 					"read-config read-manifest read-worker-status update-worker-status read-worker-heartbeat recover-stale-claims update-worker-heartbeat write-worker-inbox write-worker-identity",
 					"append-event read-events read-traces await-event write-shutdown-request read-shutdown-ack read-monitor-snapshot write-monitor-snapshot read-task-approval write-task-approval",
 					"Completion example:",
-					'transition-task-status --input \'{"team_name":"demo","task_id":"task-1","to":"completed","claim_token":"...","completion_evidence":{"summary":"done","items":[{"kind":"command","status":"passed","summary":"focused tests passed","command":"bun test packages/coding-agent/test/gjc-runtime/team-runtime.test.ts"}]}}\' --json',
+					'transition-task-status --input \'{"team_name":"demo","task_id":"task-1","to":"completed","claim_token":"...","completion_evidence":{"summary":"done","items":[{"kind":"command","status":"passed","summary":"focused tests passed","command":"bun test packages/coding-agent/test/jwc-runtime/team-runtime.test.ts"}]}}\' --json',
 					'Review-only completion may use {"kind":"inspection","status":"verified","summary":"review passed","location":"agent://review"}.',
 					'Typed lane task example: create-task --input \'{"team_name":"demo","subject":"Verify delivery","description":"Run verification","owner":"worker-1","lane":"verification","required_role":"executor","depends_on":["task-1"]}\' --json',
 				]);
 				return;
 			}
 			const input = parseInputFlag(rest);
-			const result = await executeGjcTeamApiOperation(operation, input);
+			const result = await executeJwcTeamApiOperation(operation, input);
 			const teamName = String(input.team_name ?? input.teamName ?? "").trim();
 			if (teamName) {
 				try {
-					await syncTeamHud(await readGjcTeamSnapshot(teamName));
+					await syncTeamHud(await readJwcTeamSnapshot(teamName));
 				} catch {
 					// API operations without a resolvable snapshot leave HUD state unchanged.
 				}
@@ -199,7 +199,7 @@ export default class Team extends Command {
 
 		const startArgs = action === "start" ? rest : this.argv;
 		const options = parseTeamLaunchArgs(startArgs);
-		const snapshot = await startGjcTeam({ ...options, dryRun });
+		const snapshot = await startJwcTeam({ ...options, dryRun });
 		await syncTeamHud(snapshot);
 		if (json) {
 			writeReceipt(snapshotWriteReceipt(snapshot));

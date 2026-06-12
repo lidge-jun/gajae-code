@@ -2,10 +2,10 @@ import { describe, expect, it, vi } from "bun:test";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
-import { createUltragoalPlan, startNextUltragoalGoal } from "@gajae-code/coding-agent/gjc-runtime/ultragoal-runtime";
 import { GoalRuntime } from "@gajae-code/coding-agent/goals/runtime";
 import type { Goal, GoalModeState, GoalTokenUsage } from "@gajae-code/coding-agent/goals/state";
 import { GoalTool } from "@gajae-code/coding-agent/goals/tools/goal-tool";
+import { createUltragoalPlan, startNextUltragoalGoal } from "@gajae-code/coding-agent/jwc-runtime/ultragoal-runtime";
 import type { ToolSession } from "@gajae-code/coding-agent/tools";
 
 function createUsage(overrides: Partial<GoalTokenUsage> = {}): GoalTokenUsage {
@@ -234,7 +234,7 @@ describe("GoalTool", () => {
 			const harness = createRuntimeHarness({
 				enabled: true,
 				mode: "active",
-				goal: createGoal({ objective: plan.gjcObjective }),
+				goal: createGoal({ objective: plan.jwcObjective }),
 			});
 			const tool = new GoalTool(
 				createToolSession({

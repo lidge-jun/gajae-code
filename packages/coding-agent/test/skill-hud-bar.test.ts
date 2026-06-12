@@ -99,8 +99,8 @@ describe("skill HUD bar renderer", () => {
 						receipt: {
 							version: 1,
 							skill: "jaw-interview",
-							owner: "gjc-state-cli",
-							command: "gjc state jaw-interview write",
+							owner: "jwc-state-cli",
+							command: "jwc state jaw-interview write",
 							state_path: ".jwc/state/skill-active-state.json",
 							storage_path: ".jwc/state/jaw-interview-state.json",
 							mutated_at: new Date().toISOString(),
@@ -121,7 +121,7 @@ describe("skill HUD bar renderer", () => {
 	});
 
 	it("shows only the callee after a D->R handoff (caller demoted to inactive entry, HUD filters it out)", () => {
-		// After `gjc state jaw-interview handoff --to ralplan`, the caller
+		// After `jwc state jaw-interview handoff --to ralplan`, the caller
 		// entry is preserved in active_skills with active:false and handoff_to
 		// lineage for audit; the HUD filters on active!==false so only ralplan
 		// appears in the rendered bar.
@@ -143,7 +143,7 @@ describe("skill HUD bar renderer", () => {
 	});
 
 	it("collapses the planning pipeline to the most-recently-activated stage", () => {
-		// `gjc ralplan` then `gjc ultragoal` activate their own rows without
+		// `jwc ralplan` then `jwc ultragoal` activate their own rows without
 		// running the handoff verb, so both arrive at the HUD active. Only the
 		// current (newest) stage should render.
 		const rendered = Bun.stripANSI(

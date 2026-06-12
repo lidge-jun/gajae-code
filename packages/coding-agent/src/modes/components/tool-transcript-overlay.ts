@@ -1,6 +1,5 @@
 import { Container, matchesKey } from "@gajae-code/tui";
 import { theme } from "../theme/theme";
-import type { AssistantMessageComponent } from "./assistant-message";
 import type { ToolExecutionComponent } from "./tool-execution";
 
 /**
@@ -9,17 +8,14 @@ import type { ToolExecutionComponent } from "./tool-execution";
  * of minimize/preview state in the chat. Tools live in the chat container for
  * the whole session, so no pendingTools lifecycle change is needed.
  */
-/** 99.10: the transcript pages tools AND thinking-bearing assistant cells (shared expand protocol). */
-export type TranscriptCell = ToolExecutionComponent | AssistantMessageComponent;
-
 export class ToolTranscriptOverlayComponent extends Container {
-	#tools: TranscriptCell[];
+	#tools: ToolExecutionComponent[];
 	#close: () => void;
 	#requestRender: () => void;
 	#scroll = 0;
 	#cache?: { width: number; lines: string[] };
 
-	constructor(tools: TranscriptCell[], callbacks: { close: () => void; requestRender: () => void }) {
+	constructor(tools: ToolExecutionComponent[], callbacks: { close: () => void; requestRender: () => void }) {
 		super();
 		this.#tools = tools;
 		this.#close = callbacks.close;
@@ -77,7 +73,7 @@ export class ToolTranscriptOverlayComponent extends Container {
 			lines.length === 0
 				? "empty"
 				: `${this.#scroll + 1}–${Math.min(this.#scroll + rows, lines.length)}/${lines.length}`;
-		out.push(theme.fg("accent", ` Tool transcript (${this.#tools.length} cells, ${position})`));
+		out.push(theme.fg("accent", ` Tool transcript (${this.#tools.length} tools, ${position})`));
 		out.push(...lines.slice(this.#scroll, this.#scroll + rows));
 		out.push(theme.fg("dim", " ↑↓ scroll · pgup/pgdn page · g/G top/bottom · esc close"));
 		return out;

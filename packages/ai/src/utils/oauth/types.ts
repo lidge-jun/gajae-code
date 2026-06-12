@@ -56,6 +56,15 @@ export type OAuthProvider =
 
 export type OAuthProviderId = OAuthProvider | (string & {});
 
+/**
+ * How a login flow may use a locally detected CLI token (grok-cli, codex,
+ * Claude Code keychain). "off" goes straight to the real OAuth flow,
+ * "fallback" imports a local token when present and falls back to OAuth
+ * otherwise (first-time login), "only" imports without any OAuth fallback
+ * (explicit `/login <provider> local`).
+ */
+export type LocalTokenImportMode = "off" | "fallback" | "only";
+
 export type OAuthPrompt = {
 	message: string;
 	placeholder?: string;

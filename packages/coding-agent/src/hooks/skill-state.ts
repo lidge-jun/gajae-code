@@ -1,8 +1,8 @@
 import * as path from "node:path";
 import type { SkillDiscoverySettings } from "../config/skill-settings-defaults";
-import { ModeStateSchema, SkillActiveStateSchema } from "../gjc-runtime/state-schema";
-import { writeJsonAtomic, writeWorkflowEnvelopeAtomic } from "../gjc-runtime/state-writer";
-import { isUltragoalBypassPrompt, readUltragoalVerificationState } from "../gjc-runtime/ultragoal-guard";
+import { ModeStateSchema, SkillActiveStateSchema } from "../jwc-runtime/state-schema";
+import { writeJsonAtomic, writeWorkflowEnvelopeAtomic } from "../jwc-runtime/state-writer";
+import { isUltragoalBypassPrompt, readUltragoalVerificationState } from "../jwc-runtime/ultragoal-guard";
 import { buildSessionContext, loadEntriesFromFile, type SessionEntry } from "../session/session-manager";
 import {
 	readVisibleSkillActiveState as readCanonicalVisibleSkillActiveState,
@@ -12,9 +12,9 @@ import {
 import { WORKFLOW_STATE_VERSION } from "../skill-state/workflow-state-contract";
 import {
 	compareSkillKeywordMatches,
-	GJC_SKILL_KEYWORD_DEFINITIONS,
-	type GjcWorkflowSkill,
-	isGjcWorkflowSkill,
+	isJwcWorkflowSkill,
+	JWC_SKILL_KEYWORD_DEFINITIONS,
+	type JwcWorkflowSkill,
 } from "./skill-keywords";
 
 export const GJC_STATE_DIR = ".jwc/state";
@@ -76,7 +76,7 @@ export function buildSanitizedEffectiveSkillConfigContext(input: EffectiveSkillC
 
 export interface SkillKeywordMatch {
 	keyword: string;
-	skill: GjcWorkflowSkill;
+	skill: JwcWorkflowSkill;
 	priority: number;
 }
 
@@ -138,7 +138,7 @@ function keywordToPattern(keyword: string): RegExp {
 	return new RegExp(`${prefix}${escaped}${suffix}`, "i");
 }
 
-const KEYWORD_PATTERNS = GJC_SKILL_KEYWORD_DEFINITIONS.map(definition => ({
+const KEYWORD_PATTERNS = JWC_SKILL_KEYWORD_DEFINITIONS.map(definition => ({
 	...definition,
 	pattern: keywordToPattern(definition.keyword),
 }));
@@ -156,12 +156,12 @@ function parseExplicitSkillInvocations(text: string): {
 		sawExplicitLikeInvocation = true;
 		const token = match[1] ?? "";
 		const normalized = token.startsWith("gjc:") ? token.slice(4) : token;
-		if (isGjcWorkflowSkill(normalized) && !seenSkills.has(normalized)) {
+		if (isJwcWorkflowSkill(normalized) && !seenSkills.has(normalized)) {
 			seenSkills.add(normalized);
 			matches.push({
 				keyword: match[0],
 				skill: normalized,
-				priority: GJC_SKILL_KEYWORD_DEFINITIONS.find(definition => definition.skill === normalized)?.priority ?? 0,
+				priority: JWC_SKILL_KEYWORD_DEFINITIONS.find(definition => definition.skill === normalized)?.priority ?? 0,
 			});
 		}
 		match = explicitPattern.exec(text);
@@ -193,7 +193,7 @@ export function detectPrimarySkillKeyword(text: string): SkillKeywordMatch | nul
 	return detectSkillKeywords(text)[0] ?? null;
 }
 
-export function resolveGjcStateDir(cwd: string, stateDir?: string): string {
+export function resolveJwcStateDir(cwd: string, stateDir?: string): string {
 	return stateDir ? path.resolve(cwd, stateDir) : path.join(cwd, GJC_STATE_DIR);
 }
 
@@ -206,11 +206,11 @@ import { initialPhaseForSkill } from "../skill-state/initial-phase";
 // Re-export for existing callers and tests that imported it from this module.
 export { initialPhaseForSkill };
 
-function modeStateFileName(skill: GjcWorkflowSkill): string {
+function modeStateFileName(skill: JwcWorkflowSkill): string {
 	return `${skill}-state.json`;
 }
 
-function modeStatePath(stateDir: string, skill: GjcWorkflowSkill, sessionId?: string): string {
+function modeStatePath(stateDir: string, skill: JwcWorkflowSkill, sessionId?: string): string {
 	if (sessionId) return path.join(stateDir, "sessions", encodeStatePathSegment(sessionId), modeStateFileName(skill));
 	return path.join(stateDir, modeStateFileName(skill));
 }
@@ -255,7 +255,7 @@ async function readValidatedJsonFile<T>(
 async function writeJsonFile(filePath: string, value: unknown, cwd: string): Promise<void> {
 	await writeJsonAtomic(filePath, value, {
 		cwd,
-		audit: { category: "state", verb: "write", owner: "gjc-hook" },
+		audit: { category: "state", verb: "write", owner: "jwc-hook" },
 	});
 }
 
@@ -277,8 +277,8 @@ function listActiveSkills(state: SkillActiveState | null): SkillActiveEntry[] {
 	return (state.active_skills ?? []).filter(entry => entry.active !== false);
 }
 
-function isWorkflowActiveEntry(entry: SkillActiveEntry): entry is SkillActiveEntry & { skill: GjcWorkflowSkill } {
-	return isGjcWorkflowSkill(entry.skill);
+function isWorkflowActiveEntry(entry: SkillActiveEntry): entry is SkillActiveEntry & { skill: JwcWorkflowSkill } {
+	return isJwcWorkflowSkill(entry.skill);
 }
 
 export async function readVisibleSkillActiveState(
@@ -287,7 +287,7 @@ export async function readVisibleSkillActiveState(
 	stateDir?: string,
 ): Promise<SkillActiveState | null> {
 	if (!stateDir) return await readCanonicalVisibleSkillActiveState(cwd, sessionId);
-	const resolvedStateDir = resolveGjcStateDir(cwd, stateDir);
+	const resolvedStateDir = resolveJwcStateDir(cwd, stateDir);
 	if (sessionId) {
 		const sessionState = await readValidatedJsonFile<SkillActiveState>(
 			skillStatePath(resolvedStateDir, sessionId),
@@ -313,12 +313,12 @@ interface SeedSkillActivationStateInput {
 }
 
 async function seedSkillActivationState(
-	skill: GjcWorkflowSkill,
+	skill: JwcWorkflowSkill,
 	keyword: string,
 	source: string,
 	input: SeedSkillActivationStateInput,
 ): Promise<SkillActiveState> {
-	const resolvedStateDir = resolveGjcStateDir(input.cwd, input.stateDir);
+	const resolvedStateDir = resolveJwcStateDir(input.cwd, input.stateDir);
 	const nowIso = input.nowIso ?? new Date().toISOString();
 	const phase = initialPhaseForSkill(skill);
 	const initializedStatePath = modeStatePath(resolvedStateDir, skill, input.sessionId);
@@ -369,11 +369,11 @@ async function seedSkillActivationState(
 		receipt: {
 			cwd: input.cwd,
 			skill,
-			owner: "gjc-hook",
+			owner: "jwc-hook",
 			command: source,
 			sessionId: input.sessionId,
 		},
-		audit: { category: "state", verb: "write", owner: "gjc-hook", skill },
+		audit: { category: "state", verb: "write", owner: "jwc-hook", skill },
 	});
 	await writeJsonFile(skillStatePath(resolvedStateDir, input.sessionId), state, input.cwd);
 	if (input.sessionId) {
@@ -415,7 +415,7 @@ export async function ensureWorkflowSkillActivationState(
 	input: EnsureWorkflowSkillActivationInput,
 ): Promise<SkillActiveState | null> {
 	const skill = input.skill.trim();
-	if (!isGjcWorkflowSkill(skill)) return null;
+	if (!isJwcWorkflowSkill(skill)) return null;
 	const existing = await readVisibleSkillActiveState(input.cwd, input.sessionId, input.stateDir);
 	const alreadyActive = listActiveSkills(existing).some(
 		entry =>
@@ -455,7 +455,7 @@ const STOP_RELEASING_PHASES = ["complete", "completed", "failed", "cancelled", "
  * hook keeps blocking these even in the "handoff" phase until they are demoted
  * (active:false) or cleared.
  */
-function isHandoffRequiredSkill(skill: GjcWorkflowSkill): boolean {
+function isHandoffRequiredSkill(skill: JwcWorkflowSkill): boolean {
 	return skill === "jaw-interview" || skill === "ralplan";
 }
 
@@ -482,11 +482,11 @@ function modeStateReleasesStop(state: ModeState | null, handoffRequired: boolean
 
 async function readVisibleModeState(
 	cwd: string,
-	skill: GjcWorkflowSkill,
+	skill: JwcWorkflowSkill,
 	sessionId?: string,
 	stateDir?: string,
 ): Promise<{ state: ModeState; statePath: string } | null> {
-	const resolvedStateDir = resolveGjcStateDir(cwd, stateDir);
+	const resolvedStateDir = resolveJwcStateDir(cwd, stateDir);
 	if (sessionId) {
 		const sessionStatePath = modeStatePath(resolvedStateDir, skill, sessionId);
 		const sessionState = await readValidatedJsonFile<ModeState>(sessionStatePath, "mode-state", ModeStateSchema);
@@ -527,8 +527,8 @@ export async function buildActiveUltragoalPromptContext(input: UserPromptSubmitS
 	const stateObjective =
 		typeof visibleModeState.state.objective === "string"
 			? visibleModeState.state.objective
-			: typeof visibleModeState.state.gjcObjective === "string"
-				? visibleModeState.state.gjcObjective
+			: typeof visibleModeState.state.jwcObjective === "string"
+				? visibleModeState.state.jwcObjective
 				: "";
 	const sessionObjective = await readCurrentGoalObjectiveFromSessionFile(input.sessionFile);
 	const normalizedPrompt = input.prompt?.replace(/\\?"/g, '"');
@@ -558,7 +558,7 @@ export async function buildActiveUltragoalPromptContext(input: UserPromptSubmitS
 }
 
 export async function buildSkillStopOutput(input: StopHookInput): Promise<Record<string, unknown> | null> {
-	const resolvedStateDir = resolveGjcStateDir(input.cwd, input.stateDir);
+	const resolvedStateDir = resolveJwcStateDir(input.cwd, input.stateDir);
 	const skillState = await readVisibleSkillActiveState(input.cwd, input.sessionId, input.stateDir);
 	const activeEntries = listActiveSkills(skillState)
 		.filter(isWorkflowActiveEntry)
@@ -580,8 +580,8 @@ export async function buildSkillStopOutput(input: StopHookInput): Promise<Record
 				(await readCurrentGoalObjectiveFromSessionFile(input.sessionFile)) ??
 				(typeof modeState?.objective === "string"
 					? modeState.objective
-					: typeof modeState?.gjcObjective === "string"
-						? modeState.gjcObjective
+					: typeof modeState?.jwcObjective === "string"
+						? modeState.jwcObjective
 						: "");
 			if (objective) {
 				const diagnostic = await readUltragoalVerificationState({
@@ -606,7 +606,7 @@ export async function buildSkillStopOutput(input: StopHookInput): Promise<Record
 		return {
 			decision: "block",
 			reason: systemMessage,
-			stopReason: `gjc_skill_${entry.skill.replace(/-/g, "_")}_${phase.replace(/[^a-z0-9]+/gi, "_").toLowerCase()}`,
+			stopReason: `jwc_skill_${entry.skill.replace(/-/g, "_")}_${phase.replace(/[^a-z0-9]+/gi, "_").toLowerCase()}`,
 			systemMessage,
 		};
 	}
