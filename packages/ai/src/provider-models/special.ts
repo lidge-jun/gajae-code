@@ -65,3 +65,46 @@ export interface ZaiModelManagerConfig {}
 export function zaiModelManagerOptions(_config: ZaiModelManagerConfig = {}): ModelManagerOptions<"anthropic-messages"> {
 	return { providerId: "zai" };
 }
+
+// ---------------------------------------------------------------------------
+// Kiro
+// ---------------------------------------------------------------------------
+
+export interface KiroModelManagerConfig {}
+
+export function kiroModelManagerOptions(_config: KiroModelManagerConfig = {}): ModelManagerOptions<"kiro-streaming"> {
+	return {
+		providerId: "kiro",
+		staticModels: [
+			kiroModel("kiro-auto", "Auto", 200_000, 16_384),
+			kiroModel("claude-sonnet-4.5", "Claude Sonnet 4.5", 200_000, 16_384),
+			kiroModel("claude-sonnet-4", "Claude Sonnet 4", 200_000, 16_384),
+			kiroModel("claude-haiku-4.5", "Claude Haiku 4.5", 200_000, 16_384),
+			kiroModel("deepseek-3.2", "DeepSeek 3.2", 128_000, 8_192, true),
+			kiroModel("minimax-m2.5", "MiniMax M2.5", 128_000, 8_192),
+			kiroModel("glm-5", "GLM 5", 128_000, 8_192),
+			kiroModel("qwen3-coder-next", "Qwen3 Coder Next", 128_000, 8_192, true),
+		],
+	};
+}
+
+function kiroModel(
+	id: string,
+	name: string,
+	contextWindow: number,
+	maxTokens: number,
+	reasoning = false,
+): import("../types").Model<"kiro-streaming"> {
+	return {
+		id,
+		name,
+		api: "kiro-streaming",
+		provider: "kiro",
+		baseUrl: "",
+		reasoning,
+		input: ["text", "image"],
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+		contextWindow,
+		maxTokens,
+	};
+}

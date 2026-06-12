@@ -36,6 +36,7 @@ import {
 	streamGoogle,
 	streamGoogleGeminiCli,
 	streamGoogleVertex,
+	streamKiro,
 	streamOllama,
 	streamOpenAICodexResponses,
 	streamOpenAICompletions,
@@ -217,6 +218,9 @@ export function stream<TApi extends Api>(
 	} else if (model.api === "bedrock-converse-stream") {
 		// Bedrock doesn't have any API keys instead it sources credentials from standard AWS env variables or from given AWS profile.
 		return streamBedrock(model as Model<"bedrock-converse-stream">, context, (options || {}) as BedrockOptions);
+	} else if (model.api === "kiro-streaming") {
+		// Kiro uses Bearer auth resolved internally (not standard API key)
+		return streamKiro(model as Model<"kiro-streaming">, context, (options || {}) as any);
 	}
 
 	const apiKey = options?.apiKey || getEnvApiKey(model.provider);
@@ -864,6 +868,9 @@ function mapOptionsForApi<TApi extends Api>(
 				onToolResult,
 			});
 		}
+
+		case "kiro-streaming":
+			return castApi<"kiro-streaming">(base);
 
 		default:
 			throw new Error(`Unhandled API in mapOptionsForApi: ${model.api}`);

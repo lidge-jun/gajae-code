@@ -43,7 +43,7 @@ import {
 	xiaomiModelManagerOptions,
 	zenmuxModelManagerOptions,
 } from "./openai-compat";
-import { cursorModelManagerOptions, zaiModelManagerOptions } from "./special";
+import { cursorModelManagerOptions, kiroModelManagerOptions, zaiModelManagerOptions } from "./special";
 
 /** Catalog discovery configuration for providers that support endpoint-based model listing. */
 export interface CatalogDiscoveryConfig {
@@ -218,6 +218,12 @@ export const PROVIDER_DESCRIPTORS: readonly ProviderDescriptor[] = [
 		"kimi-k2.5",
 		config => kimiCodeModelManagerOptions(config),
 		catalog("Kimi Code", ["KIMI_API_KEY"]),
+	),
+	catalogDescriptor(
+		"kiro",
+		"kiro-auto",
+		() => kiroModelManagerOptions(),
+		catalog("Kiro", ["KIRO_ACCESS_TOKEN"]),
 	),
 	catalogDescriptor(
 		"qwen-portal",

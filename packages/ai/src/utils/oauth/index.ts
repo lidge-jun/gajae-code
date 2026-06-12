@@ -46,6 +46,11 @@ const builtInOAuthProviders: OAuthProviderInfo[] = [
 		available: true,
 	},
 	{
+		id: "kiro",
+		name: "Kiro (Claude, DeepSeek, GLM, Qwen)",
+		available: true,
+	},
+	{
 		id: "kagi",
 		name: "Kagi",
 		available: true,
@@ -318,6 +323,11 @@ export async function refreshOAuthToken(
 		case "xai": {
 			const { refreshXaiToken } = await import("./xai");
 			newCredentials = await refreshXaiToken(credentials.refresh);
+			break;
+		}
+		case "kiro": {
+			const { refreshKiroToken } = await import("./kiro");
+			newCredentials = await refreshKiroToken(credentials.refresh);
 			break;
 		}
 		case "kilo":

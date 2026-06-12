@@ -1426,6 +1426,12 @@ export class AuthStorage {
 				credentials = await loginKilo(ctrl);
 				break;
 			}
+			case "kiro": {
+				const { loginKiro } = await import("./utils/oauth/kiro");
+				await this.remove(provider);
+				credentials = await loginKiro(ctrl);
+				break;
+			}
 			case "cursor": {
 				const { loginCursor } = await import("./utils/oauth/cursor");
 				credentials = await loginCursor(

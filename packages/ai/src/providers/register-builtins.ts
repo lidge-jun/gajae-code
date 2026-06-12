@@ -33,6 +33,7 @@ import type { OllamaChatOptions } from "./ollama";
 import type { OpenAICodexResponsesOptions } from "./openai-codex-responses";
 import type { OpenAICompletionsOptions } from "./openai-completions";
 import type { OpenAIResponsesOptions } from "./openai-responses";
+import type { KiroOptions } from "./kiro";
 
 // ---------------------------------------------------------------------------
 // Lazy provider module shape
@@ -130,6 +131,14 @@ interface BedrockProviderModule {
 	) => AssistantMessageEventStream;
 }
 
+interface KiroProviderModule {
+	streamKiro: (
+		model: Model<"kiro-streaming">,
+		context: Context,
+		options: KiroOptions,
+	) => AssistantMessageEventStream;
+}
+
 // ---------------------------------------------------------------------------
 // Module-level lazy promise caches
 // ---------------------------------------------------------------------------
@@ -146,6 +155,7 @@ let ollamaProviderModulePromise: Promise<LazyProviderModule<"ollama-chat">> | un
 let cursorProviderModulePromise: Promise<LazyProviderModule<"cursor-agent">> | undefined;
 let bedrockProviderModuleOverride: LazyProviderModule<"bedrock-converse-stream"> | undefined;
 let bedrockProviderModulePromise: Promise<LazyProviderModule<"bedrock-converse-stream">> | undefined;
+let kiroProviderModulePromise: Promise<LazyProviderModule<"kiro-streaming">> | undefined;
 
 export function setBedrockProviderModule(module: BedrockProviderModule): void {
 	bedrockProviderModuleOverride = {
@@ -387,6 +397,14 @@ function loadBedrockProviderModule(): Promise<LazyProviderModule<"bedrock-conver
 	return bedrockProviderModulePromise;
 }
 
+function loadKiroProviderModule(): Promise<LazyProviderModule<"kiro-streaming">> {
+	kiroProviderModulePromise ||= import("./kiro").then(module => {
+		const provider = module as KiroProviderModule;
+		return { stream: provider.streamKiro };
+	});
+	return kiroProviderModulePromise;
+}
+
 // ---------------------------------------------------------------------------
 // Lazy stream function exports
 //
@@ -410,3 +428,4 @@ export const streamCursor = createLazyStream(loadCursorProviderModule);
 export const streamOllama = createLazyStream(loadOllamaProviderModule);
 
 export const streamBedrock = createLazyStream(loadBedrockProviderModule);
+export const streamKiro = createLazyStream(loadKiroProviderModule);

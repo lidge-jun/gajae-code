@@ -23,6 +23,7 @@ import type {
 import type { GoogleOptions } from "./providers/google";
 import type { GoogleGeminiCliOptions } from "./providers/google-gemini-cli";
 import type { GoogleVertexOptions } from "./providers/google-vertex";
+import type { KiroOptions } from "./providers/kiro";
 import type { OllamaChatOptions } from "./providers/ollama";
 import type { OpenAICodexResponsesOptions } from "./providers/openai-codex-responses";
 import type { OpenAICompletionsOptions } from "./providers/openai-completions";
@@ -42,7 +43,8 @@ export type KnownApi =
 	| "google-gemini-cli"
 	| "google-vertex"
 	| "ollama-chat"
-	| "cursor-agent";
+	| "cursor-agent"
+	| "kiro-streaming";
 export type Api = KnownApi | (string & {});
 export interface ApiOptionsMap {
 	"anthropic-messages": AnthropicOptions;
@@ -56,6 +58,7 @@ export interface ApiOptionsMap {
 	"google-vertex": GoogleVertexOptions;
 	"ollama-chat": OllamaChatOptions;
 	"cursor-agent": CursorOptions;
+	"kiro-streaming": KiroOptions;
 }
 // Compile-time exhaustiveness check - this will fail if ApiOptionsMap doesn't have all KnownApi keys
 type _CheckExhaustive =
@@ -142,7 +145,8 @@ export type KnownProvider =
 	| "vllm"
 	| "xiaomi"
 	| "zenmux"
-	| "lm-studio";
+	| "lm-studio"
+	| "kiro";
 export type Provider = KnownProvider | string;
 
 import type { Effort } from "./model-thinking";
