@@ -781,7 +781,15 @@ export class Editor implements Component, Focusable {
 			let hasCursor = layoutLine.hasCursor && layoutLine.cursorPos !== undefined;
 			const marker = emitCursorMarker ? CURSOR_MARKER : "";
 
-			if (showPlaceholder) {
+			// In hardware-cursor (terminal/IME) mode we deliberately keep the cursor
+			// marker emitted and let the ghost-text path below render the placeholder
+			// after the marker (it already handles `showPlaceholder`). Disabling the
+			// cursor here would leave the hardware cursor unsynced while the placeholder
+			// shows, so the first keystroke's IME preedit snaps from a stale column —
+			// the "first char jumps right then returns" glitch. Only the block-cursor
+			// path (which would otherwise highlight a placeholder glyph) needs the
+			// placeholder rendered inline with the cursor disabled.
+			if (showPlaceholder && !this.#useTerminalCursor) {
 				const hintText = hintStyle(truncateToWidth(this.#placeholder ?? "", lineContentWidth));
 				displayText = hintText;
 				displayWidth = Math.min(visibleWidth(this.#placeholder ?? ""), lineContentWidth);

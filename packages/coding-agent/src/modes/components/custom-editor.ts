@@ -43,6 +43,8 @@ const DEFAULT_ACTION_KEYS: Record<ConfigurableEditorAction, KeyId[]> = {
 
 const PASTE_DECISION_TIMEOUT_MS = 5_000;
 const PENDING_PASTE_INPUT_MAX = 64;
+// Two Escapes within this window trigger the IME-independent exit safety net.
+const DOUBLE_ESCAPE_EXIT_WINDOW_MS = 500;
 
 type PastePendingClearReason = "timeout" | "queue-limit";
 
@@ -91,6 +93,8 @@ export class CustomEditor extends Editor {
 		Object.entries(DEFAULT_ACTION_KEYS).map(([action, keys]) => [action as ConfigurableEditorAction, [...keys]]),
 	);
 	#pasteHandler = new BracketedPasteHandler();
+	/** Timestamp of the last lone-Escape press, for the double-Escape exit safety net. */
+	#lastEscapeAt = 0;
 	#pasteDecisionPending = false;
 	#pasteDecisionToken = 0;
 	#pasteDecisionTimeout: NodeJS.Timeout | undefined;
@@ -288,6 +292,23 @@ export class CustomEditor extends Editor {
 		if (this.#matchesAction(data, "app.thinking.cycle") && this.onCycleThinkingLevel) {
 			this.onCycleThinkingLevel();
 			return;
+		}
+
+		// IME-independent exit safety net (devlog 082.1): Escape is always 0x1b
+		// regardless of the active input source, so a double-press is a guaranteed
+		// way out even when Ctrl chords (ctrl+c / ctrl+d) are swallowed by a Hangul
+		// IME on legacy terminals. The first Escape keeps its normal interrupt/dismiss
+		// behavior below; only the second within the window exits.
+		if (matchesKey(data, "escape")) {
+			const now = Date.now();
+			if (this.#lastEscapeAt !== 0 && now - this.#lastEscapeAt <= DOUBLE_ESCAPE_EXIT_WINDOW_MS && this.onExit) {
+				this.#lastEscapeAt = 0;
+				this.onExit();
+				return;
+			}
+			this.#lastEscapeAt = now;
+		} else {
+			this.#lastEscapeAt = 0;
 		}
 
 		// Intercept configured interrupt shortcut.

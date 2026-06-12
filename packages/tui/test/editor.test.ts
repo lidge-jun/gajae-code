@@ -944,6 +944,38 @@ describe("Editor component", () => {
 			expect(visibleWidth(line!.replaceAll(CURSOR_MARKER, ""))).toBe(width);
 		});
 
+		it("emits the terminal cursor marker over an empty placeholder so the hardware cursor stays synced", () => {
+			// Regression for the "first char jumps right then returns" IME glitch: in
+			// hardware-cursor mode the placeholder must not disable the cursor marker,
+			// otherwise the hardware cursor is left unsynced until the first keystroke.
+			const editor = new Editor(defaultEditorTheme);
+			editor.setBorderVisible(false);
+			editor.setUseTerminalCursor(true);
+			editor.setPlaceholder("Type your message...");
+			editor.focused = true;
+
+			const [line] = editor.render(40);
+			expect(line).toContain(CURSOR_MARKER);
+			// The marker sits at the input start (nothing visible before it).
+			const [beforeMarker] = line!.split(CURSOR_MARKER);
+			expect(visibleWidth(stripVTControlCharacters(beforeMarker!))).toBe(0);
+			// The placeholder still renders (as dim ghost text after the marker).
+			expect(stripVTControlCharacters(line!.replaceAll(CURSOR_MARKER, ""))).toContain("Type your message...");
+		});
+
+		it("renders the placeholder without a cursor marker in block-cursor mode", () => {
+			// Block-cursor mode keeps the original behavior (no hardware cursor to sync).
+			const editor = new Editor(defaultEditorTheme);
+			editor.setBorderVisible(false);
+			editor.setUseTerminalCursor(false);
+			editor.setPlaceholder("Type your message...");
+			editor.focused = true;
+
+			const [line] = editor.render(40);
+			expect(line).not.toContain(CURSOR_MARKER);
+			expect(stripVTControlCharacters(line!)).toContain("Type your message...");
+		});
+
 		it("does not overflow prompt-gutter wraps when a wide grapheme lands in a 1-column content area", () => {
 			const editor = new Editor(defaultEditorTheme);
 			editor.setBorderVisible(false);

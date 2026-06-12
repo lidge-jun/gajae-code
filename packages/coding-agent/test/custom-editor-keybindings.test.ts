@@ -42,6 +42,59 @@ describe("CustomEditor temporary model selector keybinding", () => {
 	});
 });
 
+describe("CustomEditor double-Escape exit safety net", () => {
+	const ESC = "\x1b";
+
+	it("exits on a second Escape within the window (IME-independent escape hatch)", () => {
+		const editor = createEditor();
+		const onExit = vi.fn();
+		const onEscape = vi.fn();
+		editor.onExit = onExit;
+		editor.onEscape = onEscape;
+
+		editor.handleInput(ESC); // first Escape: normal interrupt/dismiss, no exit
+		expect(onExit).toHaveBeenCalledTimes(0);
+		expect(onEscape).toHaveBeenCalledTimes(1);
+
+		editor.handleInput(ESC); // second Escape within window: exits
+		expect(onExit).toHaveBeenCalledTimes(1);
+		// The exiting Escape is consumed and must not also fire interrupt again.
+		expect(onEscape).toHaveBeenCalledTimes(1);
+	});
+
+	it("does not exit on a single Escape", () => {
+		const editor = createEditor();
+		const onExit = vi.fn();
+		editor.onExit = onExit;
+
+		editor.handleInput(ESC);
+		expect(onExit).toHaveBeenCalledTimes(0);
+	});
+
+	it("resets the double-Escape tracker when a non-Escape key is pressed in between", () => {
+		const editor = createEditor();
+		const onExit = vi.fn();
+		editor.onExit = onExit;
+
+		editor.handleInput(ESC);
+		editor.handleInput("a");
+		editor.handleInput(ESC);
+		expect(onExit).toHaveBeenCalledTimes(0);
+	});
+
+	it("exits after the window lapses between Escapes", () => {
+		vi.useFakeTimers();
+		const editor = createEditor();
+		const onExit = vi.fn();
+		editor.onExit = onExit;
+
+		editor.handleInput(ESC);
+		vi.advanceTimersByTime(600); // beyond the 500ms window
+		editor.handleInput(ESC);
+		expect(onExit).toHaveBeenCalledTimes(0); // treated as a fresh first Escape
+	});
+});
+
 describe("CustomEditor bracketed paste interception", () => {
 	it("lets coding-agent consume pasted content before the base editor stores it", async () => {
 		const editor = createEditor();
