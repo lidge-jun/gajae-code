@@ -148,8 +148,8 @@ packages/coding-agent/test/gjc-runtime/goal-runtime.test.ts
 
 ### M5. goal-continuation jaw 섹션 포팅
 
-- **대상**: `packages/coding-agent/src/prompts/goals/goal-continuation.md`, `goal-mode-active.md` (jaw 브랜드 분기 — 085.5 `brandPromptText` 또는 조건부 렌더)
-- **diff 방향**: evidence 번들 3종·검증 티어·plan-mode 블록·2-tap 체크리스트·Stop Audit 섹션 추가 (062 §4 표 기준). gjc 브랜드 diff-0.
+- **대상**: `packages/coding-agent/src/prompts/goals/goal-continuation.md`, `goal-mode-active.md` (085.5 하드 수정 원칙 [02:04 개정] — md 본문에 jwc 어휘 직접 기입, 브랜드 분기 불요)
+- **diff 방향**: evidence 번들 3종·검증 티어·plan-mode 블록·2-tap 체크리스트·Stop Audit 섹션 추가 (062 §4 표 기준).
 - **의존**: M3 (pause 카운터 주입)
 
 ### M6. ledger `goal_pause_audited` 이벤트

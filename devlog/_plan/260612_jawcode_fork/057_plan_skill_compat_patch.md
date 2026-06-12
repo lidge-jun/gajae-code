@@ -61,7 +61,7 @@ if (isJawBrand()) {
 | `~/.cli-jaw/skills` 경로 리터럴 | 무변경 보존 |
 | fenced 코드 블록 내 `cli-jaw dispatch …` | 명령 매핑 적용, 역할 어휘 비적용 |
 | gjc 브랜드(env unset) | **byte-동일** (no-op) |
-| native(비 cli-jaw) 스킬 | dev 어휘 맵 미적용, brandPromptText만 |
+| native(비 cli-jaw) 스킬 | 무치환 — 번들 소스가 이미 jwc 어휘 (085.5 M4 하드 수정) |
 | dev-pabcd/memory | 여전히 미로드 (`skills-discovery-jaw.test.ts` 기존 + 회귀 확인) |
 
 게이트: `bun run check:types` + biome + 기존 `skills-discovery-jaw.test.ts` 무회귀. rebrand/G002 무접촉(소스 스킬 파일 무변경).

@@ -1,8 +1,8 @@
 # 086 — plan: jaw 비주얼 정체성 (080 §A + 010 잔여 묶음)
 
-> 상태: 🔨 구현 중 — **시안 확정** (260612): 팔레트 **시안 3 `abyss-bite`** + 마크 **B 지느러미(fin)**.
+> 상태: ✅ 구현 완료 (260612) — **시안 확정**: 팔레트 **시안 3 `abyss-bite`** + 마크 **B 지느러미(fin)**.
 > 태그라인 [기본값] `bite · build · ship` (사용자 미지정 — 변경 요청 시 문자열 1곳 수정).
-> 소속: 080 ([080_moc_tui.md](./080_moc_tui.md) §A).
+> 소속: 080 ([080_moc_tui.md](./080_moc_tui.md) §A). ⬜ e2e: jwc 재시작 후 다크/라이트 육안 확인 + 스크린샷.
 > 입력: 사용자 "080 §A + 010 리네이밍 묶음으로 플랜. dev-frontend·dev-uiux-design 스킬과 cli-jaw 디자인 철학을 보고" (260612).
 > ⚠️ **fork 고유 변경 — 업스트림 PR 안 올림** (brand 조건부, gjc 모드 diff-0 원칙).
 
@@ -97,13 +97,51 @@ claw 마크(welcome.ts:281, 6행 × ~36열 박스드로잉)와 같은 규격으�
 | 4 | **잔여 텍스트 스윕** — `$ gjc ...` 리터럴 16건 (011 이월): examples를 APP_NAME 보간으로 | `gjc-runtime/ultragoal-runtime.ts`, `commands/state.ts`, `commands/ralplan.ts`, `commands/ultragoal.ts` 외 |
 | 5 | **가드 정합** — `verify-gjc-ui-redesign.ts`(상태줄 프리셋 검사) 저촉 확인, `rebrand-inventory` 기대값에 jaw 테마 파일 추가 필요 여부 | `scripts/` |
 
+## 3.5 구현 기록 (260612)
+
+- 테마 2종: `abyss-bite.json`(다크) + `abyss-bite-light.json`(라이트) — red-claw vars 키 1:1 유지
+  (blue-crab 선례), colors 매핑 무수정이라 67키 커버리지 보장. symbols: 🦈/🐟/🌊.
+- **계획에 없던 발견 1 — settings 스키마 기본값이 brand 기본값을 덮어씀**: `main.ts:839`가
+  `settings.get("theme.dark")`를 initTheme에 항상 전달 → 스키마 default `"red-claw"`가 `??` 폴백을
+  무력화. `settings-schema.ts:398/409` default도 brand 조건부로 패치 (theme.ts 헬퍼만으론 부족했음).
+- **계획에 없던 발견 2 — 라이브 피드백 "채팅 창이 아직 빨간색"**: `colors.accent`(입력창 테두리·
+  상태줄 모델·리스트 불릿 등 광역 슬롯)가 bite 주황이면 화면 전체가 red-claw처럼 읽힘.
+  **시안-우선 재배분**: claw/accent/coral → 시안 계열(#00d1da/#2fc4ce), bite 주황(#ff5a2e)은
+  crabShell/brandRed 점 슬롯(mdHeading·syntaxKeyword·borderAccent·thinkingHigh)에만 잔류.
+  배너 그라디언트도 주황을 끝점 1스톱으로 축소 (시안 지배 + 바이트 팁).
+- **macOS 라이트 모드 가시성**: 라이트 팔레트 dim 톤 상향(dimGray #6b7c87, dimShell #6b7f89),
+  accent #00788a(흰 배경 대비 확보). 발견 1 패치로 jwc의 theme.light 기본값이 abyss-bite-light로
+  떨어지는 것 확인 (이전엔 blue-crab 다크 팔레트가 라이트 터미널에 적용돼 글자가 안 보였음).
+- 가드 확장 (010 전략 — 끄지 않고 기대값 확장): `verify-gjc-ui-redesign.ts`가 brand 조건부 표현식
+  + 4테마 defaults를 기계 검증. `gjc-ui-redesign.test.ts`·`theme-selector-input.test.ts` 기대값 갱신.
+- 신규 테스트: `test/brand-visual-identity.test.ts` — 서브프로세스 양방향 분기
+  (jwc→abyss-bite+Jawcode 배너 / gjc→red-claw+claw 배너).
+
+- **계획에 없던 발견 3 — 입력창 테두리 = effort 인디케이터** (라이브 피드백 2 "아직 메세지 창이
+  빨간색"): 컴포저 테두리는 `getThinkingBorderColor(level)`(theme.ts:1313, interactive-mode.ts:882) —
+  사용자가 effort `high` 상시라 `thinkingHigh`=bite 주황이 테두리 전면에. **effort 램프 재배치**:
+  off dim → low `#2fc4ce` → medium `#00d1da` → high `glow #00e5f2`(전기 시안) → **xhigh/max만 bite 주황**
+  ("최대 출력에서만 문다"). error 빨강과 분리 유지. high 1차 시안(seafoam 파스텔)은 "테두리가
+  가늘어 보임" 피드백으로 고채도 glow로 교체 — 글리프는 동일, 색 잉크 밀도 차이였음.
+- 마크 정련 (라이브 피드백 3·4·5): 꼬리 █ 블록 띠 시도는 "투박" 반려 → 닫힌 윤곽선 → **최종**:
+  앞전은 둥근 라이트 스텝 커브(╭─╯), **꼬리쪽 뒷전은 헤비 박스(┗━┓, 팁 전환 ╼·수면 전환 ┖)로
+  2배 굵게**, 내부에 **아가미 슬릿 ╱ 2줄**(이음새 불필요한 내부 포인트라 대각선 사용 가능).
+  윤곽 끊김 0, 파도선(~)에서만 절단, 바이트 주황이 헤비 팁에 얹힘. 렌더 스모크 + 테스트 그린.
+- 배너 레이아웃 (라이브 피드백 6): branded일 때 **왼쪽 정렬 + 2분할 강제** — 기존엔 좌열 35%
+  캡(desiredLeftCol)이 fin 폭(35)보다 작아 width 100에서도 우열이 숨고 단일 중앙 열로 폴백했음.
+  branded는 좌열을 콘텐츠 폭만큼 성장(우열 최소폭 20 보장 시), 좌열에 워드마크/태그라인/**버전**/
+  fin/모델·프로바이더 좌측 몰기. gjc는 기존 중앙 정렬·35% 공식 그대로 (분기).
+  Flow keys도 branded는 키 이름만 (`/ · # · ! · $ · ?` / `ctrl+l · shift+tab`) — 설명 텍스트 제거.
+  Session trail은 세션 3개 → 빈 줄 → `/resume` 단독 안내로 확정 (branded, 세션 셀렉터 진입 커맨드).
+
 ## 4. 검증 / 완료 기준 (080 MOC §A 완료 기준 구체화)
 
-- `jwc` 실행: jaw 테마 + jaw 마크 + Jawcode 워드마크 기본. `gjc` 실행: red-claw + claw 그대로
-  (**brand 분기 양방향 검증** — 테마 기본값·배너 스냅샷 테스트)
-- `bun check`(rebrand-inventory 포함) + `verify-gjc-ui-redesign` 그린 · tsc 클린
-- `$ gjc` 리터럴 grep 0건 (jwc 모드 기준)
-- 스크린샷 기록 (truecolor / 256색 폴백 각 1장)
+- ✅ `jwc` 실행: jaw 테마 + jaw 마크 + Jawcode 워드마크 기본. `gjc` 실행: red-claw + claw 그대로
+  (**brand 분기 양방향 검증** — `brand-visual-identity.test.ts` + settings 스키마 양방향 확인)
+- ✅ rebrand-inventory exit 0 · `verify-gjc-ui-redesign` 그린 · tsc 클린
+- ✅ `$ gjc` 리터럴 grep 0건
+- ✅ coding-agent 전체 스위트 5354 pass / 4 fail — 4건 모두 기존 베이스라인 실패와 동일 (신규 회귀 0)
+- ⬜ 스크린샷 기록 (truecolor / 256색 폴백 각 1장) — e2e 시
 
 ## 5. 비충돌 메모 (동시 세션)
 
