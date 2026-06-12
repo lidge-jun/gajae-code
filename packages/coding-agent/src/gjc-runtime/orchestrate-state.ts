@@ -302,6 +302,8 @@ export type NativePabcdEnvelopeParsed = z.infer<typeof NativePabcdEnvelopeSchema
 export async function readPabcdState(
 	cwd: string,
 	sessionId?: string,
-): Promise<{ ok: true; value: NativePabcdEnvelopeParsed; raw: unknown } | { ok: false; error: string; raw: unknown } | null> {
+): Promise<
+	{ ok: true; value: NativePabcdEnvelopeParsed; raw: unknown } | { ok: false; error: string; raw: unknown } | null
+> {
 	return await readGjcJson(pabcdStatePath(cwd, sessionId), NativePabcdEnvelopeSchema);
 }

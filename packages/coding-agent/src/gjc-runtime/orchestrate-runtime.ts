@@ -14,19 +14,19 @@ import orchestrateC from "../prompts/jaw/orchestrate-c.md" with { type: "text" }
 import orchestrateD from "../prompts/jaw/orchestrate-d.md" with { type: "text" };
 import orchestrateI from "../prompts/jaw/orchestrate-i.md" with { type: "text" };
 import orchestrateP from "../prompts/jaw/orchestrate-p.md" with { type: "text" };
+import { WORKFLOW_STATE_VERSION } from "../skill-state/workflow-state-version";
 import {
 	canTransitionPabcd,
 	PABCD_MAX_A_ROUNDS,
+	PABCD_STAGES,
 	type PabcdCtx,
 	type PabcdEnvelope,
 	type PabcdStage,
-	PABCD_STAGES,
-	parseWorkerVerdict,
 	pabcdStatePath,
+	parseWorkerVerdict,
 	readPabcdState,
 	writeNativeWorkflowEnvelopeAtomic,
 } from "./orchestrate-state";
-import { WORKFLOW_STATE_VERSION } from "../skill-state/workflow-state-version";
 
 export interface OrchestrateCommandResult {
 	stdout?: string;
@@ -78,7 +78,8 @@ function parseArgs(argv: string[]): ParsedArgs | { error: string } {
 				if (value === undefined) return { error: `missing value for ${arg}` };
 				if (arg === "--session-id") parsed.sessionId = value;
 				else if (arg === "--audit-mode") {
-					if (value !== "solo" && value !== "dual") return { error: `--audit-mode must be solo|dual, got: ${value}` };
+					if (value !== "solo" && value !== "dual")
+						return { error: `--audit-mode must be solo|dual, got: ${value}` };
 					parsed.auditMode = value;
 				} else if (arg === "--spec-ref") parsed.specRef = value;
 				else if (arg === "--plan-ref") parsed.planRef = value;
@@ -126,7 +127,13 @@ function statusText(envelope: PabcdEnvelope | null, json: boolean): string {
 	if (json) {
 		return `${JSON.stringify(
 			envelope
-				? { active: envelope.active, stage: envelope.current_phase, spec_ref: envelope.spec_ref ?? null, plan_ref: envelope.plan_ref ?? null, ctx: envelope.ctx ?? {} }
+				? {
+						active: envelope.active,
+						stage: envelope.current_phase,
+						spec_ref: envelope.spec_ref ?? null,
+						plan_ref: envelope.plan_ref ?? null,
+						ctx: envelope.ctx ?? {},
+					}
 				: { active: false, stage: null },
 		)}\n`;
 	}
@@ -219,7 +226,11 @@ async function persist(
 	try {
 		const filePath = await writeNativeWorkflowEnvelopeAtomic(
 			cwd,
-			{ ...envelope, updated_at: new Date().toISOString(), ...(args.sessionId ? { session_id: args.sessionId } : {}) },
+			{
+				...envelope,
+				updated_at: new Date().toISOString(),
+				...(args.sessionId ? { session_id: args.sessionId } : {}),
+			},
 			{ command, sessionId: args.sessionId, fromPhase, toPhase },
 		);
 		return { path: filePath };
