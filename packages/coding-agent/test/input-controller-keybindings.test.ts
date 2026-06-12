@@ -23,6 +23,7 @@ type FakeEditor = {
 	onToggleThinking?: () => void;
 	onExternalEditor?: () => void;
 	onDequeue?: () => void;
+	onHangulCtrlChordHint?: (jamo: string, chord: string) => void;
 	onChange?: (text: string) => void;
 	onSubmit?: (text: string) => void | Promise<void>;
 	setText(text: string): void;
@@ -46,6 +47,7 @@ async function createContext() {
 	const updatePendingMessagesDisplay = vi.fn();
 	const handleBashCommand = vi.fn(async () => {});
 	const showStatus = vi.fn();
+	const setHookStatus = vi.fn();
 	const editor: FakeEditor = {
 		setText(text: string) {
 			editorText = text;
@@ -143,6 +145,7 @@ async function createContext() {
 		showWarning: vi.fn(),
 		showStatus,
 		hasActiveBtw: vi.fn(() => false),
+		statusLine: { setHookStatus } as unknown as InteractiveModeContext["statusLine"],
 	} as unknown as InteractiveModeContext;
 
 	return {
@@ -156,6 +159,7 @@ async function createContext() {
 			updatePendingMessagesDisplay,
 			handleBashCommand,
 			showStatus,
+			setHookStatus,
 		},
 	};
 }
@@ -238,6 +242,52 @@ describe("InputController keybinding setup", () => {
 		await expect(controller.handleFollowUp()).rejects.toThrow("queue full");
 
 		expect(ctx.locallySubmittedUserSignatures.has("queued during stream\u00000")).toBe(false);
+	});
+});
+
+describe("InputController Hangul IME chord hint", () => {
+	it("shows a transient hint under the input and auto-clears it", async () => {
+		vi.useFakeTimers();
+		try {
+			const { InputController, ctx, editor, spies } = await createContext();
+			const controller = new InputController(ctx);
+			controller.setupKeyHandlers();
+
+			editor.onHangulCtrlChordHint?.("ㅊ", "ctrl+c");
+
+			expect(spies.setHookStatus).toHaveBeenCalledWith(
+				"ime-hangul-chord",
+				expect.stringContaining("switch to English (한/A)"),
+			);
+			expect(spies.setHookStatus).toHaveBeenCalledWith("ime-hangul-chord", expect.stringContaining("ctrl+c"));
+
+			vi.advanceTimersByTime(4_000);
+			expect(spies.setHookStatus).toHaveBeenLastCalledWith("ime-hangul-chord", undefined);
+		} finally {
+			vi.useRealTimers();
+		}
+	});
+
+	it("extends the hint window when the chord is retried before it clears", async () => {
+		vi.useFakeTimers();
+		try {
+			const { InputController, ctx, editor, spies } = await createContext();
+			const controller = new InputController(ctx);
+			controller.setupKeyHandlers();
+
+			editor.onHangulCtrlChordHint?.("ㅇ", "ctrl+d");
+			vi.advanceTimersByTime(3_000);
+			editor.onHangulCtrlChordHint?.("ㅇ", "ctrl+d");
+			vi.advanceTimersByTime(3_000);
+
+			// 6s after the first press, but only 3s after the retry — still visible.
+			expect(spies.setHookStatus).not.toHaveBeenLastCalledWith("ime-hangul-chord", undefined);
+
+			vi.advanceTimersByTime(1_000);
+			expect(spies.setHookStatus).toHaveBeenLastCalledWith("ime-hangul-chord", undefined);
+		} finally {
+			vi.useRealTimers();
+		}
 	});
 });
 
