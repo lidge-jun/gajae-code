@@ -173,14 +173,15 @@ async function verifyDocsBranding(): Promise<GateResult> {
 	return {
 		name: "public docs current GJC crustacean theme direction",
 		passed:
-			rootReadme.includes("default dark TUI identity is the GJC red-claw theme") &&
+			// Brand-tolerant since Phase β rebrand (0b603b05): GJC or JWC spelling both satisfy the direction.
+			/default dark TUI identity is the (GJC|JWC) red-claw theme/.test(rootReadme) &&
 			rootReadme.includes("light-appearance terminals default to the bundled blue-crab theme") &&
 			packageReadme.includes("defaults to the bundled `red-claw`") &&
 			packageReadme.includes("bundled `blue-crab` theme") &&
 			themeDoc.includes('theme.dark = "red-claw"') &&
 			themeDoc.includes('theme.light = "blue-crab"'),
 		details: [
-			`README GJC red-claw default: ${rootReadme.includes("default dark TUI identity is the GJC red-claw theme")}`,
+			`README red-claw default (brand-tolerant): ${/default dark TUI identity is the (GJC|JWC) red-claw theme/.test(rootReadme)}`,
 			`README blue-crab light default: ${rootReadme.includes("light-appearance terminals default to the bundled blue-crab theme")}`,
 			`package README default red-claw: ${packageReadme.includes("defaults to the bundled `red-claw`")}`,
 			`package README default blue-crab: ${packageReadme.includes("bundled `blue-crab` theme")}`,
