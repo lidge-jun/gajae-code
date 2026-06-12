@@ -240,6 +240,35 @@ describe("native gjc jaw-interview runtime", () => {
 		expect(state.state.initial_idea).toBe("my vague idea");
 	});
 
+	it("falls back to the legacy gjc.deepInterview.ambiguityThreshold key (042 D041-D)", async () => {
+		const root = await tempDir();
+		await fs.mkdir(path.join(root, ".gjc"), { recursive: true });
+		await fs.writeFile(
+			path.join(root, ".gjc", "settings.json"),
+			JSON.stringify({ gjc: { deepInterview: { ambiguityThreshold: 0.12 } } }),
+		);
+		const result = await runNativeJawInterviewCommand(["--standard", "--json", "idea"], root);
+		expect(result.status).toBe(0);
+		const payload = JSON.parse(result.stdout ?? "{}");
+		expect(payload.threshold).toBeCloseTo(0.12);
+	});
+
+	it("prefers the new jwc.interview key over the legacy key when both exist", async () => {
+		const root = await tempDir();
+		await fs.mkdir(path.join(root, ".gjc"), { recursive: true });
+		await fs.writeFile(
+			path.join(root, ".gjc", "settings.json"),
+			JSON.stringify({
+				jwc: { interview: { ambiguityThreshold: 0.09 } },
+				gjc: { deepInterview: { ambiguityThreshold: 0.4 } },
+			}),
+		);
+		const result = await runNativeJawInterviewCommand(["--standard", "--json", "idea"], root);
+		expect(result.status).toBe(0);
+		const payload = JSON.parse(result.stdout ?? "{}");
+		expect(payload.threshold).toBeCloseTo(0.09);
+	});
+
 	it("honors jwc.interview.ambiguityThreshold in project .gjc/settings.json", async () => {
 		const root = await tempDir();
 		await fs.mkdir(path.join(root, ".gjc"), { recursive: true });

@@ -25,6 +25,46 @@ const multiQ: AskGateQuestion = {
 	multi: true,
 };
 
+describe("questionToGate meta passthrough (042 D041-A)", () => {
+	it("builds stage_state from structured meta, not the question text", () => {
+		const gate = questionToGate({
+			id: "round-3",
+			question: "What exact conditions must be satisfied?",
+			options: [{ label: "A" }, { label: "B" }],
+			meta: { kind: "round", round: 3, component: "Review UI", targeting: "criteria", ambiguity: 0.38 },
+		});
+		const state = gate.context?.stage_state as Record<string, unknown>;
+		expect(state.round).toBe(3);
+		expect(state.component).toBe("Review UI");
+		expect(state.targeting).toBe("criteria");
+		expect(state.ambiguity).toBe(0.38);
+	});
+
+	it("marks topology gates from meta kind", () => {
+		const gate = questionToGate({
+			id: "round-0",
+			question: "Is that topology right?",
+			options: [{ label: "Looks right" }],
+			meta: { kind: "topology", round: 0 },
+		});
+		const state = gate.context?.stage_state as Record<string, unknown>;
+		expect(state.topology_gate).toBe(true);
+		expect(state.round).toBe(0);
+	});
+
+	it("falls back to the legacy text-header regex when meta is absent", () => {
+		const gate = questionToGate({
+			id: "legacy",
+			question: "Round 4 | Contrarian mode | Ambiguity: 41%\n\nWhat if the opposite were true?",
+			options: [{ label: "Keep" }, { label: "Drop" }],
+		});
+		const state = gate.context?.stage_state as Record<string, unknown>;
+		expect(state.round).toBe(4);
+		expect(state.challenge_mode).toBe("contrarian mode");
+		expect(state.ambiguity).toBe("41%");
+	});
+});
+
 describe("questionToGate", () => {
 	it("emits a jaw-interview question gate with option set + free-text schema", () => {
 		const gate = questionToGate(singleQ);
