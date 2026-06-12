@@ -59,7 +59,7 @@
 버그가 많은 군은 하위번호(081.n)로 묶음:
 [081](./081_moc_cursor_tools.md) **cursor 도구군** (MOC/정본) — 081.1 미표시·081.2 타이틀환각·081.3 실행 unbound this·081.4 Glob —
 **✅ 4건 수정·e2e 검증 완료** (080 밴드 발현, hotfix 트랙). 081.5 = cursor 외 동형 패턴 감사 ·
-082.n = **TUI Ctrl/한글 IME 키 미작동** (조사 중) ·
+[082](./082_moc_tui_input.md) **TUI 입력/IME 이슈군** — 082.1 Ctrl/종료 미작동·082.2 첫 글자 캐럿 점프 (둘 다 한글 IME, 원인 확정, 수정 대기) ·
 [091](./091_plan_provider_kiro.md) — kiro 프로바이더 [제안] (090 밴드, 기술 의존 없음 — 게이트는 ToS 결정뿐) ·
 [112](./112_moc_gui.md) — GUI/Claude Desktop 옵션 (110 밴드 표면 트랙, M2 산출물 의존)
 
