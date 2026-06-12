@@ -100,7 +100,7 @@ describe("jwc goal adapter (060/061)", () => {
 		await runNativeGoalCommand(["set", "objective"], cwd);
 		const show = await runNativeGoalCommand(["show"], cwd);
 		expect(show.status).toBe(0);
-		expect(show.stdout).toContain("stories: G001:active");
+		expect(show.stdout).toContain("Stories: G001:active");
 
 		const drop = await runNativeGoalCommand(["drop", "scope changed"], cwd);
 		expect(drop.status).toBe(0);

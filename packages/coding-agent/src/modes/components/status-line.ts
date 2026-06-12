@@ -800,9 +800,20 @@ export class StatusLineComponent implements Component {
 					}
 				}
 			}
+			// 99.00.03 P1-4 — drop unprotected segments first so workflow context
+			// (mode/pabcd) survives narrow terminals; protected ones go last.
+			const PROTECTED_SEGMENTS: ReadonlySet<string> = new Set(["mode", "pabcd"]);
 			while (totalWidth() > topFillWidth && left.length > 0) {
-				left.pop();
-				leftSegIds.pop();
+				let dropIdx = -1;
+				for (let i = leftSegIds.length - 1; i >= 0; i--) {
+					if (!PROTECTED_SEGMENTS.has(leftSegIds[i])) {
+						dropIdx = i;
+						break;
+					}
+				}
+				if (dropIdx === -1) dropIdx = leftSegIds.length - 1; // only protected left — drop from the end
+				left.splice(dropIdx, 1);
+				leftSegIds.splice(dropIdx, 1);
 				leftWidth = groupWidth(left, leftCapWidth, leftSepWidth);
 			}
 		}

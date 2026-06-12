@@ -169,17 +169,38 @@ function statusText(envelope: PabcdEnvelope | null, json: boolean): string {
 				: { active: false, stage: null },
 		)}\n`;
 	}
-	if (!envelope) return "pabcd: idle (no active orchestration). Start with: orchestrate i\n";
+	if (!envelope) {
+		return "pabcd: idle (no active orchestration)\nStart with: jwc orchestrate i (interview) or jwc orchestrate p (plan directly)\n";
+	}
 	const ctx = envelope.ctx ?? {};
-	const bits = [
-		`stage=${envelope.current_phase}`,
-		envelope.spec_ref ? `spec_ref=${envelope.spec_ref}` : null,
-		envelope.plan_ref ? `plan_ref=${envelope.plan_ref}` : null,
-		ctx.a_audit_mode ? `a_audit_mode=${ctx.a_audit_mode}` : null,
-		ctx.audit_status ? `audit=${ctx.audit_status}` : null,
-		ctx.verification_status ? `verification=${ctx.verification_status}` : null,
-	].filter(Boolean);
-	return `pabcd: ${bits.join(" ")}\n`;
+	const stage = envelope.current_phase;
+	// cli-jaw status-parity (99.00.03 P1-1): one field per line, gates always
+	// shown with pending defaults, next action derived from the gate state.
+	const nextAction =
+		stage === "a" && ctx.audit_status !== "pass"
+			? "record the audit verdict (orchestrate verdict --worker-output <file>) or pass --user-approved"
+			: stage === "b" && ctx.verification_status !== "done"
+				? "record the verification verdict (orchestrate verdict --worker-output <file>) or pass --user-approved"
+				: stage === "complete"
+					? "start a new cycle: jwc orchestrate i (or p)"
+					: `advance with: jwc orchestrate ${nextStageFor(stage)}`;
+	const lines = [
+		`Stage:        ${stage}${envelope.active === false ? " (inactive)" : ""}`,
+		`Scope:        ${envelope.session_id ? `session ${envelope.session_id}` : "shared"}`,
+		`Audit:        ${ctx.audit_status ?? "pending"}${ctx.a_audit_mode ? ` (${ctx.a_audit_mode}${ctx.a_round ? `, round ${ctx.a_round}` : ""})` : ""}`,
+		`Verification: ${ctx.verification_status ?? "pending"}`,
+		`Approved:     ${ctx.user_approved ? "yes" : "no"}`,
+		`Spec:         ${envelope.spec_ref ?? "-"}`,
+		`Plan:         ${envelope.plan_ref ?? "-"}`,
+		`Next:         ${nextAction}`,
+	];
+	return `pabcd status\n${lines.join("\n")}\n`;
+}
+
+function nextStageFor(stage: string): string {
+	const order = ["i", "p", "a", "b", "c", "d"];
+	const idx = order.indexOf(stage);
+	return idx >= 0 && idx < order.length - 1 ? order[idx + 1] : "d --complete";
 }
 
 function nextCtxFor(target: PabcdStage, current: PabcdCtx, args: ParsedArgs): PabcdCtx {

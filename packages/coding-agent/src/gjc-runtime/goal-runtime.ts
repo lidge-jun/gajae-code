@@ -177,11 +177,15 @@ export async function runNativeGoalCommand(argv: readonly string[], cwd: string)
 				if (!plan) return { stdout: "goal: none (run `jwc goal set <objective>`)\n", status: 0 };
 				const active = plan.goals.find(goal => goal.status === "active");
 				const gate = await readPauseGate(cwd);
+				// 99.00.03 P1-2 — user objective first; the engine-level plan
+				// objective (ultragoal boilerplate) is detail, not the headline.
+				const userObjective = active?.objective ?? plan.brief.split("\n")[0];
 				const lines = [
-					`objective: ${plan.gjcObjective}`,
-					`brief: ${plan.brief.split("\n")[0]}`,
-					`active: ${active ? `${active.id} — ${active.objective}` : "none"}`,
-					`stories: ${plan.goals.map(goal => `${goal.id}:${goal.status}`).join(" ")}`,
+					`Goal:    ${userObjective}`,
+					`Status:  ${active ? active.status : "no active story"}${gate.paused ? " (paused)" : ""}`,
+					`Mode:    ultragoal ledger (.jwc/ultragoal/)`,
+					`ID:      ${active?.id ?? "-"}`,
+					`Stories: ${plan.goals.map(goal => `${goal.id}:${goal.status}`).join(" ")}`,
 				];
 				if (gate.paused) lines.push(`paused: by ${gate.paused.actor} at ${gate.paused.timestamp}`);
 				if (summary.currentGoal?.evidence) lines.push(`last evidence: ${summary.currentGoal.evidence}`);
