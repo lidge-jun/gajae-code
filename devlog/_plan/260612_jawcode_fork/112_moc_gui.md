@@ -143,11 +143,33 @@ D130-1 정합: Chat=boss 파이프라인 스코프(cli-jaw DB 정본), Code=세�
 3. Code 모드 UI 함의: 세션은 가볍게 만들고 가볍게 버리는 UX (새 세션 비용 ≈ 0) — 세션별 영속 설정을
    최소화하고 인스턴스 레벨(cli-jaw 설정)에서 상속.
 
+## Code 모드 fork UX [확정 D112-4, 260613 — 사용자]
+
+**fork는 "기존 채팅 유지 + 새 convo 생성"** — TUI(99.07.01)의 in-place 전환과 표면이 다르다:
+
+| | TUI `/fork` (99.07.01 랜딩) | Code 모드 (웹/electron) |
+|---|---|---|
+| 원본 세션 | 보존되지만 화면은 떠남 (단일 뷰포트 제약 → 풀 id 복귀 안내 출력) | **convo 목록·뷰 그대로 유지** — 복귀 안내 자체가 불필요 |
+| 새 세션 | 같은 뷰포트가 in-place 전환 | **새 convo 항목이 목록에 생성** + 포커스가 새 convo로 이동 |
+| 엔진 | `AgentSession.fork()` (전체 복제 + `parentSession` 링크) | **동일 — 엔진 동사 재사용, 표면만 다름** (113 원칙: 의미론은 jwc, 웹은 뷰) |
+
+- 와이어 (113.1 v2 후보): `POST /api/jwc/sessions/:id/fork` → `{newSessionId, parentSession}` + SSE
+  `session_created {forkedFrom}` — cli-jaw chat-sessions의 기존 이벤트 형태(`forkedFrom`)와 동형이라 대시보드 수신부 선례 재사용.
+- D112-2 정합: 세션은 일회용·병렬·생성비용 ≈ 0 — fork가 목록에 convo 하나 더 만드는 건 그 원칙의 자연스러운 표현.
+- claude.ai 웹 분기 모델과도 동형 (원본 대화 무손상 + 새 대화로 이어가기).
+
 ## 완료 기준
 
 - electron 앱 기동 → cli-jaw 서버 attach/spawn + 대시보드 렌더 + jwc sidecar로 대화 1회 e2e
 - (보조 트랙 착수 시) Claude Desktop에 `.mcpb` 설치 → jaw 툴 1회 호출 + MCP Apps 패널 1회 렌더
 - **Code 모드 (D112-1)**: 모드 토글 → 폴더/워크트리 선택 → jwc 세션 1회 e2e (도구 셀 접기 렌더 + 권한 다이얼로그 동작)
+
+## 문서 거버넌스 [확정 D112-3, 260613 — 사용자]
+
+**MVP 구현까지의 설계·추적 정본은 jawcode devlog** (본 112.x·113.x·110.x·130.x 체인).
+cli-jaw devlog(`_plan/260613_jwc_code_mode/`)는 **사후 구현 기록 전용** — 구현이 랜딩된 뒤
+무엇이 어떻게 들어갔는지(_fin 이동 포함)만 기록한다. 설계 변경·결정·블로커 추적을 cli-jaw 쪽에
+이중 기재하지 않는다 (드리프트 방지 — cli-jaw 01_jawcode_refs.md가 정본 포인터 역할).
 
 ## 열린 질문 (착수 전 인터뷰)
 
