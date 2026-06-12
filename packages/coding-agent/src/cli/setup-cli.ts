@@ -127,7 +127,7 @@ export function parseSetupArgs(args: string[]): SetupCommandArgs | undefined {
 			flags.artifactByteCap = args[++i];
 		} else if (arg === "--server-key") {
 			flags.serverKey = args[++i];
-		} else if (arg === "--gjc-command") {
+		} else if (arg === "--jwc-command" || arg === "--gjc-command") {
 			flags.gjcCommand = args[++i];
 		} else if (arg === "--target") {
 			flags.target = args[++i];

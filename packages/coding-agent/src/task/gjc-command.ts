@@ -8,7 +8,7 @@ interface GjcCommand {
 	shell: boolean;
 }
 
-const DEFAULT_CMD = process.platform === "win32" ? "gjc.cmd" : "gjc";
+const DEFAULT_CMD = process.platform === "win32" ? "jwc.cmd" : "jwc";
 const DEFAULT_SHELL = process.platform === "win32";
 
 export function resolveGjcCommand(): GjcCommand {
