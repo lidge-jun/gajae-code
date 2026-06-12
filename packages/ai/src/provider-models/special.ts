@@ -24,6 +24,10 @@ export function openaiCodexModelManagerOptions(
 						const result = await fetchCodexModels({ accessToken, accountId, clientVersion });
 						return result?.models ?? null;
 					},
+					// The backend serves only a handful of live models; bundled legacy
+					// ids (gpt-5, 5.1, 5.2, …) are not usable on this OAuth transport.
+					// Tag them unlisted so the picker hides them by default.
+					markUnlistedOutsideDynamic: true,
 				}
 			: undefined),
 	};

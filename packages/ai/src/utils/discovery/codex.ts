@@ -4,6 +4,12 @@ import type { Model } from "../../types";
 import { isRecord } from "../../utils";
 
 const DEFAULT_MODEL_LIST_PATHS = ["/codex/models", "/models"] as const;
+/**
+ * Backend-served ids that are not meant for the user-facing model picker
+ * (cli-jaw precedent: codex-auto-review is absent from every picker). Tagged
+ * `unlisted` instead of dropped so ctrl+o can still reveal them.
+ */
+const UNLISTED_CODEX_SLUGS = new Set(["codex-auto-review"]);
 const DEFAULT_CONTEXT_WINDOW = 272_000;
 const DEFAULT_MAX_TOKENS = 128_000;
 const DEFAULT_CODEX_CLIENT_VERSION = "0.99.0";
@@ -21,6 +27,7 @@ const codexModelEntrySchema = z
 		id: z.unknown().optional(),
 		display_name: z.unknown().optional(),
 		context_window: z.unknown().optional(),
+		max_context_window: z.unknown().optional(),
 		default_reasoning_level: z.unknown().optional(),
 		supported_reasoning_levels: z.unknown().optional(),
 		input_modalities: z.unknown().optional(),
@@ -252,13 +259,17 @@ function normalizeCodexModelEntry(entry: unknown, baseUrl: string): NormalizedCo
 		return null;
 	}
 
-	const supportedInApi = toBoolean(payload.supported_in_api);
-	if (supportedInApi === false) {
-		return null;
-	}
-
+	// `supported_in_api` gates the API platform, not this ChatGPT-OAuth
+	// transport: gpt-5.3-codex-spark reports `false` yet is fully served here
+	// (cli-jaw exposes it with runtime reasoning guards). Do not filter on it.
 	const name = toNonEmptyString(payload.display_name) ?? slug;
-	const contextWindow = toPositiveInt(payload.context_window) ?? DEFAULT_CONTEXT_WINDOW;
+	// The backend reports the default window in `context_window` and the full
+	// session capacity in `max_context_window` (e.g. gpt-5.4: 272K default /
+	// 1M max). Track the capacity so the HUD and compaction thresholds reflect
+	// what the session can actually hold.
+	const reportedWindow = toPositiveInt(payload.context_window);
+	const maxWindow = toPositiveInt(payload.max_context_window);
+	const contextWindow = Math.max(reportedWindow ?? 0, maxWindow ?? 0) || DEFAULT_CONTEXT_WINDOW;
 	const maxTokens = Math.min(DEFAULT_MAX_TOKENS, contextWindow);
 	const reasoning = supportsReasoning(payload.default_reasoning_level, payload.supported_reasoning_levels);
 	const input = normalizeInputModalities(payload.input_modalities);
@@ -280,6 +291,7 @@ function normalizeCodexModelEntry(entry: unknown, baseUrl: string): NormalizedCo
 			maxTokens,
 			...(preferWebsockets ? { preferWebsockets: true } : {}),
 			...(priority !== Number.MAX_SAFE_INTEGER ? { priority } : {}),
+			...(UNLISTED_CODEX_SLUGS.has(slug) ? { unlisted: true } : {}),
 		},
 	};
 }
