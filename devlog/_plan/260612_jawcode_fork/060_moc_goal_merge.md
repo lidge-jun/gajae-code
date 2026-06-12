@@ -2,7 +2,8 @@
 
 > 📐 상세 설계: [051_design_command_port.md](./051_design_command_port.md) §2 — cli-jaw goal 동사 셋 → ultragoal goal 도구/레저 매핑.
 
-> 상태: 🟡 설계 문서화 완료 — [061_design_goal_merge.md](./061_design_goal_merge.md) (ultragoal 실사 + 어휘 매핑 + 이식 지점, 260612 11:40). 잔여: 착수 인터뷰([열린 질문] 6건) → 구현.
+> 상태: 🟡 설계 문서화 완료 — [061_design_goal_merge.md](./061_design_goal_merge.md) (ultragoal 실사 + 어휘 매핑 + 이식 지점, 260612 11:40)
+> + [062_schema_cli_jaw_goal.md](./062_schema_cli_jaw_goal.md) (cli-jaw goal 워크플로우 전수 — GoalState/evidence 번들 3종/2-tap 게이트/continuation 프롬프트 8섹션/goal-run, 260612 13:10). 잔여: 착수 인터뷰([열린 질문] 6+2건) → 구현.
 > 결정 근거: D3 [확정] ultragoal ↔ jaw goal 매핑.
 
 ## 코드 사실 (조사 완료)
