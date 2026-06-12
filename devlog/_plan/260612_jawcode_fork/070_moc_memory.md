@@ -3,7 +3,8 @@
 > 📐 상세 설계: [051_design_command_port.md](./051_design_command_port.md) §2 — jwc memory 동사 → memories/hindsight-retain 매핑.
 > R16 확정: gjc 메모리는 user-level 전역(+per-project-tagged 스코핑, settings-schema.ts:1415) — "세션 단위" 우려 해소.
 
-> 상태: 🟡 설계 문서화 완료 — [071_design_memory_merge.md](./071_design_memory_merge.md) (memories 엔진 실사 + 동사→API 매핑, 260612 11:40). 잔여: 착수 인터뷰([열린 질문] 7건) → 구현.
+> 상태: 🟡 설계 문서화 완료 — [071_design_memory_merge.md](./071_design_memory_merge.md) (memories 엔진 실사 + 동사→API 매핑, 260612 11:40)
+> + [072_schema_cli_jaw_memory.md](./072_schema_cli_jaw_memory.md) (cli-jaw memory 워크플로우 전수 — kind 분류/FTS5 랭킹/동사 정밀 계약/role별 주입 예산/flush·reflect↔stage1·phase2 대응, 260612 13:10). 잔여: 착수 인터뷰([열린 질문] 7+3건) → 구현.
 > 입력: 사용자 "jwc memory 폴더를 만들어서 확장 가능하게" (R2, 시맨틱 미확정 — 본 MOC의 [기본값]이 1안).
 
 ## repo 기본값 (코드 확인 260612 03:09 — 중요 발견)
