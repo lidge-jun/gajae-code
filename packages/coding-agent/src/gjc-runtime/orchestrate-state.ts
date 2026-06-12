@@ -91,12 +91,15 @@ export function canTransitionPabcd(
 	if (from === null) {
 		return PABCD_ENTRY_STAGES.includes(to)
 			? { ok: true }
-			: { ok: false, reason: `No active pabcd state. Start with: jwc orchestrate i (interview) or jwc orchestrate p (plan directly — spec optional).` };
+			: {
+					ok: false,
+					reason: `No active pabcd state. Start with: jwc orchestrate i (interview) or jwc orchestrate p (plan directly — spec optional).`,
+				};
 	}
 	if (!VALID_PABCD_TRANSITIONS[from]?.includes(to)) {
 		return {
 			ok: false,
-			reason: `Invalid transition: ${from} → ${to}. Stages are forward-only with i-return; start from the next valid stage.`,
+			reason: `Invalid transition: ${from} → ${to}. Stages are forward-only with i-return; start from the next valid stage. To abandon the orchestration entirely: jwc orchestrate reset.`,
 		};
 	}
 	// Any stage → i: always allowed, context preserved by caller.

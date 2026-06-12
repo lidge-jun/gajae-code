@@ -67,6 +67,8 @@ interface ParsedArgs {
 	userApproved: boolean;
 	auditMode?: "solo" | "dual";
 	specRef?: string;
+	shared?: boolean;
+	dryRun?: boolean;
 	planRef?: string;
 	workerOutput?: string;
 }
@@ -84,6 +86,12 @@ function parseArgs(argv: string[]): ParsedArgs | { error: string } {
 				break;
 			case "--user-approved":
 				parsed.userApproved = true;
+				break;
+			case "--shared":
+				parsed.shared = true;
+				break;
+			case "--dry-run":
+				parsed.dryRun = true;
 				break;
 			case "--session-id":
 			case "--audit-mode":
@@ -314,9 +322,11 @@ export async function runNativeOrchestrateCommand(argv: string[], cwd: string): 
 		return { stdout: auditPrompt, status: 0 };
 	}
 
+	if (sub === "reset") return await resetPabcdState(cwd, parsed);
+
 	if (!isStage(sub)) {
 		return {
-			stderr: `unknown stage '${sub}' (expected ${PABCD_STAGES.join("|")}, status, verdict, audit-prompt)\n`,
+			stderr: `unknown stage '${sub}' (expected ${PABCD_STAGES.join("|")}, status, verdict, audit-prompt, reset)\n`,
 			status: 2,
 		};
 	}
@@ -389,4 +399,60 @@ async function recordGoalCheckpointForTransition(
 	} catch {
 		// fusion is additive — transitions never fail on ledger errors
 	}
+}
+
+/**
+ * `jwc orchestrate reset` — cli-jaw parity: return to IDLE from ANY state by
+ * deleting the pabcd state file (context cleared). Non-interactive by design
+ * (99.07.00 §4-2): prints a summary and proceeds — no confirmation prompt.
+ * Deletes ONLY pabcd-state.json (the session dir hosts other state files).
+ * The goal ledger is never touched (cli-jaw clears orc ctx only).
+ */
+async function resetPabcdState(
+	cwd: string,
+	parsed: { sessionId?: string; shared?: boolean; dryRun?: boolean; json?: boolean },
+): Promise<OrchestrateCommandResult> {
+	const targets: Array<{ label: string; path: string }> = [];
+	if (parsed.sessionId)
+		targets.push({ label: `session ${parsed.sessionId}`, path: pabcdStatePath(cwd, parsed.sessionId) });
+	if (!parsed.sessionId || parsed.shared) targets.push({ label: "shared", path: pabcdStatePath(cwd) });
+
+	const lines: string[] = [];
+	const removed: string[] = [];
+	for (const target of targets) {
+		const current = await readPabcdState(cwd, target.label === "shared" ? undefined : parsed.sessionId);
+		let summary = "absent";
+		try {
+			const raw = await fs.readFile(target.path, "utf8");
+			const envelope = JSON.parse(raw) as { current_phase?: string; spec_ref?: string; active?: boolean };
+			summary = `stage=${envelope.current_phase ?? "?"}${envelope.spec_ref ? ` spec_ref=${envelope.spec_ref}` : ""}${envelope.active === false ? " (inactive)" : ""}`;
+		} catch {
+			// absent or unreadable — treat as idle no-op for this target
+			void current;
+		}
+		if (summary === "absent") {
+			lines.push(`${target.label}: no pabcd state (already idle)`);
+			continue;
+		}
+		if (parsed.dryRun) {
+			lines.push(`${target.label}: would reset (${summary}) — ${target.path}`);
+			continue;
+		}
+		try {
+			await fs.unlink(target.path);
+			removed.push(target.path);
+			lines.push(`${target.label}: reset (${summary})`);
+		} catch (error) {
+			return { stderr: `orchestrate reset failed for ${target.path}: ${String(error)}\n`, status: 1 };
+		}
+	}
+
+	if (parsed.json) {
+		return { stdout: `${JSON.stringify({ ok: true, dry_run: parsed.dryRun ?? false, removed })}\n`, status: 0 };
+	}
+	const verb = parsed.dryRun ? "(dry-run) " : "";
+	return {
+		stdout: `${verb}\u2705 pabcd \u2192 idle\n${lines.join("\n")}\nRe-enter anytime: jwc orchestrate i (interview) or jwc orchestrate p (plan directly).\n`,
+		status: 0,
+	};
 }

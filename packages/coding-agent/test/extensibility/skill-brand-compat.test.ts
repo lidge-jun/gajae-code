@@ -23,10 +23,8 @@ describe("applyCliJawDevVocabularyMap (056 contract)", () => {
 		expect(applyCliJawDevVocabularyMap("then cli-jaw orchestrate P")).toContain("jwc orchestrate p");
 	});
 
-	it("maps orchestrate reset with an unsupported note", () => {
-		expect(applyCliJawDevVocabularyMap("cli-jaw orchestrate reset")).toBe(
-			"jwc orchestrate complete (full reset unsupported)",
-		);
+	it("maps orchestrate reset to the native reset verb (99.07 U1)", () => {
+		expect(applyCliJawDevVocabularyMap("cli-jaw orchestrate reset")).toBe("jwc orchestrate reset");
 	});
 
 	it("degrades server-only surfaces with an explicit note, never silently", () => {

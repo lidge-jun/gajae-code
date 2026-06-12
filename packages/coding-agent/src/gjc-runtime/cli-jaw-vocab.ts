@@ -18,7 +18,7 @@ type Rule = [RegExp, string | ((substring: string, ...args: string[]) => string)
 
 const COMMAND_RULES: readonly Rule[] = [
 	[/\bcli-jaw orchestrate ([IPABCD])\b/g, (_m, stage) => `jwc orchestrate ${stage.toLowerCase()}`],
-	[/\bcli-jaw orchestrate reset\b/g, "jwc orchestrate complete (full reset unsupported)"],
+	[/\bcli-jaw orchestrate reset\b/g, "jwc orchestrate reset"],
 	[/\bcli-jaw orchestrate\b/g, "jwc orchestrate"],
 	[
 		/\bcli-jaw dispatch[^\n`]*/g,

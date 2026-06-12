@@ -44,6 +44,7 @@ The IPABCD orchestration surface is a native workflow engine for end-to-end proj
 - b (BUILD): Main session implements the plan directly; read-only verifier subagent reports DONE/NEEDS_FIX (gates: verification_status=done required for b→c).
 - c (CHECK): Mechanical gates (bun run check + affected tests) + adversarial review + 3-way reject routing (code issue→b, plan issue→p, spec issue→i).
 - d (DONE): Cycle summary, WONDER+REFLECT reflections, close with `jwc orchestrate d --complete`.
+- reset: abandon the orchestration from ANY stage — `jwc orchestrate reset` clears the state (context cleared, back to idle). Use when the user wants OUT of the pipeline; re-enter later with i or p.
 
 State file: .jwc/state/sessions/<session-id>/pabcd-state.json — shell-run `jwc orchestrate` scopes to the live session automatically (JWC_SESSION_ID env); never pass a session id by hand. Current phase and gate verdicts are readable with `readPabcdState(cwd, sessionId)`.
 YOU advance IPABCD phases by running the exact `jwc orchestrate <stage>` command via the shell tool. No other method.
@@ -73,6 +74,7 @@ Use for read-only plan critique. It approves only when execution can proceed wit
 
 <routing>
 - User asks to run pabcd / advance a stage (e.g. "pabcd 진행해", "/orchestrate p 해줘", "다음 단계로 가자") → run `jwc orchestrate <stage>` via the shell tool yourself; the stdout IS the stage prompt — read it and follow it immediately.
+- User asks to LEAVE/abandon the pipeline (e.g. "상태머신에서 벗어나", "pabcd 그만", "오케스트레이션 취소") → run `jwc orchestrate reset` via the shell tool — never hand-edit state files or force phases.
 - YOU advance IPABCD phases by running the exact `jwc orchestrate <stage>` command via the shell tool. No other method. Do not simulate or paraphrase the stage prompt.
 - Clear, low-risk implementation request → implement directly with focused verification.
 - Vague requirements → use `jaw-interview` before planning or execution.
