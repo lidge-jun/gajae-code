@@ -43,9 +43,10 @@ function composerRow(term: VirtualTerminal): number {
 }
 
 function pinnedTui(term: VirtualTerminal, content: Component, composer: Component = new ComposerStub()): TUI {
+	// §11 layout: the fill sits ABOVE the chat so content+composer hug the floor.
 	const tui = new TUI(term);
-	tui.addChild(content);
 	tui.addChild(new ViewportFill());
+	tui.addChild(content);
 	tui.addChild(composer);
 	return tui;
 }
@@ -207,10 +208,7 @@ describe("ViewportFill boundary crossing (083.6 worst case)", () => {
 	it("re-pins the composer when a big collapse drops the frame back below the viewport", async () => {
 		const term = new VirtualTerminal(60, 12);
 		const content = new MutableContent(["chat-0"]);
-		const tui = new TUI(term);
-		tui.addChild(content);
-		tui.addChild(new ViewportFill());
-		tui.addChild(new ComposerStub());
+		const tui = pinnedTui(term, content);
 		tui.start();
 		await new Promise<void>(resolve => process.nextTick(resolve));
 		await Bun.sleep(17);
@@ -236,11 +234,11 @@ describe("ViewportFill boundary crossing (083.6 worst case)", () => {
 		expect(viewport[9]).toBe("[status]");
 		expect(viewport[10]).toBe("> input");
 		expect(viewport[11]).toBe("[footer]");
-		// Content sits at the top with the fill absorbing the middle.
-		expect(viewport[0]).toBe("chat-0");
-		expect(viewport[1]).toBe("tool-collapsed");
-		// No stale tool lines left visible between content and composer.
-		for (let row = 2; row < 9; row++) {
+		// §11: content hugs the composer from above; the fill absorbs the top.
+		expect(viewport[7]).toBe("chat-0");
+		expect(viewport[8]).toBe("tool-collapsed");
+		// No stale tool lines left visible above the content.
+		for (let row = 0; row < 7; row++) {
 			expect(viewport[row].trim()).toBe("");
 		}
 		tui.stop();
@@ -306,15 +304,20 @@ describe("ViewportFill gap compaction (083.7 §10)", () => {
 		content.setLines(Array.from({ length: 25 }, (_v, i) => `chat-${i}`));
 		tui.requestRender();
 		await flushRender(term);
+		// §11: the floor gap sits above the content (scrollback side), so the
+		// viewport already shows content hugging the composer…
 		expect(term.getViewport()[11]).toBe("[footer]");
-		expect(term.getViewport()[8].trim()).toBe(""); // gap row above composer
+		expect(term.getViewport()[8]).toBe("chat-24");
+		// …but the buffer carries blank fill rows between old and new content.
+		const blanksBefore = term.getScrollBuffer().filter(line => line.trim() === "").length;
+		expect(blanksBefore).toBeGreaterThan(0);
 
-		// Turn end: compact the gap — content tail hugs the composer again.
+		// Turn end: compact — buffer rebuilt without the dead blank region.
 		tui.compactViewportFill();
 		await flushRender(term);
 
 		const viewport = term.getViewport();
-		expect(viewport[8]).toBe("chat-24"); // last content row directly above composer
+		expect(viewport[8]).toBe("chat-24"); // content still hugs the composer
 		expect(viewport[9]).toBe("[status]");
 		expect(viewport[11]).toBe("[footer]");
 		// Scrollback rebuilt consistently — earlier transcript still reachable.
@@ -325,6 +328,114 @@ describe("ViewportFill gap compaction (083.7 §10)", () => {
 		tui.compactViewportFill();
 		await flushRender(term);
 		expect(tui.fullRedraws).toBe(redraws);
+		tui.stop();
+	});
+});
+
+describe("ViewportFill slash restore (99.20.03 표면 3 시각 보장)", () => {
+	it("keeps content+composer on the floor when the composer cluster shrinks back (selector close)", async () => {
+		const term = new VirtualTerminal(60, 16);
+		const content = new MutableContent(["chat-0", "chat-1", "chat-2"]);
+		const cluster = new MutableContent(["[status]", "> input", "[footer]"]);
+		const tui = new TUI(term);
+		tui.addChild(new ViewportFill());
+		tui.addChild(content);
+		tui.addChild(cluster);
+		tui.start();
+		await flushRender(term);
+		expect(term.getViewport()[15]).toBe("[footer]");
+		expect(term.getViewport()[12]).toBe("chat-2"); // content hugs the cluster
+
+		// Slash selector opens — the cluster grows by 6 rows in place of the editor.
+		cluster.setLines(["[status]", ...Array.from({ length: 6 }, (_v, i) => `option-${i}`), "[footer]"]);
+		tui.requestRender();
+		await flushRender(term);
+		expect(term.getViewport()[15]).toBe("[footer]");
+
+		// Selector closes — the editor is restored (cluster shrinks back).
+		cluster.setLines(["[status]", "> input", "[footer]"]);
+		tui.requestRender();
+		await flushRender(term);
+
+		const viewport = term.getViewport();
+		// Everything re-renders at the bottom: footer on the floor, content
+		// directly above the restored composer — nothing stranded at the top.
+		expect(viewport[15]).toBe("[footer]");
+		expect(viewport[14]).toBe("> input");
+		expect(viewport[13]).toBe("[status]");
+		expect(viewport[12]).toBe("chat-2");
+		expect(viewport[0].trim()).toBe(""); // gap absorbed at the top
+		tui.stop();
+	});
+});
+
+describe("ViewportFill oversized selector restore (사용자 260613 00:04 스크린샷 시나리오)", () => {
+	it("returns the restored composer to the floor after a selector taller than the viewport closes", async () => {
+		const term = new VirtualTerminal(60, 12);
+		const content = new MutableContent(["chat-0", "chat-1"]);
+		const cluster = new MutableContent(["[status]", "> input", "[footer]"]);
+		const tui = new TUI(term);
+		tui.addChild(new ViewportFill());
+		tui.addChild(content);
+		tui.addChild(cluster);
+		tui.start();
+		await flushRender(term);
+		expect(term.getViewport()[11]).toBe("[footer]");
+
+		// Selector taller than the viewport opens — frame overflows and scrolls
+		// ("스크롤이 내려가서"). Bottom anchored: the selector tail is visible.
+		cluster.setLines(["[status]", ...Array.from({ length: 20 }, (_v, i) => `option-${i}`), "[footer]"]);
+		tui.requestRender();
+		await flushRender(term);
+		expect(term.getViewport()[11]).toBe("[footer]");
+		expect(term.getViewport()[10]).toBe("option-19");
+
+		// Selector closes — editor restored. The frame shrinks massively while
+		// the buffer cannot un-scroll; the regression was a composer stranded
+		// mid-screen with blank rows BELOW it (B1 §9 behavior).
+		cluster.setLines(["[status]", "> input", "[footer]"]);
+		tui.requestRender();
+		await flushRender(term);
+
+		const viewport = term.getViewport();
+		expect(viewport[11]).toBe("[footer]"); // composer back on the floor
+		expect(viewport[10]).toBe("> input");
+		expect(viewport[9]).toBe("[status]");
+		expect(viewport[8]).toBe("chat-1"); // content hugs the restored composer
+		tui.stop();
+	});
+});
+
+describe("ViewportFill sticky gap (083.7 §12 — append diff-storm regression)", () => {
+	it("does not full-redraw on streaming appends while an overflow gap exists", async () => {
+		const term = new VirtualTerminal(60, 12);
+		const content = new MutableContent(Array.from({ length: 30 }, (_v, i) => `chat-${i}`));
+		const tui = pinnedTui(term, content);
+		tui.start();
+		await flushRender(term);
+
+		// Collapse creates the gap (one full redraw here is fine).
+		content.setLines(Array.from({ length: 25 }, (_v, i) => `chat-${i}`));
+		tui.requestRender();
+		await flushRender(term);
+		const baseline = tui.fullRedraws;
+
+		// Streaming: 5 single-line appends — each must be an append-only diff.
+		// (Regression: the gap used to shrink from the top, shifting every row
+		// below and forcing a 2J/3J full redraw per chunk — visible as the
+		// viewport "jumping to the top" mid-turn in VS Code.)
+		const lines = Array.from({ length: 25 }, (_v, i) => `chat-${i}`);
+		for (let i = 0; i < 5; i++) {
+			lines.push(`stream-${i}`);
+			content.setLines(lines);
+			tui.requestRender();
+			await flushRender(term);
+		}
+		expect(tui.fullRedraws).toBe(baseline);
+		// Composer still pinned, content still hugging it.
+		const viewport = term.getViewport();
+		expect(viewport[11]).toBe("[footer]");
+		expect(viewport[8]).toBe("stream-4");
 		tui.stop();
 	});
 });

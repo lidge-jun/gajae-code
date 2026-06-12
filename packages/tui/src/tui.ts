@@ -1153,24 +1153,30 @@ export class TUI extends Container {
 			if (line === VIEWPORT_FILL_SENTINEL) sentinels++;
 			else result.push(line);
 		}
-		// While content still overflows the viewport, keep the frame length
-		// monotonic (083.7 §9): scrolled-out rows cannot be reclaimed from the
-		// terminal buffer, so letting the frame shrink in place (autocomplete
-		// close, tool collapse) would strand the composer above permanently
-		// blank buffer rows. The fill absorbs the delta instead — the gap sits
-		// ABOVE the composer, which stays on the terminal floor. Once content
-		// fits the viewport again, the existing full-redraw paths reset the
-		// buffer, so the floor drops back to the plain viewport height.
-		const target = result.length > height ? Math.max(height, this.#viewportFillFloor) : height;
+		// While content overflows the viewport (083.7 §9/§12): scrolled-out rows
+		// cannot be reclaimed, so a shrink (autocomplete close, collapse) grows
+		// the gap to keep the frame length — the composer stays on the floor.
+		// The gap is STICKY upward only: it must not shrink back on growth,
+		// because consuming top blanks shifts every row below and turns each
+		// streaming append into a full redraw (3J storm — 260613 00:36 진단).
+		// Growth extends the frame at the end instead (append-only diff); the
+		// gap is cleared by compactViewportFill() at quiet points, or naturally
+		// when content fits the viewport again (full-redraw reset).
 		const overflowed = result.length > height;
-		// Fill counts against content lines only (all sentinels excluded).
-		const fill = Math.max(0, target - result.length);
+		let fill: number;
+		if (overflowed) {
+			this.#viewportFillGap = Math.max(this.#viewportFillGap, this.#viewportFillFloor - result.length, 0);
+			fill = this.#viewportFillGap;
+		} else {
+			fill = Math.max(0, height - result.length);
+			this.#viewportFillGap = 0;
+		}
 		if (fill > 0) {
 			const blanks = new Array<string>(fill).fill("");
 			result.splice(first, 0, ...blanks);
 		}
+		// Track the final frame length (shrink detection baseline).
 		this.#viewportFillFloor = result.length > height ? result.length : 0;
-		this.#viewportFillGap = overflowed ? fill : 0;
 		if (renderMetrics.enabled) renderMetrics.recordHelper("viewportFill", renderMetrics.now() - expandStart);
 		return result;
 	}

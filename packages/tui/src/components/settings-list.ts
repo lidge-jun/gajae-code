@@ -124,8 +124,10 @@ export class SettingsList implements Component {
 			const usedWidth = prefixWidth + maxLabelWidth + visibleWidth(separator);
 			const valueMaxWidth = width - usedWidth - 2;
 
+			// Defensive: tolerate non-string currentValue (e.g. an unset setting
+			// leaking `undefined`) — truncateToWidth throws on non-strings.
 			const valueText = this.#theme.value(
-				truncateToWidth(item.currentValue, valueMaxWidth, Ellipsis.Omit),
+				truncateToWidth(String(item.currentValue ?? ""), valueMaxWidth, Ellipsis.Omit),
 				isSelected,
 			);
 
