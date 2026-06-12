@@ -15,6 +15,7 @@ previewLines + ctrl+o 펼침, JSON 트리 collapse, thinking 토글) 두 가지 
 | [083.1](./083.1_plan_tool_autocollapse.md) | 완료 도구 자동 접힘 | A 도구→B 도구 시 A가 한 줄 요약으로, ctrl+o 전체 / ctrl+↑ 포커스 개별 / alt+t 전체 transcript 오버레이 | ✅ 완료 (3a85824, e74b2d9, d317e42e) |
 | [083.2](./083.2_plan_tool_spacing.md) | 도구 간 공백 과다 | 도구 사이 빈 줄 3줄 → 1줄 (Box/Text 세로 패딩 0, Spacer 일원화) | ✅ 구현 (a590aea) |
 | [083.3](./083.3_issue_thinking_interleave.md) | 추론 인터리빙 소실 | 도구 뒤 thinking이 상단 단일 어시스턴트 블록에 합쳐짐 — 단일 streamingComponent 구조가 원인 → 세그먼트 분할(A안) 적용 | ✅ 수정 완료 |
+| [083.4](./083.4_plan_effort_command.md) | `/effort` 커맨드 | 추론 강도 직접 지정 표면 부재 → Codex 표준 어휘로 슬래시 커맨드 추가 (none/minimal 별칭 포함) | ✅ 구현 완료 |
 
 ## 관련 레버 (참고)
 
