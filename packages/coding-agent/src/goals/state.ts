@@ -17,6 +17,10 @@ export interface GoalModeState {
 	mode: "active" | "exiting";
 	reason?: "completed";
 	goal: Goal;
+	/** Agent-initiated pause attempts since the last successful pause (2-tap gate, 061 §3.2). */
+	agentPauseCount?: number;
+	/** Recorded independent audit for the last agent-initiated pause. */
+	pauseAudit?: { actor: string; evidence: string; timestamp: string };
 }
 export interface GoalToolDetails {
 	op: "create" | "get" | "complete" | "resume" | "drop";

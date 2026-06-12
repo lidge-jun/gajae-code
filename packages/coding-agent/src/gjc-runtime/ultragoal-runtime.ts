@@ -581,6 +581,37 @@ export async function createUltragoalPlan(input: {
 	return plan;
 }
 
+/**
+ * Narrow ledger append surface for the jwc goal adapter (061 M6) — keeps the
+ * ledger writer itself private while letting the adapter record audited
+ * pause events (`goal_pause_audited`).
+ */
+export async function appendUltragoalLedgerEvent(cwd: string, event: JsonObject): Promise<UltragoalLedgerEvent> {
+	return await appendLedger(cwd, event);
+}
+
+/**
+ * Refine the durable objective in place (jwc `goal refine`, 061 §2). Updates
+ * the plan-level gjcObjective and the active (or first) story objective; no
+ * ledger event by contract (refine is a wording change, not a state change).
+ */
+export async function refineUltragoalObjective(input: { cwd: string; objective: string }): Promise<UltragoalPlan> {
+	const objective = input.objective.trim();
+	if (!objective) throw new Error("goal refine requires a non-empty objective");
+	const plan = await readUltragoalPlan(input.cwd);
+	if (!plan) throw new Error("No ultragoal plan found. Run `jwc goal set <objective>` first.");
+	const now = new Date().toISOString();
+	plan.gjcObjective = objective;
+	const target = plan.goals.find(goal => goal.status === "active") ?? plan.goals[0];
+	if (target) {
+		target.objective = objective;
+		target.updatedAt = now;
+	}
+	plan.updatedAt = now;
+	await writePlan(input.cwd, plan);
+	return plan;
+}
+
 function chooseNextGoal(plan: UltragoalPlan, retryFailed: boolean): UltragoalGoal | undefined {
 	return (
 		plan.goals.find(goal => goal.status === "active") ??

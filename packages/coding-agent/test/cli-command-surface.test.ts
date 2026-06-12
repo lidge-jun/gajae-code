@@ -37,8 +37,8 @@ describe("GJC public CLI command surface", () => {
 
 	it("gates the jaw-only surface behind the brand check (D050-24/25)", async () => {
 		const source = await Bun.file(cliEntry).text();
-		// interview (retrofit, D050-25) and orchestrate (D050-24) register only for jaw brands.
-		expect(extractCommandBlock(source, "jawOnlyCommands")).toEqual(["interview", "orchestrate"]);
+		// interview (retrofit, D050-25), orchestrate (D050-24), goal (060/061) register only for jaw brands.
+		expect(extractCommandBlock(source, "jawOnlyCommands")).toEqual(["interview", "orchestrate", "goal"]);
 		expect(source).toContain("isJawBrandEnv() ? jawOnlyCommands : []");
 		// gjc diff-0: the base surface must not leak the jaw-only commands.
 		const base = extractCommandBlock(source, "baseCommands");

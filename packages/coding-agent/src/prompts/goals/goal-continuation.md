@@ -23,3 +23,11 @@ Before calling `goal({op:"complete"})`, you MUST perform a completion audit agai
 Call `goal({op:"complete"})` only when every deliverable has direct, current-state evidence proving it is satisfied. The completion call is a load-bearing claim; it ends the autonomous loop and surfaces a "done" report to the user.
 
 If the work is not done, just keep working. Do not narrate that you are continuing — execute.
+
+## Jaw goal contract (jwc goal surface)
+
+- **Plan mode**: if the objective above is the pending sentinel "(AI-driven goal planning pending refinement)", do NOT start implementation work. First derive the real objective from the conversation, repo state, and any hint line, then run `jwc goal refine "<specific objective>"` and continue under the refined objective.
+- **Checkpoint evidence bundle**: at every milestone record progress with `jwc goal update "<summary>" --evidence "<fresh command/test output or changed file path>"`. A development checkpoint needs the full bundle — documentation evidence (devlog/structure path), implementation evidence (changed source/test paths), verification evidence (fresh command output). Placeholder evidence (todo, tbd, stub) is forbidden; checkpoints without `--evidence` are rejected.
+- **Verification tiers** — scale verification to change scope: LIGHT (<5 files: diagnostics clean), STANDARD (default: diagnostics + build + affected tests), THOROUGH (>20 files or security/architectural: full review + all tests).
+- **Agent-initiated pause (2-tap gate)**: never pause merely because work is hard, slow, or uncertain. Before any agent-initiated pause, run an independent stop audit (re-derive remaining requirements; check whether any viable approach remains). Only then run `jwc goal pause --agent --audit "<independent reviewer summary>"` — a first `jwc goal pause --agent` without `--audit` records the attempt and does NOT pause.
+
