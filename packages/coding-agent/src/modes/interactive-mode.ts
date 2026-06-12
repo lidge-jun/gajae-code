@@ -956,6 +956,12 @@ export class InteractiveMode implements InteractiveModeContext {
 		return active ?? nonEmpty[nonEmpty.length - 1];
 	}
 
+	/** 99.30.01 M2: every task reached a terminal status (completed/abandoned). */
+	#allTodoTasksTerminal(phases: TodoPhase[]): boolean {
+		const tasks = phases.flatMap(phase => phase.tasks);
+		return tasks.length > 0 && tasks.every(task => task.status === "completed" || task.status === "abandoned");
+	}
+
 	#renderTodoList(): void {
 		this.todoContainer.clear();
 		const phases = this.todoPhases.filter(phase => phase.tasks.length > 0);
@@ -965,6 +971,18 @@ export class InteractiveMode implements InteractiveModeContext {
 
 		const indent = "  ";
 		const hook = theme.tree.hook;
+
+		// 99.30.01 M2: all tasks terminal → one-line receipt unless the user
+		// manually expanded. todo_auto_clear stays off — collapse is UI-only.
+		if (!this.todoExpanded && this.#allTodoTasksTerminal(phases)) {
+			const tasks = phases.flatMap(phase => phase.tasks);
+			const completed = tasks.filter(task => task.status === "completed").length;
+			this.todoContainer.addChild(
+				new Text(`\n${indent}${theme.fg("muted", `▸ Todos (${completed}/${tasks.length}) · complete`)}`, 1, 0),
+			);
+			return;
+		}
+
 		const lines = ["", indent + theme.bold(theme.fg("accent", "Todos"))];
 
 		if (!this.todoExpanded) {
@@ -2596,12 +2614,21 @@ export class InteractiveMode implements InteractiveModeContext {
 				},
 			];
 		}
+		// 99.30.01 M2: a fresh all-terminal update collapses the panel even if
+		// previously expanded; the user can re-expand via the toggle.
+		if (this.#allTodoTasksTerminal(this.todoPhases)) {
+			this.todoExpanded = false;
+		}
 		this.#renderTodoList();
 		this.ui.requestRender();
 	}
 
 	async reloadTodos(): Promise<void> {
 		await this.#loadTodoList();
+		if (this.#allTodoTasksTerminal(this.todoPhases)) {
+			this.todoExpanded = false;
+			this.#renderTodoList();
+		}
 		this.ui.requestRender();
 	}
 
