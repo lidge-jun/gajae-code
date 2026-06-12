@@ -1112,7 +1112,7 @@ export const imageGenTool: CustomTool<typeof imageGenSchema, ImageGenToolDetails
 						"Content-Type": "application/json",
 						Authorization: `Bearer ${apiKey.apiKey}`,
 						"HTTP-Referer": "https://gaebal-gajae.dev/",
-						"X-OpenRouter-Title": "Gajae Code",
+						"X-OpenRouter-Title": "Jawcode",
 						"X-OpenRouter-Categories": "cli-agent",
 					},
 					body: JSON.stringify(requestBody),

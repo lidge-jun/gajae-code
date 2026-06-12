@@ -2,6 +2,7 @@ import type { AssistantMessage, ImageContent, Usage } from "@gajae-code/ai";
 import { Container, Image, ImageProtocol, Markdown, Spacer, TERMINAL, Text } from "@gajae-code/tui";
 import { formatNumber } from "@gajae-code/utils";
 import { settings } from "../../config/settings";
+import { resolveAgentDisplayName } from "../../gjc-runtime/agent-identity";
 import { getMarkdownTheme, theme } from "../../modes/theme/theme";
 import { isSilentAbort } from "../../session/messages";
 import { resolveImageOptions } from "../../tools/render-utils";
@@ -16,7 +17,7 @@ export class AssistantMessageComponent extends Container {
 	#usageInfo?: Usage;
 	#convertedKittyImages = new Map<string, ImageContent>();
 	#kittyConversionsInFlight = new Set<string>();
-	#responseHeader = new Text(theme.bold(theme.fg("statusLineModel", "gajae")), 1, 0);
+	#responseHeader = new Text(theme.bold(theme.fg("statusLineModel", resolveAgentDisplayName().toLowerCase())), 1, 0);
 
 	constructor(
 		message?: AssistantMessage,

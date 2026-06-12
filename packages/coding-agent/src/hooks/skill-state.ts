@@ -47,7 +47,7 @@ function formatBoolean(name: string, value: boolean | undefined): string {
 export function buildSanitizedEffectiveSkillConfigContext(input: EffectiveSkillConfigInput | undefined): string {
 	if (!input || input.unavailableReason) {
 		const reason = input?.unavailableReason ? sanitizeConfigValue(input.unavailableReason) : "not available";
-		return `Sanitized effective skill config unavailable (${reason}); bundled GJC workflow activation remains available for jaw-interview, ralplan, ultragoal, team.`;
+		return `Sanitized effective skill config unavailable (${reason}); bundled jwc workflow activation remains available for jaw-interview, ralplan, ultragoal, team.`;
 	}
 
 	const settings = input.skillsSettings ?? {};
@@ -59,7 +59,7 @@ export function buildSanitizedEffectiveSkillConfigContext(input: EffectiveSkillC
 	const customDirectoryCount = countNonEmptyStrings(settings.customDirectories);
 
 	return [
-		"Sanitized effective skill config for filesystem/custom skill discovery; bundled GJC workflow activation remains available for exactly jaw-interview, ralplan, ultragoal, team.",
+		"Sanitized effective skill config for filesystem/custom skill discovery; bundled jwc workflow activation remains available for exactly jaw-interview, ralplan, ultragoal, team.",
 		`Skill discovery booleans: ${[
 			formatBoolean("enabled", settings.enabled),
 			formatBoolean("enableSkillCommands", settings.enableSkillCommands),
@@ -221,7 +221,7 @@ function skillStatePath(stateDir: string, sessionId?: string): string {
 }
 
 function warnInvalidState(kind: string, filePath: string, error: string): void {
-	console.warn(`gjc skill-state: invalid ${kind} at ${filePath}: ${error}`);
+	console.warn(`jwc skill-state: invalid ${kind} at ${filePath}: ${error}`);
 }
 
 async function readValidatedJsonFile<T>(
@@ -407,7 +407,7 @@ export interface EnsureWorkflowSkillActivationInput {
  * active, instead of relying on the skill prompt to run its own state-init steps.
  *
  * The seed is non-destructive: if an active entry for this skill already exists
- * (for example after a `gjc state handoff` promotion that carries
+ * (for example after a `jwc state handoff` promotion that carries
  * `handoff_from`/`handoff_at` lineage), nothing is written so lineage is
  * preserved. Non-workflow skills are ignored.
  */
@@ -541,7 +541,7 @@ export async function buildActiveUltragoalPromptContext(input: UserPromptSubmitS
 			(value): value is string => typeof value === "string" && value.trim().length > 0,
 		);
 		if (objectives.length === 0) {
-			return "BLOCK_ULTRAGOAL_COMPLETION: Active Ultragoal completion is blocked until a current GJC goal objective can be verified. Use durable blocker work or run strict `gjc ultragoal checkpoint --status complete --quality-gate-json <file> --gjc-goal-json <file>` before completion.";
+			return "BLOCK_ULTRAGOAL_COMPLETION: Active Ultragoal completion is blocked until a current jwc goal objective can be verified. Use durable blocker work or run strict `jwc ultragoal checkpoint --status complete --quality-gate-json <file> --gjc-goal-json <file>` before completion.";
 		}
 		for (const objective of objectives) {
 			const diagnostic = await readUltragoalVerificationState({
@@ -550,11 +550,11 @@ export async function buildActiveUltragoalPromptContext(input: UserPromptSubmitS
 			});
 			if (diagnostic.state === "unrelated_goal") continue;
 			if (!["inactive", "active_verified_complete"].includes(diagnostic.state)) {
-				return `BLOCK_ULTRAGOAL_COMPLETION: ${diagnostic.message} Use durable blocker work or run strict \`gjc ultragoal checkpoint --status complete --quality-gate-json <file> --gjc-goal-json <file>\` before completion.`;
+				return `BLOCK_ULTRAGOAL_COMPLETION: ${diagnostic.message} Use durable blocker work or run strict \`jwc ultragoal checkpoint --status complete --quality-gate-json <file> --gjc-goal-json <file>\` before completion.`;
 			}
 		}
 	}
-	return `Ultragoal is active (phase: ${phase}; state: ${visibleModeState.statePath}). If the user prompt is a steering request, use \`gjc ultragoal steer\` to add or steer subgoals. Normal prose should not mutate Ultragoal state.`;
+	return `Ultragoal is active (phase: ${phase}; state: ${visibleModeState.statePath}). If the user prompt is a steering request, use \`jwc ultragoal steer\` to add or steer subgoals. Normal prose should not mutate Ultragoal state.`;
 }
 
 export async function buildSkillStopOutput(input: StopHookInput): Promise<Record<string, unknown> | null> {
@@ -590,7 +590,7 @@ export async function buildSkillStopOutput(input: StopHookInput): Promise<Record
 				});
 				if (diagnostic.state === "active_verified_complete") continue;
 				if (!["inactive", "unrelated_goal"].includes(diagnostic.state)) {
-					const ultragoalMessage = `GJC ultragoal verification is blocking stop: ${diagnostic.message} Run strict checkpoint verification or record review blockers before stopping.`;
+					const ultragoalMessage = `jwc ultragoal verification is blocking stop: ${diagnostic.message} Run strict checkpoint verification or record review blockers before stopping.`;
 					return {
 						decision: "block",
 						reason: ultragoalMessage,
@@ -601,8 +601,8 @@ export async function buildSkillStopOutput(input: StopHookInput): Promise<Record
 			}
 		}
 		const systemMessage = handoffRequired
-			? `GJC handoff skill "${entry.skill}" must not stop without offering a next step (phase: ${phase}; state: ${statePath}). Use the ask tool to present the next handoff step — e.g. refine further, hand off to ralplan/team/ultragoal, or finish — then chain or explicitly clear the skill before stopping.`
-			: `GJC skill "${entry.skill}" is still active (phase: ${phase}; state: ${statePath}). Continue or explicitly finish/cancel the skill before stopping.`;
+			? `jwc handoff skill "${entry.skill}" must not stop without offering a next step (phase: ${phase}; state: ${statePath}). Use the ask tool to present the next handoff step — e.g. refine further, hand off to ralplan/team/ultragoal, or finish — then chain or explicitly clear the skill before stopping.`
+			: `jwc skill "${entry.skill}" is still active (phase: ${phase}; state: ${statePath}). Continue or explicitly finish/cancel the skill before stopping.`;
 		return {
 			decision: "block",
 			reason: systemMessage,
@@ -619,15 +619,15 @@ export function buildSkillActivationAdditionalContext(
 	effectiveSkillConfig?: EffectiveSkillConfigInput,
 ): string {
 	return [
-		`GJC native UserPromptSubmit detected workflow keyword "${state.keyword}" -> ${state.skill}.`,
+		`jwc native UserPromptSubmit detected workflow keyword "${state.keyword}" -> ${state.skill}.`,
 		state.initialized_mode && state.initialized_state_path
-			? `skill: ${state.initialized_mode} activated and initial state initialized at ${state.initialized_state_path}; use \`gjc state write/read/clear --input '<json>' --json\` for runtime state updates.`
+			? `skill: ${state.initialized_mode} activated and initial state initialized at ${state.initialized_state_path}; use \`jwc state write/read/clear --input '<json>' --json\` for runtime state updates.`
 			: null,
 		state.skill === "ultragoal"
-			? "Ultragoal is active. If the user prompt is a steering request, use `gjc ultragoal steer` to add or steer subgoals."
+			? "Ultragoal is active. If the user prompt is a steering request, use `jwc ultragoal steer` to add or steer subgoals."
 			: null,
 		buildSanitizedEffectiveSkillConfigContext(effectiveSkillConfig),
-		"Follow AGENTS.md routing and preserve GJC workflow transition and planning-safety rules.",
+		"Follow AGENTS.md routing and preserve jwc workflow transition and planning-safety rules.",
 	]
 		.filter((value): value is string => Boolean(value))
 		.join(" ");

@@ -5,7 +5,7 @@
  * callee's SKILL.md is dispatched through the same custom-message path used by
  * `/skill:<name>` typing, as a user-attribution message delivered same-turn
  * (without `deliverAs: "nextTurn"`). Before dispatch, the tool calls
- * `gjc state <caller> handoff --to <callee>` in-process via the state-runtime
+ * `jwc state <caller> handoff --to <callee>` in-process via the state-runtime
  * function so caller and callee mode-states plus `skill-active-state.json`
  * transition atomically.
  *
@@ -108,7 +108,7 @@ export class SkillTool implements AgentTool<typeof skillSchema, SkillToolDetails
 				const phase = (this.#session.getActiveSkillPhase?.() ?? "running").trim().toLowerCase();
 				if (!TERMINAL_PHASES.has(phase)) {
 					throw new ToolError(
-						`skill tool: refusing to chain from "${activeSkill}" (phase=${phase}) into "${requestedName}". Finalize the current skill (gjc state ${activeSkill} write --input '{"current_phase":"handoff"}' --json) or run gjc state ${activeSkill} handoff --to ${requestedName} --json directly before chaining.`,
+						`skill tool: refusing to chain from "${activeSkill}" (phase=${phase}) into "${requestedName}". Finalize the current skill (jwc state ${activeSkill} write --input '{"current_phase":"handoff"}' --json) or run jwc state ${activeSkill} handoff --to ${requestedName} --json directly before chaining.`,
 					);
 				}
 				const cwd = this.#session.cwd;

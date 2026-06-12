@@ -32,6 +32,15 @@ export class WelcomeComponent implements Component {
 	invalidate(): void {}
 
 	/**
+	 * Optional viewport-height provider (devlog 086.1). When set and the full
+	 * banner would be taller than the terminal, the branded banner collapses to
+	 * a compact single-column variant that fits the viewport — otherwise the
+	 * banner top scrolls into scrollback during the very first paint and the
+	 * box arrives visually torn in short terminals (e.g. IDE bottom panels).
+	 */
+	getViewportRows?: () => number;
+
+	/**
 	 * Play a one-shot intro that sweeps the gradient through every phase
 	 * before settling on the resting frame. Safe to call multiple times —
 	 * subsequent calls reset and replay.
@@ -219,25 +228,13 @@ export class WelcomeComponent implements Component {
 		const hChar = theme.boxRound.horizontal;
 		const h = theme.fg("dim", hChar);
 		const v = theme.fg("dim", theme.boxRound.vertical);
-		const tl = theme.fg("dim", theme.boxRound.topLeft);
-		const tr = theme.fg("dim", theme.boxRound.topRight);
 		const bl = theme.fg("dim", theme.boxRound.bottomLeft);
 		const br = theme.fg("dim", theme.boxRound.bottomRight);
 
 		const lines: string[] = [];
 
 		// Top border with embedded title
-		const title = ` ${APP_NAME} v${this.version} · ${APP_NAME === "gjc" ? "GJC forge" : "Jawcode"} `;
-		const titlePrefixRaw = hChar.repeat(3);
-		const titleStyled = theme.fg("dim", titlePrefixRaw) + theme.fg("muted", title);
-		const titleVisLen = visibleWidth(titlePrefixRaw) + visibleWidth(title);
-		const titleSpace = boxWidth - 2;
-		if (titleVisLen >= titleSpace) {
-			lines.push(tl + truncateToWidth(titleStyled, titleSpace) + tr);
-		} else {
-			const afterTitle = titleSpace - titleVisLen;
-			lines.push(tl + titleStyled + theme.fg("dim", hChar.repeat(afterTitle)) + tr);
-		}
+		lines.push(this.#titleBorderLine(boxWidth));
 
 		// Content rows
 		const maxRows = showRightColumn ? Math.max(leftLines.length, rightLines.length) : leftLines.length;
@@ -257,7 +254,74 @@ export class WelcomeComponent implements Component {
 			lines.push(bl + h.repeat(leftCol) + br);
 		}
 
+		// Vertical responsiveness (devlog 086.1): when the full banner can't fit the
+		// viewport alongside the composer, collapse to the compact variant so the
+		// banner never straddles the scrollback boundary on first paint.
+		const viewportRows = this.getViewportRows?.();
+		if (
+			BRANDED &&
+			viewportRows !== undefined &&
+			lines.length + COMPACT_BANNER_RESERVED_ROWS > Math.max(1, viewportRows)
+		) {
+			return this.#renderCompact(boxWidth, modelPill, providerPill);
+		}
+
 		return lines;
+	}
+
+	/**
+	 * Compact branded banner for short terminals: title border, identity line,
+	 * pills, latest session + /resume — fits in 5 rows.
+	 */
+	#renderCompact(boxWidth: number, modelPill: string, providerPill: string): string[] {
+		const contentCol = boxWidth - 2;
+		const v = theme.fg("dim", theme.boxRound.vertical);
+		const lines: string[] = [this.#titleBorderLine(boxWidth)];
+
+		const dotSep = theme.fg("dim", " · ");
+		lines.push(
+			this.#boxRow(
+				` ${theme.bold(theme.fg("accent", BANNER_WORDMARK))}${dotSep}${theme.fg("dim", BANNER_TAGLINE)}${dotSep}${theme.fg("dim", `v${this.version}`)}`,
+				contentCol,
+				v,
+			),
+		);
+		lines.push(this.#boxRow(` ${modelPill} ${providerPill}`, contentCol, v));
+
+		const latest = this.recentSessions[0];
+		const resume = theme.fg("muted", "/resume");
+		const sessionRow = latest
+			? ` ${theme.fg("dim", `${theme.md.bullet} `)}${theme.fg("muted", latest.name)}${theme.fg("dim", ` (${latest.timeAgo})`)}${dotSep}${resume}`
+			: ` ${resume}`;
+		lines.push(this.#boxRow(sessionRow, contentCol, v));
+
+		lines.push(
+			theme.fg("dim", theme.boxRound.bottomLeft) +
+				theme.fg("dim", theme.boxRound.horizontal.repeat(contentCol)) +
+				theme.fg("dim", theme.boxRound.bottomRight),
+		);
+		return lines;
+	}
+
+	#boxRow(content: string, contentCol: number, v: string): string {
+		return v + this.#fitToWidth(content, contentCol) + v;
+	}
+
+	/** Top border with the embedded `{app} v{version} · {brand}` title. */
+	#titleBorderLine(boxWidth: number): string {
+		const hChar = theme.boxRound.horizontal;
+		const tl = theme.fg("dim", theme.boxRound.topLeft);
+		const tr = theme.fg("dim", theme.boxRound.topRight);
+		const title = ` ${APP_NAME} v${this.version} · ${APP_NAME === "gjc" ? "GJC forge" : "Jawcode"} `;
+		const titlePrefixRaw = hChar.repeat(3);
+		const titleStyled = theme.fg("dim", titlePrefixRaw) + theme.fg("muted", title);
+		const titleVisLen = visibleWidth(titlePrefixRaw) + visibleWidth(title);
+		const titleSpace = boxWidth - 2;
+		if (titleVisLen >= titleSpace) {
+			return tl + truncateToWidth(titleStyled, titleSpace) + tr;
+		}
+		const afterTitle = titleSpace - titleVisLen;
+		return tl + titleStyled + theme.fg("dim", hChar.repeat(afterTitle)) + tr;
 	}
 
 	/** Center text within a given width */
@@ -434,6 +498,13 @@ function gradientLogo(lines: readonly string[], phase = 0, shine?: ShineConfig):
 		return result;
 	});
 }
+
+/**
+ * Rows kept free for the composer area when deciding whether the full banner
+ * fits the viewport: surrounding spacers (2) + editor box (3) + status rail (1)
+ * + one margin row. Below that, the branded banner renders its compact variant.
+ */
+const COMPACT_BANNER_RESERVED_ROWS = 7;
 
 /** Total length of the intro animation. */
 const INTRO_MS = 3000;

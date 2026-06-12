@@ -176,7 +176,7 @@ function assertKnownFlags(args: readonly string[], parsed: ParsedInvocation): vo
 		) {
 			continue;
 		}
-		throw new StateCommandError(2, `unknown gjc state flag: ${flag}`);
+		throw new StateCommandError(2, `unknown jwc state flag: ${flag}`);
 	}
 }
 
@@ -1930,7 +1930,7 @@ export async function runNativeStateCommand(args: string[], cwd = process.cwd())
 			case "migrate":
 				return await handleMigrate(args, cwd, parsed.positionalSkill);
 			default:
-				return { status: 2, stderr: `Unknown gjc state command: ${parsed.action}\n` };
+				return { status: 2, stderr: `Unknown jwc state command: ${parsed.action}\n` };
 		}
 	} catch (error) {
 		if (error instanceof StateCommandError) return { status: error.exitStatus, stderr: `${error.message}\n` };

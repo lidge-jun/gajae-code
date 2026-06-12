@@ -1073,7 +1073,7 @@ export class AgentSession {
 		if (!idle && !system && !user && !display) return;
 		try {
 			this.#powerAssertion = MacOSPowerAssertion.start({
-				reason: "Gajae Code agent session",
+				reason: "Jawcode agent session",
 				idle,
 				system,
 				user,
@@ -2939,7 +2939,7 @@ export class AgentSession {
 	async #emitExtensionEvent(event: AgentSessionEvent): Promise<void> {
 		if (event.type === "turn_end") {
 			await requestGjcWorkerIntegrationAttempt(this.sessionManager.getCwd(), process.env).catch(error => {
-				logger.warn("GJC team worker integration request failed", { error: String(error) });
+				logger.warn("jwc team worker integration request failed", { error: String(error) });
 			});
 		}
 		if (!this.#extensionRunner) return;
@@ -4073,7 +4073,7 @@ export class AgentSession {
 		const nextToolNames = customTools.map(tool => tool.name);
 		const uniqueToolNames = new Set(nextToolNames);
 		if (uniqueToolNames.size !== nextToolNames.length) {
-			throw new Error("GJC sub-skill tool names must be unique");
+			throw new Error("jwc sub-skill tool names must be unique");
 		}
 
 		const previousGjcSubskillToolNames = new Set(this.#gjcSubskillToolNames);

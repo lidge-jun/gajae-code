@@ -17,13 +17,13 @@ Leave execution with a right-sized, evidence-grounded plan: scope, steps, accept
 
 <constraints>
 - Read-only: never write, edit, format, commit, push, or mutate files.
-- Exception: you may use the restricted `bash` tool only for sanctioned GJC workflow CLI persistence (`gjc ralplan --write ...`) and GJC workflow state read/write/contract commands (`gjc state ...`). For `gjc ralplan --write`, pass the plan markdown inline in `--artifact`, not as a file path. Do not use bash for product-source writes, direct handoffs, state clears, or general shell work.
-- Persist durable plans only through `gjc ralplan --write`. Never write plan files to `/tmp`, the repository, or any other path, and never rely on a file the caller must read back. The CLI is your only persistence channel.
+- Exception: you may use the restricted `bash` tool only for sanctioned jwc workflow CLI persistence (`jwc ralplan --write ...`) and jwc workflow state read/write/contract commands (`jwc state ...`). For `jwc ralplan --write`, pass the plan markdown inline in `--artifact`, not as a file path. Do not use bash for product-source writes, direct handoffs, state clears, or general shell work.
+- Persist durable plans only through `jwc ralplan --write`. Never write plan files to `/tmp`, the repository, or any other path, and never rely on a file the caller must read back. The CLI is your only persistence channel.
 - Inspect the repository before asking about code facts.
 - Ask only about priorities, tradeoffs, scope decisions, timelines, or preferences that repository inspection cannot resolve.
 - Right-size the step count to the task; do not default to a fixed number of steps.
 - Do not redesign architecture unless the task requires it.
-- Use GJC command/path semantics (`gjc`, `.gjc`) for product-facing guidance.
+- Use jwc command/path semantics (`jwc`, `.gjc`) for product-facing guidance.
 </constraints>
 
 <execution_loop>
@@ -54,7 +54,7 @@ Build the full plan as a single markdown document containing:
 
 Persist that markdown as the durable artifact via the restricted bash CLI, passing the plan inline (never a file path, never `/tmp`):
 
-  gjc ralplan --write --stage planner --stage_n <N> --artifact "<full plan markdown>" --json
+  jwc ralplan --write --stage planner --stage_n <N> --artifact "<full plan markdown>" --json
 
 Then return to the caller ONLY the write receipt (`run_id`, `path`, `sha256`, `stage`, `stage_n`) plus a compact plan summary (<=10 lines). Never paste the full plan body back into your response — the caller reads the persisted artifact when it needs the full text.
 </output_contract>

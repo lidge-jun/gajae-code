@@ -216,7 +216,7 @@ describe("GJC native skill-state hooks", () => {
 		try {
 			await expect(readVisibleSkillActiveState(root, undefined, stateDir)).resolves.toBeNull();
 			expect(warn).toHaveBeenCalledTimes(1);
-			expect(String(warn.mock.calls[0]?.[0] ?? "")).toContain("gjc skill-state: invalid skill-active-state at");
+			expect(String(warn.mock.calls[0]?.[0] ?? "")).toContain("jwc skill-state: invalid skill-active-state at");
 			expect(String(warn.mock.calls[0]?.[0] ?? "")).toContain("invalid JSON");
 		} finally {
 			warn.mockRestore();
@@ -276,7 +276,7 @@ describe("GJC native skill-state hooks", () => {
 			);
 			expect(allowed.outputJson).toBeNull();
 			expect(warn).toHaveBeenCalledTimes(1);
-			expect(String(warn.mock.calls[0]?.[0] ?? "")).toContain("gjc skill-state: invalid mode-state at");
+			expect(String(warn.mock.calls[0]?.[0] ?? "")).toContain("jwc skill-state: invalid mode-state at");
 			expect(String(warn.mock.calls[0]?.[0] ?? "")).toContain("invalid JSON");
 		} finally {
 			warn.mockRestore();
@@ -311,7 +311,7 @@ describe("GJC native skill-state hooks", () => {
 			);
 			expect(allowed.outputJson).toBeNull();
 			expect(warn).toHaveBeenCalledTimes(1);
-			expect(String(warn.mock.calls[0]?.[0] ?? "")).toContain("gjc skill-state: invalid mode-state at");
+			expect(String(warn.mock.calls[0]?.[0] ?? "")).toContain("jwc skill-state: invalid mode-state at");
 			expect(String(warn.mock.calls[0]?.[0] ?? "")).toContain("current_phase");
 		} finally {
 			warn.mockRestore();
@@ -338,7 +338,7 @@ describe("GJC native skill-state hooks", () => {
 			);
 			expect(allowed.outputJson).toBeNull();
 			expect(warn).toHaveBeenCalledTimes(1);
-			expect(String(warn.mock.calls[0]?.[0] ?? "")).toContain("gjc skill-state: invalid mode-state at");
+			expect(String(warn.mock.calls[0]?.[0] ?? "")).toContain("jwc skill-state: invalid mode-state at");
 			expect(String(warn.mock.calls[0]?.[0] ?? "")).toContain("current_phase");
 		} finally {
 			warn.mockRestore();
@@ -409,7 +409,7 @@ describe("GJC native skill-state hooks", () => {
 		expect(blocked.reason).toBe("workflow-state-target");
 	});
 
-	it("blocks direct workflow state JSON writes and points to gjc state", async () => {
+	it("blocks direct workflow state JSON writes and points to jwc state", async () => {
 		const root = await cwd();
 		const blocked = await getJawInterviewMutationDecision({
 			cwd: root,
@@ -418,7 +418,7 @@ describe("GJC native skill-state hooks", () => {
 		});
 		expect(blocked.blocked).toBe(true);
 		expect(blocked.reason).toBe("workflow-state-target");
-		expect(blocked.message).toContain("gjc state ralplan");
+		expect(blocked.message).toContain("jwc state ralplan");
 
 		const allowedSpec = await getJawInterviewMutationDecision({
 			cwd: root,
@@ -774,7 +774,7 @@ disabledExtensions:
 				"",
 		);
 		expect(context).toContain("Ultragoal is active");
-		expect(context).toContain("gjc ultragoal steer");
+		expect(context).toContain("jwc ultragoal steer");
 		expect(context).toContain("add or steer subgoals");
 	});
 
@@ -959,7 +959,7 @@ disabledExtensions:
 				"",
 		);
 		expect(context).toContain("Ultragoal is active");
-		expect(context).toContain("gjc ultragoal steer");
+		expect(context).toContain("jwc ultragoal steer");
 	});
 
 	it("merges managed Codex UserPromptSubmit/Stop hooks without dropping user hooks", () => {

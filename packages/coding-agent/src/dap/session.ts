@@ -1019,7 +1019,7 @@ export class DapSessionManager {
 	#buildInitializeArguments(adapter: DapResolvedAdapter): DapInitializeArguments {
 		return {
 			clientID: "gjc",
-			clientName: "Gajae Code",
+			clientName: "Jawcode",
 			adapterID: adapter.name,
 			locale: "en-US",
 			linesStartAt1: true,

@@ -19,7 +19,7 @@ Then perform two reflections:
 - What would change if we revised the ontology?
 
 Closing:
-- The summary + reflections text is the user-facing artifact; the pabcd state records the closing receipt (gjc receipt convention).
+- The summary + reflections text is the user-facing artifact; the pabcd state records the closing receipt (jwc receipt convention).
 - If significant issues surfaced: suggest "Improve the spec: `orchestrate i`".
 - Otherwise: state completion plainly. The orchestration returns to idle (stage `complete`).
 

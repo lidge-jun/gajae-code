@@ -137,12 +137,12 @@ export function canonicalWorkflowSkill(value: string): CanonicalGjcWorkflowSkill
 }
 
 export function sanctionedWorkflowStateCommand(skill: CanonicalGjcWorkflowSkill): string {
-	return `gjc state ${skill} write --input '<json>'`;
+	return `jwc state ${skill} write --input '<json>'`;
 }
 
 export function describeWorkflowStateContract(skill: CanonicalGjcWorkflowSkill): string[] {
 	return [
-		`Sanctioned mutation path: gjc state ${skill} read|write --input '<json>'`,
+		`Sanctioned mutation path: jwc state ${skill} read|write --input '<json>'`,
 		`Canonical active HUD state: .gjc/state/${SKILL_ACTIVE_STATE_FILE} and .gjc/state/sessions/<session>/${SKILL_ACTIVE_STATE_FILE}`,
 		`Skill mode state: .gjc/state/${workflowModeStateFileName(skill)} or .gjc/state/sessions/<session>/${workflowModeStateFileName(skill)}`,
 		"Receipts include version, skill, owner, command, state_path, storage_path, mutated_at, fresh_until, status, and mutation_id.",

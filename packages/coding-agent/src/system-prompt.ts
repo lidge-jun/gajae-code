@@ -300,6 +300,9 @@ export function renderIdentityBlock(): string | null {
 	if (name || emoji) {
 		lines.push(`- Name: ${[name, emoji].filter(Boolean).join(" ")}`);
 	}
+	if (name) {
+		lines.push("- This Identity section overrides the default agent name in this prompt.");
+	}
 	if (vibe) {
 		const vibeLines = vibe
 			.split(/;|\n/)

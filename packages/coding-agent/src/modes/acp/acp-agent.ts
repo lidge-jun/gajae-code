@@ -413,7 +413,7 @@ export class AcpAgent implements Agent {
 			protocolVersion: PROTOCOL_VERSION,
 			agentInfo: {
 				name: "gajae-code",
-				title: "Gajae Code",
+				title: "Jawcode",
 				version: VERSION,
 			},
 			authMethods,

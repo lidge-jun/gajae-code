@@ -220,7 +220,7 @@ describe("ACP initialize conformance", () => {
 		expect(response.agentInfo).toEqual(
 			expect.objectContaining({
 				name: "gajae-code",
-				title: "Gajae Code",
+				title: "Jawcode",
 				version: VERSION,
 			}),
 		);
