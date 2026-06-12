@@ -14,6 +14,7 @@ previewLines + ctrl+o 펼침, JSON 트리 collapse, thinking 토글) 두 가지 
 |---|------|------|------|
 | [083.1](./083.1_plan_tool_autocollapse.md) | 완료 도구 자동 접힘 | A 도구→B 도구 시 A가 한 줄 요약(`✔ bash: … +N lines`)으로, ctrl+o로 재오픈 | 🔶 1차 ✅ (3a85824) / 패턴 B·A ⬜ |
 | [083.2](./083.2_plan_tool_spacing.md) | 도구 간 공백 과다 | 도구 사이 빈 줄 3줄 → 1줄 (Box/Text 세로 패딩 0, Spacer 일원화) | ✅ 구현 (a590aea) |
+| [083.3](./083.3_issue_thinking_interleave.md) | 추론 인터리빙 소실 | 도구 뒤 thinking이 상단 단일 어시스턴트 블록에 합쳐짐 — 단일 streamingComponent 구조가 원인, 세그먼트 분할(A안) 제안 | 🔍 원인 확정 / 수정 ⬜ |
 
 ## 관련 레버 (참고)
 
