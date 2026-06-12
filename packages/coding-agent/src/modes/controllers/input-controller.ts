@@ -11,6 +11,7 @@ import { createPromptActionAutocompleteProvider } from "../../modes/prompt-actio
 import { theme } from "../../modes/theme/theme";
 import type { InteractiveModeContext } from "../../modes/types";
 import { ToolExecutionComponent } from "../components/tool-execution";
+import { ToolTranscriptOverlayComponent } from "../components/tool-transcript-overlay";
 import type { AgentSessionEvent } from "../../session/agent-session";
 import { SKILL_PROMPT_MESSAGE_TYPE, type SkillPromptDetails } from "../../session/messages";
 import { executeBuiltinSlashCommand } from "../../slash-commands/builtin-registry";
@@ -221,6 +222,9 @@ export class InputController {
 		}
 		for (const key of this.ctx.keybindings.getKeys("app.tools.focus")) {
 			this.ctx.editor.setCustomKeyHandler(key, () => this.enterOrMoveToolFocus());
+		}
+		for (const key of this.ctx.keybindings.getKeys("app.tools.transcript")) {
+			this.ctx.editor.setCustomKeyHandler(key, () => this.showToolTranscript());
 		}
 
 		this.ctx.editor.onChange = (text: string) => {
@@ -953,6 +957,32 @@ export class InputController {
 		if (!focus) return;
 		const tool = focus.tools[focus.index];
 		tool.setExpanded(!tool.expanded);
+		this.ctx.ui.requestRender();
+	}
+
+	/** 083.1 pattern A: full tool transcript in a scrollable overlay (alt+t). */
+	showToolTranscript(): void {
+		this.#exitToolFocus();
+		const tools = this.ctx.chatContainer.children.filter(
+			(child): child is ToolExecutionComponent => child instanceof ToolExecutionComponent,
+		);
+		if (tools.length === 0) {
+			this.ctx.showStatus("No tool blocks to show");
+			return;
+		}
+		const close = () => {
+			this.ctx.editorContainer.clear();
+			this.ctx.editorContainer.addChild(this.ctx.editor);
+			this.ctx.ui.setFocus(this.ctx.editor);
+			this.ctx.ui.requestRender();
+		};
+		const overlay = new ToolTranscriptOverlayComponent(tools, {
+			close,
+			requestRender: () => this.ctx.ui.requestRender(),
+		});
+		this.ctx.editorContainer.clear();
+		this.ctx.editorContainer.addChild(overlay);
+		this.ctx.ui.setFocus(overlay.getFocus());
 		this.ctx.ui.requestRender();
 	}
 

@@ -1,6 +1,7 @@
 import { beforeAll, describe, expect, it } from "bun:test";
 import { resetSettingsForTest, Settings } from "@gajae-code/coding-agent/config/settings";
 import { ToolExecutionComponent } from "@gajae-code/coding-agent/modes/components/tool-execution";
+import { ToolTranscriptOverlayComponent } from "@gajae-code/coding-agent/modes/components/tool-transcript-overlay";
 import * as themeModule from "@gajae-code/coding-agent/modes/theme/theme";
 import type { TUI } from "@gajae-code/tui";
 
@@ -58,6 +59,17 @@ describe("ToolExecutionComponent minimize", () => {
 		expect(after[0]).toContain("❯");
 		tool.setFocused(false);
 		expect(strip(tool.render(80))[0]).toBe("");
+	});
+
+	it("transcript overlay shows full output of minimized tools without mutating chat state", () => {
+		const tool = makeTool("ls", "line1\nline2\nline3");
+		tool.setMinimized(true);
+		const overlay = new ToolTranscriptOverlayComponent([tool], { close() {}, requestRender() {} });
+		const rendered = strip(overlay.render(100)).join("\n");
+		expect(rendered).toContain("line3");
+		expect(rendered).toContain("Tool transcript (1 tools");
+		expect(tool.expanded).toBe(false);
+		expect(tool.render(100).length).toBe(2);
 	});
 
 	it("keeps the error icon and first error line when minimized", () => {
