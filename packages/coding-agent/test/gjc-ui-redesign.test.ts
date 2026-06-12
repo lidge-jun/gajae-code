@@ -47,10 +47,11 @@ describe("GJC red-claw redesign defaults", () => {
 		expect(new Set([colors.accent, colors.error, colors.warning, colors.toolDiffRemoved]).size).toBe(4);
 	});
 
-	it("exposes only red-claw and blue-crab as bundled selectable themes", async () => {
+	it("exposes the bundled selectable themes (gjc pair + jaw abyss-bite pair)", async () => {
 		const themes = await themeModule.getAvailableThemes();
 
-		expect(themes).toEqual(["blue-crab", "red-claw"]);
+		expect(themes).toEqual(["abyss-bite", "abyss-bite-light", "blue-crab", "red-claw"]);
+		// Without GJC_BRAND_NAME the schema defaults stay on the upstream gjc pair
 		expect(SETTINGS_SCHEMA["theme.dark"].default).toBe("red-claw");
 		expect(SETTINGS_SCHEMA["theme.light"].default).toBe("blue-crab");
 	});

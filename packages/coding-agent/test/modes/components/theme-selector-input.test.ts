@@ -120,7 +120,8 @@ describe("ThemeSelectorComponent input handling", () => {
 		selector.getSelectList().handleInput("\x1b[B");
 		selector.getSelectList().handleInput("\n");
 
-		expect(settings.get("theme.dark")).toBe("blue-crab");
+		// 4 bundled themes (086 added the abyss-bite pair): down from red-claw wraps to abyss-bite
+		expect(settings.get("theme.dark")).toBe("abyss-bite");
 		expect(ctx.ui.setFocus).toHaveBeenLastCalledWith(ctx.editor);
 		expect(ctx.statusLine.invalidate).toHaveBeenCalled();
 		expect(ctx.updateEditorTopBorder).toHaveBeenCalled();

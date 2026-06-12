@@ -50,22 +50,30 @@ async function verifyThemeDefaults(): Promise<GateResult> {
 		.filter(([left, right]) => resolveColor(colors[left], vars) === resolveColor(colors[right], vars))
 		.map(([left, right]) => `${left} matches ${right}`);
 
+	// Brand-conditional defaults (jawcode 086): gjc keeps red-claw/blue-crab,
+	// the branded shell (jwc) defaults to the abyss-bite pair.
+	const expectedDarkDefault = 'APP_NAME !== ENGINE_NAME ? "abyss-bite" : "red-claw"';
+	const expectedLightDefault = 'APP_NAME !== ENGINE_NAME ? "abyss-bite-light" : "blue-crab"';
+
 	const retainedBuiltIns =
-		[...defaultIndex.matchAll(/^import /gm)].length === 2 &&
-		[...defaultIndex.matchAll(/^\t"/gm)].length === 2 &&
+		[...defaultIndex.matchAll(/^import /gm)].length === 4 &&
+		[...defaultIndex.matchAll(/^\t"/gm)].length === 4 &&
+		defaultIndex.includes('"abyss-bite": abyss_bite') &&
+		defaultIndex.includes('"abyss-bite-light": abyss_bite_light') &&
 		defaultIndex.includes('"blue-crab": blue_crab') &&
 		defaultIndex.includes('"red-claw": red_claw') &&
 		!defaultIndex.includes("dark_") &&
-		!defaultIndex.includes("light_") &&
 		isRecord(blueCrab.colors);
 
 	return {
 		name: "red-claw/blue-crab theme defaults and semantic token split",
 		passed:
-			settings.includes('default: "red-claw"') &&
-			settings.includes('default: "blue-crab"') &&
-			themeRuntime.includes('autoDarkTheme: string = "red-claw"') &&
-			themeRuntime.includes('autoLightTheme: string = "blue-crab"') &&
+			settings.includes(`default: ${expectedDarkDefault}`) &&
+			settings.includes(`default: ${expectedLightDefault}`) &&
+			themeRuntime.includes(`const DEFAULT_DARK_THEME: string = ${expectedDarkDefault}`) &&
+			themeRuntime.includes(`const DEFAULT_LIGHT_THEME: string = ${expectedLightDefault}`) &&
+			themeRuntime.includes("autoDarkTheme: string = DEFAULT_DARK_THEME") &&
+			themeRuntime.includes("autoLightTheme: string = DEFAULT_LIGHT_THEME") &&
 			retainedBuiltIns &&
 			resolveColor(colors.accent, vars) === resolveColor(vars.claw, vars) &&
 			resolveColor(colors.error, vars) === resolveColor(vars.dangerRed, vars) &&
@@ -73,10 +81,10 @@ async function verifyThemeDefaults(): Promise<GateResult> {
 			resolveColor(colors.toolDiffRemoved, vars) === resolveColor(vars.diffRemovalRed, vars) &&
 			semanticFindings.length === 0,
 		details: [
-			`settings default red-claw: ${settings.includes('default: "red-claw"')}`,
-			`settings default blue-crab: ${settings.includes('default: "blue-crab"')}`,
-			`runtime autoDarkTheme red-claw: ${themeRuntime.includes('autoDarkTheme: string = "red-claw"')}`,
-			`runtime autoLightTheme blue-crab: ${themeRuntime.includes('autoLightTheme: string = "blue-crab"')}`,
+			`settings default dark (brand-conditional): ${settings.includes(`default: ${expectedDarkDefault}`)}`,
+			`settings default light (brand-conditional): ${settings.includes(`default: ${expectedLightDefault}`)}`,
+			`runtime DEFAULT_DARK_THEME (brand-conditional): ${themeRuntime.includes(`const DEFAULT_DARK_THEME: string = ${expectedDarkDefault}`)}`,
+			`runtime DEFAULT_LIGHT_THEME (brand-conditional): ${themeRuntime.includes(`const DEFAULT_LIGHT_THEME: string = ${expectedLightDefault}`)}`,
 			`retained built-ins only: ${retainedBuiltIns}`,
 			`semantic collisions: ${semanticFindings.join("; ") || "<none>"}`,
 		],

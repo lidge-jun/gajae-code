@@ -1,4 +1,5 @@
 import { THINKING_EFFORTS } from "@gajae-code/ai/model-thinking";
+import { APP_NAME, ENGINE_NAME } from "@gajae-code/utils";
 import { TASK_SIMPLE_MODES } from "../task/simple-mode";
 import { getThinkingLevelMetadata } from "../thinking";
 import { EDIT_MODES } from "../utils/edit-mode";
@@ -395,7 +396,7 @@ export const SETTINGS_SCHEMA = {
 	// Theme
 	"theme.dark": {
 		type: "string",
-		default: "red-claw",
+		default: APP_NAME !== ENGINE_NAME ? "abyss-bite" : "red-claw",
 		ui: {
 			tab: "appearance",
 			label: "Dark Theme",
@@ -406,7 +407,7 @@ export const SETTINGS_SCHEMA = {
 
 	"theme.light": {
 		type: "string",
-		default: "blue-crab",
+		default: APP_NAME !== ENGINE_NAME ? "abyss-bite-light" : "blue-crab",
 		ui: {
 			tab: "appearance",
 			label: "Light Theme",

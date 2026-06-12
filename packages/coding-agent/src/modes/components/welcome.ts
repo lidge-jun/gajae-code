@@ -1,5 +1,5 @@
 import { type Component, padding, TERMINAL, truncateToWidth, visibleWidth } from "@gajae-code/tui";
-import { APP_NAME } from "@gajae-code/utils";
+import { APP_NAME, ENGINE_NAME } from "@gajae-code/utils";
 import { type ThemeColor, theme } from "../../modes/theme/theme";
 
 export interface RecentSession {
@@ -83,16 +83,24 @@ export class WelcomeComponent implements Component {
 		const minRightCol = 20;
 		const modelPill = this.#pill(theme.icon.model || "model", this.modelName, "statusLineModel");
 		const providerPill = this.#pill(theme.icon.package || "provider", this.providerName, "statusLinePath");
-		const logoMinWidth = Math.max(...RED_CLAW_LOGO.map(line => visibleWidth(line)));
-		const leftMinContentWidth = Math.max(
-			minLeftCol,
-			logoMinWidth,
-			visibleWidth("Gajae forge"),
-			visibleWidth("shape · act · prove"),
-			visibleWidth(modelPill),
-			visibleWidth(providerPill),
-		);
-		const desiredLeftCol = Math.min(preferredLeftCol, Math.max(minLeftCol, Math.floor(dualContentWidth * 0.35)));
+		const logoMinWidth = Math.max(...BANNER_LOGO.map(line => visibleWidth(line)));
+		const leftMinContentWidth =
+			Math.max(
+				minLeftCol,
+				logoMinWidth,
+				visibleWidth(BANNER_WORDMARK),
+				visibleWidth(BANNER_TAGLINE),
+				visibleWidth(modelPill),
+				visibleWidth(providerPill),
+			) + (BRANDED ? 1 : 0); // branded layout is left-aligned with a 1-col indent
+		// Branded layout prefers the two-pane split: grow the left pane to fit its
+		// content whenever the right pane can still keep its minimum width.
+		const desiredLeftCol = BRANDED
+			? Math.min(
+					Math.max(preferredLeftCol, leftMinContentWidth),
+					Math.max(minLeftCol, dualContentWidth - minRightCol),
+				)
+			: Math.min(preferredLeftCol, Math.max(minLeftCol, Math.floor(dualContentWidth * 0.35)));
 		const dualLeftCol =
 			dualContentWidth >= minRightCol + 1
 				? Math.min(desiredLeftCol, dualContentWidth - minRightCol)
@@ -105,17 +113,29 @@ export class WelcomeComponent implements Component {
 		// Logo: pick a frame from the intro animation if active, else the resting frame.
 		const logoColored = this.#currentLogoFrame();
 
-		// Left column - centered content
-		const leftLines = [
-			"",
-			this.#centerText(theme.bold(theme.fg("accent", "Gajae forge")), leftCol),
-			this.#centerText(theme.fg("dim", "shape · act · prove"), leftCol),
-			"",
-			...logoColored.map(l => this.#centerText(l, leftCol)),
-			"",
-			this.#centerText(modelPill, leftCol),
-			this.#centerText(providerPill, leftCol),
-		];
+		// Left column — branded: left-aligned identity block with version; gjc: centered
+		const leftLines = BRANDED
+			? [
+					"",
+					` ${theme.bold(theme.fg("accent", BANNER_WORDMARK))}`,
+					` ${theme.fg("dim", BANNER_TAGLINE)}`,
+					` ${theme.fg("dim", `v${this.version}`)}`,
+					"",
+					...logoColored.map(l => ` ${l}`),
+					"",
+					` ${modelPill}`,
+					` ${providerPill}`,
+				]
+			: [
+					"",
+					this.#centerText(theme.bold(theme.fg("accent", BANNER_WORDMARK)), leftCol),
+					this.#centerText(theme.fg("dim", BANNER_TAGLINE), leftCol),
+					"",
+					...logoColored.map(l => this.#centerText(l, leftCol)),
+					"",
+					this.#centerText(modelPill, leftCol),
+					this.#centerText(providerPill, leftCol),
+				];
 
 		// Right column separator
 		const separatorWidth = Math.max(0, rightCol - 2); // padding on each side
@@ -160,28 +180,38 @@ export class WelcomeComponent implements Component {
 			}
 		}
 
-		// Right column
+		// Right column — branded: key names only; gjc: keys with descriptions
+		const dot = theme.fg("dim", " · ");
+		const flowKeyLines = BRANDED
+			? [
+					` ${["/", "#", "!", "$", "?"].map(k => theme.fg("muted", k)).join(dot)}`,
+					` ${["ctrl+l", "shift+tab"].map(k => theme.fg("muted", k)).join(dot)}`,
+				]
+			: [
+					` ${theme.fg("dim", "/")}${theme.fg("muted", " commands")} ${theme.fg("dim", "·")} ${theme.fg(
+						"dim",
+						"#",
+					)}${theme.fg("muted", " actions")}`,
+					` ${theme.fg("dim", "!")}${theme.fg("muted", " shell")} ${theme.fg("dim", "·")} ${theme.fg(
+						"dim",
+						"$",
+					)}${theme.fg("muted", " python")}`,
+					` ${theme.fg("dim", "?")}${theme.fg("muted", " keymap")} ${theme.fg("dim", "·")} ${theme.fg(
+						"dim",
+						"ctrl+l",
+					)}${theme.fg("muted", " model")}`,
+					` ${theme.fg("dim", "shift+tab")}${theme.fg("muted", " reasoning")}`,
+				];
 		const rightLines = [
 			` ${theme.bold(theme.fg("accent", "Flow keys"))}`,
-			` ${theme.fg("dim", "/")}${theme.fg("muted", " commands")} ${theme.fg("dim", "·")} ${theme.fg(
-				"dim",
-				"#",
-			)}${theme.fg("muted", " actions")}`,
-			` ${theme.fg("dim", "!")}${theme.fg("muted", " shell")} ${theme.fg("dim", "·")} ${theme.fg("dim", "$")}${theme.fg(
-				"muted",
-				" python",
-			)}`,
-			` ${theme.fg("dim", "?")}${theme.fg("muted", " keymap")} ${theme.fg("dim", "·")} ${theme.fg(
-				"dim",
-				"ctrl+l",
-			)}${theme.fg("muted", " model")}`,
-			` ${theme.fg("dim", "shift+tab")}${theme.fg("muted", " reasoning")}`,
+			...flowKeyLines,
 			separator,
 			` ${theme.bold(theme.fg("accent", "Project pulse"))}`,
 			...lspLines,
 			separator,
 			` ${theme.bold(theme.fg("accent", "Session trail"))}`,
 			...sessionLines,
+			...(BRANDED ? ["", ` ${theme.fg("muted", "/resume")}`] : []),
 			"",
 		];
 
@@ -273,7 +303,7 @@ export class WelcomeComponent implements Component {
 		// the same ease-out curve so the highlight is gone by the resting frame.
 		const shinePos = (((progress * INTRO_SHINE_TRAVERSALS) % 1) + 1) % 1;
 		const shineStrength = (1 - eased) ** 1.5;
-		return gradientLogo(RED_CLAW_LOGO, phase, { strength: shineStrength, pos: shinePos });
+		return gradientLogo(BANNER_LOGO, phase, { strength: shineStrength, pos: shinePos });
 	}
 }
 
@@ -287,8 +317,24 @@ const RED_CLAW_LOGO = [
 	"╰────────────────╯        ╰────────╯",
 ];
 
+// biome-ignore format: preserve ASCII art layout
+const JAW_FIN_LOGO = [
+	"               ╭╼┓                 ",
+	"             ╭─╯ ┗┓                ",
+	"           ╭─╯    ┗┓               ",
+	"         ╭─╯  ╱ ╱  ┗━┓             ",
+	"      ╭──╯   ╱ ╱     ┗━━┓          ",
+	"~~~~~~╯~~~~~~~~~~~~~~~~~┖~~~~~~~~~~",
+];
+
+/** Branded shell (e.g. jwc) gets jaw visuals; the upstream gjc shell keeps the claw. */
+const BRANDED = APP_NAME !== ENGINE_NAME;
+const BANNER_LOGO = BRANDED ? JAW_FIN_LOGO : RED_CLAW_LOGO;
+const BANNER_WORDMARK = BRANDED ? "Jawcode" : "Gajae forge";
+const BANNER_TAGLINE = BRANDED ? "bite · build · ship" : "shape · act · prove";
+
 /** Multi-stop palette for the red-claw diagonal gradient. */
-const GRADIENT_STOPS: ReadonlyArray<readonly [number, number, number]> = [
+const CLAW_GRADIENT_STOPS: ReadonlyArray<readonly [number, number, number]> = [
 	[127, 29, 29], // deep shell red
 	[220, 38, 38], // claw red
 	[249, 115, 22], // orange coral
@@ -296,8 +342,21 @@ const GRADIENT_STOPS: ReadonlyArray<readonly [number, number, number]> = [
 	[255, 215, 168], // shell highlight
 ];
 
+/** Multi-stop palette for the abyss-bite diagonal gradient: abyss → cyan glow → bite tip. */
+const JAW_GRADIENT_STOPS: ReadonlyArray<readonly [number, number, number]> = [
+	[15, 42, 67], // abyss navy
+	[19, 100, 127], // deep teal
+	[0, 182, 190], // cyan glow
+	[0, 209, 218], // bright cyan
+	[255, 106, 61], // bite orange tip
+];
+
+const GRADIENT_STOPS = BRANDED ? JAW_GRADIENT_STOPS : CLAW_GRADIENT_STOPS;
+
 /** 256-color ramp fallback when truecolor isn't available. */
-const GRADIENT_RAMP_256 = [52, 88, 124, 160, 202, 209, 215];
+const CLAW_GRADIENT_RAMP_256 = [52, 88, 124, 160, 202, 209, 215];
+const JAW_GRADIENT_RAMP_256 = [17, 23, 30, 37, 44, 51, 208];
+const GRADIENT_RAMP_256 = BRANDED ? JAW_GRADIENT_RAMP_256 : CLAW_GRADIENT_RAMP_256;
 
 /** Half-width of the shine highlight band, expressed in gradient-t units. */
 const SHINE_HALF_WIDTH = 0.18;
@@ -386,4 +445,4 @@ const INTRO_SWEEPS = 2.5;
 const INTRO_SHINE_TRAVERSALS = 3;
 
 /** Resting gradient frame, cached for re-renders outside of the intro. */
-const REST_FRAME = gradientLogo(RED_CLAW_LOGO, 0);
+const REST_FRAME = gradientLogo(BANNER_LOGO, 0);

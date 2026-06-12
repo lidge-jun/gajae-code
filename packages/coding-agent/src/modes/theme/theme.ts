@@ -10,7 +10,7 @@ import {
 	supportsLanguage as nativeSupportsLanguage,
 } from "@gajae-code/natives";
 import type { EditorTheme, MarkdownTheme, SelectListTheme, SymbolTheme } from "@gajae-code/tui";
-import { adjustHsv, getCustomThemesDir, isEnoent, logger } from "@gajae-code/utils";
+import { APP_NAME, adjustHsv, ENGINE_NAME, getCustomThemesDir, isEnoent, logger } from "@gajae-code/utils";
 import chalk from "chalk";
 import * as z from "zod/v4";
 // Embed theme JSON files at build time
@@ -1785,8 +1785,12 @@ var themeWatcher: fs.FSWatcher | undefined;
 var themeReloadTimer: NodeJS.Timeout | undefined;
 var sigwinchHandler: (() => void) | undefined;
 var autoDetectedTheme: boolean = false;
-var autoDarkTheme: string = "red-claw";
-var autoLightTheme: string = "blue-crab";
+/** Brand-conditional default themes: jaw visuals when running as a branded shell (e.g. jwc), upstream gjc themes otherwise. */
+const DEFAULT_DARK_THEME: string = APP_NAME !== ENGINE_NAME ? "abyss-bite" : "red-claw";
+const DEFAULT_LIGHT_THEME: string = APP_NAME !== ENGINE_NAME ? "abyss-bite-light" : "blue-crab";
+
+var autoDarkTheme: string = DEFAULT_DARK_THEME;
+var autoLightTheme: string = DEFAULT_LIGHT_THEME;
 var onThemeChangeCallback: (() => void) | undefined;
 var themeLoadRequestId: number = 0;
 var previewThemeActive: boolean = false;
@@ -1806,8 +1810,8 @@ export async function initTheme(
 	lightTheme?: string,
 ): Promise<void> {
 	autoDetectedTheme = true;
-	autoDarkTheme = darkTheme ?? "red-claw";
-	autoLightTheme = lightTheme ?? "blue-crab";
+	autoDarkTheme = darkTheme ?? DEFAULT_DARK_THEME;
+	autoLightTheme = lightTheme ?? DEFAULT_LIGHT_THEME;
 	const name = getDefaultTheme();
 	previewThemeActive = false;
 	currentThemeName = name;
@@ -1820,9 +1824,9 @@ export async function initTheme(
 			startSigwinchListener();
 		}
 	} catch (err) {
-		logger.debug("Theme loading failed, falling back to red-claw theme", { error: String(err) });
-		currentThemeName = "red-claw";
-		theme = await loadTheme("red-claw", getCurrentThemeOptions());
+		logger.debug(`Theme loading failed, falling back to ${DEFAULT_DARK_THEME} theme`, { error: String(err) });
+		currentThemeName = DEFAULT_DARK_THEME;
+		theme = await loadTheme(DEFAULT_DARK_THEME, getCurrentThemeOptions());
 		// Don't start watcher for fallback theme
 	}
 }
@@ -1852,9 +1856,9 @@ export async function setTheme(
 		if (requestId !== themeLoadRequestId) {
 			return { success: false, error: "Theme change superseded by a newer request" };
 		}
-		// Theme is invalid - fall back to red-claw theme
-		currentThemeName = "red-claw";
-		theme = await loadTheme("red-claw", getCurrentThemeOptions());
+		// Theme is invalid - fall back to the default dark theme
+		currentThemeName = DEFAULT_DARK_THEME;
+		theme = await loadTheme(DEFAULT_DARK_THEME, getCurrentThemeOptions());
 		// Don't start watcher for fallback theme
 		return {
 			success: false,
@@ -1962,8 +1966,8 @@ export async function setSymbolPreset(preset: SymbolPreset): Promise<void> {
 		try {
 			theme = await loadTheme(currentThemeName, getCurrentThemeOptions());
 		} catch {
-			// Fall back to red-claw theme with new preset
-			theme = await loadTheme("red-claw", getCurrentThemeOptions());
+			// Fall back to the default dark theme with new preset
+			theme = await loadTheme(DEFAULT_DARK_THEME, getCurrentThemeOptions());
 		}
 		if (onThemeChangeCallback) {
 			onThemeChangeCallback();
@@ -1988,8 +1992,8 @@ export async function setColorBlindMode(enabled: boolean): Promise<void> {
 		try {
 			theme = await loadTheme(currentThemeName, getCurrentThemeOptions());
 		} catch {
-			// Fall back to red-claw theme
-			theme = await loadTheme("red-claw", getCurrentThemeOptions());
+			// Fall back to the default dark theme
+			theme = await loadTheme(DEFAULT_DARK_THEME, getCurrentThemeOptions());
 		}
 		if (onThemeChangeCallback) {
 			onThemeChangeCallback();
@@ -2277,7 +2281,7 @@ function isThemeJsonLight(themeJson: ThemeJson): boolean {
 }
 
 export function isLightTheme(themeName?: string, agentDir?: string): boolean {
-	const name = themeName ?? "red-claw";
+	const name = themeName ?? DEFAULT_DARK_THEME;
 	const builtinThemes = getBuiltinThemes();
 	let themeJson: ThemeJson | undefined;
 	if (name in builtinThemes) {
