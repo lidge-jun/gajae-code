@@ -5,8 +5,11 @@ When enabled, the agent automatically extracts durable knowledge from past sessi
 Disabled by default. Enable via `/settings` or `config.yml`:
 
 ```yaml
-memories:
-  enabled: true
+memory:
+  backend: local
+# legacy equivalent:
+# memories:
+#   enabled: true
 ```
 
 ## Usage
@@ -22,6 +25,24 @@ At session start, if a memory summary exists for the current project, it is inje
 ### Memory artifacts
 
 Generated local-memory artifacts are private runtime state, not a public tool or URI surface. They may be summarized into the system prompt when local memory is enabled, but users and model-facing tool docs should not rely on direct `memory://` reads. The legacy internal `memory://` resolver remains only for compatibility with existing persisted guidance and is not part of the public coding harness contract; remove it after legacy local-memory prompts no longer reference it.
+### `jwc memory` and `jwc chat` (Jaw brand)
+
+On the **jwc** CLI brand (`GJC_BRAND_NAME=jwc`), the native commands below mirror the cli-jaw memory workflow. They route through `packages/coding-agent/src/gjc-runtime/memory-runtime.ts` into the same engines as the interactive agent:
+
+| Backend | Setting | Role |
+| ------- | ------- | ---- |
+| `local` | `memory.backend: local` (or legacy `memories.enabled: true`) | SQLite pipeline under `<agentDir>/memories/state`, per-project artifacts |
+| `hindsight` | `memory.backend: hindsight` | Vectorize Hindsight remote bank (`hindsight.*` settings) |
+| `off` | default | Commands print a configuration hint and exit non-zero |
+
+**Local `jwc memory` verbs:** `search`, `read`, `save`, `context`, `browse`, `list`, `status`, `reindex`. Ref vocabulary for read/context: `summary`, `memory`, `raw`, `stage1:<thread_id>`, `rollout:<slug>` (plus artifact basename aliases). Manual save uses `thread_id = manual:<file>` and enqueues phase2 consolidation.
+
+**`jwc chat search`** greps rollout session JSONL under the current project cwd (`--days`, `--recent`, `--context`).
+
+**Task Snapshot (local):** Each turn, `localBackend.beforeAgentStartPrompt` may append a `<memories>` block with up to four diversified search hits for the current user prompt, in parallel with the `memory_summary.md` guidance injection.
+
+Standalone `jwc memory save` cannot refresh another process’s live TUI session; in-session saves call `refreshBaseSystemPrompt()` when the runtime passes an `AgentSession`. Otherwise visibility follows the watermark queue and the next rebuild.
+
 ### `/memory` slash command
 
 | Subcommand            | Effect                                         |
@@ -73,6 +94,7 @@ If the requested memory role is not configured, memory model resolution falls ba
 | Setting                               | Default | Description                                               |
 | ------------------------------------- | ------- | --------------------------------------------------------- |
 | `memories.enabled`                    | `false` | Master switch                                             |
+| `memory.backend`                      | `off`   | `off`, `local`, or `hindsight` — prefer over legacy `memories.enabled` |
 | `memories.maxRolloutAgeDays`          | `30`    | Sessions older than this are not processed                |
 | `memories.minRolloutIdleHours`        | `12`    | Sessions active more recently than this are skipped       |
 | `memories.maxRolloutsPerStartup`      | `64`    | Cap on sessions processed in a single startup             |
