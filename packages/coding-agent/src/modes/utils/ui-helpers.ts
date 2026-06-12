@@ -308,6 +308,10 @@ export class UiHelpers {
 			}
 			// Assistant messages need special handling for tool calls
 			if (message.role === "assistant") {
+				// 083.1: a new assistant message closes the previous tool batch —
+				// in replay every batch is history, so its last tool collapses too.
+				this.ctx.lastToolComponent?.setMinimized?.(true);
+				this.ctx.lastToolComponent = undefined;
 				this.ctx.addMessageToChat(message);
 				const lastChild = this.ctx.chatContainer.children[this.ctx.chatContainer.children.length - 1];
 				const assistantComponent = lastChild instanceof AssistantMessageComponent ? lastChild : undefined;
