@@ -128,10 +128,22 @@ type CancelCallback = () => void;
 interface ProviderTabState {
 	id: string;
 	label: string;
-	providerId?: string;
+	providerIds?: string[];
 }
 const ALL_TAB = "ALL";
 const CANONICAL_TAB = "CANONICAL";
+
+// jwc rebrand: short tab labels for the /model selector only — the provider
+// auth/selection dialogs keep the raw provider ids.
+const PROVIDER_TAB_LABEL_OVERRIDES: Record<string, string> = {
+	anthropic: "CLAUDE",
+	"openai-codex": "CODEX",
+};
+
+// Local runtimes share one LOCAL tab instead of three rarely-used tabs.
+// ollama-cloud is a hosted provider and intentionally NOT part of this group.
+const LOCAL_TAB = "LOCAL";
+const LOCAL_TAB_PROVIDERS: readonly string[] = ["llama.cpp", "lm-studio", "ollama"];
 
 const STATIC_PROVIDER_TABS: ProviderTabState[] = [
 	{ id: ALL_TAB, label: ALL_TAB },
@@ -151,11 +163,11 @@ const OPENAI_CODE_PROFILE_PRESET: ModelAssignmentPreset = {
 };
 
 function formatProviderTabLabel(providerId: string): string {
-	return providerId.replace(/[-_]+/g, " ").toUpperCase();
+	return PROVIDER_TAB_LABEL_OVERRIDES[providerId] ?? providerId.replace(/[-_]+/g, " ").toUpperCase();
 }
 
 function createProviderTab(providerId: string): ProviderTabState {
-	return { id: providerId, label: formatProviderTabLabel(providerId), providerId };
+	return { id: providerId, label: formatProviderTabLabel(providerId), providerIds: [providerId] };
 }
 /**
  * Component that renders a canonical model selector with provider tabs.
@@ -506,21 +518,29 @@ export class ModelSelectorComponent extends Container {
 		for (const provider of this.#modelRegistry.getDiscoverableProviders()) {
 			providerSet.add(provider);
 		}
-		const sortedProviderIds = Array.from(providerSet).sort((left, right) =>
-			formatProviderTabLabel(left).localeCompare(formatProviderTabLabel(right)),
-		);
-		this.#providers = [...STATIC_PROVIDER_TABS, ...sortedProviderIds.map(createProviderTab)];
+		const localProviders = LOCAL_TAB_PROVIDERS.filter(provider => providerSet.has(provider));
+		for (const provider of localProviders) {
+			providerSet.delete(provider);
+		}
+		const providerTabs = Array.from(providerSet).map(createProviderTab);
+		if (localProviders.length > 0) {
+			providerTabs.push({ id: LOCAL_TAB, label: LOCAL_TAB, providerIds: localProviders });
+		}
+		providerTabs.sort((left, right) => left.label.localeCompare(right.label));
+		this.#providers = [...STATIC_PROVIDER_TABS, ...providerTabs];
 		const activeIndex = this.#providers.findIndex(tab => tab.id === activeTabId);
 		this.#activeTabIndex =
 			activeIndex >= 0 ? activeIndex : Math.min(this.#activeTabIndex, this.#providers.length - 1);
 	}
 
 	async #refreshSelectedProvider(): Promise<void> {
-		const providerId = this.#getActiveProviderId();
-		if (this.#scopedModels.length > 0 || !providerId) {
+		const providerIds = this.#getActiveProviderIds();
+		if (this.#scopedModels.length > 0 || !providerIds || providerIds.length === 0) {
 			return;
 		}
-		await this.#modelRegistry.refreshProvider(providerId);
+		for (const providerId of providerIds) {
+			await this.#modelRegistry.refreshProvider(providerId);
+		}
 		await this.#loadModels();
 		this.#buildProviderTabs();
 		this.#updateTabBar();
@@ -555,8 +575,8 @@ export class ModelSelectorComponent extends Container {
 		return this.#getActiveTab().id;
 	}
 
-	#getActiveProviderId(): string | undefined {
-		return this.#getActiveTab().providerId;
+	#getActiveProviderIds(): string[] | undefined {
+		return this.#getActiveTab().providerIds;
 	}
 
 	#isCanonicalTab(): boolean {
@@ -565,20 +585,20 @@ export class ModelSelectorComponent extends Container {
 
 	#filterModels(query: string): void {
 		const activeTabId = this.#getActiveTabId();
-		const activeProviderId = this.#getActiveProviderId();
+		const activeProviderIds = this.#getActiveProviderIds();
 		const isCanonicalTab = activeTabId === CANONICAL_TAB;
 
 		// Start with all models or filter by provider/canonical view
 		let baseModels = this.#allModels;
 		const baseCanonicalModels = this.#canonicalModels;
-		if (activeProviderId) {
-			baseModels = this.#allModels.filter(m => m.provider === activeProviderId);
+		if (activeProviderIds && activeProviderIds.length > 0) {
+			baseModels = this.#allModels.filter(m => activeProviderIds.includes(m.provider));
 		}
 
 		// Apply fuzzy filter if query is present
 		if (query.trim()) {
 			// If user is searching from a provider tab, auto-switch to ALL to show global provider results.
-			if (activeProviderId && !isCanonicalTab) {
+			if (activeProviderIds && activeProviderIds.length > 0 && !isCanonicalTab) {
 				this.#activeTabIndex = 0;
 				if (this.#tabBar && this.#tabBar.getActiveIndex() !== 0) {
 					this.#tabBar.setActiveIndex(0);
@@ -658,11 +678,14 @@ export class ModelSelectorComponent extends Container {
 	}
 
 	#getProviderEmptyStateMessage(): string | undefined {
-		const activeProviderId = this.#getActiveProviderId();
-		if (!activeProviderId || this.#searchInput.getValue().trim()) {
+		const activeProviderIds = this.#getActiveProviderIds();
+		if (!activeProviderIds || activeProviderIds.length === 0 || this.#searchInput.getValue().trim()) {
 			return undefined;
 		}
-		const state = this.#modelRegistry.getProviderDiscoveryState(activeProviderId);
+		// Grouped tabs (LOCAL) surface the first member that reports a state.
+		const state = activeProviderIds
+			.map(providerId => this.#modelRegistry.getProviderDiscoveryState(providerId))
+			.find(providerState => providerState !== undefined);
 		if (!state) {
 			return undefined;
 		}
