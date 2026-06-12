@@ -118,12 +118,12 @@ function parseStateAction(words: readonly string[]): string | undefined {
 	return third ? undefined : second;
 }
 
-function validateMatchedGjcCommand(words: readonly string[]): BashAllowedPrefixesCheck {
-	if (words[0] !== "gjc") return { allowed: true };
+function validateMatchedJwcCommand(words: readonly string[]): BashAllowedPrefixesCheck {
+	if (words[0] !== "jwc") return { allowed: true };
 
 	if (words[1] === "ralplan") {
 		if (!words.includes("--write")) {
-			return { allowed: false, reason: "restricted role-agent bash only allows `gjc ralplan --write ...`" };
+			return { allowed: false, reason: "restricted role-agent bash only allows `jwc ralplan --write ...`" };
 		}
 		return { allowed: true };
 	}
@@ -133,11 +133,11 @@ function validateMatchedGjcCommand(words: readonly string[]): BashAllowedPrefixe
 		if (!action) {
 			return {
 				allowed: false,
-				reason: "restricted role-agent bash only allows documented `gjc state` action shapes",
+				reason: "restricted role-agent bash only allows documented `jwc state` action shapes",
 			};
 		}
 		if (!ALLOWED_STATE_ACTIONS.has(action)) {
-			return { allowed: false, reason: `restricted role-agent bash does not allow \`gjc state ${action}\`` };
+			return { allowed: false, reason: `restricted role-agent bash does not allow \`jwc state ${action}\`` };
 		}
 		return { allowed: true };
 	}
@@ -165,5 +165,5 @@ export function checkBashAllowedPrefixes(
 		};
 	}
 
-	return validateMatchedGjcCommand(parsed.words);
+	return validateMatchedJwcCommand(parsed.words);
 }

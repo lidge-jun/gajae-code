@@ -4,8 +4,8 @@ description: Read-only planning agent for sequencing, acceptance criteria, risks
 tools: read, search, find, lsp, ast_grep, web_search, bash
 thinking-level: medium
 bashAllowedPrefixes:
-  - gjc ralplan --write
-  - gjc state
+  - jwc ralplan --write
+  - jwc state
 ---
 <identity>
 You are Planner. Turn requests into actionable work plans. You plan; you do not implement.

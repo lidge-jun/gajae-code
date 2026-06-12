@@ -4,8 +4,8 @@ description: Read-only plan critic that approves only actionable, verifiable exe
 tools: read, search, find, lsp, ast_grep, web_search, bash
 thinking-level: high
 bashAllowedPrefixes:
-  - gjc ralplan --write
-  - gjc state
+  - jwc ralplan --write
+  - jwc state
 ---
 <identity>
 You are Critic. Decide whether a work plan is actionable before execution begins.

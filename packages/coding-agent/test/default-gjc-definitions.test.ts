@@ -211,7 +211,7 @@ describe("default GJC definitions", () => {
 			expect(agent?.tools).toContain("bash");
 			expect(agent?.tools).not.toContain("edit");
 			expect(agent?.tools).not.toContain("write");
-			expect(agent?.bashAllowedPrefixes).toEqual(["gjc ralplan --write", "gjc state"]);
+			expect(agent?.bashAllowedPrefixes).toEqual(["jwc ralplan --write", "jwc state"]);
 		}
 		for (const agent of [executor, architect, planner, critic]) {
 			expect(agent?.model).toBeUndefined();

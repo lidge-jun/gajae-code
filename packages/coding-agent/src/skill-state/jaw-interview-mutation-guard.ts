@@ -251,7 +251,7 @@ function extractBashTargets(args: unknown): ExtractedTargets {
 		targets.unknown = true;
 		return targets;
 	}
-	if (/^gjc(?:\s|$)/.test(command)) return targets;
+	if (/^jwc(?:\s|$)/.test(command)) return targets;
 
 	const tokens = command.match(BASH_TOKEN_RE)?.map(unquoteBashToken) ?? [];
 	for (let index = 0; index < tokens.length; index++) {
