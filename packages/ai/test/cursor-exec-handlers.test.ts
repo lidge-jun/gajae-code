@@ -92,17 +92,22 @@ describe("Cursor resolveExecHandler execHandlers binding", () => {
 });
 
 describe("Cursor system prompt encoding", () => {
-	it("emits one Cursor system blob per ordered prompt", () => {
+	it("leads with a host-override directive, then one blob per ordered prompt", () => {
 		const jsons = buildCursorSystemPromptJsons(["Primary instructions.", "Developer constraints."]);
-		expect(jsons).toHaveLength(2);
-		expect(JSON.parse(jsons[0])).toEqual({ role: "system", content: "Primary instructions." });
-		expect(JSON.parse(jsons[1])).toEqual({ role: "system", content: "Developer constraints." });
+		expect(jsons).toHaveLength(3);
+		// First blob pins the model to the host agent and disclaims Cursor IDE conventions.
+		const override = JSON.parse(jsons[0]) as { role: string; content: string };
+		expect(override.role).toBe("system");
+		expect(override.content).toContain("NOT operating inside the Cursor IDE");
+		expect(JSON.parse(jsons[1])).toEqual({ role: "system", content: "Primary instructions." });
+		expect(JSON.parse(jsons[2])).toEqual({ role: "system", content: "Developer constraints." });
 	});
 
-	it("falls back to a single default system message when all entries are empty", () => {
+	it("still emits the host-override directive plus the default greeting when all entries are empty", () => {
 		const jsons = buildCursorSystemPromptJsons(["", ""]);
-		expect(jsons).toHaveLength(1);
-		expect(JSON.parse(jsons[0])).toEqual({ role: "system", content: "You are a helpful assistant." });
+		expect(jsons).toHaveLength(2);
+		expect((JSON.parse(jsons[0]) as { content: string }).content).toContain("NOT operating inside the Cursor IDE");
+		expect(JSON.parse(jsons[1])).toEqual({ role: "system", content: "You are a helpful assistant." });
 	});
 });
 describe("Cursor request action encoding", () => {

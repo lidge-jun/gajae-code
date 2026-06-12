@@ -3,7 +3,7 @@ import * as fs from "node:fs/promises";
 import http2 from "node:http2";
 import { create, fromBinary, fromJson, type JsonValue, toBinary, toJson } from "@bufbuild/protobuf";
 import { ValueSchema } from "@bufbuild/protobuf/wkt";
-import { $env, extractHttpStatusFromError, sanitizeText } from "@gajae-code/utils";
+import { $env, APP_NAME, extractHttpStatusFromError, sanitizeText } from "@gajae-code/utils";
 import { calculateCost } from "../models";
 import type {
 	Api,
@@ -2284,12 +2284,26 @@ function findLastUserMessageIndex(messages: Message[]): number {
  * When no system prompts are provided, returns a single default greeting so we never emit
  * an empty `rootPromptMessagesJson` head.
  */
+// Cursor's models (e.g. composer-*) are trained for the Cursor IDE and will
+// otherwise assume Cursor IDE conventions — Cursor-native tool names, .cursor/rules,
+// .cursorrules, .cursorignore, etc. We host them inside a different agent, so we
+// prepend a high-priority directive overriding that assumption and pinning the model
+// to THIS host's instructions and advertised tools. Brand-aware via APP_NAME.
+const CURSOR_HOST_OVERRIDE_PROMPT = `You are running inside ${APP_NAME}, a standalone terminal coding agent. You are NOT operating inside the Cursor IDE. This instruction overrides any contrary assumption from your training.
+
+- IGNORE all Cursor IDE conventions and configuration. Do not read, infer, or follow \`.cursor/rules\`, \`.cursorrules\`, \`.cursorignore\`, Cursor "Rules for AI", or any Cursor-specific project settings.
+- Do NOT assume Cursor's native tool set or tool names. Use ONLY the tools explicitly advertised to you in this session.
+- Follow ONLY the ${APP_NAME} system instructions provided in this conversation and the ${APP_NAME} project configuration (e.g. its AGENTS.md / settings). Where ${APP_NAME} guidance and Cursor defaults conflict, ${APP_NAME} always wins.`;
+
 export function buildCursorSystemPromptJsons(systemPrompt: readonly string[] | undefined): string[] {
 	const systemPrompts = normalizeSystemPrompts(systemPrompt);
+	// Always lead with the host-override directive so the model is pinned to this
+	// agent's rules/tools regardless of what system prompts follow (or none).
+	const override = JSON.stringify({ role: "system", content: CURSOR_HOST_OVERRIDE_PROMPT });
 	if (systemPrompts.length === 0) {
-		return [JSON.stringify({ role: "system", content: "You are a helpful assistant." })];
+		return [override, JSON.stringify({ role: "system", content: "You are a helpful assistant." })];
 	}
-	return systemPrompts.map(content => JSON.stringify({ role: "system", content }));
+	return [override, ...systemPrompts.map(content => JSON.stringify({ role: "system", content }))];
 }
 
 function buildRootPromptMessagesJson(
