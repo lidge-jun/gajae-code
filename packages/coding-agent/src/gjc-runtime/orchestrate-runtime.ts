@@ -31,6 +31,7 @@ import {
 	readPabcdState,
 	writeNativeWorkflowEnvelopeAtomic,
 } from "./orchestrate-state";
+import { buildAuditLensSkillPointer, buildStageSkillPointer } from "./stage-skill-map";
 
 export interface OrchestrateCommandResult {
 	stdout?: string;
@@ -297,7 +298,11 @@ export async function runNativeOrchestrateCommand(argv: string[], cwd: string): 
 		if (lens !== "planner" && lens !== "architect") {
 			return { stderr: "orchestrate audit-prompt requires a lens: planner | architect\n", status: 2 };
 		}
-		return { stdout: ORCHESTRATE_AUDIT_PROMPTS[lens], status: 0 };
+		const lensPointer = buildAuditLensSkillPointer(lens);
+		const auditPrompt = lensPointer
+			? `${ORCHESTRATE_AUDIT_PROMPTS[lens]}\n\n${lensPointer}`
+			: ORCHESTRATE_AUDIT_PROMPTS[lens];
+		return { stdout: auditPrompt, status: 0 };
 	}
 
 	if (!isStage(sub)) {
@@ -342,6 +347,8 @@ export async function runNativeOrchestrateCommand(argv: string[], cwd: string): 
 	if (parsed.json) {
 		return { stdout: `${JSON.stringify({ ok: true, from, to: target, state_path: written.path })}\n`, status: 0 };
 	}
-	const prompt = target === "complete" ? "pabcd: orchestration complete — state closed.\n" : STAGE_PROMPTS[target];
+	const stagePointer = target === "complete" ? null : buildStageSkillPointer(target);
+	const basePrompt = target === "complete" ? "pabcd: orchestration complete — state closed.\n" : STAGE_PROMPTS[target];
+	const prompt = stagePointer ? `${basePrompt}\n\n${stagePointer}` : basePrompt;
 	return { stdout: `✅ pabcd → ${target}\n\n${prompt}`, status: 0 };
 }

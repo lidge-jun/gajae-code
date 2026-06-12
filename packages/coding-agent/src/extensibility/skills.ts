@@ -8,6 +8,7 @@ import type { SourceMeta } from "../capability/types";
 import type { SkillsSettings } from "../config/settings";
 import { type Skill as CapabilitySkill, loadCapability } from "../discovery";
 import { compareSkillOrder, isJawBrand, scanSkillsFromDir } from "../discovery/helpers";
+import { applyCliJawDevVocabularyMap, isCliJawSkillPath } from "../gjc-runtime/cli-jaw-vocab";
 import type { SkillPromptDetails } from "../session/messages";
 import { expandTilde } from "../tools/path-utils";
 import type { LoadedSubskillActivation } from "./gjc-plugins";
@@ -401,7 +402,13 @@ export async function buildSkillPromptMessage(
 	context?: BuildSkillPromptMessageContext,
 ): Promise<BuiltSkillPromptMessage> {
 	const content = typeof skill.content === "string" ? skill.content : await Bun.file(skill.filePath).text();
-	const body = content.replace(/^---\n[\s\S]*?\n---\n/, "").trim();
+	let body = content.replace(/^---\n[\s\S]*?\n---\n/, "").trim();
+	if (isJawBrand() && isCliJawSkillPath(skill.filePath)) {
+		// ~/.cli-jaw/skills bodies carry cli-jaw server vocabulary jwc cannot run
+		// (055/056) — substitute at prompt-build time; the source file is owned
+		// by the cli-jaw instance and must never be edited here.
+		body = applyCliJawDevVocabularyMap(body);
+	}
 	const metaLines = [`Skill: ${skill.filePath}`];
 	const trimmedArgs = args.trim();
 	if (trimmedArgs) {
