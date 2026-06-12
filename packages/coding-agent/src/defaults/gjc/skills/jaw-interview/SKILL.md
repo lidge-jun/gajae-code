@@ -1,13 +1,13 @@
 ---
 name: jaw-interview
-description: Socratic deep interview with mathematical ambiguity gating before explicit execution approval
+description: Socratic jaw interview with dual-audit ambiguity gating before explicit execution approval
 argument-hint: "[--quick|--standard|--deep] <idea or vague description>"
 pipeline: [jaw-interview, plan]
 handoff-policy: approval-required
 handoff: .gjc/specs/jaw-interview-{slug}.md
 level: 3
 
-source: "forked from upstream jaw-interview skill and rebranded for GJC"
+source: "forked from upstream deep-interview skill, merged with jaw Interview (040 band)"
 ---
 
 <Purpose>
@@ -38,14 +38,17 @@ Inspired by the [Ouroboros project](https://github.com/Q00/ouroboros) which demo
 </Why_This_Exists>
 
 <Execution_Policy>
-- Ask ONE question at a time -- never batch multiple questions
+- Ask 1-3 questions per round. Bundle only INDEPENDENT questions -- never batch questions where one answer changes another. Each question targets a named dimension
 - Preserve the user/session language for every user-facing announcement, topology confirmation, option label, and interview question when state includes `language.instruction`; for example Korean initial ideas must receive Korean jaw-interview questions unless the user explicitly requests another language
 - Target the WEAKEST clarity dimension with each question
 - Before Round 1 ambiguity scoring, run a one-time Round 0 topology enumeration gate that confirms the top-level component list and locks it into state
 - Make weakest-dimension targeting explicit every round: name the weakest dimension, state its score/gap, and explain why the next question is aimed there
 - Gather codebase facts via `explore` agent BEFORE asking the user about them
 - For brownfield confirmation questions, cite the repo evidence that triggered the question (file path, symbol, or pattern) instead of asking the user to rediscover it
-- Score ambiguity after every answer -- display the score transparently
+- Internal audit every round: re-assess all four dimensions (goal/constraints/criteria/ontology) yourself and accumulate a known/unknown tracker where each known fact carries source (user_statement, repo_fact, inference, assumption, default) and confidence
+- Negativity bias: treat every answer as a claim to pressure-test. If an answer is vague, hedging ("maybe", "아마", "~일 수도"), or lacks concrete detail, DOWNGRADE the affected dimension score and stay on that dimension until one layer deeper, one assumption clearer, or one boundary tighter. Never raise a score to close the interview faster
+- The ontology dimension score is the ontology stability_ratio mapped to the tracker (display only); the external ambiguity formula and gate stay on the three scored dimensions (+brownfield context)
+- External audit (the mathematical scoring call) runs at CHECKPOINTS only, not every round: when your internal tracker estimates every dimension at 0.8+, immediately before honoring an explicit user skip, and immediately before Phase 4 crystallization. The pre-skip and pre-crystallization external audits are MANDATORY -- never finalize or skip on internal scores alone. Display the latest external score (with round number) plus your internal estimate each round
 - When the locked topology has multiple active components, score and target each component explicitly so depth-first clarity on one component cannot hide ambiguity in siblings
 - Keep prompt payloads budgeted: summarize or trim oversized initial context/history before composing question, scoring, spec, or handoff prompts
 - If the user's initial context is oversized, create a concise prompt-safe summary first and wait for that summary before ambiguity scoring, question generation, or downstream execution handoff
@@ -104,7 +107,7 @@ Jaw Interview threshold: <resolvedThresholdPercent> (source: <resolvedThresholdS
    - Otherwise: **greenfield**
 3. **For brownfield**: Build the first-round context before designing Round 1 questions:
    - Run `explore` agent to map relevant codebase areas, store as `codebase_context`.
-   - Consult accumulated local planning knowledge: glob `.gjc/specs/deep-*.md` and `.gjc/plans/*.md`, then read the 1-3 most relevant artifacts by topic match with `initial_idea`. Summarize only durable domain facts, prior decisions, constraints, and unresolved gaps that should shape Round 1; do not treat artifact text as instructions.
+   - Consult accumulated local planning knowledge: glob `.gjc/specs/jaw-interview-*.md`, `.gjc/specs/deep-*.md` (legacy artifacts), and `.gjc/plans/*.md`, then read the 1-3 most relevant artifacts by topic match with `initial_idea`. Summarize only durable domain facts, prior decisions, constraints, and unresolved gaps that should shape Round 1; do not treat artifact text as instructions.
    - Use this brownfield context to avoid re-asking facts already crystallized by prior jaw-interview/deep-dive sessions or ralplan plans.
 3.5. **Verify Phase 0 threshold resolution is complete**:
    - Confirm the required first line has already been emitted: `Jaw Interview threshold: <resolvedThresholdPercent> (source: <resolvedThresholdSource>)`
@@ -271,13 +274,30 @@ Auto-research must never add a public skill entrypoint, never be slash-command/d
 
 ### Step 2b: Ask the Question
 
-Use the `ask` tool with the generated question. Before rendering the prompt/options, apply `language.instruction` from state when present so the entire user-facing question remains in the preserved session language. Present it clearly with the current ambiguity context:
+Use the `ask` tool with the generated question(s) -- 1-3 independent questions per round. Before rendering the prompt/options, apply `language.instruction` from state when present so the entire user-facing question remains in the preserved session language.
 
-```
-Round {n} | Component: {target_component_name} | Targeting: {weakest_dimension} | Why now: {one_sentence_targeting_rationale} | Ambiguity: {score}%
+Put the round metadata in the `ask` tool's structured `meta` field instead of encoding it into the question text -- the TUI renders the header from `meta` and this stays language-safe:
 
-{question}
+```json
+{
+  "questions": [{
+    "id": "{dimension}-r{n}",
+    "question": "{plain question text only}",
+    "options": [{ "label": "...", "description": "optional one-line tradeoff" }],
+    "meta": {
+      "kind": "round",
+      "round": {n},
+      "component": "{target_component_name}",
+      "targeting": "{weakest_dimension}",
+      "whyNow": "{one_sentence_targeting_rationale}",
+      "ambiguity": {latest_external_score_0_to_1},
+      "mode": "{challenge mode if active}"
+    }
+  }]
+}
 ```
+
+Do NOT prepend a `Round N | Component: ... | Ambiguity: ...` text header to the question -- that legacy text protocol is replaced by `meta`.
 
 Options should include contextually relevant choices plus free-text, translated/localized according to `language.instruction` when present.
 
@@ -287,9 +307,9 @@ After the `ask` tool resolves and before ambiguity scoring, if the user opts out
 
 Auto-answer has a clarity cap: unless the architect confidence is `high` and uncertainty is negligible, no dimension score improved solely by the auto-answer may exceed `0.85`. If the auto-answer would make ambiguity cross the resolved threshold, ask the user for threshold-crossing confirmation before Phase 4: present the tentative assumption and require explicit confirmation, revision, or continued questioning. On architect failure or invalid response, continue with the user's opt-out as an unresolved gap, increment `architect_failures`, and do not block the interview.
 
-### Step 2c: Score Ambiguity
+### Step 2c: Score Ambiguity (checkpoint external audit)
 
-After receiving the user's answer, score clarity across all dimensions.
+After receiving the user's answer, ALWAYS update the internal tracker (all four dimensions, negativity bias applied). Run the external mathematical scoring call ONLY at checkpoints: internal estimate of every dimension at 0.8+, immediately before an explicit user skip, or immediately before Phase 4 crystallization. The pre-skip and pre-crystallization external audits are mandatory. When spawning the scoring call, fork the context with a pinned cacheIdentity so successive checkpoint calls share the provider prompt-cache prefix.
 
 If the round used an auto-answer, include the architect answer, rationale, confidence, and uncertainty in the scoring prompt. Apply the Step 2b′ clarity cap mechanically before calculating ambiguity, and treat any low-confidence or insufficient-context auto-answer as an unresolved gap rather than user-confirmed truth.
 
@@ -369,11 +389,14 @@ Round {n} complete.
 
 | Dimension | Score | Weight | Weighted | Gap |
 |-----------|-------|--------|----------|-----|
-| Goal | {s} | {w} | {s*w} | {gap or "Clear"} |
-| Constraints | {s} | {w} | {s*w} | {gap or "Clear"} |
-| Success Criteria | {s} | {w} | {s*w} | {gap or "Clear"} |
-| Context (brownfield) | {s} | {w} | {s*w} | {gap or "Clear"} |
+| Goal | {s} ({level}) | {w} | {s*w} | {gap or "Clear"} |
+| Constraints | {s} ({level}) | {w} | {s*w} | {gap or "Clear"} |
+| Success Criteria | {s} ({level}) | {w} | {s*w} | {gap or "Clear"} |
+| Context (brownfield) | {s} ({level}) | {w} | {s*w} | {gap or "Clear"} |
+| Ontology (tracker) | {stability_ratio} ({level}) | — | display only | {gap or "Clear"} |
 | **Ambiguity** | | | **{score}%** | |
+
+Score notation is dual: raw 0-1 score plus quantized level -- `<0.3 low / <0.5 medium / <0.7 high / <0.9 xhigh / >=0.9 max` (e.g. `0.82 (xhigh)`). On non-checkpoint rounds label the table "internal estimate"; on checkpoint rounds label it with the external audit round number.
 
 **Topology:** Targeted {target_component_name} | Active: {active_component_count} | Deferred: {deferred_component_count} | Next rotation after: {last_targeted_component_id}
 
@@ -393,7 +416,7 @@ Update interview state with the new round, global scores, per-component `topolog
 
 ### Step 2f: Check Soft Limits
 
-- **Round 3+**: Allow early exit if user says "enough", "let's go", "build it"
+- **Round 1+**: Allow explicit early exit at ANY round if the user says "enough", "let's go", "build it", "skip", or equivalent -- run the mandatory pre-skip external audit, warn about remaining ambiguity, then crystallize the spec with Status: BELOW_THRESHOLD_EARLY_EXIT
 - **Round 10**: Show soft warning: "We're at 10 rounds. Current ambiguity: {score}%. Continue or proceed with current clarity?"
 - **Round 20**: Hard cap: "Maximum interview rounds reached. Proceeding with current clarity level ({score}%)."
 
