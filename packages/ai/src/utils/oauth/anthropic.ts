@@ -168,6 +168,19 @@ export class AnthropicOAuthFlow extends OAuthCallbackFlow {
  * Login with Anthropic OAuth
  */
 export async function loginAnthropic(ctrl: OAuthController): Promise<OAuthCredentials> {
+	const { detectClaudeCodeToken } = await import("./local-token-detect");
+	const local = detectClaudeCodeToken();
+	if (local) {
+		ctrl.onProgress?.("Found Claude Code token, importing automatically");
+		if (local.expires < Date.now() + 60_000) {
+			try {
+				return await refreshAnthropicToken(local.refresh);
+			} catch {}
+		} else {
+			return local;
+		}
+	}
+
 	const flow = new AnthropicOAuthFlow(ctrl);
 	return flow.login();
 }

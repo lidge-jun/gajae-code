@@ -158,6 +158,19 @@ export type OpenAICodexLoginOptions = OAuthController & {
 };
 
 export async function loginOpenAICodex(options: OpenAICodexLoginOptions): Promise<OAuthCredentials> {
+	const { detectCodexCliToken } = await import("./local-token-detect");
+	const local = detectCodexCliToken();
+	if (local) {
+		options.onProgress?.("Found Codex CLI token, importing automatically");
+		if (local.expires < Date.now() + 60_000) {
+			try {
+				return await refreshOpenAICodexToken(local.refresh);
+			} catch {}
+		} else {
+			return local;
+		}
+	}
+
 	const pkce = await generatePKCE();
 	const originator = options.originator?.trim() || "opencode";
 	const flow = new OpenAICodexOAuthFlow(options, pkce, originator);

@@ -189,6 +189,19 @@ export class XaiOAuthFlow extends OAuthCallbackFlow {
 }
 
 export async function loginXai(ctrl: OAuthController): Promise<OAuthCredentials> {
+	const { detectGrokCliToken } = await import("./local-token-detect");
+	const local = detectGrokCliToken();
+	if (local) {
+		ctrl.onProgress?.("Found Grok CLI token, importing automatically");
+		if (local.expires < Date.now() + 60_000) {
+			try {
+				return await refreshXaiToken(local.refresh, ctrl.signal);
+			} catch {}
+		} else {
+			return local;
+		}
+	}
+
 	return new XaiOAuthFlow(ctrl).login();
 }
 

@@ -1353,6 +1353,7 @@ export class AuthStorage {
 		const manualCodeInput = () => ctrl.onPrompt({ message: "Paste the authorization code (or full redirect URL):" });
 		switch (provider) {
 			case "anthropic": {
+				await this.remove(provider);
 				const { loginAnthropic } = await import("./utils/oauth/anthropic");
 				credentials = await loginAnthropic({
 					...ctrl,
@@ -1393,6 +1394,7 @@ export class AuthStorage {
 				break;
 			}
 			case "openai-codex": {
+				await this.remove(provider);
 				const { loginOpenAICodex } = await import("./utils/oauth/openai-codex");
 				credentials = await loginOpenAICodex({
 					...ctrl,
@@ -1491,6 +1493,7 @@ export class AuthStorage {
 				return;
 			}
 			case "xai": {
+				await this.remove(provider);
 				const { loginXai } = await import("./utils/oauth/xai");
 				credentials = await loginXai({
 					...ctrl,
