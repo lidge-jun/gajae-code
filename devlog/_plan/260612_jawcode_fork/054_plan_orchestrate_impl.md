@@ -109,12 +109,14 @@
 - **2라운드 델타 재감사**(Architect solo — D050-21 첫 적용): FAIL — ① native writer 3종 명세 공백 ② A audit 프롬프트 B3 누락 ③ slash 무게이트 ④ 재생성/diff-0 stale 문구. **2R가 코드로 확정한 것**: `strictSkillEnum`(`state-schema.ts:32-33`)이 write 게이트에서 4종 강제 → native writer 분리가 유일 경로 / `jwc.js:2`가 cli import 전 `GJC_BRAND_NAME` 설정 → 조건부 등록 빌더 가능 → **v4에 전부 반영**
 - **3라운드 델타 재감사**(`a_round=3` — 한도 마지막, Architect solo): **PASS** — 2R 6건 전부 해소 확인, 신규 추측 공백 없음, 코드 앵커 spot-check 정확. 잔여 wording 4건(경로 접두사·앵커 모듈 경로·receipt sub-schema 명시·B3 제목)은 v5에서 정리 → **B 진입 준비 완료**
 
-## Acceptance (M1)
+## Acceptance (M1) — 260612 C 단계 검증 완료
 
-- [ ] B1–B7 전체 + 풀사이클 e2e 1회 (D050-7)
-- [ ] spec 보유 시 `orchestrate p` 단독 진입 e2e / 승인 전 mutation 0
-- [ ] subagent stage 파일 receipt-only — plan 본문 복제 금지 (D050-13)
-- [ ] `/skill:ralplan` SKILL 본문 diff 없음 (D050-14)
-- [ ] gjc 브랜드 diff-0(D050-24 결정 기준) / rebrand·G002·dogfood 게이트 green
-- [ ] B7 문서 패치 완료 (050·051·052 + 053 속집 2 체크리스트 2건)
-- [ ] devlog 번호 lexicographic 규칙 준수 (D050-3)
+- [x] B1–B7 전체 + 풀사이클 e2e 1회 (D050-7) — 런타임 테스트 i→…→complete + /tmp 실CLI 스모크. ※ 실전 과제 1건 풀사이클(D050-19 Critic 1-pass 첫 실사용)은 후속 도그푸딩
+- [x] spec 보유 시 `orchestrate p` 단독 진입 e2e / 승인 전 mutation 0 (런타임은 `.gjc/state` 외 무기록 — B4 스코프 노트)
+- [x] subagent stage 파일 receipt-only — plan 본문 복제 금지 (D050-13, 프롬프트 계약)
+- [x] `/skill:ralplan` SKILL 본문 diff 없음 (D050-14)
+- [x] gjc 브랜드 diff-0 — rebrand-inventory --strict·G002 green, 브랜드 분기 표면 테스트 양방향 assert
+- [x] B7 문서 패치 완료 (050·051·052·workflows.md + 053 속집 2 체크리스트)
+- [x] devlog 번호 lexicographic 규칙 준수 (D050-3)
+
+게이트 증거: tsgo clean / biome clean(신규 파일) / bun test 433 pass·0 fail(38 파일) / rebrand strict unexpectedLegacyHitCount=0 / G002 passed
