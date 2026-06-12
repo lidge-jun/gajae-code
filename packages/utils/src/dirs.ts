@@ -1,7 +1,7 @@
 /**
  * Centralized path helpers for gajae-code config directories.
  *
- * Uses PI_CONFIG_DIR (default ".gjc") for the config root and
+ * Uses PI_CONFIG_DIR (default ".jwc") for the config root and
  * PI_CODING_AGENT_DIR to override the agent directory.
  *
  * On Linux, if XDG_DATA_HOME / XDG_STATE_HOME / XDG_CACHE_HOME environment
@@ -22,8 +22,8 @@ export const ENGINE_NAME: string = "gjc";
 /** App name shown to users (brandable via JWC_BRAND_NAME/GJC_BRAND_NAME); the jwc fork defaults to "jwc" (062.1 §4) */
 export const APP_NAME: string = process.env.JWC_BRAND_NAME || process.env.GJC_BRAND_NAME || "jwc";
 
-/** Config directory name (e.g. ".gjc") */
-export const CONFIG_DIR_NAME: string = ".gjc";
+/** Config directory name (e.g. ".jwc") */
+export const CONFIG_DIR_NAME: string = ".jwc";
 
 /** Version (e.g. "1.0.0") */
 export const VERSION: string = version;
@@ -92,12 +92,12 @@ export function setProjectDir(dir: string): void {
 	process.chdir(projectDir);
 }
 
-/** Get the config directory name relative to home (e.g. ".gjc" or PI_CONFIG_DIR override). */
+/** Get the config directory name relative to home (e.g. ".jwc" or PI_CONFIG_DIR override). */
 export function getConfigDirName(): string {
 	return process.env.JWC_CONFIG_DIR ?? process.env.GJC_CONFIG_DIR ?? process.env.PI_CONFIG_DIR ?? CONFIG_DIR_NAME;
 }
 
-/** Get the config agent directory name relative to home (e.g. ".gjc/agent" or PI_CONFIG_DIR + "/agent"). */
+/** Get the config agent directory name relative to home (e.g. ".jwc/agent" or PI_CONFIG_DIR + "/agent"). */
 export function getConfigAgentDirName(): string {
 	return `${getConfigDirName()}/agent`;
 }
@@ -161,7 +161,7 @@ class DirResolver {
 			state: xdgState ?? this.configRoot,
 			cache: xdgCache ?? this.configRoot,
 		};
-		// XDG flattens the agent/ prefix: ~/.gjc/agent/sessions → $XDG_DATA_HOME/gjc/sessions
+		// XDG flattens the agent/ prefix: ~/.jwc/agent/sessions → $XDG_DATA_HOME/gjc/sessions
 		this.#agentDirs = {
 			data: xdgData ?? this.agentDir,
 			state: xdgState ?? this.agentDir,
@@ -205,7 +205,7 @@ const RESOLVER_HOME = os.homedir();
 // Root directories
 // =============================================================================
 
-/** Get the config root directory (~/.gjc). */
+/** Get the config root directory (~/.jwc). */
 export function getConfigRootDir(): string {
 	return dirs.configRoot;
 }
@@ -216,37 +216,37 @@ export function setAgentDir(dir: string): void {
 	process.env.GJC_CODING_AGENT_DIR = dir;
 }
 
-/** Get the agent config directory (~/.gjc/agent). */
+/** Get the agent config directory (~/.jwc/agent). */
 export function getAgentDir(): string {
 	return dirs.agentDir;
 }
 
-/** Get the project-local config directory (.gjc). */
+/** Get the project-local config directory (.jwc). */
 export function getProjectAgentDir(cwd: string = getProjectDir()): string {
 	return path.join(cwd, CONFIG_DIR_NAME);
 }
 
 // =============================================================================
-// Config-root subdirectories (~/.gjc/*)
+// Config-root subdirectories (~/.jwc/*)
 // =============================================================================
 
-/** Get the reports directory (~/.gjc/reports). */
+/** Get the reports directory (~/.jwc/reports). */
 export function getReportsDir(): string {
 	return dirs.rootSubdir("reports", "state");
 }
 
-/** Get the logs directory (~/.gjc/logs). */
+/** Get the logs directory (~/.jwc/logs). */
 export function getLogsDir(): string {
 	return dirs.rootSubdir("logs", "state");
 }
 
-/** Get the path to a dated log file (~/.gjc/logs/gjc.YYYY-MM-DD.log). */
+/** Get the path to a dated log file (~/.jwc/logs/gjc.YYYY-MM-DD.log). */
 export function getLogPath(date = new Date()): string {
 	return path.join(getLogsDir(), `${ENGINE_NAME}.${date.toISOString().slice(0, 10)}.log`);
 }
 
 /**
- * Get the plugins directory (~/.gjc/plugins or its XDG equivalent).
+ * Get the plugins directory (~/.jwc/plugins or its XDG equivalent).
  *
  * No-arg form (production callers) goes through the XDG-aware DirResolver so
  * reads and writes always agree. The optional `home` parameter is for test
@@ -262,52 +262,52 @@ export function getPluginsDir(home?: string): string {
 	return dirs.rootSubdir("plugins", "data");
 }
 
-/** Where npm installs packages (~/.gjc/plugins/node_modules). */
+/** Where npm installs packages (~/.jwc/plugins/node_modules). */
 export function getPluginsNodeModules(): string {
 	return path.join(getPluginsDir(), "node_modules");
 }
 
-/** Plugin manifest (~/.gjc/plugins/package.json). */
+/** Plugin manifest (~/.jwc/plugins/package.json). */
 export function getPluginsPackageJson(): string {
 	return path.join(getPluginsDir(), "package.json");
 }
 
-/** Plugin lock file (~/.gjc/plugins/gjc-plugins.lock.json). */
+/** Plugin lock file (~/.jwc/plugins/gjc-plugins.lock.json). */
 export function getPluginsLockfile(): string {
 	return path.join(getPluginsDir(), "gjc-plugins.lock.json");
 }
 
-/** Get the remote mount directory (~/.gjc/remote). */
+/** Get the remote mount directory (~/.jwc/remote). */
 export function getRemoteDir(): string {
 	return dirs.rootSubdir("remote", "data");
 }
 
-/** Get the agent-managed worktrees directory (~/.gjc/wt). */
+/** Get the agent-managed worktrees directory (~/.jwc/wt). */
 export function getWorktreesDir(): string {
 	return dirs.rootSubdir("wt", "data");
 }
 
-/** Get the SSH control socket directory (~/.gjc/ssh-control). */
+/** Get the SSH control socket directory (~/.jwc/ssh-control). */
 export function getSshControlDir(): string {
 	return dirs.rootSubdir("ssh-control", "state");
 }
 
-/** Get the remote host info directory (~/.gjc/remote-host). */
+/** Get the remote host info directory (~/.jwc/remote-host). */
 export function getRemoteHostDir(): string {
 	return dirs.rootSubdir("remote-host", "data");
 }
 
-/** Get the managed Python venv directory (~/.gjc/python-env). */
+/** Get the managed Python venv directory (~/.jwc/python-env). */
 export function getPythonEnvDir(): string {
 	return dirs.rootSubdir("python-env", "data");
 }
 
-/** Get the shared Python gateway state directory (~/.gjc/agent/python-gateway; XDG default: $XDG_STATE_HOME/gjc/python-gateway). */
+/** Get the shared Python gateway state directory (~/.jwc/agent/python-gateway; XDG default: $XDG_STATE_HOME/gjc/python-gateway). */
 export function getPythonGatewayDir(): string {
 	return dirs.agentSubdir(undefined, "python-gateway", "state");
 }
 
-/** Get the puppeteer sandbox directory (~/.gjc/puppeteer). */
+/** Get the puppeteer sandbox directory (~/.jwc/puppeteer). */
 export function getPuppeteerDir(): string {
 	return dirs.rootSubdir("puppeteer", "cache");
 }
@@ -316,7 +316,7 @@ export function getPuppeteerDir(): string {
  * Stable 7-character hex digest of an absolute filesystem path.
  *
  * Used to pack the project identity into a single short fs-safe segment
- * (e.g. PR-checkout and task-isolation worktree dirs under `~/.gjc/wt/`).
+ * (e.g. PR-checkout and task-isolation worktree dirs under `~/.jwc/wt/`).
  * Bun.hash is non-cryptographic — collision space is ~2^28, which is fine
  * for naming a handful of repos on a single machine. Same input on the
  * same Bun runtime yields the same output.
@@ -325,18 +325,18 @@ export function hashPath(absPath: string): string {
 	return Bun.hash(path.resolve(absPath)).toString(16).padStart(16, "0").slice(-7);
 }
 
-/** Get the path to a single worktree directory (~/.gjc/wt/<segment>). */
+/** Get the path to a single worktree directory (~/.jwc/wt/<segment>). */
 export function getWorktreeDir(segment: string): string {
 	return path.join(getWorktreesDir(), segment);
 }
 
-/** Get the GPU cache path (~/.gjc/gpu_cache.json). */
+/** Get the GPU cache path (~/.jwc/gpu_cache.json). */
 export function getGpuCachePath(): string {
 	return dirs.rootSubdir("gpu_cache.json", "cache");
 }
 
 /**
- * Get the GitHub view cache database path (~/.gjc/cache/github-cache.db).
+ * Get the GitHub view cache database path (~/.jwc/cache/github-cache.db).
  * Honors the `GJC_GITHUB_CACHE_DB` env var when set so tests can isolate the
  * cache file without touching the rest of the config root.
  */
@@ -346,38 +346,38 @@ export function getGithubCacheDbPath(): string {
 	return dirs.rootSubdir(path.join("cache", "github-cache.db"), "cache");
 }
 
-/** Get the natives directory (~/.gjc/natives). */
+/** Get the natives directory (~/.jwc/natives). */
 export function getNativesDir(): string {
 	return dirs.rootSubdir("natives", "cache");
 }
 
-/** Get the stats database path (~/.gjc/stats.db). */
+/** Get the stats database path (~/.jwc/stats.db). */
 export function getStatsDbPath(): string {
 	return dirs.rootSubdir("stats.db", "data");
 }
 
-/** Get the autoresearch state directory (~/.gjc/autoresearch). */
+/** Get the autoresearch state directory (~/.jwc/autoresearch). */
 export function getAutoresearchDir(): string {
 	return dirs.rootSubdir("autoresearch", "state");
 }
 
-/** Get the per-project autoresearch state directory (~/.gjc/autoresearch/<encoded-project>). */
+/** Get the per-project autoresearch state directory (~/.jwc/autoresearch/<encoded-project>). */
 export function getAutoresearchProjectDir(encodedProject: string): string {
 	return path.join(getAutoresearchDir(), encodedProject);
 }
 
-/** Get the per-project autoresearch SQLite database path (~/.gjc/autoresearch/<encoded-project>.db). */
+/** Get the per-project autoresearch SQLite database path (~/.jwc/autoresearch/<encoded-project>.db). */
 export function getAutoresearchDbPath(encodedProject: string): string {
 	return path.join(getAutoresearchDir(), `${encodedProject}.db`);
 }
 
-/** Get the per-run artifact directory (~/.gjc/autoresearch/<encoded-project>/runs/<runId>). */
+/** Get the per-run artifact directory (~/.jwc/autoresearch/<encoded-project>/runs/<runId>). */
 export function getAutoresearchRunDir(encodedProject: string, runId: number): string {
 	return path.join(getAutoresearchProjectDir(encodedProject), "runs", String(runId).padStart(4, "0"));
 }
 
 // =============================================================================
-// Agent subdirectories (~/.gjc/agent/*)
+// Agent subdirectories (~/.jwc/agent/*)
 // =============================================================================
 
 /** Get the path to agent.db (SQLite database for settings and auth storage). */
@@ -395,76 +395,76 @@ export function getModelDbPath(agentDir?: string): string {
 	return dirs.agentSubdir(agentDir, "models.db", "data");
 }
 
-/** Get the sessions directory (~/.gjc/agent/sessions). */
+/** Get the sessions directory (~/.jwc/agent/sessions). */
 export function getSessionsDir(agentDir?: string): string {
 	return dirs.agentSubdir(agentDir, "sessions", "data");
 }
 
-/** Get the content-addressed blob store directory (~/.gjc/agent/blobs). */
+/** Get the content-addressed blob store directory (~/.jwc/agent/blobs). */
 export function getBlobsDir(agentDir?: string): string {
 	return dirs.agentSubdir(agentDir, "blobs", "data");
 }
 
-/** Get the custom themes directory (~/.gjc/agent/themes). */
+/** Get the custom themes directory (~/.jwc/agent/themes). */
 export function getCustomThemesDir(agentDir?: string): string {
 	return dirs.agentSubdir(agentDir, "themes");
 }
 
-/** Get the tools directory (~/.gjc/agent/tools). */
+/** Get the tools directory (~/.jwc/agent/tools). */
 export function getToolsDir(agentDir?: string): string {
 	return dirs.agentSubdir(agentDir, "tools");
 }
 
-/** Get the slash commands directory (~/.gjc/agent/commands). */
+/** Get the slash commands directory (~/.jwc/agent/commands). */
 export function getCommandsDir(agentDir?: string): string {
 	return dirs.agentSubdir(agentDir, "commands");
 }
 
-/** Get the prompts directory (~/.gjc/agent/prompts). */
+/** Get the prompts directory (~/.jwc/agent/prompts). */
 export function getPromptsDir(agentDir?: string): string {
 	return dirs.agentSubdir(agentDir, "prompts");
 }
 
-/** Get the user-level Python modules directory (~/.gjc/agent/modules). */
+/** Get the user-level Python modules directory (~/.jwc/agent/modules). */
 export function getAgentModulesDir(agentDir?: string): string {
 	return dirs.agentSubdir(agentDir, "modules");
 }
 
-/** Get the memories directory (~/.gjc/agent/memories). */
+/** Get the memories directory (~/.jwc/agent/memories). */
 export function getMemoriesDir(agentDir?: string): string {
 	return dirs.agentSubdir(agentDir, "memories", "state");
 }
 
-/** Get the terminal sessions directory (~/.gjc/agent/terminal-sessions). */
+/** Get the terminal sessions directory (~/.jwc/agent/terminal-sessions). */
 export function getTerminalSessionsDir(agentDir?: string): string {
 	return dirs.agentSubdir(agentDir, "terminal-sessions", "state");
 }
 
-/** Get the crash log path (~/.gjc/agent/gjc-crash.log). */
+/** Get the crash log path (~/.jwc/agent/gjc-crash.log). */
 export function getCrashLogPath(agentDir?: string): string {
 	return dirs.agentSubdir(agentDir, "gjc-crash.log", "state");
 }
 
-/** Get the debug log path (~/.gjc/agent/gjc-debug.log). */
+/** Get the debug log path (~/.jwc/agent/gjc-debug.log). */
 export function getDebugLogPath(agentDir?: string): string {
 	return dirs.agentSubdir(agentDir, `${ENGINE_NAME}-debug.log`, "state");
 }
 
 // =============================================================================
-// Project subdirectories (.gjc/*)
+// Project subdirectories (.jwc/*)
 // =============================================================================
 
-/** Get the project-level Python modules directory (.gjc/modules). */
+/** Get the project-level Python modules directory (.jwc/modules). */
 export function getProjectModulesDir(cwd: string = getProjectDir()): string {
 	return path.join(getProjectAgentDir(cwd), "modules");
 }
 
-/** Get the project-level prompts directory (.gjc/prompts). */
+/** Get the project-level prompts directory (.jwc/prompts). */
 export function getProjectPromptsDir(cwd: string = getProjectDir()): string {
 	return path.join(getProjectAgentDir(cwd), "prompts");
 }
 
-/** Get the project-level plugin overrides path (.gjc/plugin-overrides.json). */
+/** Get the project-level plugin overrides path (.jwc/plugin-overrides.json). */
 export function getProjectPluginOverridesPath(cwd: string = getProjectDir()): string {
 	return path.join(getProjectAgentDir(cwd), "plugin-overrides.json");
 }

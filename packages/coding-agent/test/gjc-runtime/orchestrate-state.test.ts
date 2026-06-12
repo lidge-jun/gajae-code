@@ -190,7 +190,7 @@ describe("orchestrate runtime full cycle", () => {
 
 	it("runs i→p→a→(verdict pass)→b→(verdict done)→c→d→complete", async () => {
 		expect((await run(["i"])).status).toBe(0);
-		expect((await run(["p", "--spec-ref", ".gjc/specs/jaw-interview-x.md"])).status).toBe(0);
+		expect((await run(["p", "--spec-ref", ".jwc/specs/jaw-interview-x.md"])).status).toBe(0);
 		expect((await run(["a"])).status).toBe(0);
 
 		// Gate: b refused while audit is pending.
@@ -219,7 +219,7 @@ describe("orchestrate runtime full cycle", () => {
 		};
 		expect(parsed.active).toBe(false);
 		expect(parsed.stage).toBe("complete");
-		expect(parsed.spec_ref).toBe(".gjc/specs/jaw-interview-x.md");
+		expect(parsed.spec_ref).toBe(".jwc/specs/jaw-interview-x.md");
 		expect(parsed.ctx.audit_status).toBe("pass");
 		expect(parsed.ctx.verification_status).toBe("done");
 	});
@@ -255,12 +255,12 @@ describe("orchestrate runtime full cycle", () => {
 	});
 
 	it("enters p directly with a spec (D050-2 handoff, no i round-trip)", async () => {
-		const entry = await run(["p", "--spec-ref", ".gjc/specs/jaw-interview-direct.md"]);
+		const entry = await run(["p", "--spec-ref", ".jwc/specs/jaw-interview-direct.md"]);
 		expect(entry.status).toBe(0);
 		const status = await run(["status", "--json"]);
 		const parsed = JSON.parse(status.stdout ?? "{}") as { stage: string; spec_ref: string | null };
 		expect(parsed.stage).toBe("p");
-		expect(parsed.spec_ref).toBe(".gjc/specs/jaw-interview-direct.md");
+		expect(parsed.spec_ref).toBe(".jwc/specs/jaw-interview-direct.md");
 	});
 
 	it("records stage-p critic verdicts and escalates at the p-round cap (D050-19)", async () => {

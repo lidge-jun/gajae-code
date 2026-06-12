@@ -29,14 +29,14 @@ function tool(name: string, extra: Record<string, unknown> = {}): AgentTool {
 }
 
 describe("G2 gjc ACL gate", () => {
-	it("blocks mutation tools targeting .gjc paths", async () => {
+	it("blocks mutation tools targeting .jwc paths", async () => {
 		await withTempCwd(async cwd => {
 			const blockedCases: Array<[AgentTool, unknown]> = [
-				[tool("write"), { path: ".gjc/state/foo.json", content: "{}" }],
-				[tool("edit"), { path: ".gjc/specs/spec.md", edits: [{ old_text: "a", new_text: "b" }] }],
-				[tool("ast_edit"), { paths: [".gjc/state/foo.json"], ops: [{ pat: "foo", out: "bar" }] }],
-				[tool("bash"), { command: "echo x > .gjc/state/foo.json" }],
-				[tool("bash"), { command: "rm -rf .gjc/specs" }],
+				[tool("write"), { path: ".jwc/state/foo.json", content: "{}" }],
+				[tool("edit"), { path: ".jwc/specs/spec.md", edits: [{ old_text: "a", new_text: "b" }] }],
+				[tool("ast_edit"), { paths: [".jwc/state/foo.json"], ops: [{ pat: "foo", out: "bar" }] }],
+				[tool("bash"), { command: "echo x > .jwc/state/foo.json" }],
+				[tool("bash"), { command: "rm -rf .jwc/specs" }],
 			];
 
 			for (const [targetTool, args] of blockedCases) {
@@ -50,7 +50,7 @@ describe("G2 gjc ACL gate", () => {
 		});
 	});
 
-	it("allows sanctioned gjc bash commands and non-.gjc writes", async () => {
+	it("allows sanctioned gjc bash commands and non-.jwc writes", async () => {
 		await withTempCwd(async cwd => {
 			const gjcCommand = await getJawInterviewMutationDecision({
 				cwd,

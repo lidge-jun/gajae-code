@@ -177,7 +177,7 @@ describe("GJC native skill-state hooks", () => {
 			initialized_mode: "jaw-interview",
 		});
 		expect(state?.initialized_state_path).toBe(
-			path.join(root, ".gjc", "state", "sessions", "session-1", "jaw-interview-state.json"),
+			path.join(root, ".jwc", "state", "sessions", "session-1", "jaw-interview-state.json"),
 		);
 		const modeState = await Bun.file(state?.initialized_state_path ?? "").json();
 		expect(modeState).toMatchObject({
@@ -384,7 +384,7 @@ describe("GJC native skill-state hooks", () => {
 			cwd: root,
 			sessionId: "session-rich",
 			tool: { name: "write" } as never,
-			args: { path: ".gjc/specs/jaw-interview-sample.md", content: "spec" },
+			args: { path: ".jwc/specs/jaw-interview-sample.md", content: "spec" },
 		});
 		expect(blockedSpec.blocked).toBe(true);
 		expect(blockedSpec.reason).toBe("gjc-target");
@@ -394,7 +394,7 @@ describe("GJC native skill-state hooks", () => {
 			cwd: root,
 			sessionId: "session-rich",
 			tool: { name: "bash" } as never,
-			args: { command: "cat sample.md > .gjc/specs/jaw-interview-sample.md" },
+			args: { command: "cat sample.md > .jwc/specs/jaw-interview-sample.md" },
 		});
 		expect(blockedGjcBash.blocked).toBe(true);
 		expect(blockedGjcBash.reason).toBe("gjc-target");
@@ -403,7 +403,7 @@ describe("GJC native skill-state hooks", () => {
 			cwd: root,
 			sessionId: "session-rich",
 			tool: { name: "write" } as never,
-			args: { path: ".gjc/state/sessions/session-rich/jaw-interview-state.json", content: "{}" },
+			args: { path: ".jwc/state/sessions/session-rich/jaw-interview-state.json", content: "{}" },
 		});
 		expect(blocked.blocked).toBe(true);
 		expect(blocked.reason).toBe("workflow-state-target");
@@ -414,7 +414,7 @@ describe("GJC native skill-state hooks", () => {
 		const blocked = await getJawInterviewMutationDecision({
 			cwd: root,
 			tool: { name: "write" } as never,
-			args: { path: ".gjc/state/ralplan-state.json", content: "{}" },
+			args: { path: ".jwc/state/ralplan-state.json", content: "{}" },
 		});
 		expect(blocked.blocked).toBe(true);
 		expect(blocked.reason).toBe("workflow-state-target");
@@ -423,14 +423,14 @@ describe("GJC native skill-state hooks", () => {
 		const allowedSpec = await getJawInterviewMutationDecision({
 			cwd: root,
 			tool: { name: "write" } as never,
-			args: { path: ".gjc/specs/jaw-interview-sample.md", content: "spec" },
+			args: { path: ".jwc/specs/jaw-interview-sample.md", content: "spec" },
 		});
 		expect(allowedSpec.blocked).toBe(true);
 
 		const allowedPlan = await getJawInterviewMutationDecision({
 			cwd: root,
 			tool: { name: "write" } as never,
-			args: { path: ".gjc/plans/sample.md", content: "plan" },
+			args: { path: ".jwc/plans/sample.md", content: "plan" },
 		});
 		expect(allowedPlan.blocked).toBe(true);
 	});
@@ -451,12 +451,12 @@ describe("GJC native skill-state hooks", () => {
 		const encodedSession = "%2E%2E%2F%2E%2E%2F%2E%2E%2Fescape";
 		const state = await readVisibleSkillActiveState(root, "../../../escape");
 		expect(state?.initialized_state_path).toBe(
-			path.join(root, ".gjc", "state", "sessions", encodedSession, "team-state.json"),
+			path.join(root, ".jwc", "state", "sessions", encodedSession, "team-state.json"),
 		);
 		expect(
-			await fs.stat(path.join(root, ".gjc", "state", "sessions", encodedSession, "skill-active-state.json")),
+			await fs.stat(path.join(root, ".jwc", "state", "sessions", encodedSession, "skill-active-state.json")),
 		).toBeDefined();
-		await expect(fs.stat(path.join(root, ".gjc", "escape"))).rejects.toThrow();
+		await expect(fs.stat(path.join(root, ".jwc", "escape"))).rejects.toThrow();
 	});
 
 	it("UserPromptSubmit injects sanitized effective skill config without raw paths or settings-file instructions", async () => {
@@ -496,8 +496,8 @@ describe("GJC native skill-state hooks", () => {
 		expect(context).toContain("disabledSkillExtensions.count=1");
 		expect(context).toContain("Custom skill directories: count=1");
 		expect(context).not.toContain(rawCustomDirectory);
-		expect(context).not.toContain("~/.gjc");
-		expect(context).not.toContain(".gjc/settings.json");
+		expect(context).not.toContain("~/.jwc");
+		expect(context).not.toContain(".jwc/settings.json");
 		expect(context).not.toContain("SKILL.md");
 		expect(context).not.toContain("ralplan, team]");
 		expect(context).not.toContain("legacy-*");
@@ -664,7 +664,7 @@ disabledExtensions:
 		expect(blocked.outputJson).toMatchObject({ decision: "block", stopReason: "gjc_skill_ralplan_planner" });
 
 		await Bun.write(
-			path.join(root, ".gjc", "state", "sessions", "session-2", "ralplan-state.json"),
+			path.join(root, ".jwc", "state", "sessions", "session-2", "ralplan-state.json"),
 			JSON.stringify({ active: false, current_phase: "complete", session_id: "session-2" }),
 		);
 		const allowed = await dispatchGjcNativeSkillHook({
@@ -692,7 +692,7 @@ disabledExtensions:
 		// Remove the mode-state file while skill-active-state.json still lists the
 		// handoff skill active. The Stop hook must not treat the missing file as
 		// terminal — handoff skills must always offer a next step.
-		await fs.rm(path.join(root, ".gjc", "state", "sessions", "session-missing", "ralplan-state.json"), {
+		await fs.rm(path.join(root, ".jwc", "state", "sessions", "session-missing", "ralplan-state.json"), {
 			force: true,
 		});
 
@@ -721,7 +721,7 @@ disabledExtensions:
 		// A handoff-phase jaw-interview that is still active must keep blocking so
 		// the agent presents the next handoff step via the ask tool.
 		await Bun.write(
-			path.join(root, ".gjc", "state", "sessions", "session-handoff", "jaw-interview-state.json"),
+			path.join(root, ".jwc", "state", "sessions", "session-handoff", "jaw-interview-state.json"),
 			JSON.stringify({ active: true, current_phase: "handoff", session_id: "session-handoff" }),
 		);
 		const blocked = await dispatchGjcNativeSkillHook({
@@ -735,7 +735,7 @@ disabledExtensions:
 
 		// Once demoted to active:false (the handoff/clear outcome), stop is allowed.
 		await Bun.write(
-			path.join(root, ".gjc", "state", "sessions", "session-handoff", "jaw-interview-state.json"),
+			path.join(root, ".jwc", "state", "sessions", "session-handoff", "jaw-interview-state.json"),
 			JSON.stringify({ active: false, current_phase: "handoff", session_id: "session-handoff" }),
 		);
 		const allowed = await dispatchGjcNativeSkillHook({
@@ -791,7 +791,7 @@ disabledExtensions:
 			},
 			{ effectiveSkillConfig: testEffectiveSkillConfig },
 		);
-		const statePath = path.join(root, ".gjc", "state", "sessions", "session-ultra-block", "ultragoal-state.json");
+		const statePath = path.join(root, ".jwc", "state", "sessions", "session-ultra-block", "ultragoal-state.json");
 		const state = await Bun.file(statePath).json();
 		await Bun.write(statePath, JSON.stringify({ ...state, objective: plan.goals[0]?.objective }, null, 2));
 
@@ -869,7 +869,7 @@ disabledExtensions:
 		);
 		const statePath = path.join(
 			root,
-			".gjc",
+			".jwc",
 			"state",
 			"sessions",
 			"session-ultra-stop-pending",
@@ -921,7 +921,7 @@ disabledExtensions:
 		);
 		const statePath = path.join(
 			root,
-			".gjc",
+			".jwc",
 			"state",
 			"sessions",
 			"session-ultra-bypass-pending",
@@ -1023,7 +1023,7 @@ disabledExtensions:
 
 	it("ensureWorkflowSkillActivationState is idempotent and preserves handoff lineage", async () => {
 		const root = await cwd();
-		const stateDir = path.join(root, ".gjc", "state", "sessions", "session-keep");
+		const stateDir = path.join(root, ".jwc", "state", "sessions", "session-keep");
 		await fs.mkdir(stateDir, { recursive: true });
 		await fs.writeFile(
 			path.join(stateDir, "skill-active-state.json"),

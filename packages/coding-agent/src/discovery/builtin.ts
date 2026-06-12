@@ -1,5 +1,5 @@
 /**
- * Builtin Provider (.gjc)
+ * Builtin Provider (.jwc)
  *
  * Primary provider for GJC native configs. Supports all capabilities.
  */
@@ -36,7 +36,7 @@ import {
 
 const PROVIDER_ID = "native";
 const DISPLAY_NAME = "GJC";
-const DESCRIPTION = "Native GJC configuration from ~/.gjc and .gjc/";
+const DESCRIPTION = "Native GJC configuration from ~/.jwc and .jwc/";
 const PRIORITY = 100;
 
 const PATHS = SOURCE_PATHS.native;
@@ -283,7 +283,7 @@ registerProvider<SystemPrompt>(systemPromptCapability.id, {
 
 // Skills
 async function loadSkills(ctx: LoadContext): Promise<LoadResult<Skill>> {
-	// Walk up from cwd finding .gjc/skills/ in ancestors (closest first)
+	// Walk up from cwd finding .jwc/skills/ in ancestors (closest first)
 	const ancestors = getAncestorDirs(ctx.cwd, ctx.repoRoot ?? ctx.home);
 	const projectScans = ancestors.flatMap(({ dir }) =>
 		getProjectConfigDirs().map(projectConfigDir =>
@@ -296,7 +296,7 @@ async function loadSkills(ctx: LoadContext): Promise<LoadResult<Skill>> {
 		),
 	);
 
-	// User-level scan from ~/.gjc/agent/skills/
+	// User-level scan from ~/.jwc/agent/skills/
 	const userScans = getUserAgentDirs().map(userAgentDir =>
 		scanSkillsFromDir(ctx, {
 			dir: path.join(ctx.home, userAgentDir, "skills"),
@@ -373,8 +373,8 @@ async function loadRules(ctx: LoadContext): Promise<LoadResult<Rule>> {
 	// Top-level RULES.md is a sticky always-apply rule. The context-file
 	// discovery contract treats it as the file "re-injected near the current
 	// turn so they keep hold across long conversations".
-	// User scope:    ~/.gjc/agent/RULES.md
-	// Project scope: nearest .gjc/RULES.md walking up from cwd to repoRoot
+	// User scope:    ~/.jwc/agent/RULES.md
+	// Project scope: nearest .jwc/RULES.md walking up from cwd to repoRoot
 	for (const userAgentDir of getUserAgentDirs()) {
 		const userRulesFile = path.join(ctx.home, userAgentDir, "RULES.md");
 		const userRule = await loadStickyRulesFile(userRulesFile, "user");
@@ -926,7 +926,7 @@ async function loadContextFiles(ctx: LoadContext): Promise<LoadResult<ContextFil
 registerProvider<ContextFile>(contextFileCapability.id, {
 	id: PROVIDER_ID,
 	displayName: DISPLAY_NAME,
-	description: "Load AGENTS.md from .gjc/ directories",
+	description: "Load AGENTS.md from .jwc/ directories",
 	priority: PRIORITY,
 	load: loadContextFiles,
 });

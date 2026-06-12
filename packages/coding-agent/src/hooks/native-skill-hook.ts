@@ -102,7 +102,7 @@ async function readRawConfig(filePath: string): Promise<Record<string, unknown> 
 
 function resolveConfigPaths(cwd: string, override?: string[]): string[] {
 	if (override) return override;
-	const configDirName = process.env.GJC_CONFIG_DIR ?? process.env.PI_CONFIG_DIR ?? ".gjc";
+	const configDirName = process.env.GJC_CONFIG_DIR ?? process.env.PI_CONFIG_DIR ?? ".jwc";
 	const userAgentDir = process.env.GJC_CODING_AGENT_DIR ?? path.join(os.homedir(), configDirName, "agent");
 	return [path.join(userAgentDir, "config.yml"), path.join(cwd, configDirName, "config.yml")];
 }
@@ -253,7 +253,7 @@ async function readStdinJson(): Promise<{ payload: HookPayload; parseError: Erro
 }
 
 async function logHookError(cwd: string, type: string, error: unknown): Promise<void> {
-	const logsDir = path.join(cwd, ".gjc", "logs");
+	const logsDir = path.join(cwd, ".jwc", "logs");
 	await mkdir(logsDir, { recursive: true }).catch(() => {});
 	await appendFile(
 		path.join(logsDir, `native-hook-${new Date().toISOString().split("T")[0]}.jsonl`),

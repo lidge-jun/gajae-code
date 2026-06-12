@@ -4,7 +4,7 @@ Local observability dashboard for AI usage statistics.
 
 ## Features
 
-- **Session log parsing**: Reads JSONL session logs from `~/.gjc/agent/sessions/`
+- **Session log parsing**: Reads JSONL session logs from `~/.jwc/agent/sessions/`
 - **SQLite aggregation**: Efficient stats storage and querying using `bun:sqlite`
 - **Web dashboard**: Real-time metrics visualization with Chart.js
 - **Incremental sync**: Only processes new/modified log entries
@@ -64,8 +64,8 @@ console.log(stats.byModel[0].avgTokensPerSecond);
 
 ## Data Storage
 
-- **Session logs**: `~/.gjc/agent/sessions/` (JSONL files)
-- **Stats database**: `~/.gjc/stats.db` (SQLite)
+- **Session logs**: `~/.jwc/agent/sessions/` (JSONL files)
+- **Stats database**: `~/.jwc/stats.db` (SQLite)
 
 ## Dashboard
 

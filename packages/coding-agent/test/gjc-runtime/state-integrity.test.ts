@@ -22,7 +22,7 @@ async function readJson(filePath: string): Promise<Record<string, unknown>> {
 }
 
 async function readAuditEntries(cwd: string): Promise<Array<Record<string, unknown>>> {
-	const raw = await fs.readFile(path.join(cwd, ".gjc/state/audit.jsonl"), "utf-8");
+	const raw = await fs.readFile(path.join(cwd, ".jwc/state/audit.jsonl"), "utf-8");
 	return raw
 		.trim()
 		.split("\n")
@@ -38,7 +38,7 @@ describe("gjc state integrity", () => {
 				cwd,
 			);
 			expect(first.status).toBe(0);
-			const statePath = path.join(cwd, ".gjc/state/ralplan-state.json");
+			const statePath = path.join(cwd, ".jwc/state/ralplan-state.json");
 			const stamped = await readJson(statePath);
 			expect((stamped.receipt as Record<string, unknown>)?.content_sha256).toMatchObject({ algorithm: "sha256" });
 
@@ -70,11 +70,11 @@ describe("gjc state integrity", () => {
 	it("does not checksum generic non-envelope JSON written by the shared writer", async () => {
 		await withTempCwd(async cwd => {
 			await writeJsonAtomic(
-				path.join(cwd, ".gjc/state/team/tasks/task-1.json"),
+				path.join(cwd, ".jwc/state/team/tasks/task-1.json"),
 				{ id: "task-1", status: "open" },
 				{ cwd },
 			);
-			const task = await readJson(path.join(cwd, ".gjc/state/team/tasks/task-1.json"));
+			const task = await readJson(path.join(cwd, ".jwc/state/team/tasks/task-1.json"));
 			expect(task.receipt).toBeUndefined();
 			expect(task.content_sha256).toBeUndefined();
 		});
@@ -88,7 +88,7 @@ describe("gjc state integrity", () => {
 			);
 			const result = await runNativeStateCommand(["handoff", "--mode", "jaw-interview", "--to", "ralplan"], cwd);
 			expect(result.status).toBe(0);
-			const entries = await fs.readdir(path.join(cwd, ".gjc/state/transactions")).catch(() => [] as string[]);
+			const entries = await fs.readdir(path.join(cwd, ".jwc/state/transactions")).catch(() => [] as string[]);
 			expect(entries).toEqual([]);
 		});
 	});
@@ -111,9 +111,9 @@ describe("gjc state integrity", () => {
 				delete process.env.GJC_STATE_HANDOFF_FAIL_AFTER_CALLER;
 			}
 
-			const journals = await fs.readdir(path.join(cwd, ".gjc/state/transactions"));
+			const journals = await fs.readdir(path.join(cwd, ".jwc/state/transactions"));
 			expect(journals).toHaveLength(1);
-			const journal = await readJson(path.join(cwd, ".gjc/state/transactions", journals[0]));
+			const journal = await readJson(path.join(cwd, ".jwc/state/transactions", journals[0]));
 			expect(journal).toMatchObject({
 				status: "pending",
 				mutation_id: "jaw-interview:handoff:ralplan:2026-06-03T00:00:00.000Z",
@@ -129,11 +129,11 @@ describe("gjc state integrity", () => {
 			} finally {
 				Date.prototype.toISOString = originalNow;
 			}
-			const remainingAfterRecovery = await fs.readdir(path.join(cwd, ".gjc/state/transactions"));
+			const remainingAfterRecovery = await fs.readdir(path.join(cwd, ".jwc/state/transactions"));
 			expect(remainingAfterRecovery).toEqual([]);
 
 			await fs.writeFile(
-				path.join(cwd, ".gjc/state/transactions/orphan-unrelated.json"),
+				path.join(cwd, ".jwc/state/transactions/orphan-unrelated.json"),
 				`${JSON.stringify({ version: 1, mutation_id: "orphan", status: "pending", paths: ["/elsewhere"] })}\n`,
 			);
 			const write = await runNativeStateCommand(
@@ -141,7 +141,7 @@ describe("gjc state integrity", () => {
 				cwd,
 			);
 			expect(write.status).toBe(0);
-			expect(await readJson(path.join(cwd, ".gjc/state/ultragoal-state.json"))).toMatchObject({
+			expect(await readJson(path.join(cwd, ".jwc/state/ultragoal-state.json"))).toMatchObject({
 				skill: "ultragoal",
 			});
 		});

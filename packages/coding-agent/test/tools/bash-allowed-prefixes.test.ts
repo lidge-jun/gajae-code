@@ -77,7 +77,7 @@ describe("checkBashAllowedPrefixes", () => {
 
 	it("blocks shell chaining that could smuggle destructive commands", () => {
 		const result = checkBashAllowedPrefixes(
-			"jwc ralplan --write --stage critic --artifact ok; rm -rf .gjc",
+			"jwc ralplan --write --stage critic --artifact ok; rm -rf .jwc",
 			ROLE_AGENT_PREFIXES,
 		);
 

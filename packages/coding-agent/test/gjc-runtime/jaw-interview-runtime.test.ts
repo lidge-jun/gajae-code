@@ -55,12 +55,12 @@ describe("native gjc jaw-interview runtime", () => {
 		);
 		expect(missing.status).toBe(0);
 		const missingState = JSON.parse(
-			await fs.readFile(path.join(missingRoot, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(missingRoot, ".jwc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		expect(missingState.spec_slug).toBe("missing-state");
 
 		const validRoot = await tempDir();
-		const validStatePath = path.join(validRoot, ".gjc", "state", "jaw-interview-state.json");
+		const validStatePath = path.join(validRoot, ".jwc", "state", "jaw-interview-state.json");
 		await fs.mkdir(path.dirname(validStatePath), { recursive: true });
 		await fs.writeFile(
 			validStatePath,
@@ -79,7 +79,7 @@ describe("native gjc jaw-interview runtime", () => {
 
 	it("fails closed on corrupt jaw-interview state unless --force is supplied", async () => {
 		const root = await tempDir();
-		const statePath = path.join(root, ".gjc", "state", "jaw-interview-state.json");
+		const statePath = path.join(root, ".jwc", "state", "jaw-interview-state.json");
 		await fs.mkdir(path.dirname(statePath), { recursive: true });
 		await fs.writeFile(statePath, '{"current_phase":', "utf-8");
 
@@ -91,7 +91,7 @@ describe("native gjc jaw-interview runtime", () => {
 		expect(rejected.stderr).toContain("existing jaw-interview state is corrupt or tampered");
 		expect(rejected.stderr).toContain("use --force to overwrite");
 		expect(await fs.readFile(statePath, "utf-8")).toBe('{"current_phase":');
-		await expect(fs.access(path.join(root, ".gjc", "specs", "jaw-interview-corrupt-rejected.md"))).rejects.toThrow();
+		await expect(fs.access(path.join(root, ".jwc", "specs", "jaw-interview-corrupt-rejected.md"))).rejects.toThrow();
 
 		const forced = await runNativeJawInterviewCommand(
 			["--write", "--stage", "final", "--slug", "corrupt-forced", "--spec", "# Forced", "--force", "--json"],
@@ -101,7 +101,7 @@ describe("native gjc jaw-interview runtime", () => {
 		const forcedState = JSON.parse(await fs.readFile(statePath, "utf-8"));
 		expect(forcedState.spec_slug).toBe("corrupt-forced");
 		expect(forcedState.receipt).toMatchObject({ skill: "jaw-interview", owner: "gjc-runtime" });
-		const audit = (await fs.readFile(path.join(root, ".gjc", "state", "audit.jsonl"), "utf-8"))
+		const audit = (await fs.readFile(path.join(root, ".jwc", "state", "audit.jsonl"), "utf-8"))
 			.trim()
 			.split("\n")
 			.map(line => JSON.parse(line) as Record<string, unknown>);
@@ -110,7 +110,7 @@ describe("native gjc jaw-interview runtime", () => {
 		).toBe(true);
 	});
 
-	it("persists a final spec under .gjc/specs through the native CLI/API", async () => {
+	it("persists a final spec under .jwc/specs through the native CLI/API", async () => {
 		const root = await tempDir();
 		const specPath = path.join(root, "final-spec.md");
 		await fs.writeFile(specPath, "# Final Spec\n\nAcceptance: persist me.\n");
@@ -121,17 +121,17 @@ describe("native gjc jaw-interview runtime", () => {
 		);
 		expect(result.status).toBe(0);
 		const payload = JSON.parse(result.stdout ?? "{}");
-		expect(payload.path).toBe(path.join(root, ".gjc", "specs", "jaw-interview-persist-me.md"));
+		expect(payload.path).toBe(path.join(root, ".jwc", "specs", "jaw-interview-persist-me.md"));
 		expect(await fs.readFile(payload.path, "utf-8")).toBe("# Final Spec\n\nAcceptance: persist me.\n");
 
 		const state = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".jwc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		expect(state.current_phase).toBe("handoff");
 		expect(state.active).toBe(true);
 		expect(state.spec_path).toBe(payload.path);
 		expect(state.spec_slug).toBe("persist-me");
-		await expect(fs.access(path.join(root, ".gjc", "plans"))).rejects.toThrow();
+		await expect(fs.access(path.join(root, ".jwc", "plans"))).rejects.toThrow();
 	});
 
 	it("uses --deliberate to persist the final spec and hand off to ralplan", async () => {
@@ -154,11 +154,11 @@ describe("native gjc jaw-interview runtime", () => {
 		const payload = JSON.parse(result.stdout ?? "{}");
 		expect(payload.handoff).toMatchObject({ to: "ralplan", mode: "deliberate" });
 
-		const specPath = path.join(root, ".gjc", "specs", "jaw-interview-deliberate-spec.md");
+		const specPath = path.join(root, ".jwc", "specs", "jaw-interview-deliberate-spec.md");
 		expect(await fs.readFile(specPath, "utf-8")).toContain("Use ralplan deliberately.");
 
 		const jawInterviewState = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".jwc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		expect(jawInterviewState.active).toBe(false);
 		expect(jawInterviewState.current_phase).toBe("handoff");
@@ -166,7 +166,7 @@ describe("native gjc jaw-interview runtime", () => {
 		expect(jawInterviewState.spec_path).toBe(specPath);
 
 		const ralplanState = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "ralplan-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".jwc", "state", "ralplan-state.json"), "utf-8"),
 		);
 		expect(ralplanState.active).toBe(true);
 		expect(ralplanState.current_phase).toBe("planner");
@@ -183,7 +183,7 @@ describe("native gjc jaw-interview runtime", () => {
 		);
 		expect(deepResult.status).toBe(0);
 		const deepPayload = JSON.parse(deepResult.stdout ?? "{}");
-		expect(deepPayload.path).toContain(path.join(".gjc", "specs", "jaw-interview-separate.md"));
+		expect(deepPayload.path).toContain(path.join(".jwc", "specs", "jaw-interview-separate.md"));
 
 		const ralplanResult = await runNativeRalplanCommand(
 			["--write", "--stage", "final", "--stage_n", "1", "--artifact", "# Plan", "--run-id", "separate", "--json"],
@@ -191,7 +191,7 @@ describe("native gjc jaw-interview runtime", () => {
 		);
 		expect(ralplanResult.status).toBe(0);
 		const ralplanPayload = JSON.parse(ralplanResult.stdout ?? "{}");
-		expect(ralplanPayload.path).toContain(path.join(".gjc", "plans", "ralplan", "separate", "stage-01-final.md"));
+		expect(ralplanPayload.path).toContain(path.join(".jwc", "plans", "ralplan", "separate", "stage-01-final.md"));
 		expect(await fs.readFile(deepPayload.path, "utf-8")).toBe("# Requirements\n");
 		expect(await fs.readFile(ralplanPayload.path, "utf-8")).toBe("# Plan\n");
 	});
@@ -208,7 +208,7 @@ describe("native gjc jaw-interview runtime", () => {
 		expect(payload.language.instruction).toContain("Korean");
 
 		const state = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".jwc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		expect(state.language).toEqual(payload.language);
 		expect(state.state.language).toEqual(payload.language);
@@ -232,7 +232,7 @@ describe("native gjc jaw-interview runtime", () => {
 		const result = await runNativeJawInterviewCommand(["my vague idea"], root);
 		expect(result.status).toBe(0);
 		const state = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".jwc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		expect(state.resolution).toBe("standard");
 		expect(state.threshold).toBeCloseTo(0.05);
@@ -242,9 +242,9 @@ describe("native gjc jaw-interview runtime", () => {
 
 	it("falls back to the legacy gjc.deepInterview.ambiguityThreshold key (042 D041-D)", async () => {
 		const root = await tempDir();
-		await fs.mkdir(path.join(root, ".gjc"), { recursive: true });
+		await fs.mkdir(path.join(root, ".jwc"), { recursive: true });
 		await fs.writeFile(
-			path.join(root, ".gjc", "settings.json"),
+			path.join(root, ".jwc", "settings.json"),
 			JSON.stringify({ gjc: { deepInterview: { ambiguityThreshold: 0.12 } } }),
 		);
 		const result = await runNativeJawInterviewCommand(["--standard", "--json", "idea"], root);
@@ -255,9 +255,9 @@ describe("native gjc jaw-interview runtime", () => {
 
 	it("prefers the new jwc.interview key over the legacy key when both exist", async () => {
 		const root = await tempDir();
-		await fs.mkdir(path.join(root, ".gjc"), { recursive: true });
+		await fs.mkdir(path.join(root, ".jwc"), { recursive: true });
 		await fs.writeFile(
-			path.join(root, ".gjc", "settings.json"),
+			path.join(root, ".jwc", "settings.json"),
 			JSON.stringify({
 				jwc: { interview: { ambiguityThreshold: 0.09 } },
 				gjc: { deepInterview: { ambiguityThreshold: 0.4 } },
@@ -269,18 +269,18 @@ describe("native gjc jaw-interview runtime", () => {
 		expect(payload.threshold).toBeCloseTo(0.09);
 	});
 
-	it("honors jwc.interview.ambiguityThreshold in project .gjc/settings.json", async () => {
+	it("honors jwc.interview.ambiguityThreshold in project .jwc/settings.json", async () => {
 		const root = await tempDir();
-		await fs.mkdir(path.join(root, ".gjc"), { recursive: true });
+		await fs.mkdir(path.join(root, ".jwc"), { recursive: true });
 		await fs.writeFile(
-			path.join(root, ".gjc", "settings.json"),
+			path.join(root, ".jwc", "settings.json"),
 			JSON.stringify({ jwc: { interview: { ambiguityThreshold: 0.08 } } }),
 		);
 		const result = await runNativeJawInterviewCommand(["--standard", "--json", "idea"], root);
 		expect(result.status).toBe(0);
 		const payload = JSON.parse(result.stdout ?? "{}");
 		expect(payload.threshold).toBeCloseTo(0.08);
-		expect(payload.threshold_source).toBe(path.join(root, ".gjc", "settings.json"));
+		expect(payload.threshold_source).toBe(path.join(root, ".jwc", "settings.json"));
 	});
 
 	it("prefers modern config.yml threshold over legacy project settings.json", async () => {
@@ -289,9 +289,9 @@ describe("native gjc jaw-interview runtime", () => {
 		setAgentDir(agentDir);
 		resetSettingsForTest();
 		await fs.writeFile(path.join(agentDir, "config.yml"), "jwc:\n  interview:\n    ambiguityThreshold: 0.2\n");
-		await fs.mkdir(path.join(root, ".gjc"), { recursive: true });
+		await fs.mkdir(path.join(root, ".jwc"), { recursive: true });
 		await fs.writeFile(
-			path.join(root, ".gjc", "settings.json"),
+			path.join(root, ".jwc", "settings.json"),
 			JSON.stringify({ jwc: { interview: { ambiguityThreshold: 0.08 } } }),
 		);
 
@@ -306,9 +306,9 @@ describe("native gjc jaw-interview runtime", () => {
 
 	it("--threshold beats project settings.json", async () => {
 		const root = await tempDir();
-		await fs.mkdir(path.join(root, ".gjc"), { recursive: true });
+		await fs.mkdir(path.join(root, ".jwc"), { recursive: true });
 		await fs.writeFile(
-			path.join(root, ".gjc", "settings.json"),
+			path.join(root, ".jwc", "settings.json"),
 			JSON.stringify({ jwc: { interview: { ambiguityThreshold: 0.08 } } }),
 		);
 		const result = await runNativeJawInterviewCommand(
@@ -338,7 +338,7 @@ describe("native gjc jaw-interview runtime", () => {
 		const root = await tempDir();
 		await runNativeJawInterviewCommand(["--standard", "idea body"], root);
 		const active = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "skill-active-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".jwc", "state", "skill-active-state.json"), "utf-8"),
 		);
 		const entry = (
 			active.active_skills as Array<{

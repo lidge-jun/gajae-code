@@ -75,7 +75,7 @@ function cleanScope(value: string | undefined): string | null {
 
 export function buildCoordinatorMcpConfig(env: NodeJS.ProcessEnv = process.env): CoordinatorMcpConfig {
 	const stateRoot =
-		env.GJC_COORDINATOR_MCP_STATE_ROOT?.trim() || path.join(process.cwd(), ".gjc", "state", "coordinator-mcp");
+		env.GJC_COORDINATOR_MCP_STATE_ROOT?.trim() || path.join(process.cwd(), ".jwc", "state", "coordinator-mcp");
 	return {
 		allowedRoots: parseRootList(env.GJC_COORDINATOR_MCP_WORKDIR_ROOTS).map(root => path.resolve(root)),
 		mutationClasses: parseMutationClasses(

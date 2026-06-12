@@ -62,7 +62,7 @@ import { FileSessionStorage, MemorySessionStorage } from "./session-storage";
 
 export const CURRENT_SESSION_VERSION = 3;
 function isUnderProjectGjc(cwd: string, targetPath: string): boolean {
-	const relative = path.relative(path.join(path.resolve(cwd), ".gjc"), path.resolve(targetPath));
+	const relative = path.relative(path.join(path.resolve(cwd), ".jwc"), path.resolve(targetPath));
 	return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
 }
 
@@ -3579,7 +3579,7 @@ export class SessionManager {
 	/**
 	 * Create a new session.
 	 * @param cwd Working directory (stored in session header)
-	 * @param sessionDir Optional session directory. If omitted, uses default (~/.gjc/agent/sessions/<encoded-cwd>/).
+	 * @param sessionDir Optional session directory. If omitted, uses default (~/.jwc/agent/sessions/<encoded-cwd>/).
 	 */
 	static create(cwd: string, sessionDir?: string, storage: SessionStorage = new FileSessionStorage()): SessionManager {
 		const dir = sessionDir ?? SessionManager.getDefaultSessionDir(cwd, undefined, storage);
@@ -3643,7 +3643,7 @@ export class SessionManager {
 	/**
 	 * Continue the most recent session, or create new if none.
 	 * @param cwd Working directory
-	 * @param sessionDir Optional session directory. If omitted, uses default (~/.gjc/agent/sessions/<encoded-cwd>/).
+	 * @param sessionDir Optional session directory. If omitted, uses default (~/.jwc/agent/sessions/<encoded-cwd>/).
 	 */
 	static async continueRecent(
 		cwd: string,
@@ -3676,7 +3676,7 @@ export class SessionManager {
 	/**
 	 * List all sessions.
 	 * @param cwd Working directory (used to compute default session directory)
-	 * @param sessionDir Optional session directory. If omitted, uses default (~/.gjc/agent/sessions/<encoded-cwd>/).
+	 * @param sessionDir Optional session directory. If omitted, uses default (~/.jwc/agent/sessions/<encoded-cwd>/).
 	 */
 	static async list(
 		cwd: string,

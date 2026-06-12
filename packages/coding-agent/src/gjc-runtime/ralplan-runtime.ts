@@ -16,14 +16,14 @@ import { appendJsonl, readExistingStateForMutation, writeArtifact, writeWorkflow
  *
  * 1. **Consensus handoff**: `gjc ralplan [--interactive] [--deliberate] [--architect <kind>]
  *    [--critic <kind>] [--session-id <id>] "<task>"` validates the documented flag surface,
- *    seeds `.gjc/state/ralplan-state.json`, and updates the shared HUD rail via
+ *    seeds `.jwc/state/ralplan-state.json`, and updates the shared HUD rail via
  *    `syncSkillActiveState`. The CLI never *runs* the Planner / Architect / Critic loop itself —
  *    that lives in the bundled `/skill:ralplan` skill — but it accepts every documented flag so
  *    scripted users see a useful response and the active run is visible to the TUI.
  *
  * 2. **Artifact write**: `gjc ralplan --write --stage <type> --stage_n <N> --artifact
  *    <path-or-string> [--run-id <id>] [--session-id <id>] [--json]` persists Planner / Architect
- *    / Critic / revision / ADR / final markdown under `.gjc/plans/ralplan/<run-id>/`, maintains
+ *    / Critic / revision / ADR / final markdown under `.jwc/plans/ralplan/<run-id>/`, maintains
  *    an `index.jsonl` audit log, copies `final` stages to `pending-approval.md`, and advances
  *    the HUD chip to reflect the latest persisted stage.
  */
@@ -159,8 +159,8 @@ interface ResolvedArtifactArgs {
 
 function ralplanStatePath(cwd: string, sessionId: string | undefined): string {
 	const stateDir = sessionId
-		? path.join(cwd, ".gjc", "state", "sessions", encodeSessionSegment(sessionId))
-		: path.join(cwd, ".gjc", "state");
+		? path.join(cwd, ".jwc", "state", "sessions", encodeSessionSegment(sessionId))
+		: path.join(cwd, ".jwc", "state");
 	return path.join(stateDir, "ralplan-state.json");
 }
 
@@ -369,7 +369,7 @@ async function resolveArtifactArgs(args: readonly string[], cwd: string): Promis
 
 	// Precedence for run_id:
 	//   1. explicit --run-id flag
-	//   2. existing run_id field in .gjc/state[/sessions/<id>]/ralplan-state.json
+	//   2. existing run_id field in .jwc/state[/sessions/<id>]/ralplan-state.json
 	//   3. explicit --session-id flag (use as run id)
 	//   4. freshly generated default run id
 	const explicitRunId = flagValue(args, "--run-id")?.trim();
@@ -393,7 +393,7 @@ interface PersistedArtifact {
 }
 
 async function persistArtifact(resolved: ResolvedArtifactArgs, cwd: string): Promise<PersistedArtifact> {
-	const runDir = path.join(cwd, ".gjc", "plans", "ralplan", resolved.runId);
+	const runDir = path.join(cwd, ".jwc", "plans", "ralplan", resolved.runId);
 
 	const fileName = `stage-${pad2(resolved.stageN)}-${resolved.stage}.md`;
 	const filePath = path.join(runDir, fileName);
@@ -568,8 +568,8 @@ async function seedRalplanState(
 	resolved: ConsensusHandoffArgs,
 ): Promise<{ statePath: string; runId: string }> {
 	const stateDir = resolved.sessionId
-		? path.join(cwd, ".gjc", "state", "sessions", encodeSessionSegment(resolved.sessionId))
-		: path.join(cwd, ".gjc", "state");
+		? path.join(cwd, ".jwc", "state", "sessions", encodeSessionSegment(resolved.sessionId))
+		: path.join(cwd, ".jwc", "state");
 
 	const statePath = path.join(stateDir, "ralplan-state.json");
 	// Reuse an existing run id when present so a re-invocation of `gjc ralplan "task"` doesn't

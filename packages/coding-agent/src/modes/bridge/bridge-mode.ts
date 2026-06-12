@@ -593,7 +593,7 @@ export async function runBridgeMode(
 		});
 	};
 	const gateStore = new FileGateStore(
-		path.join(session.sessionManager.getCwd(), ".gjc", "state", "workflow-gates", `${session.sessionId}.json`),
+		path.join(session.sessionManager.getCwd(), ".jwc", "state", "workflow-gates", `${session.sessionId}.json`),
 	);
 	const unattendedControlPlane = new UnattendedSessionControlPlane({
 		runId: session.sessionId,

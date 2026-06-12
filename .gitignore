@@ -40,22 +40,24 @@ coverage/
 packages/ai/test/.temp-images/
 
 # Project specific
-!.gjc/
-!.gjc/agents/
-!.gjc/agents/**
-!.gjc/skills/
-!.gjc/skills/**
-.gjc/plugins/
-.gjc/context/
-.gjc/interviews/
-.gjc/plans/
-.gjc/ralplan/
-.gjc/specs/
-.gjc/ultragoal/
-.gjc/verification/
-.gjc/logs/
-.gjc/state/
-.gjc/metrics.json
+!.jwc/
+!.jwc/agents/
+!.jwc/agents/**
+!.jwc/skills/
+!.jwc/skills/**
+.jwc/plugins/
+.jwc/context/
+.jwc/interviews/
+.jwc/plans/
+.jwc/ralplan/
+.jwc/specs/
+.jwc/ultragoal/
+.jwc/verification/
+.jwc/logs/
+.jwc/state/
+.jwc/metrics.json
+# Legacy state dir — pre-.jwc leftovers + migration sentinel (remove after transition)
+.gjc/
 .pi_config/
 .opencode/
 .worktrees/

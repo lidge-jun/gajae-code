@@ -34,8 +34,8 @@ Define custom secret entries in YAML. Two locations are checked:
 
 | Level   | Path                       | Purpose                     |
 | ------- | -------------------------- | --------------------------- |
-| Global  | `~/.gjc/agent/secrets.yml` | Secrets across all projects |
-| Project | `<cwd>/.gjc/secrets.yml`   | Project-specific secrets    |
+| Global  | `~/.jwc/agent/secrets.yml` | Secrets across all projects |
+| Project | `<cwd>/.jwc/secrets.yml`   | Project-specific secrets    |
 
 Project entries override global entries with matching `content`.
 

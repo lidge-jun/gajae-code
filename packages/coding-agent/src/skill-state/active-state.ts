@@ -343,7 +343,7 @@ export function normalizeSkillActiveState(raw: unknown): SkillActiveState | null
 }
 
 export function getSkillActiveStatePaths(cwd: string, sessionId?: string): SkillActiveStatePaths {
-	const stateDir = path.join(cwd, ".gjc", "state");
+	const stateDir = path.join(cwd, ".jwc", "state");
 	const rootPath = path.join(stateDir, SKILL_ACTIVE_STATE_FILE);
 	const normalizedSessionId = safeString(sessionId).trim();
 	if (!normalizedSessionId) return { rootPath };

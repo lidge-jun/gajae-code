@@ -36,11 +36,11 @@ describe("agent identity leak zero (085.6)", () => {
 		expect(template).toContain("<jawcode-system-prompt>");
 		expect(template).not.toContain("You are GJC");
 		expect(template).not.toContain("Gajae Code");
-		// Prose-level GJC must be gone; functional identifiers (.gjc paths,
+		// Prose-level GJC must be gone; functional identifiers (.jwc paths,
 		// defaults/gjc dir) are the preservation boundary and may remain.
 		const prose = template
 			.split("\n")
-			.filter(line => !line.includes(".gjc") && !line.includes("defaults/gjc"))
+			.filter(line => !line.includes(".jwc") && !line.includes("defaults/gjc"))
 			.join("\n");
 		expect(prose).not.toMatch(/\bGJC\b/);
 	});

@@ -39,7 +39,7 @@ async function readJson(filePath: string): Promise<Record<string, unknown> | nul
 describe("gjc state handoff", () => {
 	it("transitions caller -> callee atomically across mode-state and active-state", async () => {
 		await withTempCwd(async cwd => {
-			const callerPath = path.join(cwd, ".gjc/state/jaw-interview-state.json");
+			const callerPath = path.join(cwd, ".jwc/state/jaw-interview-state.json");
 			await writeJson(callerPath, {
 				skill: "jaw-interview",
 				version: 1,
@@ -68,13 +68,13 @@ describe("gjc state handoff", () => {
 			expect(caller?.handoff_at).toBe(handoffAt);
 			expect(caller?.version).toBe(WORKFLOW_STATE_VERSION);
 
-			const callee = await readJson(path.join(cwd, ".gjc/state/ralplan-state.json"));
+			const callee = await readJson(path.join(cwd, ".jwc/state/ralplan-state.json"));
 			expect(callee?.active).toBe(true);
 			expect(callee?.handoff_from).toBe("jaw-interview");
 			expect(callee?.handoff_at).toBe(handoffAt);
 			expect(callee?.version).toBe(WORKFLOW_STATE_VERSION);
 
-			const activeState = await readJson(path.join(cwd, ".gjc/state/skill-active-state.json"));
+			const activeState = await readJson(path.join(cwd, ".jwc/state/skill-active-state.json"));
 			const activeSkills = (activeState?.active_skills as Array<Record<string, unknown>>) ?? [];
 			// Handoff demotes the caller to active:false with handoff_to lineage so
 			// downstream readers can audit the transition; HUD readers filter on
@@ -92,8 +92,8 @@ describe("gjc state handoff", () => {
 
 	it("normalizes legacy caller and callee envelopes to v2 during handoff", async () => {
 		await withTempCwd(async cwd => {
-			const callerPath = path.join(cwd, ".gjc/state/jaw-interview-state.json");
-			const calleePath = path.join(cwd, ".gjc/state/ralplan-state.json");
+			const callerPath = path.join(cwd, ".jwc/state/jaw-interview-state.json");
+			const calleePath = path.join(cwd, ".jwc/state/ralplan-state.json");
 			await writeJson(callerPath, {
 				skill: "jaw-interview",
 				version: 1,
@@ -121,8 +121,8 @@ describe("gjc state handoff", () => {
 
 	it("bootstraps an absent callee mode-state during handoff", async () => {
 		await withTempCwd(async cwd => {
-			const callerPath = path.join(cwd, ".gjc/state/jaw-interview-state.json");
-			const calleePath = path.join(cwd, ".gjc/state/ralplan-state.json");
+			const callerPath = path.join(cwd, ".jwc/state/jaw-interview-state.json");
+			const calleePath = path.join(cwd, ".jwc/state/ralplan-state.json");
 			await writeJson(callerPath, {
 				skill: "jaw-interview",
 				version: 1,
@@ -145,8 +145,8 @@ describe("gjc state handoff", () => {
 
 	it("rejects corrupt callee mode-state without --force and overwrites with --force", async () => {
 		await withTempCwd(async cwd => {
-			const callerPath = path.join(cwd, ".gjc/state/jaw-interview-state.json");
-			const calleePath = path.join(cwd, ".gjc/state/ralplan-state.json");
+			const callerPath = path.join(cwd, ".jwc/state/jaw-interview-state.json");
+			const calleePath = path.join(cwd, ".jwc/state/ralplan-state.json");
 			await writeJson(callerPath, {
 				skill: "jaw-interview",
 				version: 1,
@@ -177,7 +177,7 @@ describe("gjc state handoff", () => {
 
 	it("rejects corrupt caller mode-state without --force and proceeds with --force", async () => {
 		await withTempCwd(async cwd => {
-			const callerPath = path.join(cwd, ".gjc/state/jaw-interview-state.json");
+			const callerPath = path.join(cwd, ".jwc/state/jaw-interview-state.json");
 			await fs.mkdir(path.dirname(callerPath), { recursive: true });
 			await fs.writeFile(callerPath, "{broken json", "utf-8");
 
@@ -196,15 +196,15 @@ describe("gjc state handoff", () => {
 			expect(forced.status).toBe(0);
 			const caller = await readJson(callerPath);
 			expect(caller?.active).toBe(false);
-			const callee = await readJson(path.join(cwd, ".gjc/state/ralplan-state.json"));
+			const callee = await readJson(path.join(cwd, ".jwc/state/ralplan-state.json"));
 			expect(callee?.handoff_from).toBe("jaw-interview");
 		});
 	});
 
 	it("writes callee mode-state before caller mode-state (HUD-coherent ordering)", async () => {
 		await withTempCwd(async cwd => {
-			const callerPath = path.join(cwd, ".gjc/state/jaw-interview-state.json");
-			const calleePath = path.join(cwd, ".gjc/state/ralplan-state.json");
+			const callerPath = path.join(cwd, ".jwc/state/jaw-interview-state.json");
+			const calleePath = path.join(cwd, ".jwc/state/ralplan-state.json");
 			await writeJson(callerPath, {
 				skill: "jaw-interview",
 				version: 1,
@@ -230,7 +230,7 @@ describe("gjc state handoff", () => {
 
 	it("rejects missing --to", async () => {
 		await withTempCwd(async cwd => {
-			await writeJson(path.join(cwd, ".gjc/state/jaw-interview-state.json"), {
+			await writeJson(path.join(cwd, ".jwc/state/jaw-interview-state.json"), {
 				skill: "jaw-interview",
 				version: 1,
 				active: true,
@@ -244,7 +244,7 @@ describe("gjc state handoff", () => {
 
 	it("rejects unknown callee skill", async () => {
 		await withTempCwd(async cwd => {
-			await writeJson(path.join(cwd, ".gjc/state/jaw-interview-state.json"), {
+			await writeJson(path.join(cwd, ".jwc/state/jaw-interview-state.json"), {
 				skill: "jaw-interview",
 				version: 1,
 				active: true,
@@ -261,7 +261,7 @@ describe("gjc state handoff", () => {
 
 	it("rejects --to equal to caller", async () => {
 		await withTempCwd(async cwd => {
-			await writeJson(path.join(cwd, ".gjc/state/ralplan-state.json"), {
+			await writeJson(path.join(cwd, ".jwc/state/ralplan-state.json"), {
 				skill: "ralplan",
 				version: 1,
 				active: true,
@@ -286,7 +286,7 @@ describe("gjc state handoff", () => {
 
 	it("supports backward chain ultragoal -> ralplan", async () => {
 		await withTempCwd(async cwd => {
-			await writeJson(path.join(cwd, ".gjc/state/ultragoal-state.json"), {
+			await writeJson(path.join(cwd, ".jwc/state/ultragoal-state.json"), {
 				skill: "ultragoal",
 				version: 1,
 				active: true,
@@ -297,11 +297,11 @@ describe("gjc state handoff", () => {
 				cwd,
 			);
 			expect(result.status).toBe(0);
-			const ultragoal = await readJson(path.join(cwd, ".gjc/state/ultragoal-state.json"));
+			const ultragoal = await readJson(path.join(cwd, ".jwc/state/ultragoal-state.json"));
 			expect(ultragoal?.active).toBe(false);
 			expect(ultragoal?.current_phase).toBe("handoff");
 			expect(ultragoal?.handoff_to).toBe("ralplan");
-			const ralplan = await readJson(path.join(cwd, ".gjc/state/ralplan-state.json"));
+			const ralplan = await readJson(path.join(cwd, ".jwc/state/ralplan-state.json"));
 			expect(ralplan?.active).toBe(true);
 			expect(ralplan?.handoff_from).toBe("ultragoal");
 		});
@@ -310,7 +310,7 @@ describe("gjc state handoff", () => {
 		await withTempCwd(async cwd => {
 			const sessionId = "session-G007";
 			const encodedSession = encodeURIComponent(sessionId).replaceAll(".", "%2E");
-			const sessionDir = path.join(cwd, ".gjc/state/sessions", encodedSession);
+			const sessionDir = path.join(cwd, ".jwc/state/sessions", encodedSession);
 			await writeJson(path.join(sessionDir, "jaw-interview-state.json"), {
 				skill: "jaw-interview",
 				version: 1,
@@ -340,7 +340,7 @@ describe("gjc state handoff", () => {
 			expect(callee.handoff_from).toBe("jaw-interview");
 
 			// Root state files were NOT mutated for this session-scoped handoff.
-			await expect(fs.access(path.join(cwd, ".gjc/state/jaw-interview-state.json"))).rejects.toThrow();
+			await expect(fs.access(path.join(cwd, ".jwc/state/jaw-interview-state.json"))).rejects.toThrow();
 
 			// Session-scoped active-state has callee active and carries lineage.
 			const sessionActive = JSON.parse(
@@ -353,7 +353,7 @@ describe("gjc state handoff", () => {
 	});
 	it("propagates strict sync failure when active-state write fails after mode-state writes succeed", async () => {
 		await withTempCwd(async cwd => {
-			const callerPath = path.join(cwd, ".gjc/state/jaw-interview-state.json");
+			const callerPath = path.join(cwd, ".jwc/state/jaw-interview-state.json");
 			await writeJson(callerPath, {
 				skill: "jaw-interview",
 				version: 1,
@@ -365,7 +365,7 @@ describe("gjc state handoff", () => {
 			// exercises the strict active-state path, not the pre-sync mode-state
 			// path, and proves the CLI returns non-zero status when the atomic
 			// transaction cannot complete.
-			await fs.mkdir(path.join(cwd, ".gjc/state/skill-active-state.json"), { recursive: true });
+			await fs.mkdir(path.join(cwd, ".jwc/state/skill-active-state.json"), { recursive: true });
 
 			const result = await runNativeStateCommand(
 				["handoff", "--mode", "jaw-interview", "--to", "ralplan", "--json"],
@@ -382,7 +382,7 @@ describe("gjc state handoff", () => {
 			expect(caller.current_phase).toBe("handoff");
 			expect(caller.active).toBe(false);
 			const callee = JSON.parse(
-				await fs.readFile(path.join(cwd, ".gjc/state/ralplan-state.json"), "utf-8"),
+				await fs.readFile(path.join(cwd, ".jwc/state/ralplan-state.json"), "utf-8"),
 			) as Record<string, unknown>;
 			expect(callee.active).toBe(true);
 			expect(callee.handoff_from).toBe("jaw-interview");
@@ -391,14 +391,14 @@ describe("gjc state handoff", () => {
 
 	it("treats corrupt active-state JSON as a strict failure", async () => {
 		await withTempCwd(async cwd => {
-			await writeJson(path.join(cwd, ".gjc/state/jaw-interview-state.json"), {
+			await writeJson(path.join(cwd, ".jwc/state/jaw-interview-state.json"), {
 				skill: "jaw-interview",
 				version: 1,
 				active: true,
 				current_phase: "interviewing",
 			});
-			await fs.mkdir(path.join(cwd, ".gjc/state"), { recursive: true });
-			await fs.writeFile(path.join(cwd, ".gjc/state/skill-active-state.json"), "{ not valid json");
+			await fs.mkdir(path.join(cwd, ".jwc/state"), { recursive: true });
+			await fs.writeFile(path.join(cwd, ".jwc/state/skill-active-state.json"), "{ not valid json");
 
 			const result = await runNativeStateCommand(
 				["handoff", "--mode", "jaw-interview", "--to", "ralplan", "--json"],
@@ -411,7 +411,7 @@ describe("gjc state handoff", () => {
 
 	it("preserves earlier inactive lineage across successive handoffs (D->R->U keeps di's handoff_to in active_skills)", async () => {
 		await withTempCwd(async cwd => {
-			const stateDir = path.join(cwd, ".gjc/state");
+			const stateDir = path.join(cwd, ".jwc/state");
 			await writeJson(path.join(stateDir, "jaw-interview-state.json"), {
 				skill: "jaw-interview",
 				version: 1,
@@ -470,7 +470,7 @@ describe("gjc state handoff", () => {
 		await withTempCwd(async cwd => {
 			const sessionId = "session-env-default";
 			const encodedSession = encodeURIComponent(sessionId).replaceAll(".", "%2E");
-			const sessionDir = path.join(cwd, ".gjc/state/sessions", encodedSession);
+			const sessionDir = path.join(cwd, ".jwc/state/sessions", encodedSession);
 			await writeJson(path.join(sessionDir, "jaw-interview-state.json"), {
 				skill: "jaw-interview",
 				version: 1,
@@ -505,7 +505,7 @@ describe("gjc state handoff", () => {
 		await withTempCwd(async cwd => {
 			const sessionId = "session-docs-flow";
 			const encodedSession = encodeURIComponent(sessionId).replaceAll(".", "%2E");
-			const sessionDir = path.join(cwd, ".gjc/state/sessions", encodedSession);
+			const sessionDir = path.join(cwd, ".jwc/state/sessions", encodedSession);
 			// Bootstrap: an active jaw-interview session-scoped state exists.
 			await writeJson(path.join(sessionDir, "jaw-interview-state.json"), {
 				skill: "jaw-interview",

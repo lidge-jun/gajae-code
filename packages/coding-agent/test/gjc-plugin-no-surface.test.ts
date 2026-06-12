@@ -31,7 +31,7 @@ let originalHome: string | undefined;
 async function installMixedRootRegistry(): Promise<void> {
 	const pluginPath = path.join(tempHome, "plugin-install", "malicious-mixed-root");
 	await fs.cp(path.join(fixturesRoot, "malicious-mixed-root"), pluginPath, { recursive: true });
-	const pluginsDir = path.join(tempHome, ".gjc", "plugins");
+	const pluginsDir = path.join(tempHome, ".jwc", "plugins");
 	await fs.mkdir(pluginsDir, { recursive: true });
 	await fs.writeFile(
 		path.join(pluginsDir, "installed_plugins.json"),
@@ -53,10 +53,10 @@ async function installMixedRootRegistry(): Promise<void> {
 }
 
 async function installProjectSkillFixture(): Promise<void> {
-	await fs.mkdir(path.join(tempCwd, ".gjc", "gjc-plugins"), { recursive: true });
+	await fs.mkdir(path.join(tempCwd, ".jwc", "gjc-plugins"), { recursive: true });
 	await fs.cp(
 		path.join(fixturesRoot, "valid-skill-plugin"),
-		path.join(tempCwd, ".gjc", "gjc-plugins", "valid-skill-plugin"),
+		path.join(tempCwd, ".jwc", "gjc-plugins", "valid-skill-plugin"),
 		{ recursive: true },
 	);
 }
@@ -152,7 +152,7 @@ describe("GJC plugin roots never surface through legacy claude plugin providers"
 		expect(before).not.toContain("design");
 
 		const roots = await discoverGjcPluginRoots({ cwd: tempCwd });
-		expect(roots.some(root => root.endsWith(path.join(".gjc", "gjc-plugins", "valid-skill-plugin")))).toBe(true);
+		expect(roots.some(root => root.endsWith(path.join(".jwc", "gjc-plugins", "valid-skill-plugin")))).toBe(true);
 		const activation = await resolveSubskillActivationForSkillInvocation({
 			cwd: tempCwd,
 			skillName: "ralplan",

@@ -19,7 +19,7 @@ export const JWC_SESSION_CWD_ENV = "JWC_SESSION_CWD";
 
 const REQUEST_VERSION = 1;
 export const DEFAULT_ULTRAGOAL_OBJECTIVE =
-	"Complete the durable ultragoal plan in .gjc/ultragoal/goals.json, including later accepted/appended stories, under the original brief constraints; use .gjc/ultragoal/ledger.jsonl as the audit trail.";
+	"Complete the durable ultragoal plan in .jwc/ultragoal/goals.json, including later accepted/appended stories, under the original brief constraints; use .jwc/ultragoal/ledger.jsonl as the audit trail.";
 
 export interface PendingGoalModeRequest {
 	version: typeof REQUEST_VERSION;
@@ -31,7 +31,7 @@ export interface PendingGoalModeRequest {
 	/**
 	 * Session id that produced this request (from GJC_SESSION_ID). When present,
 	 * only the originating session may consume it, so concurrent sessions sharing
-	 * the same `.gjc` project state never auto-run each other's ultragoal.
+	 * the same `.jwc` project state never auto-run each other's ultragoal.
 	 */
 	sessionId?: string;
 }
@@ -52,11 +52,11 @@ function isEnoent(error: unknown): boolean {
 }
 
 function requestPath(cwd: string): string {
-	return path.join(cwd, ".gjc", "state", "goal-mode-request.json");
+	return path.join(cwd, ".jwc", "state", "goal-mode-request.json");
 }
 
 function ultragoalGoalsPath(cwd: string): string {
-	return path.join(cwd, ".gjc", "ultragoal", "goals.json");
+	return path.join(cwd, ".jwc", "ultragoal", "goals.json");
 }
 
 function isCreateGoalsArg(value: string): boolean {
@@ -168,7 +168,7 @@ export async function writeCurrentSessionGoalModeState(input: {
 		mode: "goal",
 		data: { goal: state.goal },
 	};
-	// The session transcript file lives outside `.gjc/` (GJC_SESSION_FILE), so it is not a
+	// The session transcript file lives outside `.jwc/` (GJC_SESSION_FILE), so it is not a
 	// sanctioned-writer target; append directly.
 	await fs.appendFile(sessionFile, `${JSON.stringify(entry)}\n`);
 	return { status: "updated", goal: state.goal, sessionFile };

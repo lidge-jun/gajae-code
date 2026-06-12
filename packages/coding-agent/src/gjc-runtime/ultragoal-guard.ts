@@ -49,7 +49,7 @@ function isKnownUltragoalObjective(currentObjective: string): boolean {
 	const normalized = currentObjective.trim();
 	return (
 		normalized === DEFAULT_ULTRAGOAL_OBJECTIVE ||
-		(normalized.includes(".gjc/ultragoal/goals.json") && normalized.includes(".gjc/ultragoal/ledger.jsonl"))
+		(normalized.includes(".jwc/ultragoal/goals.json") && normalized.includes(".jwc/ultragoal/ledger.jsonl"))
 	);
 }
 
@@ -234,7 +234,7 @@ export async function readUltragoalVerificationState(input: {
 		if (isKnownUltragoalObjective(currentObjective) || (await hasDurableUltragoalState(input.cwd))) {
 			return {
 				state: "unreadable_fail_closed",
-				message: "Active Ultragoal objective is missing durable .gjc/ultragoal/goals.json state.",
+				message: "Active Ultragoal objective is missing durable .jwc/ultragoal/goals.json state.",
 			};
 		}
 		return { state: "inactive", message: "No Ultragoal plan exists." };

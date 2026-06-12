@@ -15,7 +15,7 @@ export default class Goal extends Command {
 	static examples = [
 		`$ ${APP_NAME} goal set "ship the importer"`,
 		`$ ${APP_NAME} goal update "parser done" --evidence "bun test parser 12 pass"`,
-		`$ ${APP_NAME} goal done --quality-gate-json .gjc/state/pabcd-quality-gate.json`,
+		`$ ${APP_NAME} goal done --quality-gate-json .jwc/state/pabcd-quality-gate.json`,
 		`$ ${APP_NAME} goal pause --agent --audit "reviewer found no remaining path"`,
 		`$ ${APP_NAME} goal status`,
 		`$ ${APP_NAME} goal history 20`,

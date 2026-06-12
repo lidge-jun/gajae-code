@@ -33,7 +33,7 @@ describe("SYSTEM.md prompt assembly", () => {
 
 	it("renders SYSTEM.md exactly once when it is used as the custom base prompt", async () => {
 		const projectDir = path.join(tempDir, "project");
-		const systemDir = path.join(projectDir, ".gjc");
+		const systemDir = path.join(projectDir, ".jwc");
 		const systemPrompt = "You are the project SYSTEM prompt.";
 		fs.mkdirSync(systemDir, { recursive: true });
 		fs.writeFileSync(path.join(systemDir, "SYSTEM.md"), systemPrompt);
@@ -64,10 +64,10 @@ describe("SYSTEM.md prompt assembly", () => {
 
 	it("prefers project SYSTEM.md over user SYSTEM.md", async () => {
 		const projectDir = path.join(tempDir, "project");
-		fs.mkdirSync(path.join(projectDir, ".gjc"), { recursive: true });
-		fs.mkdirSync(path.join(tempHomeDir, ".gjc", "agent"), { recursive: true });
-		fs.writeFileSync(path.join(tempHomeDir, ".gjc", "agent", "SYSTEM.md"), "User SYSTEM prompt");
-		fs.writeFileSync(path.join(projectDir, ".gjc", "SYSTEM.md"), "Project SYSTEM prompt");
+		fs.mkdirSync(path.join(projectDir, ".jwc"), { recursive: true });
+		fs.mkdirSync(path.join(tempHomeDir, ".jwc", "agent"), { recursive: true });
+		fs.writeFileSync(path.join(tempHomeDir, ".jwc", "agent", "SYSTEM.md"), "User SYSTEM prompt");
+		fs.writeFileSync(path.join(projectDir, ".jwc", "SYSTEM.md"), "Project SYSTEM prompt");
 
 		await expect(loadSystemPromptFiles({ cwd: projectDir })).resolves.toBe("Project SYSTEM prompt");
 	});

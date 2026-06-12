@@ -60,7 +60,7 @@ describe("gjc state workflow command", () => {
 				expect(payload).toMatchObject({ skill, status: "fresh" });
 
 				const modeState = await Bun.file(
-					path.join(cwd, ".gjc", "state", "sessions", `session-${skill}`, `${skill}-state.json`),
+					path.join(cwd, ".jwc", "state", "sessions", `session-${skill}`, `${skill}-state.json`),
 				).json();
 				expect(modeState).toMatchObject({
 					skill,
@@ -70,7 +70,7 @@ describe("gjc state workflow command", () => {
 				expect(modeState.receipt.command).toBe(`gjc state ${skill} write`);
 
 				const activeState = await Bun.file(
-					path.join(cwd, ".gjc", "state", "sessions", `session-${skill}`, "skill-active-state.json"),
+					path.join(cwd, ".jwc", "state", "sessions", `session-${skill}`, "skill-active-state.json"),
 				).json();
 				expect(activeState.active_skills[0]).toMatchObject({
 					skill,
@@ -130,12 +130,12 @@ describe("gjc state workflow command", () => {
 			expect(transition.exitCode, transition.stderr.toString()).toBe(0);
 
 			const modeState = await Bun.file(
-				path.join(cwd, ".gjc", "state", "sessions", "session-1", "jaw-interview-state.json"),
+				path.join(cwd, ".jwc", "state", "sessions", "session-1", "jaw-interview-state.json"),
 			).json();
 			expect(modeState.current_phase).toBe("handoff");
 
 			const activeState = await Bun.file(
-				path.join(cwd, ".gjc", "state", "sessions", "session-1", "skill-active-state.json"),
+				path.join(cwd, ".jwc", "state", "sessions", "session-1", "skill-active-state.json"),
 			).json();
 			expect(activeState.active_skills[0]).toMatchObject({ skill: "jaw-interview", phase: "handoff" });
 

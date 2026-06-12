@@ -85,7 +85,7 @@ describe("issue 823: standalone-binary native loader path resolution", () => {
 	});
 
 	it("places embedded-extracted candidates ahead of build-host candidates for linux-x64 standalone", () => {
-		const versionedDir = "/home/u/.gjc/natives/14.5.2";
+		const versionedDir = "/home/u/.jwc/natives/14.5.2";
 		const userDataDir = "/home/u/.local/bin";
 		const nativeDir = "/build-host/packages/natives/native";
 		const execDir = "/home/u/.local/bin";
@@ -104,7 +104,7 @@ describe("issue 823: standalone-binary native loader path resolution", () => {
 		const buildHostModern = path.join(nativeDir, "pi_natives.linux-x64-modern.node");
 
 		// Versioned cache and user-data dir candidates must exist for compiled binaries —
-		// these are where the embedded-addon extraction lands (~/.gjc/natives/<v>) and where
+		// these are where the embedded-addon extraction lands (~/.jwc/natives/<v>) and where
 		// `gjc update` writes the standalone binary on linux (~/.local/bin).
 		expect(candidates).toContain(versionedModern);
 		expect(candidates).toContain(versionedBaseline);
@@ -116,7 +116,7 @@ describe("issue 823: standalone-binary native loader path resolution", () => {
 	});
 
 	it("does not probe user-data candidates when running outside a standalone binary", () => {
-		const versionedDir = "/home/u/.gjc/natives/14.5.2";
+		const versionedDir = "/home/u/.jwc/natives/14.5.2";
 		const userDataDir = "/home/u/.local/bin";
 		const candidates = resolveLoaderCandidates({
 			addonFilenames: getAddonFilenames({ tag: "linux-x64", arch: "x64", variant: "baseline" }),

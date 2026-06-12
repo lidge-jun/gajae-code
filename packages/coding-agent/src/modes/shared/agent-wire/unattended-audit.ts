@@ -71,7 +71,7 @@ function defaultId(): string {
 
 export function defaultAuditPath(runId: string, root = process.cwd()): string {
 	const safe = runId.replace(/[^a-zA-Z0-9_.-]/g, "_");
-	return path.join(root, ".gjc", "audit", "unattended", `${safe}.jsonl`);
+	return path.join(root, ".jwc", "audit", "unattended", `${safe}.jsonl`);
 }
 
 /** Append-only audit log writer + reader for one unattended run. */

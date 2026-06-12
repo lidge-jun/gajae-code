@@ -356,8 +356,12 @@ interface ExtensionManifest {
 
 async function readExtensionManifest(packageJsonPath: string): Promise<ExtensionManifest | null> {
 	try {
-		const pkg = (await Bun.file(packageJsonPath).json()) as { gjc?: ExtensionManifest; pi?: ExtensionManifest };
-		const manifest = pkg.gjc ?? pkg.pi;
+		const pkg = (await Bun.file(packageJsonPath).json()) as {
+			jwc?: ExtensionManifest;
+			gjc?: ExtensionManifest;
+			pi?: ExtensionManifest;
+		};
+		const manifest = pkg.jwc ?? pkg.gjc ?? pkg.pi;
 		if (manifest && typeof manifest === "object") {
 			return manifest;
 		}
@@ -502,7 +506,7 @@ export async function discoverAndLoadExtensions(
 		}
 	};
 
-	// 1. Discover extension modules via capability API (native .gjc/.pi only)
+	// 1. Discover extension modules via capability API (native .jwc/.pi only)
 	const discovered = await loadCapability<ExtensionModule>(extensionModuleCapability.id, { cwd });
 	for (const ext of discovered.items) {
 		if (ext._source.provider !== "native") continue;

@@ -8,7 +8,7 @@ export function gjcPluginUserRoot(): string {
 }
 
 export function gjcPluginProjectRoot(cwd: string): string {
-	return path.join(cwd, ".gjc", "gjc-plugins");
+	return path.join(cwd, ".jwc", "gjc-plugins");
 }
 
 function isEnoent(error: unknown): boolean {

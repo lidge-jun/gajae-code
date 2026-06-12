@@ -544,7 +544,7 @@ function isEnoent(error: unknown): error is FsError {
 }
 function stateWriterOptions(filePath: string, category: "state" | "ledger" | "report" | "prune", verb: string) {
 	const resolved = path.resolve(filePath);
-	const marker = `${path.sep}.gjc${path.sep}`;
+	const marker = `${path.sep}.jwc${path.sep}`;
 	const markerIndex = resolved.indexOf(marker);
 	const cwd = markerIndex >= 0 ? resolved.slice(0, markerIndex) : process.cwd();
 	return { cwd, audit: { category, verb, owner: "gjc-runtime" as const } };
@@ -661,7 +661,7 @@ function workerIntegrationDedupePath(dir: string, worker: string): string {
 export function resolveGjcTeamStateRoot(cwd = process.cwd(), env: NodeJS.ProcessEnv = process.env): string {
 	const explicit = env.GJC_TEAM_STATE_ROOT?.trim();
 	if (explicit) return path.resolve(cwd, explicit);
-	return path.join(cwd, ".gjc", "state", "team");
+	return path.join(cwd, ".jwc", "state", "team");
 }
 
 async function readJsonFile<T>(filePath: string): Promise<T | null> {
@@ -996,7 +996,7 @@ async function writeWorkerLifecycleForConfig(
 }
 
 function teamModeStatePath(): string {
-	return path.join(".gjc", "state", "team-state.json");
+	return path.join(".jwc", "state", "team-state.json");
 }
 
 export async function persistGjcTeamModeStateSummary(snapshot: GjcTeamSnapshot, cwd = process.cwd()): Promise<void> {
@@ -1917,7 +1917,7 @@ function integrationReportPath(dir: string): string {
 	return path.join(dir, "integration-report.md");
 }
 function commitHygieneLedgerPath(config: GjcTeamConfig): string {
-	return path.join(config.leader_cwd, ".gjc", "reports", "team-commit-hygiene", `${config.team_name}.ledger.json`);
+	return path.join(config.leader_cwd, ".jwc", "reports", "team-commit-hygiene", `${config.team_name}.ledger.json`);
 }
 function integrationNowState(
 	status: GjcTeamIntegrationStatus,
@@ -1983,11 +1983,11 @@ export type GjcWorkerCheckpointClassification =
 
 const UNMERGED_GIT_STATUS_CODES = new Set(["DD", "AU", "UD", "UA", "DU", "AA", "UU"]);
 const PROTECTED_WORKER_CHECKPOINT_PREFIXES = [
-	".gjc/state/",
-	".gjc/logs/",
-	".gjc/reports/",
-	".gjc/tmp/",
-	".gjc/ultragoal/",
+	".jwc/state/",
+	".jwc/logs/",
+	".jwc/reports/",
+	".jwc/tmp/",
+	".jwc/ultragoal/",
 ];
 
 function parsePorcelainStatusFiles(stdout: string): string[] {

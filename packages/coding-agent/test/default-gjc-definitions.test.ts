@@ -170,7 +170,7 @@ describe("default GJC definitions", () => {
 		expect(section).toContain("Advisory findings are included in the gate report only");
 	});
 
-	it("keeps the four role agents bundled when project .gjc is absent", async () => {
+	it("keeps the four role agents bundled when project .jwc is absent", async () => {
 		await withTempHome(async home => {
 			const repoRoot = await makeTempRoot();
 			const agents = await discoverAgents(repoRoot, home);
@@ -232,7 +232,7 @@ describe("default GJC definitions", () => {
 			process.env.GJC_BRAND_NAME = "gjc";
 			try {
 				const repoRoot = await makeTempRoot();
-				const projectGjcRoot = path.join(repoRoot, ".gjc");
+				const projectGjcRoot = path.join(repoRoot, ".jwc");
 				await installDefaultGjcDefinitions({ targetRoot: projectGjcRoot });
 
 				const skills = await loadSkills({
@@ -261,10 +261,10 @@ describe("default GJC definitions", () => {
 		});
 	});
 
-	it("preserves project .gjc agent overrides at runtime", async () => {
+	it("preserves project .jwc agent overrides at runtime", async () => {
 		await withTempHome(async home => {
 			const repoRoot = await makeTempRoot();
-			const agentsDir = path.join(repoRoot, ".gjc", "agents");
+			const agentsDir = path.join(repoRoot, ".jwc", "agents");
 			await fs.mkdir(agentsDir, { recursive: true });
 			await Bun.write(
 				path.join(agentsDir, "executor.md"),
@@ -298,7 +298,7 @@ Project executor override body.
 			expect(ultragoal).toContain(name);
 		}
 		expect(systemPrompt).toContain("delegate bounded slices to `executor`");
-		expect(systemPrompt).toContain("committed repo-visible `.gjc` defaults are not the source of truth");
+		expect(systemPrompt).toContain("committed repo-visible `.jwc` defaults are not the source of truth");
 		expect(ultragoal).toContain("run `ralplan` first");
 		expect(ultragoal).toContain("Role agents return implementation/review evidence");
 		expect(ultragoal).toContain("await timeout only limits the leader's wait");
@@ -332,14 +332,14 @@ Project executor override body.
 		expect(jawInterview).toBeDefined();
 		const content = jawInterview?.content ?? "";
 
-		for (const required of ["ask", ".gjc/state", "pending approval"]) {
+		for (const required of ["ask", ".jwc/state", "pending approval"]) {
 			expect(content).toContain(required);
 		}
 		expect(content).toContain("/skill:ralplan");
 		expect(content).toContain("/skill:team");
 		expect(content).toContain("`jwc ralplan` is a native CLI");
-		expect(content).toContain("Direct `.gjc/` file edits are forbidden");
-		expect(content).toContain("do not edit `.gjc/state` directly without force override");
+		expect(content).toContain("Direct `.jwc/` file edits are forbidden");
+		expect(content).toContain("do not edit `.jwc/state` directly without force override");
 		expect(content).toContain("default `0.05`");
 		expect(content).toContain("language.instruction");
 		expect(content).toContain("Do not surprise a Korean session with English questions");
@@ -374,9 +374,9 @@ Project executor override body.
 		expect(content).toContain("--stage planner");
 		expect(content).toContain("--stage architect");
 		expect(content).toContain("--stage critic");
-		expect(content).toContain("do not directly edit `.gjc/plans`");
+		expect(content).toContain("do not directly edit `.jwc/plans`");
 		expect(content).toContain(
-			"Direct `write`, `edit`, or `ast_edit` calls against `.gjc/specs`, `.gjc/plans`, `.gjc/state`, or any other `.gjc/` path are forbidden",
+			"Direct `write`, `edit`, or `ast_edit` calls against `.jwc/specs`, `.jwc/plans`, `.jwc/state`, or any other `.jwc/` path are forbidden",
 		);
 	});
 
@@ -416,7 +416,7 @@ Project executor override body.
 	it("does not make installed fragments reachable as skill-relative internal URL assets", async () => {
 		await withTempHome(async () => {
 			const repoRoot = await makeTempRoot();
-			await installDefaultGjcDefinitions({ targetRoot: path.join(repoRoot, ".gjc") });
+			await installDefaultGjcDefinitions({ targetRoot: path.join(repoRoot, ".jwc") });
 
 			const skills = await loadSkills({
 				cwd: repoRoot,
@@ -439,7 +439,7 @@ Project executor override body.
 	it("does not make the ultragoal ai-slop-cleaner fragment reachable as a skill-relative internal URL asset", async () => {
 		await withTempHome(async () => {
 			const repoRoot = await makeTempRoot();
-			await installDefaultGjcDefinitions({ targetRoot: path.join(repoRoot, ".gjc") });
+			await installDefaultGjcDefinitions({ targetRoot: path.join(repoRoot, ".jwc") });
 
 			const skills = await loadSkills({
 				cwd: repoRoot,
@@ -462,7 +462,7 @@ Project executor override body.
 });
 
 describe("bundled skills CLI", () => {
-	it("reads embedded workflow skills from outside the repository without .gjc files", async () => {
+	it("reads embedded workflow skills from outside the repository without .jwc files", async () => {
 		const externalRoot = await makeTempRoot();
 		const proc = Bun.spawn(
 			[

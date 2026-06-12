@@ -6,7 +6,7 @@ Steps:
 1. Run the jaw-interview workflow for the user's request (`/skill:jaw-interview` engine; CLI surface: `interview`). Keep rounds short: 1–3 questions per round, steer toward the weakest of the 4 dimensions (goal / constraint / success / ontology).
 2. When all dimensions are covered and no blocking unknowns remain, persist the final spec:
    `interview --write --stage final --slug <slug> --spec <final-spec.md>`
-   The spec lands at `.gjc/specs/jaw-interview-<slug>.md` and is recorded as `spec_ref` for this orchestration.
+   The spec lands at `.jwc/specs/jaw-interview-<slug>.md` and is recorded as `spec_ref` for this orchestration.
 3. Suggest the next stage with a one-click hint — do NOT auto-advance (D050-2):
    "Ready for planning. Run `orchestrate p` to proceed."
 

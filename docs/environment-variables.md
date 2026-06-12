@@ -18,8 +18,8 @@ Most runtime lookups use `$env` from `@gajae-code/utils` (`packages/utils/src/en
 
 1. Existing process environment (`Bun.env`)
 2. Project `.env` (`$PWD/.env`) for keys not already set
-3. Agent `.env` (`~/.gjc/agent/.env`, respecting `JWC_CONFIG_DIR` / `JWC_CODING_AGENT_DIR`) for keys not already set
-4. Config-root `.env` (`~/.gjc/.env`, respecting `JWC_CONFIG_DIR`) for keys not already set
+3. Agent `.env` (`~/.jwc/agent/.env`, respecting `JWC_CONFIG_DIR` / `JWC_CODING_AGENT_DIR`) for keys not already set
+4. Config-root `.env` (`~/.jwc/.env`, respecting `JWC_CONFIG_DIR`) for keys not already set
 5. Home `.env` (`~/.env`) for keys not already set
 
 Additional rule inside each `.env` file: `JWC_*` keys are mirrored onto their legacy `GJC_*` spellings at load time (062.1 safety net).
@@ -94,7 +94,7 @@ When the broker is enabled, the local SQLite credential store is bypassed and al
 | Variable                | Used for                                                                                          | Required when                                                                                                          | Notes / precedence                                                                                                                                                                                  |
 | ----------------------- | ------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `JWC_AUTH_BROKER_URL`   | Base URL of the remote auth-broker (e.g. `https://broker.tailnet:8765`); selects broker mode      | Resolving credentials through a broker; also required by `gjc auth-gateway serve` (the gateway is itself a broker client) | Wins over `auth.broker.url` in `config.yml`. When set with no resolvable token, `resolveAuthBrokerConfig()` hard-errors instead of falling back to local SQLite.                                    |
-| `JWC_AUTH_BROKER_TOKEN` | Bearer token sent on every broker endpoint except `/v1/healthz`                                   | `JWC_AUTH_BROKER_URL` is set and no token is available from `auth.broker.token` or `<config-dir>/auth-broker.token`     | Resolution: this env → `auth.broker.token` (`$ENV_NAME` indirection supported) → `<config-dir>/auth-broker.token` (mode `0600`). `<config-dir>` is `~/.gjc/` (respecting `JWC_CONFIG_DIR`).         |
+| `JWC_AUTH_BROKER_TOKEN` | Bearer token sent on every broker endpoint except `/v1/healthz`                                   | `JWC_AUTH_BROKER_URL` is set and no token is available from `auth.broker.token` or `<config-dir>/auth-broker.token`     | Resolution: this env → `auth.broker.token` (`$ENV_NAME` indirection supported) → `<config-dir>/auth-broker.token` (mode `0600`). `<config-dir>` is `~/.jwc/` (respecting `JWC_CONFIG_DIR`).         |
 
 The gateway has no dedicated env vars — it inherits `JWC_AUTH_BROKER_*`. Its own inbound bearer token lives at `<config-dir>/auth-gateway.token` and is managed via `gjc auth-gateway token`.
 
@@ -230,11 +230,11 @@ providers:
 
 `gjc team ...` starts tmux worker panes from the current tmux-backed leader session. Start that leader with `gjc --tmux` first; `gjc team` intentionally does not create or attach the leader session itself.
 
-`gjc team ... --dry-run --json` creates the same machine-readable state tree as a team launch without starting tmux panes. By default that state is written under `<cwd>/.gjc/state/team/<team>/`; treat it as ephemeral smoke-test/review state. Do not commit generated `.gjc/state/team` contents. Remove the generated team directory after a dry-run when the harness no longer needs it.
+`gjc team ... --dry-run --json` creates the same machine-readable state tree as a team launch without starting tmux panes. By default that state is written under `<cwd>/.jwc/state/team/<team>/`; treat it as ephemeral smoke-test/review state. Do not commit generated `.jwc/state/team` contents. Remove the generated team directory after a dry-run when the harness no longer needs it.
 
 | Variable | Behavior |
 | --- | --- |
-| `JWC_TEAM_STATE_ROOT` | Overrides the team state root (default `<cwd>/.gjc/state/team`) |
+| `JWC_TEAM_STATE_ROOT` | Overrides the team state root (default `<cwd>/.jwc/state/team`) |
 | `JWC_TEAM_TMUX_COMMAND` | tmux binary/command override for team launch |
 | `JWC_TEAM_WORKER_COMMAND` | Worker GJC command override |
 | `JWC_TEAM_WORKER_CLI` | Team worker CLI selector; accepted values are `auto` or `gjc` |
@@ -249,7 +249,7 @@ providers:
 | `JWC_COORDINATOR_MCP_WORKDIR_ROOTS` | Required allowlist for workdir and artifact paths. `gjc setup hermes` renders absolute normalized paths joined with the platform path delimiter (`:` on POSIX, `;` on Windows). The bridge parser also accepts commas, semicolons, and newlines for legacy manual configs. |
 | `JWC_COORDINATOR_MCP_MUTATIONS` | Enables mutating tool classes as a comma-separated list (`sessions`, `questions`, `reports`) or `all`. `sessions` covers session startup, prompt delivery, durable turn journal updates, queue, and force operations. Per-call `allow_mutation: true` is still required. |
 | `JWC_COORDINATOR_MCP_ARTIFACT_BYTE_CAP` | Max bytes returned by artifact reads (default `65536`, capped at `1048576`). |
-| `JWC_COORDINATOR_MCP_STATE_ROOT` | Bridge coordination state root (default `<cwd>/.gjc/state/coordinator-mcp`). |
+| `JWC_COORDINATOR_MCP_STATE_ROOT` | Bridge coordination state root (default `<cwd>/.jwc/state/coordinator-mcp`). |
 | `JWC_COORDINATOR_MCP_PROFILE` | Optional profile namespace for session/question/report state. Missing scope never widens to global session enumeration. |
 | `JWC_COORDINATOR_MCP_REPO` | Optional repo namespace for session/question/report state. Missing scope never widens to global session enumeration. |
 | `JWC_COORDINATOR_MCP_SESSION_COMMAND` | Optional GJC-compatible command used by mutating session startup to launch a detached tmux session. When unset, startup records a bridge session without tmux actuation unless a service adapter is injected. `gjc setup hermes` omits this by default and never hard-codes a provider/model; explicit values are preserved as user intent. |
@@ -333,7 +333,7 @@ OAuth host chain: `KIMI_CODE_OAUTH_HOST` → `KIMI_OAUTH_HOST` → `https://auth
 | `SEARXNG_ENDPOINT`, `SEARXNG_TOKEN`                 | SearXNG endpoint and optional bearer token                    |
 | `SEARXNG_BASIC_USERNAME`, `SEARXNG_BASIC_PASSWORD`  | SearXNG HTTP Basic Auth credentials                           |
 
-SearXNG also reads the equivalent `searxng.endpoint`, `searxng.token`, `searxng.basicUsername`, and `searxng.basicPassword` settings from `~/.gjc/agent/config.yml`; environment variables are fallbacks.
+SearXNG also reads the equivalent `searxng.endpoint`, `searxng.token`, `searxng.basicUsername`, and `searxng.basicPassword` settings from `~/.jwc/agent/config.yml`; environment variables are fallbacks.
 
 ### Anthropic web search auth chain
 
@@ -417,8 +417,8 @@ These are consumed via `@gajae-code/utils/dirs` and affect where coding-agent st
 
 | Variable              | Default / behavior                                                            |
 | --------------------- | ----------------------------------------------------------------------------- |
-| `JWC_CONFIG_DIR`       | Config root dirname under home (default `.gjc`)                               |
-| `JWC_CODING_AGENT_DIR` | Full override for agent directory (default `~/<JWC_CONFIG_DIR or .gjc>/agent`) |
+| `JWC_CONFIG_DIR`       | Config root dirname under home (default `.jwc`)                               |
+| `JWC_CODING_AGENT_DIR` | Full override for agent directory (default `~/<JWC_CONFIG_DIR or .jwc>/agent`) |
 | `PWD`                 | Used when matching canonical current working directory in path helpers        |
 
 ---

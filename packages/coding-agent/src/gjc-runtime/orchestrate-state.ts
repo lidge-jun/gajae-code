@@ -7,7 +7,7 @@
  * (`RequiredOnWriteEnvelopeSchema`) fail-closes on the 4 canonical slugs, so
  * native state has its own strict write schema + writer (D050-22 audit, 054 B1).
  *
- * Envelope file: `.gjc/state/pabcd-state.json` (logical contract name in the
+ * Envelope file: `.jwc/state/pabcd-state.json` (logical contract name in the
  * 050 decision docs: `pabcd.json` — D050-8). Transition table and the worker
  * verdict parser are ports of cli-jaw `src/orchestrator/state-machine.ts`
  * (`canTransition`, `parseWorkerVerdict`).
@@ -226,8 +226,8 @@ function encodeSessionSegment(value: string): string {
 
 function stateDirFor(cwd: string, sessionId: string | undefined): string {
 	return sessionId
-		? path.join(cwd, ".gjc", "state", "sessions", encodeSessionSegment(sessionId))
-		: path.join(cwd, ".gjc", "state");
+		? path.join(cwd, ".jwc", "state", "sessions", encodeSessionSegment(sessionId))
+		: path.join(cwd, ".jwc", "state");
 }
 
 export function pabcdStatePath(cwd: string, sessionId?: string): string {

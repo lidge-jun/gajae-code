@@ -34,7 +34,7 @@ describe("gjc state read markdown", () => {
 				"--mode",
 				"jaw-interview",
 				"--input",
-				JSON.stringify({ active: true, current_phase: "interviewing", artifact_path: ".gjc/specs/draft.md" }),
+				JSON.stringify({ active: true, current_phase: "interviewing", artifact_path: ".jwc/specs/draft.md" }),
 			],
 			root,
 		);
@@ -45,7 +45,7 @@ describe("gjc state read markdown", () => {
 		expect(markdown.stdout).toContain("- Current phase: interviewing");
 		expect(markdown.stdout).toContain("- Valid next transitions:");
 		expect(markdown.stdout).toContain("- Receipt: fresh");
-		expect(markdown.stdout).toContain(".gjc/specs/draft.md");
+		expect(markdown.stdout).toContain(".jwc/specs/draft.md");
 		expect(() => JSON.parse(markdown.stdout ?? "")).toThrow();
 
 		const json = await runNativeStateCommand(["read", "--mode", "jaw-interview", "--json"], root);

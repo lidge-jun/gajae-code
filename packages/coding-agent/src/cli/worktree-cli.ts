@@ -1,7 +1,7 @@
 /**
  * CLI handler for `gjc worktree` — list and clean up agent-managed worktrees.
  *
- * Layout under `~/.gjc/wt/`:
+ * Layout under `~/.jwc/wt/`:
  *
  *   - **PR-checkout worktrees** (`tools/gh.ts`): a regular git worktree dir
  *     containing a `.git` *file* that points back at
@@ -23,7 +23,7 @@ import * as git from "../utils/git";
 type WorktreeKind = "pr-checkout" | "task-isolation" | "empty" | "stray";
 
 export interface WorktreeEntry {
-	/** Absolute path to the worktree dir (or stray container) under `~/.gjc/wt/`. */
+	/** Absolute path to the worktree dir (or stray container) under `~/.jwc/wt/`. */
 	path: string;
 	/** Classification of what we found on disk. */
 	kind: WorktreeKind;
@@ -174,7 +174,7 @@ async function scanWorktrees(): Promise<WorktreeEntry[]> {
 			continue;
 		}
 
-		// Legacy nesting: ~/.gjc/wt/<encoded-project>/<branch-or-id>
+		// Legacy nesting: ~/.jwc/wt/<encoded-project>/<branch-or-id>
 		let children: string[];
 		try {
 			children = await fs.readdir(dir);

@@ -138,7 +138,7 @@ export function hashStructuredValue(value: unknown): string {
 }
 
 export function getUltragoalPaths(cwd: string): UltragoalPaths {
-	const dir = path.join(cwd, ".gjc", "ultragoal");
+	const dir = path.join(cwd, ".jwc", "ultragoal");
 	return {
 		dir,
 		briefPath: path.join(dir, "brief.md"),
@@ -1117,7 +1117,7 @@ async function readGjcGoalSnapshot(input: {
 	if (!input.value?.trim()) {
 		if (!input.required) return undefined;
 		throw new Error(
-			`${input.errorPrefix} require --gjc-goal-json from a fresh active goal({"op":"get"}) snapshot; this is the GJC goal-mode receipt, not the .gjc/ultragoal/goals.json goal record`,
+			`${input.errorPrefix} require --gjc-goal-json from a fresh active goal({"op":"get"}) snapshot; this is the GJC goal-mode receipt, not the .jwc/ultragoal/goals.json goal record`,
 		);
 	}
 	const snapshot = await readStructuredValue(input.cwd, input.value);
@@ -1126,12 +1126,12 @@ async function readGjcGoalSnapshot(input: {
 	const goalObject = qualityGateObject(snapshotObject?.goal) ?? qualityGateObject(detailsObject?.goal);
 	if (!goalObject)
 		throw new Error(
-			`${input.errorPrefix} require --gjc-goal-json with a goal object from goal({"op":"get"}); pass the active GJC goal-mode snapshot, not the .gjc/ultragoal/goals.json goal record`,
+			`${input.errorPrefix} require --gjc-goal-json with a goal object from goal({"op":"get"}); pass the active GJC goal-mode snapshot, not the .jwc/ultragoal/goals.json goal record`,
 		);
 	const updatedAt = snapshotUpdatedAtMilliseconds(goalObject.updatedAt);
 	if (!updatedAt)
 		throw new Error(
-			`${input.errorPrefix} require --gjc-goal-json goal.updatedAt as epoch milliseconds or an ISO timestamp from goal({"op":"get"}); pass the active GJC goal-mode snapshot, not the .gjc/ultragoal/goals.json goal record`,
+			`${input.errorPrefix} require --gjc-goal-json goal.updatedAt as epoch milliseconds or an ISO timestamp from goal({"op":"get"}); pass the active GJC goal-mode snapshot, not the .jwc/ultragoal/goals.json goal record`,
 		);
 	const nowMilliseconds = Date.now();
 	if (updatedAt < nowMilliseconds - GJC_GOAL_SNAPSHOT_MAX_AGE_MILLISECONDS) {
@@ -1150,7 +1150,7 @@ async function readGjcGoalSnapshot(input: {
 	}
 	if (!expectedObjectives.has(objective)) {
 		throw new Error(
-			`${input.errorPrefix} require --gjc-goal-json objective to match the active GJC goal-mode objective from goal({"op":"get"}), not the .gjc/ultragoal/goals.json goal ${input.goal?.id ?? "record"}`,
+			`${input.errorPrefix} require --gjc-goal-json objective to match the active GJC goal-mode objective from goal({"op":"get"}), not the .jwc/ultragoal/goals.json goal ${input.goal?.id ?? "record"}`,
 		);
 	}
 	if (goalObject.status !== "active") {
@@ -1432,7 +1432,7 @@ function renderUltragoalHelp(args: readonly string[]): string | null {
 			`  $ ${APP_NAME} ultragoal checkpoint --goal-id <id> --status <status> --evidence <text> [FLAGS]`,
 			"",
 			"FLAGS",
-			"      --goal-id=<value>            Durable .gjc/ultragoal goal id, e.g. G001",
+			"      --goal-id=<value>            Durable .jwc/ultragoal goal id, e.g. G001",
 			"      --status=<value>             pending|active|complete|failed|blocked|review_blocked|superseded",
 			"      --evidence=<value>           Completion or checkpoint evidence text",
 			"      --quality-gate-json=<value>  JSON string or path for complete checkpoints",
@@ -1442,7 +1442,7 @@ function renderUltragoalHelp(args: readonly string[]): string | null {
 			"COMPLETE CHECKPOINT RECEIPTS",
 			"  --quality-gate-json must be an object with architectReview, executorQa, and iteration.",
 			"  executorQa.contractCoverage[] rows require an obligation field; description is not a substitute.",
-			'  --gjc-goal-json must contain the active GJC goal-mode snapshot from goal({"op":"get"}), not the .gjc/ultragoal/goals.json goal record.',
+			'  --gjc-goal-json must contain the active GJC goal-mode snapshot from goal({"op":"get"}), not the .jwc/ultragoal/goals.json goal record.',
 			"  goal.updatedAt may be epoch milliseconds or an ISO timestamp and must be fresh.",
 			"",
 			"EXAMPLES",

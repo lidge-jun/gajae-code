@@ -21,7 +21,7 @@
  *
  * Skips unless a local gateway is reachable at the default `127.0.0.1:4000`
  * (override via `GJC_E2E_GATEWAY_URL`) AND the bearer token file exists at
- * `~/.gjc/auth-gateway.token`.
+ * `~/.jwc/auth-gateway.token`.
  *
  * To run: `bun --cwd packages/ai test test/auth-gateway-cross-protocol-caching.test.ts`
  * with the gateway live (`gjc auth-gateway serve` or pm2).

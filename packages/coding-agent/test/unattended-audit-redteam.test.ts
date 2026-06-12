@@ -210,12 +210,12 @@ describe("UnattendedAuditLog red-team coverage", () => {
 		}
 	});
 
-	it("sanitizes defaultAuditPath run ids into a safe single segment under .gjc/audit/unattended", () => {
+	it("sanitizes defaultAuditPath run ids into a safe single segment under .jwc/audit/unattended", () => {
 		const root = tempDir();
 		const auditPath = defaultAuditPath("../run with/slashes and spaces", root);
 		const relative = path.relative(root, auditPath);
-		expect(relative).toBe(path.join(".gjc", "audit", "unattended", ".._run_with_slashes_and_spaces.jsonl"));
-		expect(path.dirname(auditPath)).toBe(path.join(root, ".gjc", "audit", "unattended"));
+		expect(relative).toBe(path.join(".jwc", "audit", "unattended", ".._run_with_slashes_and_spaces.jsonl"));
+		expect(path.dirname(auditPath)).toBe(path.join(root, ".jwc", "audit", "unattended"));
 		expect(path.basename(auditPath)).not.toContain("/");
 		expect(path.basename(auditPath)).not.toContain(" ");
 	});

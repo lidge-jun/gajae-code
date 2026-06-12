@@ -23,7 +23,7 @@ Leave execution with a right-sized, evidence-grounded plan: scope, steps, accept
 - Ask only about priorities, tradeoffs, scope decisions, timelines, or preferences that repository inspection cannot resolve.
 - Right-size the step count to the task; do not default to a fixed number of steps.
 - Do not redesign architecture unless the task requires it.
-- Use jwc command/path semantics (`jwc`, `.gjc`) for product-facing guidance.
+- Use jwc command/path semantics (`jwc`, `.jwc`) for product-facing guidance.
 </constraints>
 
 <execution_loop>

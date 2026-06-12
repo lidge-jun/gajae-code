@@ -62,7 +62,7 @@ describe("gjc state no-lock concurrency fuzz", () => {
 		);
 
 		await rebuildActiveSnapshot(root, undefined, { cwd: root });
-		const snapshot = await readJson<SkillActiveState>(path.join(root, ".gjc", "state", "skill-active-state.json"));
+		const snapshot = await readJson<SkillActiveState>(path.join(root, ".jwc", "state", "skill-active-state.json"));
 		const activeSkills = snapshot.active_skills ?? [];
 		const bySkill = new Map(activeSkills.map(entry => [entry.skill, entry]));
 
@@ -79,7 +79,7 @@ describe("gjc state no-lock concurrency fuzz", () => {
 
 	it("allows exactly one O_EXCL claim winner when workers race the same team claim file", async () => {
 		const root = await tempDir();
-		const claimPath = ".gjc/state/team/claims/shared-task.json";
+		const claimPath = ".jwc/state/team/claims/shared-task.json";
 		const attempts = await Promise.all(
 			Array.from({ length: WORKER_COUNT }, async (_, index) => {
 				try {
@@ -111,7 +111,7 @@ describe("gjc state no-lock concurrency fuzz", () => {
 
 	it("keeps concurrent audit JSONL appends complete and parseable", async () => {
 		const root = await tempDir();
-		const auditPath = ".gjc/state/audit.jsonl";
+		const auditPath = ".jwc/state/audit.jsonl";
 		const ids = Array.from({ length: WORKER_COUNT }, (_, index) => `audit-${index}`);
 
 		await Promise.all(

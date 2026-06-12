@@ -3,8 +3,8 @@
 /**
  * G4 verifier for bundled GJC skill documentation.
  *
- *   --report  (default)  list command references and direct `.gjc` shell mutations, exit 0
- *   --fail               exit non-zero on manifest drift or direct `.gjc` shell mutations
+ *   --report  (default)  list command references and direct `.jwc` shell mutations, exit 0
+ *   --fail               exit non-zero on manifest drift or direct `.jwc` shell mutations
  */
 
 import * as fs from "node:fs";
@@ -69,7 +69,7 @@ function collectDirectGjcMutations(file: string, content: string): MutationRef[]
 	const refs: MutationRef[] = [];
 	const relative = path.relative(repoRoot, file);
 	const lines = content.split("\n");
-	const mutationPattern = /(?:^|[;&|]\s*)(?:rm\s+(?:-[A-Za-z]*\s+)*|rmdir\s+|mkdir\s+(?:-[A-Za-z]*\s+)*|touch\s+|mv\s+|cp\s+|install\s+|tee\s+(?:-[A-Za-z]*\s+)*|printf\b[^|;>]*>|echo\b[^|;>]*>|cat\b[^|;>]*>|>+\s*)\.?\.gjc(?:\b|\/)/u;
+	const mutationPattern = /(?:^|[;&|]\s*)(?:rm\s+(?:-[A-Za-z]*\s+)*|rmdir\s+|mkdir\s+(?:-[A-Za-z]*\s+)*|touch\s+|mv\s+|cp\s+|install\s+|tee\s+(?:-[A-Za-z]*\s+)*|printf\b[^|;>]*>|echo\b[^|;>]*>|cat\b[^|;>]*>|>+\s*)\.?\.jwc(?:\b|\/)/u;
 	for (let i = 0; i < lines.length; i++) {
 		const line = stripInlineCode(lines[i] ?? "");
 		if (mutationPattern.test(line)) {
@@ -95,7 +95,7 @@ function main(): void {
 	const drift = commandRefs.filter(ref => !ref.valid);
 	console.log(`gjc skill docs verifier - scanned ${path.relative(repoRoot, skillsRoot)}/*/SKILL.md`);
 	console.log(`Found ${commandRefs.length} gjc command reference(s).`);
-	console.log(`Found ${mutationRefs.length} direct .gjc shell mutation example(s).\n`);
+	console.log(`Found ${mutationRefs.length} direct .jwc shell mutation example(s).\n`);
 
 	const byFile = new Map<string, CommandRef[]>();
 	for (const ref of commandRefs) {
@@ -118,10 +118,10 @@ function main(): void {
 		}
 	}
 
-	console.log(`\nSummary: ${drift.length} command drift issue(s), ${mutationRefs.length} direct .gjc shell mutation example(s).`);
+	console.log(`\nSummary: ${drift.length} command drift issue(s), ${mutationRefs.length} direct .jwc shell mutation example(s).`);
 
 	if (failMode && (drift.length > 0 || mutationRefs.length > 0)) {
-		console.error(`\nG4 FAIL: skill docs must reference manifest verbs only and avoid direct .gjc shell mutation examples.`);
+		console.error(`\nG4 FAIL: skill docs must reference manifest verbs only and avoid direct .jwc shell mutation examples.`);
 		process.exit(1);
 	}
 }

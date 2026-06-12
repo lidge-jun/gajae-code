@@ -3,7 +3,7 @@ import { Command } from "@gajae-code/utils/cli";
 import { runNativeStateCommand } from "../gjc-runtime/state-runtime";
 
 export default class State extends Command {
-	static description = `Read or update ${APP_NAME.toUpperCase()} workflow state receipts under .gjc/state`;
+	static description = `Read or update ${APP_NAME.toUpperCase()} workflow state receipts under .jwc/state`;
 	static strict = false;
 	static examples = [
 		`$ ${APP_NAME} state read --input '{"mode":"jaw-interview"}' --json`,

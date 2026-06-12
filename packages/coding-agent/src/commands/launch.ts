@@ -144,7 +144,7 @@ export default class Index extends Command {
 		`# Limit model cycling to specific models\n  ${APP_NAME} --models claude-sonnet,claude-haiku,gpt-4o`,
 		`# Activate a model profile for this session\n  ${APP_NAME} --mpreset codex-standard`,
 		`# Persist a model profile as the default\n  ${APP_NAME} --mpreset opencode-go-pro --default`,
-		`# Export a session file to HTML\n  ${APP_NAME} --export ~/.gjc/agent/sessions/--path--/session.jsonl`,
+		`# Export a session file to HTML\n  ${APP_NAME} --export ~/.jwc/agent/sessions/--path--/session.jsonl`,
 	];
 
 	static strict = false;

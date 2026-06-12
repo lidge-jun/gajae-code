@@ -12,15 +12,15 @@ import {
 import { RequiredOnWriteEnvelopeSchema } from "./state-schema";
 
 /**
- * Sole sanctioned project `.gjc/**` writer module (gate G1).
+ * Sole sanctioned project `.jwc/**` writer module (gate G1).
  *
- * All native `.gjc/**` filesystem mutations must route through these primitives.
- * The primitives validate project `.gjc/**` ownership, create parent directories,
+ * All native `.jwc/**` filesystem mutations must route through these primitives.
+ * The primitives validate project `.jwc/**` ownership, create parent directories,
  * and emit workflow receipts or audit entries where applicable by the caller's
  * supplied mutation context. No lockfiles are used; isolation is by atomic rename,
  * append, O_EXCL creates, conditional deletes, per-entry active-state files,
  * and derived active-state snapshots.
- * Transaction journals are per mutation id under `.gjc/state/transactions/`;
+ * Transaction journals are per mutation id under `.jwc/state/transactions/`;
  * they are recovery evidence only, never global locks or waiters, so stale
  * journals do not block unrelated state reads or writes.
  */
@@ -164,11 +164,11 @@ function cwdForOptions(options?: StateWriterOptions): string {
 function resolveGjcTarget(targetPath: string, cwd = process.cwd()): string {
 	if (!targetPath.trim()) throw new Error("targetPath is required");
 	const projectRoot = path.resolve(cwd);
-	const gjcRoot = path.join(projectRoot, ".gjc");
+	const gjcRoot = path.join(projectRoot, ".jwc");
 	const resolved = path.resolve(projectRoot, targetPath);
 	const relative = path.relative(gjcRoot, resolved);
 	if (relative === "" || relative.startsWith("..") || path.isAbsolute(relative)) {
-		throw new Error(`target path must be within project .gjc/**: ${targetPath}`);
+		throw new Error(`target path must be within project .jwc/**: ${targetPath}`);
 	}
 	return resolved;
 }
@@ -254,7 +254,7 @@ function encodePathSegment(value: string): string {
 function activeStateDir(cwd: string, sessionScope?: string | ActiveSessionScope): string {
 	const sessionId = typeof sessionScope === "string" ? sessionScope : sessionScope?.sessionId;
 	const normalizedSessionId = safeString(sessionId).trim();
-	const stateDir = path.join(cwd, ".gjc", "state");
+	const stateDir = path.join(cwd, ".jwc", "state");
 	return normalizedSessionId
 		? path.join(stateDir, "sessions", encodePathSegment(normalizedSessionId), "active")
 		: path.join(stateDir, "active");
@@ -263,7 +263,7 @@ function activeStateDir(cwd: string, sessionScope?: string | ActiveSessionScope)
 function activeSnapshotPath(cwd: string, sessionScope?: string | ActiveSessionScope): string {
 	const sessionId = typeof sessionScope === "string" ? sessionScope : sessionScope?.sessionId;
 	const normalizedSessionId = safeString(sessionId).trim();
-	const stateDir = path.join(cwd, ".gjc", "state");
+	const stateDir = path.join(cwd, ".jwc", "state");
 	return normalizedSessionId
 		? path.join(stateDir, "sessions", encodePathSegment(normalizedSessionId), "skill-active-state.json")
 		: path.join(stateDir, "skill-active-state.json");
@@ -489,8 +489,8 @@ export async function removeFileAudited(targetPath: string, options?: StateWrite
 }
 
 /**
- * Active entry files under `.gjc/state/active/<skill>.json` and
- * `.gjc/state/sessions/<id>/active/<skill>.json` are authoritative. The
+ * Active entry files under `.jwc/state/active/<skill>.json` and
+ * `.jwc/state/sessions/<id>/active/<skill>.json` are authoritative. The
  * adjacent `skill-active-state.json` file is only a derived cache rebuilt from
  * those entries, so concurrent snapshot rebuilds can race without losing any
  * writer's per-skill state.
@@ -701,14 +701,14 @@ export async function forceOverwrite(
 }
 
 export async function appendAuditEntry(cwd: string, entry: AuditEntry): Promise<string> {
-	const filePath = resolveGjcTarget(path.join(".gjc", "state", "audit.jsonl"), cwd);
+	const filePath = resolveGjcTarget(path.join(".jwc", "state", "audit.jsonl"), cwd);
 	await fs.mkdir(path.dirname(filePath), { recursive: true });
 	await fs.appendFile(filePath, `${JSON.stringify(entry)}\n`, "utf-8");
 	return filePath;
 }
 
 function transactionJournalPath(cwd: string, mutationId: string): string {
-	return path.join(path.resolve(cwd), ".gjc", "state", "transactions", `${encodePathSegment(mutationId)}.json`);
+	return path.join(path.resolve(cwd), ".jwc", "state", "transactions", `${encodePathSegment(mutationId)}.json`);
 }
 
 export async function readWorkflowTransactionJournal(

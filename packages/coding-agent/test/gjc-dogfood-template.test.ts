@@ -12,8 +12,8 @@ describe("GJC dogfood skill template", () => {
 		const defaultSkillNames = defaultSkillEntries.map(entry => entry.split("/")[0]).sort();
 
 		expect(defaultSkillNames).toEqual(expectedWorkflowSkills);
-		expect(template).toContain("~/.gjc/skills/gjc-dogfood/SKILL.md");
-		expect(template).toContain("<project>/.gjc/skills/gjc-dogfood/SKILL.md");
+		expect(template).toContain("~/.jwc/skills/gjc-dogfood/SKILL.md");
+		expect(template).toContain("<project>/.jwc/skills/gjc-dogfood/SKILL.md");
 		expect(template).toContain("The live issue has no comment approving a fifth bundled default workflow skill");
 		expect(template).toContain("Use when running or reviewing work through jwc sessions");
 		expect(template).toContain("jwc --tmux --worktree <path>");

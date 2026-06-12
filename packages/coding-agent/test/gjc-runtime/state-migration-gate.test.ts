@@ -27,7 +27,7 @@ async function readJson(filePath: string): Promise<Record<string, unknown>> {
 }
 
 async function readAuditEntries(cwd: string): Promise<Array<Record<string, unknown>>> {
-	const raw = await fs.readFile(path.join(cwd, ".gjc/state/audit.jsonl"), "utf-8");
+	const raw = await fs.readFile(path.join(cwd, ".jwc/state/audit.jsonl"), "utf-8");
 	return raw
 		.trim()
 		.split("\n")
@@ -38,7 +38,7 @@ async function readAuditEntries(cwd: string): Promise<Array<Record<string, unkno
 describe("G7 gjc state migration gate", () => {
 	it("normalizes legacy state purely and persists migration only through the state command", async () => {
 		await withTempCwd(async cwd => {
-			const statePath = path.join(cwd, ".gjc/state/ralplan-state.json");
+			const statePath = path.join(cwd, ".jwc/state/ralplan-state.json");
 			const legacy = {
 				current_phase: "planning",
 				extension_field: { nested: true },
@@ -79,7 +79,7 @@ describe("G7 gjc state migration gate", () => {
 
 	it("rejects tampered migrated state without --force and leaves the file untouched", async () => {
 		await withTempCwd(async cwd => {
-			const statePath = path.join(cwd, ".gjc/state/ralplan-state.json");
+			const statePath = path.join(cwd, ".jwc/state/ralplan-state.json");
 			const legacy = {
 				current_phase: "planning",
 				extension_field: { nested: true },
@@ -109,7 +109,7 @@ describe("G7 gjc state migration gate", () => {
 
 	it("migrates tampered state with --force and audits the forced mismatch", async () => {
 		await withTempCwd(async cwd => {
-			const statePath = path.join(cwd, ".gjc/state/ralplan-state.json");
+			const statePath = path.join(cwd, ".jwc/state/ralplan-state.json");
 			const legacy = {
 				current_phase: "planning",
 				extension_field: { nested: true },

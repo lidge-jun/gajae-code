@@ -207,7 +207,7 @@ export async function runRpcMode(
 	// Unattended control plane (#318/#319/#323/G011): routes negotiate_unattended +
 	// workflow_gate_response and lets skill runtimes emit gates over RPC.
 	const gateStore = new FileGateStore(
-		path.join(session.sessionManager.getCwd(), ".gjc", "state", "workflow-gates", `${session.sessionId}.json`),
+		path.join(session.sessionManager.getCwd(), ".jwc", "state", "workflow-gates", `${session.sessionId}.json`),
 	);
 	const unattendedControlPlane = new UnattendedSessionControlPlane({
 		runId: session.sessionId,

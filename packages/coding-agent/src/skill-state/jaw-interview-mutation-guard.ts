@@ -15,7 +15,7 @@ import {
 export const JAW_INTERVIEW_MUTATION_BLOCK_MESSAGE =
 	"Jaw-interview phase boundary: continue gathering context/questions/risks and emit a handoff/spec before code edits. Mutation tools and patch execution are blocked while jaw-interview is active; finalize specs through `jwc interview --write --stage final` or hand off to an execution phase.";
 export const WORKFLOW_STATE_MUTATION_BLOCK_MESSAGE =
-	".gjc workflow state and artifacts are runtime-owned. Agent mutation tools cannot edit `.gjc/**`; use the sanctioned `jwc` CLI instead.";
+	".jwc workflow state and artifacts are runtime-owned. Agent mutation tools cannot edit `.jwc/**`; use the sanctioned `jwc` CLI instead.";
 
 const BLOCKED_TOOL_NAMES = new Set(["edit", "write", "ast_edit", "bash"]);
 const ARCHIVE_OR_SQLITE_BASE_RE = /^(.+?\.(?:tar\.gz|sqlite3|sqlite|db3|zip|tgz|tar|db))(?:$|:)/i;
@@ -71,7 +71,7 @@ function encodePathSegment(value: string): string {
 }
 
 function modeStatePath(cwd: string, skill: string, sessionId?: string): string {
-	const stateDir = path.join(cwd, ".gjc", "state");
+	const stateDir = path.join(cwd, ".jwc", "state");
 	const fileName = `${skill}-state.json`;
 	if (sessionId) return path.join(stateDir, "sessions", encodePathSegment(sessionId), fileName);
 	return path.join(stateDir, fileName);
@@ -354,7 +354,7 @@ function relativeGjcSegments(cwd: string, rawPath: string): string[] | null {
 
 function blockedWorkflowStateSkill(cwd: string, rawPath: string): CanonicalGjcWorkflowSkill | null {
 	const segments = relativeGjcSegments(cwd, rawPath);
-	if (segments?.[0] !== ".gjc") return null;
+	if (segments?.[0] !== ".jwc") return null;
 	if (segments[1] === "specs" || segments[1] === "plans") return null;
 	if (segments[1] !== "state") return null;
 	const fileName = segments.at(-1) ?? "";
@@ -375,12 +375,12 @@ function firstBlockedWorkflowStateSkill(cwd: string, targets: ExtractedTargets):
 
 function isAllowlistedPath(cwd: string, rawPath: string): boolean {
 	const segments = relativeGjcSegments(cwd, rawPath);
-	if (segments?.[0] !== ".gjc") return false;
+	if (segments?.[0] !== ".jwc") return false;
 	return segments[1] === "specs" || segments[1] === "plans";
 }
 function isBlockedGjcPath(cwd: string, rawPath: string): boolean {
 	const segments = relativeGjcSegments(cwd, rawPath);
-	return segments?.[0] === ".gjc";
+	return segments?.[0] === ".jwc";
 }
 
 function hasBlockedGjcTarget(cwd: string, targets: ExtractedTargets): boolean {

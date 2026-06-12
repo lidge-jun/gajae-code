@@ -35,7 +35,7 @@ async function writeState(root: string, mode: string, state: Record<string, unkn
 }
 
 async function writeRawState(root: string, mode: string, state: unknown) {
-	const stateDir = path.join(root, ".gjc", "state");
+	const stateDir = path.join(root, ".jwc", "state");
 	await fs.mkdir(stateDir, { recursive: true });
 	await fs.writeFile(
 		path.join(stateDir, `${mode}-state.json`),
@@ -97,7 +97,7 @@ describe("gjc state write hardening", () => {
 		const result = await writeState(root, "ralplan", { active: true });
 		expect(result.status).toBe(0);
 		expect(receiptFrom(result.stdout).current_phase).toBe("planner");
-		const onDisk = JSON.parse(await fs.readFile(path.join(root, ".gjc", "state", "ralplan-state.json"), "utf-8"));
+		const onDisk = JSON.parse(await fs.readFile(path.join(root, ".jwc", "state", "ralplan-state.json"), "utf-8"));
 		expect(onDisk.current_phase).toBe("planner");
 	});
 
@@ -106,7 +106,7 @@ describe("gjc state write hardening", () => {
 		const result = await writeState(root, "ralplan", { current_phase: "" });
 		expect(result.status).toBe(0);
 		expect(receiptFrom(result.stdout).current_phase).toBe("planner");
-		const onDisk = JSON.parse(await fs.readFile(path.join(root, ".gjc", "state", "ralplan-state.json"), "utf-8"));
+		const onDisk = JSON.parse(await fs.readFile(path.join(root, ".jwc", "state", "ralplan-state.json"), "utf-8"));
 		expect(onDisk.current_phase).toBe("planner");
 	});
 
@@ -122,7 +122,7 @@ describe("gjc state write hardening", () => {
 		const result = await writeState(root, "ralplan", { active: true });
 		expect(result.status).toBe(0);
 		expect(receiptFrom(result.stdout).current_phase).toBe("planner");
-		const onDisk = JSON.parse(await fs.readFile(path.join(root, ".gjc", "state", "ralplan-state.json"), "utf-8"));
+		const onDisk = JSON.parse(await fs.readFile(path.join(root, ".jwc", "state", "ralplan-state.json"), "utf-8"));
 		expect(onDisk.current_phase).toBe("planner");
 	});
 
@@ -146,7 +146,7 @@ describe("gjc state write hardening", () => {
 
 	it("reads unknown legacy phases fail-open", async () => {
 		const root = await tempDir();
-		const stateDir = path.join(root, ".gjc", "state");
+		const stateDir = path.join(root, ".jwc", "state");
 		await fs.mkdir(stateDir, { recursive: true });
 		await fs.writeFile(
 			path.join(stateDir, "ralplan-state.json"),
@@ -229,7 +229,7 @@ describe("gjc state write hardening", () => {
 		const written = receiptFrom(result.stdout);
 		expect(written).toMatchObject({ ok: true, skill: "jaw-interview", current_phase: "interviewing" });
 		const onDisk = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".jwc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		expect(onDisk.rounds).toEqual(extension.rounds);
 		expect(onDisk.topology).toEqual(extension.topology);

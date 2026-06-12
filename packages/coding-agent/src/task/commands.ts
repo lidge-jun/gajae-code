@@ -65,7 +65,7 @@ export function loadBundledCommands(): WorkflowCommand[] {
 /**
  * Discover all available commands.
  *
- * Precedence (highest wins): .gjc project, .gjc user, then bundled
+ * Precedence (highest wins): .jwc project, .jwc user, then bundled
  */
 export async function discoverCommands(cwd: string): Promise<WorkflowCommand[]> {
 	const resolvedCwd = path.resolve(cwd);

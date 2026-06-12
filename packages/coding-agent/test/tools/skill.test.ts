@@ -39,8 +39,8 @@ function encodeSessionSegment(value: string): string {
 }
 
 function stateBaseDir(cwd: string, sessionId?: string): string {
-	if (!sessionId) return path.join(cwd, ".gjc/state");
-	return path.join(cwd, ".gjc/state/sessions", encodeSessionSegment(sessionId));
+	if (!sessionId) return path.join(cwd, ".jwc/state");
+	return path.join(cwd, ".jwc/state/sessions", encodeSessionSegment(sessionId));
 }
 
 async function writeCallerModeState(

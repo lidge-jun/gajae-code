@@ -2190,7 +2190,7 @@
 - Simplified SSE stream parsing using readLines utility
 - Updated test framework from vitest to bun:test
 - Replaced temp directory creation with TempDir API
-- Changed credential storage from auth.json to ~/.gjc/agent/agent.db
+- Changed credential storage from auth.json to ~/.jwc/agent/agent.db
 - Changed CLI command examples from npx to bunx
 - Refactored OAuth flows to use common callback server base class
 - Updated OAuth provider interfaces to use controller pattern

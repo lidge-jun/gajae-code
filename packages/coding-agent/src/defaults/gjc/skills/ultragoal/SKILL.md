@@ -11,11 +11,11 @@ Use when the user asks for `ultragoal`, `create-goals`, `complete-goals`, durabl
 
 ## Purpose
 
-`ultragoal` turns a brief into repo-native artifacts and then drives a jwc goal safely through the unified `goal` tool. New plans default to a stable pointer-style aggregate jwc goal for the whole durable plan in `.gjc/ultragoal/goals.json`, including later accepted/appended stories under the original brief constraints, while jwc tracks G001/G002 story progress in the ledger. Ultragoal does not require any `/goal` slash-command between runs. For back-to-back ultragoal runs in one session/thread, call `goal({"op":"drop"})` only when `goal({"op":"get"})` still reports an active aggregate; then call `goal({"op":"create"})`. The goal tool stays armed across drop so the next create works in-session, and no slash-command cleanup exists or is required.
+`ultragoal` turns a brief into repo-native artifacts and then drives a jwc goal safely through the unified `goal` tool. New plans default to a stable pointer-style aggregate jwc goal for the whole durable plan in `.jwc/ultragoal/goals.json`, including later accepted/appended stories under the original brief constraints, while jwc tracks G001/G002 story progress in the ledger. Ultragoal does not require any `/goal` slash-command between runs. For back-to-back ultragoal runs in one session/thread, call `goal({"op":"drop"})` only when `goal({"op":"get"})` still reports an active aggregate; then call `goal({"op":"create"})`. The goal tool stays armed across drop so the next create works in-session, and no slash-command cleanup exists or is required.
 
-- `.gjc/ultragoal/brief.md`
-- `.gjc/ultragoal/goals.json`
-- `.gjc/ultragoal/ledger.jsonl` (checkpoint and structured steering audit events)
+- `.jwc/ultragoal/brief.md`
+- `.jwc/ultragoal/goals.json`
+- `.jwc/ultragoal/ledger.jsonl` (checkpoint and structured steering audit events)
 
 Existing aggregate plans with the legacy enumerated objective are migrated to the stable pointer objective on read, persisted to `goals.json`, retained in `gjcObjectiveAliases` for already-active hidden goal reconciliation, and audited with an `aggregate_objective_migrated` ledger entry.
 
@@ -81,7 +81,7 @@ Use `goal({"op":"get"})` snapshots inside Ultragoal for ledger reconciliation. T
    - `jwc ultragoal create-goals --brief-file <path>`
    - `cat <brief> | jwc ultragoal create-goals --from-stdin`
    - `jwc ultragoal create-goals --gjc-goal-mode per-story --brief "<brief>"` only when one jwc goal context per story is explicitly preferred
-3. Inspect `.gjc/ultragoal/goals.json` and refine if needed.
+3. Inspect `.jwc/ultragoal/goals.json` and refine if needed.
 
 ## Complete goals
 
@@ -125,9 +125,9 @@ jwc ultragoal steer --directive-json ./steering.json --json
 
 Steering invariants:
 
-- Do not edit the aggregate goal objective, original brief constraints, quality gates, or completion status. The aggregate objective is a stable pointer to `.gjc/ultragoal/goals.json` and `.gjc/ultragoal/ledger.jsonl`, not an enumeration of initial goal ids.
-- Do not hard-delete goals, auto-complete work, weaken verification, or silently mutate `.gjc/ultragoal`.
-- Accepted and rejected attempts append structured audit entries to `.gjc/ultragoal/ledger.jsonl`.
+- Do not edit the aggregate goal objective, original brief constraints, quality gates, or completion status. The aggregate objective is a stable pointer to `.jwc/ultragoal/goals.json` and `.jwc/ultragoal/ledger.jsonl`, not an enumeration of initial goal ids.
+- Do not hard-delete goals, auto-complete work, weaken verification, or silently mutate `.jwc/ultragoal`.
+- Accepted and rejected attempts append structured audit entries to `.jwc/ultragoal/ledger.jsonl`.
 - Superseded goals remain in `goals.json` with steering metadata and are skipped for scheduling.
 - Blocked goals without replacements are skipped for scheduling but still block final completion until later explicit steering replaces or supersedes them.
 
@@ -146,18 +146,18 @@ When delegating with native subagents, an await timeout only limits the leader's
 
 If an Ultragoal request has no approved plan or consensus artifact, run `ralplan` first and preserve its PRD, test spec, role roster, and verification guidance in the Ultragoal ledger. Do not silently substitute ad-hoc execution for missing planning.
 
-The Ultragoal leader owns `.gjc/ultragoal/goals.json` and `.gjc/ultragoal/ledger.jsonl`. Role agents return implementation/review evidence; they do not checkpoint Ultragoal or mutate goal state.
+The Ultragoal leader owns `.jwc/ultragoal/goals.json` and `.jwc/ultragoal/ledger.jsonl`. Role agents return implementation/review evidence; they do not checkpoint Ultragoal or mutate goal state.
 
-For large subgoals with independent slices, the Ultragoal leader must spawn parallel `executor` subagents instead of doing serial solo work. Split only cleanly separable files/surfaces, give each executor bounded targets and acceptance criteria, and keep checkpoint ownership in the leader. Use `architect` / `critic` review lanes after integration; do not let worker agents mutate `.gjc/ultragoal` or call goal tools.
+For large subgoals with independent slices, the Ultragoal leader must spawn parallel `executor` subagents instead of doing serial solo work. Split only cleanly separable files/surfaces, give each executor bounded targets and acceptance criteria, and keep checkpoint ownership in the leader. Use `architect` / `critic` review lanes after integration; do not let worker agents mutate `.jwc/ultragoal` or call goal tools.
 
 ## Use Ultragoal and Team together
 
-Use ultragoal and team together for a durable Ultragoal story that benefits from one visible tmux worker session. Ultragoal remains leader-owned: `.gjc/ultragoal/goals.json` stores the story plan and `.gjc/ultragoal/ledger.jsonl` stores checkpoints. Team is the single-worker tmux execution engine and returns task/evidence status to the leader.
+Use ultragoal and team together for a durable Ultragoal story that benefits from one visible tmux worker session. Ultragoal remains leader-owned: `.jwc/ultragoal/goals.json` stores the story plan and `.jwc/ultragoal/ledger.jsonl` stores checkpoints. Team is the single-worker tmux execution engine and returns task/evidence status to the leader.
 
 The leader checkpoints Ultragoal from Team evidence with a fresh `goal({"op":"get"})` snapshot:
 
 ```sh
-jwc ultragoal checkpoint --goal-id <id> --status complete --evidence "<team evidence mentioning .gjc/ultragoal and <id>>" --gjc-goal-json <fresh-goal-get-json-or-path> --quality-gate-json <quality-gate-json-or-path>
+jwc ultragoal checkpoint --goal-id <id> --status complete --evidence "<team evidence mentioning .jwc/ultragoal and <id>>" --gjc-goal-json <fresh-goal-get-json-or-path> --quality-gate-json <quality-gate-json-or-path>
 ```
 
 Workers do not own ultragoal goal state, do not create worker ultragoal ledgers, and do not checkpoint Ultragoal. Workers must not run `jwc ultragoal checkpoint`; checkpoint authority stays with the leader after worker tasks are terminal. Team launch remains explicit; Ultragoal does not auto-launch Team and performs no hidden goal mutation.
@@ -167,7 +167,7 @@ Workers do not own ultragoal goal state, do not create worker ultragoal ledgers,
 The completion-gate cleanup sweep is driven by `ai-slop-cleaner`, an internal Ultragoal sub-skill bundled as a `kind: "skill-fragment"` prompt with parent skill `ultragoal` (installed at `skill-fragments/ultragoal/ai-slop-cleaner.md`). It is analogous to jaw-interview's auto-research fragment: loaded on demand for one specific hook, never a user-facing skill.
 
 - It is not slash-command discoverable, has no public skill-listing entry, and is never resolvable through `skill://`.
-- It is a read-only detector+reporter over the active story's changed files only: it never edits code, writes files, mutates `.gjc/`, checkpoints, calls goal tools, or spawns workflows.
+- It is a read-only detector+reporter over the active story's changed files only: it never edits code, writes files, mutates `.jwc/`, checkpoints, calls goal tools, or spawns workflows.
 - It classifies every finding as blocking or advisory across the full taxonomy (fallback-like masking vs. grounded, duplication, dead code, needless abstraction, boundary violations, UI/design slop, missing tests).
 - The leader and a leader-spawned `executor` own all fixes; the cleaner reruns until zero blocking findings remain. Advisory findings live in the gate report only.
 - Recursion guard: it must not spawn nested `ralplan`/`team`/`jaw-interview`/`ultragoal`; broad or architectural findings are handed back to the leader as review blockers.

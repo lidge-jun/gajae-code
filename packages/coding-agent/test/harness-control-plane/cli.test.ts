@@ -280,7 +280,7 @@ describe("gjc harness CLI (foundation)", () => {
 			expect(started.code).toBe(0);
 			const sessionId = started.json.evidence.handle.sessionId as string;
 
-			await appendEvent(path.join(workspace, ".gjc", "state", "harness"), sessionId, {
+			await appendEvent(path.join(workspace, ".jwc", "state", "harness"), sessionId, {
 				eventId: "evt-cross-cwd-prompt",
 				cursor: 1,
 				createdAt: "2026-06-03T00:00:01.000Z",

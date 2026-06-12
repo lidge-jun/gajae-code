@@ -38,7 +38,7 @@ describe("jaw-brand skill discovery (substitution model)", () => {
 	});
 
 	const cliJawSkillsDir = () => path.join(tempHomeDir, ".cli-jaw", "skills");
-	const nativeUserSkillsDir = () => path.join(tempHomeDir, ".gjc", "agent", "skills");
+	const nativeUserSkillsDir = () => path.join(tempHomeDir, ".jwc", "agent", "skills");
 	const agentsSkillsDir = () => path.join(tempHomeDir, "work", ".agents", "skills");
 
 	it("jwc brand: cli-jaw global root replaces the native user root", async () => {

@@ -57,7 +57,7 @@ describe("provider onboarding setup core", () => {
 
 	it("creates the models.yml parent directory on first provider add", async () => {
 		tempRoot = await fs.mkdtemp(path.join(os.tmpdir(), "gjc-provider-onboarding-"));
-		const modelsPath = path.join(tempRoot, "Users", "example", ".gjc", "agent", "models.yml");
+		const modelsPath = path.join(tempRoot, "Users", "example", ".jwc", "agent", "models.yml");
 
 		await addApiCompatibleProvider({
 			compatibility: "anthropic",

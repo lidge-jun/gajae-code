@@ -199,7 +199,7 @@ describe("BashTool restricted role-agent allowlist", () => {
 
 			expect(result.content.find(part => part.type === "text")?.text).toContain("stage-01-architect.md");
 			const persisted = await fs.readFile(
-				path.join(root, ".gjc", "plans", "ralplan", "bash-marker", "stage-01-architect.md"),
+				path.join(root, ".jwc", "plans", "ralplan", "bash-marker", "stage-01-architect.md"),
 				"utf-8",
 			);
 			expect(persisted).toBe(`${artifactPath}\n`);

@@ -174,7 +174,7 @@ export class PluginManager {
 		const actualName = extractPackageName(spec.packageName);
 		const pkgPath = path.join(getPluginsNodeModules(), actualName, "package.json");
 
-		let pkg: { name: string; version: string; gjc?: PluginManifest; pi?: PluginManifest };
+		let pkg: { name: string; version: string; jwc?: PluginManifest; gjc?: PluginManifest; pi?: PluginManifest };
 		try {
 			pkg = await Bun.file(pkgPath).json();
 		} catch (err) {
@@ -183,7 +183,7 @@ export class PluginManager {
 			}
 			throw err;
 		}
-		const manifest: PluginManifest = pkg.gjc || pkg.pi || { version: pkg.version };
+		const manifest: PluginManifest = pkg.jwc || pkg.gjc || pkg.pi || { version: pkg.version };
 		manifest.version = pkg.version;
 
 		// Resolve enabled features
@@ -277,14 +277,16 @@ export class PluginManager {
 
 		for (const [name] of Object.entries(deps)) {
 			const pluginPkgPath = path.join(getPluginsNodeModules(), name, "package.json");
-			let pluginPkg: { version: string; gjc?: PluginManifest; pi?: PluginManifest };
+			let pluginPkg: { version: string; jwc?: PluginManifest; gjc?: PluginManifest; pi?: PluginManifest };
 			try {
 				pluginPkg = await Bun.file(pluginPkgPath).json();
 			} catch (err) {
 				if (isEnoent(err)) continue;
 				throw err;
 			}
-			const manifest: PluginManifest = pluginPkg.gjc || pluginPkg.pi || { version: pluginPkg.version };
+			const manifest: PluginManifest = pluginPkg.jwc ||
+				pluginPkg.gjc ||
+				pluginPkg.pi || { version: pluginPkg.version };
 			manifest.version = pluginPkg.version;
 
 			const runtimeState = config.plugins[name] || {
@@ -317,7 +319,7 @@ export class PluginManager {
 		const absolutePath = path.resolve(this.#cwd, localPath);
 
 		const pkgFilePath = path.join(absolutePath, "package.json");
-		let pkg: { name?: string; version: string; gjc?: PluginManifest; pi?: PluginManifest };
+		let pkg: { name?: string; version: string; jwc?: PluginManifest; gjc?: PluginManifest; pi?: PluginManifest };
 		try {
 			pkg = await Bun.file(pkgFilePath).json();
 		} catch (err) {
@@ -350,7 +352,7 @@ export class PluginManager {
 
 		await fs.promises.symlink(absolutePath, linkPath);
 
-		const manifest: PluginManifest = pkg.gjc || pkg.pi || { version: pkg.version };
+		const manifest: PluginManifest = pkg.jwc || pkg.gjc || pkg.pi || { version: pkg.version };
 		manifest.version = pkg.version;
 
 		// Add to runtime config
@@ -526,7 +528,13 @@ export class PluginManager {
 			const pluginPath = path.join(nodeModulesPath, name);
 			const pluginPkgPath = path.join(pluginPath, "package.json");
 
-			let pluginPkg: { version: string; description?: string; gjc?: PluginManifest; pi?: PluginManifest };
+			let pluginPkg: {
+				version: string;
+				description?: string;
+				jwc?: PluginManifest;
+				gjc?: PluginManifest;
+				pi?: PluginManifest;
+			};
 			try {
 				pluginPkg = await Bun.file(pluginPkgPath).json();
 			} catch (err) {
@@ -550,8 +558,8 @@ export class PluginManager {
 				}
 				throw err;
 			}
-			const hasManifest = !!(pluginPkg.gjc || pluginPkg.pi);
-			const manifest: PluginManifest | undefined = pluginPkg.gjc || pluginPkg.pi;
+			const hasManifest = !!(pluginPkg.jwc || pluginPkg.gjc || pluginPkg.pi);
+			const manifest: PluginManifest | undefined = pluginPkg.jwc || pluginPkg.gjc || pluginPkg.pi;
 
 			checks.push({
 				name: `plugin:${name}`,

@@ -27,11 +27,11 @@ function listDefinitionFiles(dir: string, extensions: readonly string[]): string
 		});
 }
 
-const visibleSkills = listSkillDirs(".gjc/skills").sort();
-const visibleAgents = listDefinitionFiles(".gjc/agents", [".md", ".toml"]).sort();
+const visibleSkills = listSkillDirs(".jwc/skills").sort();
+const visibleAgents = listDefinitionFiles(".jwc/agents", [".md", ".toml"]).sort();
 const otherVisibleDefinitions = [
-	...listDefinitionFiles(".gjc/commands", [".md"]),
-	...listDefinitionFiles(".gjc/rules", [".md"]),
+	...listDefinitionFiles(".jwc/commands", [".md"]),
+	...listDefinitionFiles(".jwc/rules", [".md"]),
 ].sort();
 const bundledSkills = listSkillDirs("packages/coding-agent/src/defaults/gjc/skills").sort();
 const bundledRoleAgents = listDefinitionFiles("packages/coding-agent/src/prompts/agents", [".md"])

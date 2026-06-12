@@ -23,7 +23,7 @@ Ralplan is the consensus planning workflow. It triggers iterative planning with 
 - `--deliberate`: Forces deliberate mode for high-risk work. Adds pre-mortem (3 scenarios) and expanded test planning (unit/integration/e2e/observability). Without this flag, deliberate mode can still auto-enable when the request explicitly signals high risk (auth/security, migrations, destructive changes, production incidents, compliance/PII, public API breakage).
 - `--architect openai-code`: Use OpenAI code for the Architect pass when OpenAI code CLI is available. Otherwise, briefly note the fallback and keep the default jwc Architect review.
 - `--critic openai-code`: Use OpenAI code for the Critic pass when OpenAI code CLI is available. Otherwise, briefly note the fallback and keep the default jwc Critic review.
-- `--write --stage <type> --stage_n <N> --artifact <markdown file path or markdown string>`: Native artifact write path persisting Planner, Architect, Critic, revision, ADR, and final pending-approval plan markdown under `.gjc/plans/ralplan/<run-id>/`. Use this instead of editing `.gjc/` files directly.
+- `--write --stage <type> --stage_n <N> --artifact <markdown file path or markdown string>`: Native artifact write path persisting Planner, Architect, Critic, revision, ADR, and final pending-approval plan markdown under `.jwc/plans/ralplan/<run-id>/`. Use this instead of editing `.jwc/` files directly.
 
 ## Usage with interactive mode
 
@@ -37,13 +37,13 @@ Ralplan is the consensus planning workflow. It triggers iterative planning with 
 
 Ralplan is a planning module. It may inspect context and draft or update plan/spec/proposal artifacts, but it MUST mark those artifacts as `pending approval` unless the user has explicitly opted into execution in the current turn or via the structured approval UI. Before explicit execution approval, it MUST NOT run mutation-oriented shell commands, edit source files, commit, push, open PRs, invoke execution skills, or delegate implementation tasks.
 
-Planning artifacts and stage handoffs MUST be persisted through the ralplan CLI artifact writer, not by direct `.gjc/` edits. Every role agent or subagent that produces a durable stage artifact MUST write it with:
+Planning artifacts and stage handoffs MUST be persisted through the ralplan CLI artifact writer, not by direct `.jwc/` edits. Every role agent or subagent that produces a durable stage artifact MUST write it with:
 
 ```bash
 jwc ralplan --write --stage <type> --stage_n <N> --artifact "markdown file path or markdown string"
 ```
 
-Use stage values that match the producer or artifact kind, such as `planner`, `architect`, `critic`, `revision`, `adr`, or `final`. Increment `--stage_n` for each consensus-loop pass. The `--artifact` value may be either a markdown file path prepared outside `.gjc/` for ingestion or the markdown content string itself. The native `--write` handler persists markdown under `.gjc/plans/ralplan/<run-id>/stage-<NN>-<stage>.md`, maintains an `index.jsonl` audit log, and for `final` stages additionally writes a `pending-approval.md` copy. Direct `write`, `edit`, or `ast_edit` calls against `.gjc/specs`, `.gjc/plans`, `.gjc/state`, or any other `.gjc/` path are forbidden unless an explicit force override is active.
+Use stage values that match the producer or artifact kind, such as `planner`, `architect`, `critic`, `revision`, `adr`, or `final`. Increment `--stage_n` for each consensus-loop pass. The `--artifact` value may be either a markdown file path prepared outside `.jwc/` for ingestion or the markdown content string itself. The native `--write` handler persists markdown under `.jwc/plans/ralplan/<run-id>/stage-<NN>-<stage>.md`, maintains an `index.jsonl` audit log, and for `final` stages additionally writes a `pending-approval.md` copy. Direct `write`, `edit`, or `ast_edit` calls against `.jwc/specs`, `.jwc/plans`, `.jwc/state`, or any other `.jwc/` path are forbidden unless an explicit force override is active.
 
 Restricted read-only role agents (`planner`, `architect`, and `critic`) must pass markdown content directly in `--artifact`; their restricted bash environment intentionally disables artifact file-path ingestion so a verdict command cannot persist arbitrary file contents.
 
@@ -74,7 +74,7 @@ The consensus workflow:
    d. Return to Critic evaluation
    e. Repeat this loop until Critic returns `APPROVE` or 5 iterations are reached
    f. If 5 iterations are reached without `APPROVE`, present the best version to the user
-6. On Critic approval, mark the plan `pending approval` unless explicit execution approval has already been captured, persist the ADR/final plan via `jwc ralplan --write --stage final --stage_n <N> --artifact "..."`, and do not directly edit `.gjc/plans`. *(--interactive only)* If `--interactive` is set, use the `ask` tool to present the plan with approval options (Approve execution via ultragoal (Recommended) / Approve execution via team (only when tmux-based interactive worker parallelization is required) / Compact then return for execution approval / Request changes / Reject). Final plan must include ADR (Decision, Drivers, Alternatives considered, Why chosen, Consequences, Follow-ups). Otherwise, output the final plan and stop before any mutation or delegation.
+6. On Critic approval, mark the plan `pending approval` unless explicit execution approval has already been captured, persist the ADR/final plan via `jwc ralplan --write --stage final --stage_n <N> --artifact "..."`, and do not directly edit `.jwc/plans`. *(--interactive only)* If `--interactive` is set, use the `ask` tool to present the plan with approval options (Approve execution via ultragoal (Recommended) / Approve execution via team (only when tmux-based interactive worker parallelization is required) / Compact then return for execution approval / Request changes / Reject). Final plan must include ADR (Decision, Drivers, Alternatives considered, Why chosen, Consequences, Follow-ups). Otherwise, output the final plan and stop before any mutation or delegation.
 7. *(--interactive only)* User chooses: Approve ultragoal execution (recommended), Approve team execution (tmux parallelization only), Request changes, or Reject
 8. *(--interactive only)* On approval: invoke `/skill:ultragoal` for execution by default; invoke `/skill:team` only when the user explicitly needs tmux-based interactive worker parallelization -- never implement directly
 
@@ -94,7 +94,7 @@ Follow the Plan skill's full documentation for consensus mode details.
 
 The Planner is a **same-session persisted subagent**: launched detached once, awaited before the Architect, then **resumed** with consolidated Architect + Critic feedback on every re-review pass instead of being re-spawned. The Architect and Critic stay **fresh, independent spawns each pass** so their verdicts remain reproducible from their pass artifacts alone. Do NOT modify the subagent control surface; this orchestration uses the existing `subagent` resume/steer controls only.
 
-**Persistence boundary:** this is same-parent, active-session continuity only. Resumability depends on the in-memory subagent record (and a persistent parent session — an in-memory parent yields `resumable:false`), not just a session file. The `.gjc` run-state record is an audit/routing hint, NOT a durable cross-process subagent registry. After a process restart, a missing record, or any unavailable/failed resume, use the fresh Planner fallback.
+**Persistence boundary:** this is same-parent, active-session continuity only. Resumability depends on the in-memory subagent record (and a persistent parent session — an in-memory parent yields `resumable:false`), not just a session file. The `.jwc` run-state record is an audit/routing hint, NOT a durable cross-process subagent registry. After a process restart, a missing record, or any unavailable/failed resume, use the fresh Planner fallback.
 
 **Resume routing table** (per re-review pass, when resuming the persisted Planner id):
 

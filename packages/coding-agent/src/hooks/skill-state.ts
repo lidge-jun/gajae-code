@@ -17,7 +17,7 @@ import {
 	isGjcWorkflowSkill,
 } from "./skill-keywords";
 
-export const GJC_STATE_DIR = ".gjc/state";
+export const GJC_STATE_DIR = ".jwc/state";
 export const SKILL_ACTIVE_STATE_FILE = "skill-active-state.json";
 
 export interface EffectiveSkillConfigInput {
@@ -401,7 +401,7 @@ export interface EnsureWorkflowSkillActivationInput {
 }
 
 /**
- * Idempotently seed `.gjc/state` for a workflow skill that was invoked directly
+ * Idempotently seed `.jwc/state` for a workflow skill that was invoked directly
  * (e.g. via `/skill:<name>`) rather than through keyword detection. This ensures
  * the mutation guard and Stop hook engage the moment a workflow skill becomes
  * active, instead of relying on the skill prompt to run its own state-init steps.

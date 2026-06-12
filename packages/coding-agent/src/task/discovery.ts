@@ -2,8 +2,8 @@
  * Agent discovery from filesystem.
  *
  * Discovers agent definitions from:
- *   - ~/.gjc/agent/agents/*.md (user-level, primary)
- *   - .gjc/agents/*.md (project-level, primary)
+ *   - ~/.jwc/agent/agents/*.md (user-level, primary)
+ *   - .jwc/agents/*.md (project-level, primary)
  *   - installed GJC plugin roots
  *
  * Agent files use markdown with YAML frontmatter.
@@ -54,7 +54,7 @@ async function loadAgentsFromDir(dir: string, source: AgentSource): Promise<Agen
 /**
  * Discover agents from filesystem and merge with bundled agents.
  *
- * Precedence (highest wins): .gjc project, .gjc user, GJC plugins, then bundled
+ * Precedence (highest wins): .jwc project, .jwc user, GJC plugins, then bundled
  *
  * @param cwd - Current working directory for project agent discovery
  */
@@ -62,7 +62,7 @@ export async function discoverAgents(cwd: string, home: string = os.homedir()): 
 	const resolvedCwd = path.resolve(cwd);
 	const agentSources = Array.from(new Set(getConfigDirs("", { project: false }).map(entry => entry.source)));
 
-	// Get user directories (priority order: .gjc, ...)
+	// Get user directories (priority order: .jwc, ...)
 	const userDirs = getConfigDirs("agents", { project: false })
 		.filter(entry => agentSources.includes(entry.source))
 		.map(entry => ({

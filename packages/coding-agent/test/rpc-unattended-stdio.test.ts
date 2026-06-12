@@ -43,7 +43,7 @@ const fixtureModelsYaml = `providers:
 beforeEach(async () => {
 	workspace = await mkdtemp(path.join(tmpdir(), "rpc-stdio-ws-"));
 	cliEnv = createHarnessCliEnv(repoRoot);
-	const agentDir = path.join(workspace, ".gjc", "agent");
+	const agentDir = path.join(workspace, ".jwc", "agent");
 	await mkdir(agentDir, { recursive: true });
 	await writeFile(path.join(agentDir, "models.yml"), fixtureModelsYaml);
 	cliEnv.env.GJC_CODING_AGENT_DIR = agentDir;

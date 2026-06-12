@@ -45,9 +45,9 @@ describe("jaw-interview SKILL.md policy markers (042)", () => {
 	});
 
 	it("hands off specs at the jaw-interview path and consults legacy artifacts (D040-9)", () => {
-		expect(skill).toContain("handoff: .gjc/specs/jaw-interview-{slug}.md");
-		expect(skill).toContain("`.gjc/specs/jaw-interview-*.md`");
-		expect(skill).toContain("`.gjc/specs/deep-*.md` (legacy artifacts)");
+		expect(skill).toContain("handoff: .jwc/specs/jaw-interview-{slug}.md");
+		expect(skill).toContain("`.jwc/specs/jaw-interview-*.md`");
+		expect(skill).toContain("`.jwc/specs/deep-*.md` (legacy artifacts)");
 	});
 
 	it("displays dual score notation with the 5-level quantization (D040-10)", () => {

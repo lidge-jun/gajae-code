@@ -21,7 +21,7 @@ async function readJson(filePath: string): Promise<Record<string, unknown>> {
 }
 
 async function readAuditEntries(cwd: string): Promise<Array<Record<string, unknown>>> {
-	const raw = await fs.readFile(path.join(cwd, ".gjc/state/audit.jsonl"), "utf-8");
+	const raw = await fs.readFile(path.join(cwd, ".jwc/state/audit.jsonl"), "utf-8");
 	return raw
 		.trim()
 		.split("\n")
@@ -76,7 +76,7 @@ describe("G5 gjc state receipts", () => {
 			expect(writePayload).toMatchObject({ ok: true, skill: "ralplan", current_phase: "planner", active: true });
 			expect(writePayload.state).toBeUndefined();
 			expectCliChecksum(writePayload);
-			const statePath = path.join(cwd, ".gjc/state/ralplan-state.json");
+			const statePath = path.join(cwd, ".jwc/state/ralplan-state.json");
 			expectValidReceipt(await readJson(statePath), "ralplan");
 			expectAuditEntry(findAuditEntry(await readAuditEntries(cwd), "write"), "write");
 
@@ -105,7 +105,7 @@ describe("G5 gjc state receipts", () => {
 			expectCliChecksum(handoffReceipts.from);
 			expectCliChecksum(handoffReceipts.to);
 			expect(handoffReceipts.from.version).toBeUndefined();
-			expectValidReceipt(await readJson(path.join(cwd, ".gjc/state/jaw-interview-state.json")), "jaw-interview");
+			expectValidReceipt(await readJson(path.join(cwd, ".jwc/state/jaw-interview-state.json")), "jaw-interview");
 			expectValidReceipt(await readJson(statePath), "ralplan");
 
 			const entries = await readAuditEntries(cwd);

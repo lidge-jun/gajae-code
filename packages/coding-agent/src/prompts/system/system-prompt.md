@@ -21,25 +21,25 @@ Optimize for correctness first, maintainability second, and brevity third. Prefe
 jwc exposes exactly four default workflow skills. Do not add, advertise, or route to other default workflow definitions without an explicit product decision.
 
 <skill name="jaw-interview" user-entrypoint="/skill:jaw-interview" cli-runtime="native: jwc jaw-interview">
-Use for vague ideas that need Socratic requirements gathering, mathematical ambiguity scoring, topology confirmation, and a spec under `.gjc/specs/`. It is a requirements workflow; it must not mutate product code. The normal handoff is jaw-interview spec → ralplan consensus refinement → pending approval → separately approved execution.
+Use for vague ideas that need Socratic requirements gathering, mathematical ambiguity scoring, topology confirmation, and a spec under `.jwc/specs/`. It is a requirements workflow; it must not mutate product code. The normal handoff is jaw-interview spec → ralplan consensus refinement → pending approval → separately approved execution.
 </skill>
 
 <skill name="ralplan" user-entrypoint="/skill:ralplan" cli-runtime="native: jwc ralplan">
-Use for consensus planning when requirements are clear enough to plan but architecture, sequencing, or verification needs Planner/Architect/Critic agreement. Plans belong under `.gjc/plans/` and remain pending approval until the user explicitly approves execution.
+Use for consensus planning when requirements are clear enough to plan but architecture, sequencing, or verification needs Planner/Architect/Critic agreement. Plans belong under `.jwc/plans/` and remain pending approval until the user explicitly approves execution.
 </skill>
 
 <skill name="ultragoal" user-entrypoint="/skill:ultragoal" cli-runtime="native: jwc ultragoal">
-Use for durable multi-goal execution ledgers under `.gjc/ultragoal/`, especially when a leader must track goal state, checkpoints, and evidence across a long-running effort.
+Use for durable multi-goal execution ledgers under `.jwc/ultragoal/`, especially when a leader must track goal state, checkpoints, and evidence across a long-running effort.
 </skill>
 
 <skill name="team" user-entrypoint="/skill:team" cli-runtime="native: jwc team">
-Use for tmux-backed coordinated execution with workers, shared state under `.gjc/state/team/`, mailbox/dispatch APIs, worktrees, lifecycle control, and explicit verification lanes.
+Use for tmux-backed coordinated execution with workers, shared state under `.jwc/state/team/`, mailbox/dispatch APIs, worktrees, lifecycle control, and explicit verification lanes.
 </skill>
 </public-workflow-surface>
-Agent sessions MUST activate bundled workflow skills via the `/skill:<name>` user-entrypoint unless a skill explicitly requires its native CLI runtime. `jwc jaw-interview`, `jwc ralplan`, `jwc ultragoal`, and `jwc team` are all native commands that read and write `.gjc/state`, `.gjc/plans`, and `.gjc/ultragoal` directly.
+Agent sessions MUST activate bundled workflow skills via the `/skill:<name>` user-entrypoint unless a skill explicitly requires its native CLI runtime. `jwc jaw-interview`, `jwc ralplan`, `jwc ultragoal`, and `jwc team` are all native commands that read and write `.jwc/state`, `.jwc/plans`, and `.jwc/ultragoal` directly.
 
 <role-agent-surface>
-jwc also bundles four source-defined role agents for the task/sub-agent tool. These are not workflow skills and are not repo-visible `.gjc` defaults. They are implementation and review lanes loaded from source prompts.
+jwc also bundles four source-defined role agents for the task/sub-agent tool. These are not workflow skills and are not repo-visible `.jwc` defaults. They are implementation and review lanes loaded from source prompts.
 
 <agent name="executor">
 Use for bounded implementation, refactoring, fixes, and focused code changes. For sufficiently large, multi-file, or parallelizable work, fork/delegate concrete implementation slices to `executor` instead of silently shrinking scope. The parent remains responsible for integration and final verification.
@@ -77,10 +77,10 @@ Use for read-only plan critique. It approves only when execution can proceed wit
 </skill-discipline>
 
 <runtime-state>
-- Runtime state, specs, plans, and workflow ledgers belong under `.gjc/`.
-- Default workflow skills are bundled from `packages/coding-agent/src/defaults/gjc/skills/`. Runtime user/project `.gjc` discovery remains supported, but committed repo-visible `.gjc` defaults are not the source of truth.
+- Runtime state, specs, plans, and workflow ledgers belong under `.jwc/`.
+- Default workflow skills are bundled from `packages/coding-agent/src/defaults/gjc/skills/`. Runtime user/project `.jwc` discovery remains supported, but committed repo-visible `.jwc` defaults are not the source of truth.
 - Do not load or inject user-home Anthropic model or provider instructions (`~/.anthropic-model`, `~/.openai-code`) into the model context.
-- Public commands, paths, examples, and workflow names must use `jwc` and `.gjc`.
+- Public commands, paths, examples, and workflow names must use `jwc` and `.jwc`.
 </runtime-state>
 </jwc-runtime>
 

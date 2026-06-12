@@ -88,7 +88,7 @@ function parseGoalArgs(argv: readonly string[]): ParsedGoalArgs | { error: strin
 }
 
 function pauseGatePath(cwd: string): string {
-	return path.join(cwd, ".gjc", "state", "goal-pause-gate.json");
+	return path.join(cwd, ".jwc", "state", "goal-pause-gate.json");
 }
 
 interface PauseGateState {
@@ -121,7 +121,7 @@ async function activateGoalMode(cwd: string, objective: string): Promise<void> {
 	await writePendingGoalModeRequest({
 		cwd,
 		objective,
-		goalsPath: path.join(cwd, ".gjc", "ultragoal", "goals.json"),
+		goalsPath: path.join(cwd, ".jwc", "ultragoal", "goals.json"),
 		sessionId: process.env[GJC_SESSION_ID_ENV],
 	});
 }
@@ -225,7 +225,7 @@ export async function runNativeGoalCommand(argv: readonly string[], cwd: string)
 				}
 				// Quality gate: explicit flag wins; otherwise auto-connect the
 				// orchestrate-c artifact convention (061 §6-6).
-				const autoGate = path.join(cwd, ".gjc", "state", "pabcd-quality-gate.json");
+				const autoGate = path.join(cwd, ".jwc", "state", "pabcd-quality-gate.json");
 				const gateRef = qualityGateJson ?? ((await Bun.file(autoGate).exists()) ? autoGate : undefined);
 				const evidenceText = [note || "goal completion", ...evidence].join("; ");
 				await checkpointUltragoalGoal({

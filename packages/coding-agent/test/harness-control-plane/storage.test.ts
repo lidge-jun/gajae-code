@@ -127,7 +127,7 @@ describe("harness storage", () => {
 			path.resolve("/z"),
 		);
 		expect(resolveHarnessRoot({ cwd: "/repo", env: {} as NodeJS.ProcessEnv })).toBe(
-			path.join("/repo", ".gjc", "state", "harness"),
+			path.join("/repo", ".jwc", "state", "harness"),
 		);
 	});
 

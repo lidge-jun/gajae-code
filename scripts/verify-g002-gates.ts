@@ -181,7 +181,7 @@ async function verifyRebrandSurface(): Promise<GateResult> {
 
 	const rootName = typeof rootPackage.name === "string" ? rootPackage.name : "<missing>";
 	const codingName = typeof codingPackage.name === "string" ? codingPackage.name : "<missing>";
-	const hasGjcBin = typeof bin.gjc === "string";
+	const hasGjcBin = typeof (bin.jwc ?? bin.gjc) === "string"; // transition: bin key renames with 065.1
 	const hasLegacyBin = ("om" + "p") in bin;
 
 	details.push(`root package name: ${rootName}`);
@@ -268,7 +268,7 @@ async function verifyPackageVersionAndBinaryAllowlist(): Promise<GateResult> {
 }
 
 async function verifyVisibleDefinitions(): Promise<GateResult> {
-	const otherDefinitionRoots = [".gjc/skills", ".gjc/agents", ".gjc/commands", ".gjc/rules"];
+	const otherDefinitionRoots = [".jwc/skills", ".jwc/agents", ".jwc/commands", ".jwc/rules"];
 	const otherDefinitions: string[] = [];
 	const details: string[] = [];
 	const bundledSkills = readVisibleEntries("packages/coding-agent/src/defaults/gjc/skills").filter(entry =>
@@ -296,7 +296,7 @@ async function verifyVisibleDefinitions(): Promise<GateResult> {
 	details.push(`actual bundled workflow skills: ${skills.join(", ") || "<none>"}`);
 	details.push(`expected bundled role agents: ${expectedRoleAgents.join(", ")}`);
 	details.push(`actual bundled role agents: ${roleAgents.join(", ") || "<none>"}`);
-	details.push(`repo-visible .gjc definitions: ${otherDefinitions.join(", ") || "<none>"}`);
+	details.push(`repo-visible .jwc definitions: ${otherDefinitions.join(", ") || "<none>"}`);
 	details.push(`gitignored default definitions: ${ignoredDefinitions.join(", ") || "<none>"}`);
 
 	return {
@@ -363,7 +363,7 @@ async function verifyBroadWorkflowExposure(): Promise<GateResult> {
 		if (exportsRecord[exportKey] !== null) findings.push(`packages/coding-agent/package.json exports ${exportKey} is not blocked`);
 	}
 
-	const publicDefinitionRoots = [".gjc/skills", ".gjc/agents", ".gjc/commands", ".gjc/rules"];
+	const publicDefinitionRoots = [".jwc/skills", ".jwc/agents", ".jwc/commands", ".jwc/rules"];
 	for (const root of publicDefinitionRoots) {
 		const absolute = path.join(repoRoot, root);
 		if (!fs.existsSync(absolute)) continue;

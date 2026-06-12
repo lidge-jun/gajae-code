@@ -3,11 +3,11 @@
 Issue #93 requested a gaebal-gajae/operator dogfood skill. The live issue has no comment approving a fifth bundled default workflow skill, so this stays a local template instead of changing the default workflow surface. Operators can copy it into a user or project override when they want jwc-first session guidance:
 
 ```sh
-mkdir -p ~/.gjc/skills/gjc-dogfood
-cp docs/gjc-dogfood-skill-template.md ~/.gjc/skills/gjc-dogfood/SKILL.md
+mkdir -p ~/.jwc/skills/gjc-dogfood
+cp docs/gjc-dogfood-skill-template.md ~/.jwc/skills/gjc-dogfood/SKILL.md
 ```
 
-For a single project, copy it to `<project>/.gjc/skills/gjc-dogfood/SKILL.md` instead. Do not commit that project `.gjc` copy unless the project explicitly wants a local override.
+For a single project, copy it to `<project>/.jwc/skills/gjc-dogfood/SKILL.md` instead. Do not commit that project `.jwc` copy unless the project explicitly wants a local override.
 
 ---
 name: gjc-dogfood

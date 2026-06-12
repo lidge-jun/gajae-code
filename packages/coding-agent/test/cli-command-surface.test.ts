@@ -122,7 +122,7 @@ describe("GJC public CLI command surface", () => {
 
 		expect(result.exitCode, output).toBe(0);
 		expect(output).toContain("--dry-run");
-		expect(output).toContain(".gjc/state/team");
+		expect(output).toContain(".jwc/state/team");
 		expect(output).toContain("do not commit");
 		expect(output).toContain("existing tmux/JWC --tmux session");
 		expect(output).toContain("jwc --tmux");
@@ -186,7 +186,7 @@ describe("GJC public CLI command surface", () => {
 		try {
 			const result = Bun.spawnSync(["bun", cliEntry, "setup", "--json"], {
 				cwd: repoRoot,
-				env: { ...process.env, HOME: home, GJC_CODING_AGENT_DIR: path.join(home, ".gjc", "agent") },
+				env: { ...process.env, HOME: home, GJC_CODING_AGENT_DIR: path.join(home, ".jwc", "agent") },
 				stderr: "pipe",
 				stdout: "pipe",
 			});
@@ -196,7 +196,7 @@ describe("GJC public CLI command surface", () => {
 			expect(result.exitCode, stderr).toBe(0);
 			const payload = JSON.parse(stdout) as { written?: number; targetRoot?: string };
 			expect(payload.written).toBe(7);
-			expect(payload.targetRoot).toContain(path.join(home, ".gjc", "agent"));
+			expect(payload.targetRoot).toContain(path.join(home, ".jwc", "agent"));
 		} finally {
 			await fs.rm(home, { recursive: true, force: true });
 		}

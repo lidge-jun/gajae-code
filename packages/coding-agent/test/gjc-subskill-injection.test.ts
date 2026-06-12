@@ -18,10 +18,10 @@ const ralplanSkill = {
 async function tempProject(): Promise<string> {
 	const cwd = await fs.mkdtemp(path.join(os.tmpdir(), "gjc-subskill-injection-"));
 	tempRoots.push(cwd);
-	await fs.mkdir(path.join(cwd, ".gjc", "gjc-plugins"), { recursive: true });
+	await fs.mkdir(path.join(cwd, ".jwc", "gjc-plugins"), { recursive: true });
 	await fs.cp(
 		path.join(fixturesRoot, "valid-skill-plugin"),
-		path.join(cwd, ".gjc", "gjc-plugins", "valid-skill-plugin"),
+		path.join(cwd, ".jwc", "gjc-plugins", "valid-skill-plugin"),
 		{
 			recursive: true,
 		},
@@ -30,7 +30,7 @@ async function tempProject(): Promise<string> {
 }
 
 async function activationFromFixture(cwd: string): Promise<LoadedSubskillActivation> {
-	const plugin = await loadGjcPlugin(path.join(cwd, ".gjc", "gjc-plugins", "valid-skill-plugin"));
+	const plugin = await loadGjcPlugin(path.join(cwd, ".jwc", "gjc-plugins", "valid-skill-plugin"));
 	const binding = plugin.bindings[0];
 	return {
 		plugin: binding.plugin,

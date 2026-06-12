@@ -14,7 +14,7 @@ import { appendJsonl, readExistingStateForMutation, writeArtifact, writeWorkflow
  *
  * The CLI itself does not run the Socratic interview; that lives inside the `/skill:jaw-interview`
  * skill executed by the agent. This handler validates the documented argument-hint surface
- * (`[--quick|--standard|--deep] <idea>`), seeds `.gjc/state/jaw-interview-state.json`, and
+ * (`[--quick|--standard|--deep] <idea>`), seeds `.jwc/state/jaw-interview-state.json`, and
  * updates the shared HUD rail via `syncSkillActiveState` so the active interview is visible to
  * the TUI.
  */
@@ -88,8 +88,8 @@ function defaultSpecSlug(now: Date = new Date()): string {
 
 function stateDirFor(cwd: string, sessionId: string | undefined): string {
 	return sessionId
-		? path.join(cwd, ".gjc", "state", "sessions", encodeSessionSegment(sessionId))
-		: path.join(cwd, ".gjc", "state");
+		? path.join(cwd, ".jwc", "state", "sessions", encodeSessionSegment(sessionId))
+		: path.join(cwd, ".jwc", "state");
 }
 
 function jawInterviewStatePath(cwd: string, sessionId: string | undefined): string {
@@ -203,7 +203,7 @@ function modernSettingsPath(): string {
 	if (configDir) return path.join(configDir, "config.yml");
 	const configRoot = process.env.GJC_CONFIG_DIR?.trim() || process.env.PI_CONFIG_DIR?.trim();
 	if (configRoot) return path.join(configRoot, "agent", "config.yml");
-	return path.join(os.homedir(), ".gjc", "agent", "config.yml");
+	return path.join(os.homedir(), ".jwc", "agent", "config.yml");
 }
 
 async function readModernSettingsAmbiguityThreshold(): Promise<{ threshold: number; source: string } | undefined> {
@@ -225,10 +225,10 @@ async function resolveConfiguredAmbiguityThreshold(
 ): Promise<{ threshold: number; source: string } | undefined> {
 	const modernValue = await readModernSettingsAmbiguityThreshold();
 	if (modernValue) return modernValue;
-	const projectSettings = path.join(cwd, ".gjc", "settings.json");
+	const projectSettings = path.join(cwd, ".jwc", "settings.json");
 	const projectValue = await readSettingsAmbiguityThreshold(projectSettings);
 	if (projectValue) return projectValue;
-	const configDir = process.env.GJC_CONFIG_DIR?.trim() || path.join(os.homedir(), ".gjc");
+	const configDir = process.env.GJC_CONFIG_DIR?.trim() || path.join(os.homedir(), ".jwc");
 	const userSettings = path.join(configDir, "settings.json");
 	return await readSettingsAmbiguityThreshold(userSettings);
 }
@@ -405,7 +405,7 @@ export async function persistJawInterviewSpec(
 	}
 	const existing = existingRead.kind === "valid" ? existingRead.value : {};
 
-	const specPath = path.join(cwd, ".gjc", "specs", `jaw-interview-${resolved.slug}.md`);
+	const specPath = path.join(cwd, ".jwc", "specs", `jaw-interview-${resolved.slug}.md`);
 	const content = resolved.spec.endsWith("\n") ? resolved.spec : `${resolved.spec}\n`;
 	await writeArtifact(specPath, content, {
 		cwd,
@@ -415,7 +415,7 @@ export async function persistJawInterviewSpec(
 	const sha256 = createHash("sha256").update(content).digest("hex");
 	const createdAt = new Date().toISOString();
 	await appendJsonl(
-		path.join(cwd, ".gjc", "specs", "jaw-interview-index.jsonl"),
+		path.join(cwd, ".jwc", "specs", "jaw-interview-index.jsonl"),
 		{ slug: resolved.slug, stage: resolved.stage, path: specPath, created_at: createdAt, sha256 },
 		{ cwd, audit: { category: "ledger", verb: "append", owner: "gjc-runtime", skill: "jaw-interview" } },
 	);

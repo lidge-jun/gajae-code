@@ -27,7 +27,7 @@ export interface Skill {
 	hide?: boolean;
 	/** Source metadata for display */
 	_source?: SourceMeta;
-	/** Embedded SKILL.md content for bundled defaults that survive .gjc deletion. */
+	/** Embedded SKILL.md content for bundled defaults that survive .jwc deletion. */
 	content?: string;
 }
 
@@ -122,7 +122,7 @@ export async function loadSkills(options: LoadSkillsOptions = {}): Promise<LoadS
 		return { skills: [], warnings: [] };
 	}
 
-	// GJC accepts native `.gjc` skills. Under a jaw brand (jwc) the cli-jaw
+	// GJC accepts native `.jwc` skills. Under a jaw brand (jwc) the cli-jaw
 	// global root replaces the native user root (with fallback when absent) and
 	// the `.agents` cross-tool convention is enabled. Other providers may still
 	// exist for their own capabilities, but their skill surfaces stay ignored.

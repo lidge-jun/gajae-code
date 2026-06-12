@@ -76,7 +76,7 @@ function parseInputFlag(argv: string[]): Record<string, unknown> {
 
 export default class Team extends Command {
 	static description =
-		`Run native ${APP_NAME.toUpperCase()} tmux team orchestration from inside an existing tmux/${APP_NAME.toUpperCase()} --tmux session; --dry-run writes ephemeral .gjc/state/team state only`;
+		`Run native ${APP_NAME.toUpperCase()} tmux team orchestration from inside an existing tmux/${APP_NAME.toUpperCase()} --tmux session; --dry-run writes ephemeral .jwc/state/team state only`;
 	static strict = false;
 
 	static args = {
@@ -90,7 +90,7 @@ export default class Team extends Command {
 		json: Flags.boolean({ char: "j", description: "Emit machine-readable JSON", default: false }),
 		"dry-run": Flags.boolean({
 			description:
-				"Create ephemeral .gjc/state/team state without starting tmux panes; do not commit generated state",
+				"Create ephemeral .jwc/state/team state without starting tmux panes; do not commit generated state",
 			default: false,
 		}),
 	};
@@ -211,7 +211,7 @@ export default class Team extends Command {
 			`tmux: ${snapshot.tmux_session}`,
 			`state: ${snapshot.state_dir}`,
 			`workers: ${snapshot.workers.length}`,
-			...(dryRun ? ["dry-run: wrote ephemeral .gjc/state/team state only; do not commit generated .gjc state"] : []),
+			...(dryRun ? ["dry-run: wrote ephemeral .jwc/state/team state only; do not commit generated .jwc state"] : []),
 		]);
 	}
 }

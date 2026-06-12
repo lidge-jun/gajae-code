@@ -75,7 +75,7 @@ function readRepoLinkMarker(file: string): RepoLinkMarker | null {
 function createRepoNodeModulesLinks(repoRoot: string, packages: LinkedWorkspacePackage[]): () => void {
 	const nodeModulesDir = path.join(repoRoot, "node_modules");
 	const scopeDir = path.join(nodeModulesDir, "@gajae-code");
-	const markerDir = path.join(nodeModulesDir, ".gjc-harness-test-links");
+	const markerDir = path.join(nodeModulesDir, ".jwc-harness-test-links");
 	const marker = path.join(markerDir, `${process.pid}-${Date.now()}-${Math.random().toString(16).slice(2)}.json`);
 	fs.mkdirSync(markerDir, { recursive: true });
 	const createdLinks = linkWorkspacePackages(scopeDir, packages);

@@ -4,7 +4,7 @@
  * The canonical event/frame contract now lives in `event-contract.ts`. This
  * module re-exports it under the historical `Bridge*` names so existing RPC and
  * Bridge code keeps compiling while the adapters migrate to the canonical
- * `AgentWire*` names. See `.gjc/specs/deep-interview-reconcile-rpc-adapters.md`.
+ * `AgentWire*` names. See `.jwc/specs/deep-interview-reconcile-rpc-adapters.md`.
  */
 import type {
 	AgentWireEventFrame,

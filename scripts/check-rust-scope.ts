@@ -148,7 +148,7 @@ async function readPackageName(cargoTomlPath: string): Promise<string | undefine
 function isIgnoredPath(relativePath: string): boolean {
 	return (
 		relativePath.startsWith(".git/") ||
-		relativePath.startsWith(".gjc/") ||
+		relativePath.startsWith(".jwc/") ||
 		relativePath.startsWith("node_modules/") ||
 		relativePath.includes("/node_modules/") ||
 		relativePath.startsWith("target/") ||

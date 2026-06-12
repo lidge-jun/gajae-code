@@ -5,7 +5,7 @@
  * Tool selection persists across session reloads and respects branch navigation.
  *
  * Usage:
- * 1. Copy this file to ~/.gjc/agent/extensions/ (legacy: ~/.pi/agent/extensions/) or your project's .gjc/extensions/
+ * 1. Copy this file to ~/.jwc/agent/extensions/ (legacy: ~/.pi/agent/extensions/) or your project's .jwc/extensions/
  * 2. Use /tools to open the tool selector
  */
 import type { ExtensionAPI, ExtensionContext } from "@gajae-code/coding-agent";

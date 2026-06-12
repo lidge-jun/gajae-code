@@ -74,7 +74,7 @@ describe("Coordinator MCP server protocol", () => {
 	it("starts sessions through the structured GJC service adapter, not arbitrary terminal relay", async () => {
 		const root = await tempRoot();
 		const calls: unknown[] = [];
-		const stateRoot = path.join(root, ".gjc", "state", "hermes-start");
+		const stateRoot = path.join(root, ".jwc", "state", "hermes-start");
 		const server = createCoordinatorMcpServer({
 			env: {
 				GJC_COORDINATOR_MCP_WORKDIR_ROOTS: root,
@@ -136,7 +136,7 @@ describe("Coordinator MCP server protocol", () => {
 
 	it("persists audited follow-up, question answers, and bounded reports", async () => {
 		const root = await tempRoot();
-		const stateRoot = path.join(root, ".gjc", "state", "hermes-test");
+		const stateRoot = path.join(root, ".jwc", "state", "hermes-test");
 		const server = createCoordinatorMcpServer({
 			env: {
 				GJC_COORDINATOR_MCP_WORKDIR_ROOTS: root,
@@ -201,7 +201,7 @@ describe("Coordinator MCP server protocol", () => {
 
 	it("rejects traversal-shaped session and question ids before state file access", async () => {
 		const root = await tempRoot();
-		const stateRoot = path.join(root, ".gjc", "state", "hermes-test");
+		const stateRoot = path.join(root, ".jwc", "state", "hermes-test");
 		const server = createCoordinatorMcpServer({
 			env: {
 				GJC_COORDINATOR_MCP_WORKDIR_ROOTS: root,
@@ -234,7 +234,7 @@ describe("Coordinator MCP server protocol", () => {
 
 	it("creates durable turns, enforces active backpressure, and reads terminal reports", async () => {
 		const root = await tempRoot();
-		const stateRoot = path.join(root, ".gjc", "state", "hermes-turns");
+		const stateRoot = path.join(root, ".jwc", "state", "hermes-turns");
 		const server = createCoordinatorMcpServer({
 			env: {
 				GJC_COORDINATOR_MCP_WORKDIR_ROOTS: root,
@@ -324,7 +324,7 @@ describe("Coordinator MCP server protocol", () => {
 
 	it("validates turn and question ownership before path-addressed mutations", async () => {
 		const root = await tempRoot();
-		const stateRoot = path.join(root, ".gjc", "state", "hermes-ids");
+		const stateRoot = path.join(root, ".jwc", "state", "hermes-ids");
 		const server = createCoordinatorMcpServer({
 			env: {
 				GJC_COORDINATOR_MCP_WORKDIR_ROOTS: root,
@@ -403,7 +403,7 @@ describe("Coordinator MCP server protocol", () => {
 
 	it("awaits turns with bounded timeout and preserves queued turns", async () => {
 		const root = await tempRoot();
-		const stateRoot = path.join(root, ".gjc", "state", "hermes-await");
+		const stateRoot = path.join(root, ".jwc", "state", "hermes-await");
 		const server = createCoordinatorMcpServer({
 			env: {
 				GJC_COORDINATOR_MCP_WORKDIR_ROOTS: root,
@@ -443,7 +443,7 @@ describe("Coordinator MCP server protocol", () => {
 
 	it("wakes await_turn from durable turn changes without waiting for the fallback interval", async () => {
 		const root = await tempRoot();
-		const stateRoot = path.join(root, ".gjc", "state", "hermes-watch");
+		const stateRoot = path.join(root, ".jwc", "state", "hermes-watch");
 		const server = createCoordinatorMcpServer({
 			env: {
 				GJC_COORDINATOR_MCP_WORKDIR_ROOTS: root,
@@ -496,7 +496,7 @@ describe("Coordinator MCP server protocol", () => {
 
 	it("terminalizes active turns from durable runtime session state", async () => {
 		const root = await tempRoot();
-		const stateRoot = path.join(root, ".gjc", "state", "hermes-runtime");
+		const stateRoot = path.join(root, ".jwc", "state", "hermes-runtime");
 		const server = createCoordinatorMcpServer({
 			env: {
 				GJC_COORDINATOR_MCP_WORKDIR_ROOTS: root,
@@ -550,7 +550,7 @@ describe("Coordinator MCP server protocol", () => {
 	});
 	it("terminalizes active turns quickly when the recorded tmux session is gone", async () => {
 		const root = await tempRoot();
-		const stateRoot = path.join(root, ".gjc", "state", "hermes-stale");
+		const stateRoot = path.join(root, ".jwc", "state", "hermes-stale");
 		const server = createCoordinatorMcpServer({
 			env: {
 				GJC_COORDINATOR_MCP_WORKDIR_ROOTS: root,

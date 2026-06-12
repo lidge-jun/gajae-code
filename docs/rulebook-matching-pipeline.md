@@ -56,10 +56,10 @@ Consequence: precedence and deduplication are **name-based only**. Two different
 
 ### Native provider (`builtin.ts`)
 
-Loads `.gjc` rules from:
+Loads `.jwc` rules from:
 
-- project: `<cwd>/.gjc/rules/*.{md,mdc}`
-- user: `~/.gjc/agent/rules/*.{md,mdc}`
+- project: `<cwd>/.jwc/rules/*.{md,mdc}`
+- user: `~/.jwc/agent/rules/*.{md,mdc}`
 
 Normalization:
 

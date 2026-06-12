@@ -12,11 +12,11 @@ export default class JawInterview extends Command {
 		threshold: Flags.string({ description: "Override ambiguity threshold for kickoff" }),
 		"threshold-source": Flags.string({ description: "Describe the threshold override source" }),
 		"session-id": Flags.string({
-			description: "Route state/spec handoff through a session-scoped .gjc state directory",
+			description: "Route state/spec handoff through a session-scoped .jwc state directory",
 		}),
 		write: Flags.boolean({ description: "Persist a final jaw-interview spec through the sanctioned GJC CLI/API" }),
 		stage: Flags.string({ description: 'Spec stage for --write (currently "final")' }),
-		slug: Flags.string({ description: "Safe slug for .gjc/specs/jaw-interview-<slug>.md" }),
+		slug: Flags.string({ description: "Safe slug for .jwc/specs/jaw-interview-<slug>.md" }),
 		spec: Flags.string({ description: "Final spec markdown or a path to the final spec markdown" }),
 		handoff: Flags.string({ description: 'After --write, hand off to a workflow target (currently "ralplan")' }),
 		deliberate: Flags.boolean({

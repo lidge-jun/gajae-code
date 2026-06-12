@@ -30,7 +30,7 @@ async function writeFileWithAge(
 	ageDays: number,
 	content = "{}\n",
 ): Promise<string> {
-	const filePath = path.join(root, ".gjc", "state", relativePath);
+	const filePath = path.join(root, ".jwc", "state", relativePath);
 	await fs.mkdir(path.dirname(filePath), { recursive: true });
 	await fs.writeFile(filePath, content, "utf-8");
 	const when = new Date(Date.now() - ageDays * 24 * 60 * 60 * 1000);
@@ -91,7 +91,7 @@ describe("native gjc state retention gc", () => {
 		expect(await exists(currentSnapshot)).toBe(true);
 		expect(await exists(audit)).toBe(true);
 
-		const auditLines = (await fs.readFile(path.join(root, ".gjc", "state", "audit.jsonl"), "utf-8"))
+		const auditLines = (await fs.readFile(path.join(root, ".jwc", "state", "audit.jsonl"), "utf-8"))
 			.trim()
 			.split(/\r?\n/)
 			.map(line => JSON.parse(line) as Record<string, unknown>);

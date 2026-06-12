@@ -24,7 +24,7 @@ async function makeTempRoot(): Promise<string> {
 
 async function writeActiveJawInterview(cwd: string, sessionId = "session-a", phase = "interviewing"): Promise<void> {
 	const now = new Date().toISOString();
-	const sessionDir = path.join(cwd, ".gjc", "state", "sessions", encodePathSegment(sessionId));
+	const sessionDir = path.join(cwd, ".jwc", "state", "sessions", encodePathSegment(sessionId));
 	await fs.mkdir(sessionDir, { recursive: true });
 	const activeState = {
 		version: 1,
@@ -96,7 +96,7 @@ describe("jaw-interview mutation guard", () => {
 		const cwd = await makeTempRoot();
 		await writeActiveJawInterview(cwd);
 
-		for (const rawPath of [".gjc/specs/jaw-interview-x.md", ".gjc/plans/plan.md"]) {
+		for (const rawPath of [".jwc/specs/jaw-interview-x.md", ".jwc/plans/plan.md"]) {
 			const decision = await getJawInterviewMutationDecision({
 				cwd,
 				sessionId: "session-a",
@@ -109,36 +109,36 @@ describe("jaw-interview mutation guard", () => {
 		}
 
 		const blockedCases: Array<[string, AgentTool, unknown]> = [
-			["write active", tool("write"), { path: ".gjc/state/skill-active-state.json", content: "{}" }],
+			["write active", tool("write"), { path: ".jwc/state/skill-active-state.json", content: "{}" }],
 			[
 				"write session active",
 				tool("write"),
-				{ path: ".gjc/state/sessions/session-a/skill-active-state.json", content: "{}" },
+				{ path: ".jwc/state/sessions/session-a/skill-active-state.json", content: "{}" },
 			],
 			...(["jaw-interview", "ralplan", "ultragoal", "team"] as const).map(
 				skill =>
 					[
 						`write ${skill}`,
 						tool("write"),
-						{ path: `.gjc/state/sessions/session-a/${skill}-state.json`, content: "{}" },
+						{ path: `.jwc/state/sessions/session-a/${skill}-state.json`, content: "{}" },
 					] as [string, AgentTool, unknown],
 			),
 			[
 				"apply_patch state",
 				tool("edit", { mode: "apply_patch", customWireName: "apply_patch" }),
 				{
-					input: "*** Begin Patch\n*** Update File: .gjc/state/team-state.json\n@@\n-a\n+b\n*** End Patch\n",
+					input: "*** Begin Patch\n*** Update File: .jwc/state/team-state.json\n@@\n-a\n+b\n*** End Patch\n",
 				},
 			],
 			[
 				"vim state",
 				tool("edit", { mode: "vim" }),
-				{ file: "src/foo.ts", steps: [{ kbd: [":edit .gjc/state/sessions/session-a/ralplan-state.json<CR>"] }] },
+				{ file: "src/foo.ts", steps: [{ kbd: [":edit .jwc/state/sessions/session-a/ralplan-state.json<CR>"] }] },
 			],
 			[
 				"ast_edit state",
 				tool("ast_edit"),
-				{ paths: [".gjc/state/**/team-state.json"], ops: [{ pat: "foo", out: "bar" }] },
+				{ paths: [".jwc/state/**/team-state.json"], ops: [{ pat: "foo", out: "bar" }] },
 			],
 		];
 
@@ -158,7 +158,7 @@ describe("jaw-interview mutation guard", () => {
 		}
 	});
 
-	it("blocks all write targets during active jaw-interview, including non-.gjc paths", async () => {
+	it("blocks all write targets during active jaw-interview, including non-.jwc paths", async () => {
 		const cwd = await makeTempRoot();
 		await writeActiveJawInterview(cwd);
 
@@ -179,7 +179,7 @@ describe("jaw-interview mutation guard", () => {
 			expect(decision.message).toBe(JAW_INTERVIEW_MUTATION_BLOCK_MESSAGE);
 		}
 
-		for (const rawPath of [".gjc/specs-evil/plan.md", ".gjc/stateful/data.json"]) {
+		for (const rawPath of [".jwc/specs-evil/plan.md", ".jwc/stateful/data.json"]) {
 			const decision = await getJawInterviewMutationDecision({
 				cwd,
 				sessionId: "session-a",
@@ -194,7 +194,7 @@ describe("jaw-interview mutation guard", () => {
 			cwd,
 			sessionId: "session-a",
 			tool: tool("ast_edit"),
-			args: { paths: [".gjc/state/jaw-interview-state.json", "packages/**"], ops: [{ pat: "foo", out: "bar" }] },
+			args: { paths: [".jwc/state/jaw-interview-state.json", "packages/**"], ops: [{ pat: "foo", out: "bar" }] },
 		});
 		expect(mixed.blocked).toBe(true);
 	});
@@ -221,16 +221,16 @@ describe("jaw-interview mutation guard", () => {
 		}
 	});
 
-	it("blocks mutating bash that targets .gjc during active jaw-interview", async () => {
+	it("blocks mutating bash that targets .jwc during active jaw-interview", async () => {
 		const cwd = await makeTempRoot();
 		await writeActiveJawInterview(cwd);
 
 		for (const command of [
-			"rm .gjc/state/jaw-interview-state.json",
-			"mkdir -p .gjc/specs",
-			"cp source.md .gjc/specs/jaw-interview-x.md",
-			"sed -i 's/a/b/' .gjc/plans/plan.md",
-			"cat source.md > .gjc/specs/jaw-interview-x.md",
+			"rm .jwc/state/jaw-interview-state.json",
+			"mkdir -p .jwc/specs",
+			"cp source.md .jwc/specs/jaw-interview-x.md",
+			"sed -i 's/a/b/' .jwc/plans/plan.md",
+			"cat source.md > .jwc/specs/jaw-interview-x.md",
 		]) {
 			const decision = await getJawInterviewMutationDecision({
 				cwd,
@@ -244,7 +244,7 @@ describe("jaw-interview mutation guard", () => {
 		}
 	});
 
-	it("blocks vim file-switches into .gjc", async () => {
+	it("blocks vim file-switches into .jwc", async () => {
 		const cwd = await makeTempRoot();
 		await writeActiveJawInterview(cwd);
 
@@ -254,7 +254,7 @@ describe("jaw-interview mutation guard", () => {
 			tool: tool("edit", { mode: "vim" }),
 			args: {
 				file: "packages/coding-agent/src/product.ts",
-				steps: [{ kbd: [":edit .gjc/specs/jaw-interview-x.md<CR>", "iunsafe"] }],
+				steps: [{ kbd: [":edit .jwc/specs/jaw-interview-x.md<CR>", "iunsafe"] }],
 			},
 		});
 
@@ -279,7 +279,7 @@ describe("jaw-interview mutation guard", () => {
 		const cwd = await makeTempRoot();
 		await writeActiveJawInterview(cwd);
 		await Bun.write(
-			path.join(cwd, ".gjc", "state", "sessions", "session-a", "jaw-interview-state.json"),
+			path.join(cwd, ".jwc", "state", "sessions", "session-a", "jaw-interview-state.json"),
 			JSON.stringify({ active: "yes", current_phase: "interviewing", session_id: "session-a" }),
 		);
 		const warn = spyOn(console, "warn").mockImplementation(() => {});
@@ -301,7 +301,7 @@ describe("jaw-interview mutation guard", () => {
 	it("allows writes and logs when jaw-interview mode state is corrupt JSON", async () => {
 		const cwd = await makeTempRoot();
 		await writeActiveJawInterview(cwd);
-		await Bun.write(path.join(cwd, ".gjc", "state", "sessions", "session-a", "jaw-interview-state.json"), "{");
+		await Bun.write(path.join(cwd, ".jwc", "state", "sessions", "session-a", "jaw-interview-state.json"), "{");
 		const warn = spyOn(console, "warn").mockImplementation(() => {});
 		try {
 			const decision = await getJawInterviewMutationDecision({
@@ -322,7 +322,7 @@ describe("jaw-interview mutation guard", () => {
 		const cwd = await makeTempRoot();
 		await writeActiveJawInterview(cwd);
 
-		for (const rawPaths of [["src/product.ts"], [".gjc/specs/jaw-interview-x.md"], []]) {
+		for (const rawPaths of [["src/product.ts"], [".jwc/specs/jaw-interview-x.md"], []]) {
 			await expect(
 				assertJawInterviewMutationRawPathsAllowed({
 					cwd,

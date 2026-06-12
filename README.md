@@ -107,7 +107,7 @@ For remote-control protocol details, see [`docs/bridge.md`](docs/bridge.md).
 
 ## Configuration
 
-Provider retry budgets live in `~/.gjc/config.yml`:
+Provider retry budgets live in `~/.jwc/config.yml`:
 
 ```yaml
 retry:
@@ -138,7 +138,7 @@ Run the CLI from source:
 bun packages/coding-agent/src/cli.ts --help
 ```
 
-Default workflow definitions live in source, not committed `.gjc` copies:
+Default workflow definitions live in source, not committed `.jwc` copies:
 
 ```text
 packages/coding-agent/src/defaults/gjc/skills/<name>/SKILL.md

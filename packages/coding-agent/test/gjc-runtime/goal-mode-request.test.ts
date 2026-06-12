@@ -39,13 +39,13 @@ describe("GJC ultragoal goal mode request", () => {
 
 	it("reads gjcObjective from the generated ultragoal plan", async () => {
 		const root = await tempDir();
-		const goalsPath = path.join(root, ".gjc", "ultragoal", "goals.json");
+		const goalsPath = path.join(root, ".jwc", "ultragoal", "goals.json");
 		await fs.mkdir(path.dirname(goalsPath), { recursive: true });
-		await Bun.write(goalsPath, JSON.stringify({ gjcObjective: "Complete .gjc/ultragoal/goals.json" }));
+		await Bun.write(goalsPath, JSON.stringify({ gjcObjective: "Complete .jwc/ultragoal/goals.json" }));
 
 		const result = await readUltragoalGjcObjective(root);
 
-		expect(result.objective).toBe("Complete .gjc/ultragoal/goals.json");
+		expect(result.objective).toBe("Complete .jwc/ultragoal/goals.json");
 		expect(result.goalsPath).toBe(goalsPath);
 	});
 
@@ -266,7 +266,7 @@ describe("GJC ultragoal goal mode request", () => {
 		// leak into a concurrent independent session sharing the same cwd.
 		expect(await consumePendingGoalModeRequest(root, "other-session")).toBeNull();
 		const pending = await consumePendingGoalModeRequest(root, "session-owner");
-		expect(pending?.objective).toContain(".gjc/ultragoal/goals.json");
+		expect(pending?.objective).toContain(".jwc/ultragoal/goals.json");
 		expect(pending?.sessionId).toBe("session-owner");
 		const entries = (await loadEntriesFromFile(sessionFile)).filter(
 			(entry): entry is SessionEntry => entry.type !== "session",
@@ -277,7 +277,7 @@ describe("GJC ultragoal goal mode request", () => {
 
 	it("surfaces corrupt pending request json", async () => {
 		const root = await tempDir();
-		const requestPath = path.join(root, ".gjc", "state", "goal-mode-request.json");
+		const requestPath = path.join(root, ".jwc", "state", "goal-mode-request.json");
 		await fs.mkdir(path.dirname(requestPath), { recursive: true });
 		await Bun.write(requestPath, "{");
 
@@ -286,7 +286,7 @@ describe("GJC ultragoal goal mode request", () => {
 
 	it("surfaces corrupt ultragoal goals json", async () => {
 		const root = await tempDir();
-		const goalsPath = path.join(root, ".gjc", "ultragoal", "goals.json");
+		const goalsPath = path.join(root, ".jwc", "ultragoal", "goals.json");
 		await fs.mkdir(path.dirname(goalsPath), { recursive: true });
 		await Bun.write(goalsPath, "{");
 

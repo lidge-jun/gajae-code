@@ -6,12 +6,12 @@ Example extensions for gajae-code.
 
 ```bash
 # Copy an existing extension into the user extension directory for auto-discovery
-mkdir -p ~/.gjc/agent/extensions
-cp packages/coding-agent/examples/extensions/hello.ts ~/.gjc/agent/extensions/
+mkdir -p ~/.jwc/agent/extensions
+cp packages/coding-agent/examples/extensions/hello.ts ~/.jwc/agent/extensions/
 
-# Project-local extensions can live in .gjc/extensions/
-mkdir -p .gjc/extensions
-cp packages/coding-agent/examples/extensions/pirate.ts .gjc/extensions/
+# Project-local extensions can live in .jwc/extensions/
+mkdir -p .jwc/extensions
+cp packages/coding-agent/examples/extensions/pirate.ts .jwc/extensions/
 ```
 
 ## Examples

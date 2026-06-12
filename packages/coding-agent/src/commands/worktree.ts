@@ -1,12 +1,12 @@
 /**
- * List and clean up agent-managed git worktrees under `~/.gjc/wt`.
+ * List and clean up agent-managed git worktrees under `~/.jwc/wt`.
  */
 import { APP_NAME } from "@gajae-code/utils";
 import { Args, Command, Flags } from "@gajae-code/utils/cli";
 import { clearWorktrees, listWorktrees } from "../cli/worktree-cli";
 
 export default class Worktree extends Command {
-	static description = "List or clear agent-managed git worktrees (~/.gjc/wt)";
+	static description = "List or clear agent-managed git worktrees (~/.jwc/wt)";
 
 	static aliases = ["wt"];
 

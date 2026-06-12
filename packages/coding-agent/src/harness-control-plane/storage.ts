@@ -1,7 +1,7 @@
 /**
  * Session-scoped storage for the harness control plane.
  *
- * Layout (under the harness state root, default `<cwd>/.gjc/state/harness`):
+ * Layout (under the harness state root, default `<cwd>/.jwc/state/harness`):
  *   sessions/<encoded-id>/state.json        lifecycle + handle (atomic)
  *   sessions/<encoded-id>/lease.json         owner lease (M3)
  *   sessions/<encoded-id>/events.jsonl       owner-only severity envelopes
@@ -166,7 +166,7 @@ export function resolveHarnessRoot(opts?: { root?: string; cwd?: string; env?: N
 	if (opts?.root) return path.resolve(opts.root);
 	const fromEnv = env.GJC_HARNESS_STATE_ROOT;
 	if (fromEnv?.trim()) return path.resolve(fromEnv.trim());
-	return path.join(opts?.cwd ?? process.cwd(), ".gjc", "state", "harness");
+	return path.join(opts?.cwd ?? process.cwd(), ".jwc", "state", "harness");
 }
 
 export function assertSafeSessionId(id: string): void {

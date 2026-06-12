@@ -153,7 +153,7 @@ describe("CONSUMER/KEY-FIELD MATRIX for compact handoff payloads", () => {
 			"
 			`);
 
-		await writeJson(path.join(root, ".gjc/state/jaw-interview-state.json"), {
+		await writeJson(path.join(root, ".jwc/state/jaw-interview-state.json"), {
 			skill: "jaw-interview",
 			version: 1,
 			active: true,
@@ -180,7 +180,7 @@ describe("CONSUMER/KEY-FIELD MATRIX for compact handoff payloads", () => {
 		expect(scrub(ultragoalHandoff.stdout ?? "")).toMatchInlineSnapshot(`
 			"ultragoal next-action=execute-goal goal-id=G001
 			objective=Ship the compact output
-			gjc-objective=Complete the durable ultragoal plan in .gjc/ultragoal/goals.json, including later accepted/appended stories, under the original brief constraints; use .gjc/ultragoal/ledger.jsonl as the audit trail.
+			gjc-objective=Complete the durable ultragoal plan in .jwc/ultragoal/goals.json, including later accepted/appended stories, under the original brief constraints; use .jwc/ultragoal/ledger.jsonl as the audit trail.
 			checkpoint requires=architectReview:CLEAR+APPROVE,executorQa:passed
 			"
 			`);

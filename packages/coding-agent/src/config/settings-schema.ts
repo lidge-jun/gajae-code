@@ -2092,7 +2092,7 @@ export const SETTINGS_SCHEMA = {
 		ui: {
 			tab: "tools",
 			label: "GitHub view cache",
-			description: "Cache rendered issue/PR view output in ~/.gjc/cache/github-cache.db so repeated reads are free",
+			description: "Cache rendered issue/PR view output in ~/.jwc/cache/github-cache.db so repeated reads are free",
 		},
 	},
 

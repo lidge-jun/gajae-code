@@ -397,7 +397,7 @@ export class AcpAgent implements Agent {
 			{
 				id: "agent",
 				name: "Use existing local credentials",
-				description: "Authenticate via the provider keys/OAuth state already configured under ~/.gjc.",
+				description: "Authenticate via the provider keys/OAuth state already configured under ~/.jwc.",
 			},
 		];
 		if (params.clientCapabilities?.auth?.terminal === true) {

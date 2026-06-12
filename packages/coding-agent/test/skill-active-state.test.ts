@@ -45,7 +45,7 @@ describe("GJC skill-active state", () => {
 		]);
 	});
 
-	it("writes root and session copies under .gjc/state", async () => {
+	it("writes root and session copies under .jwc/state", async () => {
 		await withTempCwd(async cwd => {
 			await syncSkillActiveState({
 				cwd,
@@ -67,7 +67,7 @@ describe("GJC skill-active state", () => {
 		await withTempCwd(async cwd => {
 			const paths = getSkillActiveStatePaths(cwd, "../escape/session");
 			expect(paths.sessionPath).toBe(
-				path.join(cwd, ".gjc", "state", "sessions", "%2E%2E%2Fescape%2Fsession", "skill-active-state.json"),
+				path.join(cwd, ".jwc", "state", "sessions", "%2E%2E%2Fescape%2Fsession", "skill-active-state.json"),
 			);
 		});
 	});

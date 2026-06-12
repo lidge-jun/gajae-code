@@ -170,7 +170,7 @@ function artifactCompletionEvidence(summary = "Completed by artifact review") {
 				kind: "artifact",
 				status: "verified",
 				summary: "Artifact was reviewed",
-				artifact: ".gjc/state/team/demo/report.md",
+				artifact: ".jwc/state/team/demo/report.md",
 			},
 		],
 	};
@@ -208,7 +208,7 @@ describe("native gjc team runtime", () => {
 
 		expect(snapshot.team_name).toBe("demo-team");
 		expect(snapshot.phase).toBe("running");
-		expect(snapshot.state_dir).toContain(path.join(".gjc", "state", "team", "demo-team"));
+		expect(snapshot.state_dir).toContain(path.join(".jwc", "state", "team", "demo-team"));
 		expect(snapshot.task_counts.pending).toBe(1);
 		expect(snapshot.workers).toHaveLength(1);
 		expect(snapshot.tmux_target).toBe("dry-run:0");
@@ -434,7 +434,7 @@ describe("native gjc team runtime", () => {
 			expect(worker.pane_id?.startsWith("%")).toBe(true);
 			expect(worker.worktree_detached).toBe(true);
 			expect(worker.worktree_base_ref).toBeTruthy();
-			expect(worker.worktree_path).toContain(path.join(".gjc", "state", "team", "worktree-team", "worktrees"));
+			expect(worker.worktree_path).toContain(path.join(".jwc", "state", "team", "worktree-team", "worktrees"));
 			const gitFile = await Bun.file(path.join(worker.worktree_path ?? "", ".git")).text();
 			expect(gitFile).toContain("gitdir:");
 		}
@@ -523,7 +523,7 @@ describe("native gjc team runtime", () => {
 				env: { PATH: "" },
 			}),
 		).rejects.toThrow("ambiguous_team_lane_split");
-		expect(await Bun.file(path.join(cleanupRoot, ".gjc", "state", "team", "ambiguous-lane-team")).exists()).toBe(
+		expect(await Bun.file(path.join(cleanupRoot, ".jwc", "state", "team", "ambiguous-lane-team")).exists()).toBe(
 			false,
 		);
 	});
@@ -544,7 +544,7 @@ describe("native gjc team runtime", () => {
 		).rejects.toThrow("ambiguous_team_lane_split");
 
 		expect(
-			await Bun.file(path.join(cleanupRoot, ".gjc", "state", "team", "ambiguous-lane-worktree-team")).exists(),
+			await Bun.file(path.join(cleanupRoot, ".jwc", "state", "team", "ambiguous-lane-worktree-team")).exists(),
 		).toBe(false);
 		expect(await Bun.file(path.join(cleanupRoot, "tmux-split-count")).exists()).toBe(false);
 		const tmuxLog = await Bun.file(path.join(cleanupRoot, "tmux.log")).text();
@@ -567,12 +567,12 @@ describe("native gjc team runtime", () => {
 			}),
 		).rejects.toThrow(/gjc_team_requires_tmux_leader: run `gjc --tmux` first/);
 
-		expect(await Bun.file(path.join(cleanupRoot, ".gjc", "state", "team", "fail-team", "phase.json")).exists()).toBe(
+		expect(await Bun.file(path.join(cleanupRoot, ".jwc", "state", "team", "fail-team", "phase.json")).exists()).toBe(
 			false,
 		);
 		expect(
 			await Bun.file(
-				path.join(cleanupRoot, ".gjc", "state", "team", "fail-team", "worktrees", "worker-1", ".git"),
+				path.join(cleanupRoot, ".jwc", "state", "team", "fail-team", "worktrees", "worker-1", ".git"),
 			).exists(),
 		).toBe(false);
 	});
@@ -593,11 +593,11 @@ describe("native gjc team runtime", () => {
 		).rejects.toThrow(/unmanaged_tmux_session:test-session/);
 
 		expect(
-			await Bun.file(path.join(cleanupRoot, ".gjc", "state", "team", "unmanaged-team", "phase.json")).exists(),
+			await Bun.file(path.join(cleanupRoot, ".jwc", "state", "team", "unmanaged-team", "phase.json")).exists(),
 		).toBe(false);
 		expect(
 			await Bun.file(
-				path.join(cleanupRoot, ".gjc", "state", "team", "unmanaged-team", "worktrees", "worker-1", ".git"),
+				path.join(cleanupRoot, ".jwc", "state", "team", "unmanaged-team", "worktrees", "worker-1", ".git"),
 			).exists(),
 		).toBe(false);
 		const tmuxLog = await Bun.file(path.join(cleanupRoot, "tmux.log")).text();
@@ -628,7 +628,7 @@ describe("native gjc team runtime", () => {
 		expect(tmuxLog).not.toContain("kill-session");
 		await expect(
 			Bun.file(
-				path.join(cleanupRoot, ".gjc", "state", "team", "split-fail-team", "worktrees", "worker-1", ".git"),
+				path.join(cleanupRoot, ".jwc", "state", "team", "split-fail-team", "worktrees", "worker-1", ".git"),
 			).text(),
 		).rejects.toThrow();
 	});
@@ -766,7 +766,7 @@ describe("native gjc team runtime", () => {
 		expect(task.completion_evidence?.recorded_by).toBe("worker-1");
 		expect(task.claim).toBeUndefined();
 		expect(
-			await Bun.file(path.join(cleanupRoot, ".gjc", "state", "team", "life-team", "claims", "task-1.json")).exists(),
+			await Bun.file(path.join(cleanupRoot, ".jwc", "state", "team", "life-team", "claims", "task-1.json")).exists(),
 		).toBe(false);
 		await expect(
 			executeGjcTeamApiOperation(
@@ -799,7 +799,7 @@ describe("native gjc team runtime", () => {
 		expect(stopped.worker_lifecycle_by_id["worker-1"]?.shutdown_mode).toBe("graceful");
 		expect(stopped.worker_lifecycle_by_id["worker-1"]?.shutdown_request_id?.startsWith("shutdown-")).toBe(true);
 		const shutdownRequest = (await Bun.file(
-			path.join(cleanupRoot, ".gjc", "state", "team", "life-team", "workers", "worker-1", "shutdown-request.json"),
+			path.join(cleanupRoot, ".jwc", "state", "team", "life-team", "workers", "worker-1", "shutdown-request.json"),
 		).json()) as { mode?: string; request_id?: string };
 		expect(shutdownRequest.mode).toBe("graceful");
 		expect(shutdownRequest.request_id).toBe(stopped.worker_lifecycle_by_id["worker-1"]?.shutdown_request_id);
@@ -1007,7 +1007,7 @@ describe("native gjc team runtime", () => {
 			dryRun: true,
 			env: { PATH: "" },
 		});
-		const stateDir = path.join(cleanupRoot, ".gjc", "state", "team", "evidence-team");
+		const stateDir = path.join(cleanupRoot, ".jwc", "state", "team", "evidence-team");
 
 		const workerTwoClaim = await claimGjcTeamTask("evidence-team", "worker-2", cleanupRoot, { PATH: "" }, "task-2");
 		expect(workerTwoClaim.ok).toBe(true);
@@ -1067,7 +1067,7 @@ describe("native gjc team runtime", () => {
 			dryRun: true,
 			env: { PATH: "" },
 		});
-		const stateDir = path.join(cleanupRoot, ".gjc", "state", "team", "invalid-evidence-team");
+		const stateDir = path.join(cleanupRoot, ".jwc", "state", "team", "invalid-evidence-team");
 		const claim = await claimGjcTeamTask("invalid-evidence-team", "worker-1", cleanupRoot, { PATH: "" });
 		expect(claim.ok).toBe(true);
 		const taskBefore = await readGjcTeamTask("invalid-evidence-team", "task-1", cleanupRoot, { PATH: "" });
@@ -1195,7 +1195,7 @@ describe("native gjc team runtime", () => {
 			dryRun: true,
 			env: { PATH: "" },
 		});
-		const stateDir = path.join(cleanupRoot, ".gjc", "state", "team", "legacy-completed-team");
+		const stateDir = path.join(cleanupRoot, ".jwc", "state", "team", "legacy-completed-team");
 		const task = await readGjcTeamTask("legacy-completed-team", "task-1", cleanupRoot, { PATH: "" });
 		await Bun.write(
 			path.join(stateDir, "tasks", "task-1.json"),
@@ -1218,7 +1218,7 @@ describe("native gjc team runtime", () => {
 			dryRun: true,
 			env: { PATH: "" },
 		});
-		const stateDir = path.join(cleanupRoot, ".gjc", "state", "team", "expired-claim-team");
+		const stateDir = path.join(cleanupRoot, ".jwc", "state", "team", "expired-claim-team");
 		const claim = await claimGjcTeamTask("expired-claim-team", "worker-1", cleanupRoot, { PATH: "" });
 		expect(claim.ok).toBe(true);
 		const claimedTask = await readGjcTeamTask("expired-claim-team", "task-1", cleanupRoot, { PATH: "" });
@@ -1249,7 +1249,7 @@ describe("native gjc team runtime", () => {
 			dryRun: true,
 			env: { PATH: "" },
 		});
-		const stateDir = path.join(cleanupRoot, ".gjc", "state", "team", "stale-heartbeat-team");
+		const stateDir = path.join(cleanupRoot, ".jwc", "state", "team", "stale-heartbeat-team");
 		const claim = await claimGjcTeamTask("stale-heartbeat-team", "worker-1", cleanupRoot, { PATH: "" });
 		expect(claim.ok).toBe(true);
 		await Bun.write(
@@ -1288,7 +1288,7 @@ describe("native gjc team runtime", () => {
 			dryRun: true,
 			env: { PATH: "" },
 		});
-		const stateDir = path.join(cleanupRoot, ".gjc", "state", "team", "status-semantics-team");
+		const stateDir = path.join(cleanupRoot, ".jwc", "state", "team", "status-semantics-team");
 		const claim = await claimGjcTeamTask("status-semantics-team", "worker-1", cleanupRoot, { PATH: "" });
 		expect(claim.ok).toBe(true);
 		await Bun.write(
@@ -1653,7 +1653,7 @@ describe("native gjc team runtime", () => {
 			await Bun.file(
 				path.join(
 					cleanupRoot,
-					".gjc",
+					".jwc",
 					"state",
 					"team",
 					"notification-team",
@@ -1736,7 +1736,7 @@ describe("native gjc team runtime", () => {
 		).rejects.toThrow(/invalid_worker_id/);
 		expect(
 			await Bun.file(
-				path.join(cleanupRoot, ".gjc", "state", "team", "guard-team", "escaped", "heartbeat.json"),
+				path.join(cleanupRoot, ".jwc", "state", "team", "guard-team", "escaped", "heartbeat.json"),
 			).exists(),
 		).toBe(false);
 
@@ -1747,10 +1747,10 @@ describe("native gjc team runtime", () => {
 			GJC_TEAM_NUDGE_COOLDOWN_MS: "60000",
 		});
 		expect(monitored.workers[0]?.status).toBe("idle");
-		const nudgeDir = path.join(cleanupRoot, ".gjc", "state", "team", "guard-team", "workers", "worker-1", "nudges");
+		const nudgeDir = path.join(cleanupRoot, ".jwc", "state", "team", "guard-team", "workers", "worker-1", "nudges");
 		const nudges = await fs.readdir(nudgeDir);
 		expect(nudges.length).toBeGreaterThan(0);
-		const events = await readEvents(path.join(cleanupRoot, ".gjc", "state", "team", "guard-team"));
+		const events = await readEvents(path.join(cleanupRoot, ".jwc", "state", "team", "guard-team"));
 		expect(events).toContain("worker_lifecycle_nudge");
 		expect(events).toContain("auto_action_taken");
 	});
@@ -1786,7 +1786,7 @@ describe("native gjc team runtime", () => {
 		const leaderMailbox = await readMailbox(snapshot.state_dir, "leader-fixed");
 		expect(leaderMailbox).toContain("INTEGRATED: merged worker-1");
 		const ledger = await Bun.file(
-			path.join(cleanupRoot, ".gjc", "reports", "team-commit-hygiene", "integrate-dirty-team.ledger.json"),
+			path.join(cleanupRoot, ".jwc", "reports", "team-commit-hygiene", "integrate-dirty-team.ledger.json"),
 		).json();
 		expect(JSON.stringify(ledger)).toContain("auto_checkpoint");
 		expect(JSON.stringify(ledger)).toContain("integration_merge");
@@ -1797,12 +1797,12 @@ describe("native gjc team runtime", () => {
 		expect(
 			classifyGjcTeamCheckpointFiles([
 				"src/feature.ts",
-				".gjc/state/team/demo/worker.json",
-				".gjc/reports/team-commit-hygiene/demo.ledger.json",
+				".jwc/state/team/demo/worker.json",
+				".jwc/reports/team-commit-hygiene/demo.ledger.json",
 			]),
 		).toEqual({
 			eligible: ["src/feature.ts"],
-			protected: [".gjc/state/team/demo/worker.json", ".gjc/reports/team-commit-hygiene/demo.ledger.json"],
+			protected: [".jwc/state/team/demo/worker.json", ".jwc/reports/team-commit-hygiene/demo.ledger.json"],
 		});
 
 		cleanupRoot = await createGitRepo();
@@ -1819,7 +1819,7 @@ describe("native gjc team runtime", () => {
 		const worker = config.workers[0];
 		if (!worker?.worktree_path) throw new Error("missing worker worktree");
 		await Bun.write(path.join(worker.worktree_path, "semantic.txt"), "semantic\n");
-		await Bun.write(path.join(worker.worktree_path, ".gjc", "state", "team", "runtime.json"), "{}\n");
+		await Bun.write(path.join(worker.worktree_path, ".jwc", "state", "team", "runtime.json"), "{}\n");
 
 		await monitorGjcTeam("protected-checkpoint-team", cleanupRoot, {
 			PATH: process.env.PATH ?? "",
@@ -1827,7 +1827,7 @@ describe("native gjc team runtime", () => {
 		});
 
 		expect(await Bun.file(path.join(cleanupRoot, "semantic.txt")).text()).toBe("semantic\n");
-		expect(await Bun.file(path.join(cleanupRoot, ".gjc", "state", "team", "runtime.json")).exists()).toBe(false);
+		expect(await Bun.file(path.join(cleanupRoot, ".jwc", "state", "team", "runtime.json")).exists()).toBe(false);
 	});
 
 	it("worker turn-end integration requests notify the leader once per fingerprint", async () => {
@@ -1863,7 +1863,7 @@ describe("native gjc team runtime", () => {
 		expect(await readEvents(snapshot.state_dir)).toContain("worker_integration_attempt_requested");
 		expect(await readMailbox(snapshot.state_dir, "leader-fixed")).toContain("INTEGRATION REQUESTED: worker-1");
 		const ledger = await Bun.file(
-			path.join(cleanupRoot, ".gjc", "reports", "team-commit-hygiene", "turn-end-request-team.ledger.json"),
+			path.join(cleanupRoot, ".jwc", "reports", "team-commit-hygiene", "turn-end-request-team.ledger.json"),
 		).json();
 		expect(JSON.stringify(ledger)).toContain("leader_integration_attempt");
 	});
@@ -1953,7 +1953,7 @@ describe("native gjc team runtime", () => {
 		const events = await readEvents(snapshot.state_dir);
 		expect(events).toContain("worker_cherry_pick_applied");
 		const ledger = await Bun.file(
-			path.join(cleanupRoot, ".gjc", "reports", "team-commit-hygiene", "diverged-team.ledger.json"),
+			path.join(cleanupRoot, ".jwc", "reports", "team-commit-hygiene", "diverged-team.ledger.json"),
 		).json();
 		expect(JSON.stringify(ledger)).toContain("integration_cherry_pick");
 	});
@@ -1990,7 +1990,7 @@ describe("native gjc team runtime", () => {
 		expect(await readMailbox(snapshot.state_dir, "leader-fixed")).toContain("CONFLICT: merge failed");
 		expect(await readMailbox(snapshot.state_dir, "worker-1")).toContain("Manual resolution required");
 		const ledger = await Bun.file(
-			path.join(cleanupRoot, ".gjc", "reports", "team-commit-hygiene", "merge-conflict-team.ledger.json"),
+			path.join(cleanupRoot, ".jwc", "reports", "team-commit-hygiene", "merge-conflict-team.ledger.json"),
 		).json();
 		expect(JSON.stringify(ledger)).toContain('"status":"conflict"');
 		expect(JSON.stringify(ledger)).toContain("integration_merge");
@@ -2077,7 +2077,7 @@ describe("native gjc team runtime", () => {
 		expect(await readMailbox(snapshot.state_dir, "leader-fixed")).toContain("CONFLICT: cherry-pick failed");
 		expect(await readMailbox(snapshot.state_dir, "worker-1")).toContain("Manual resolution required");
 		const ledger = await Bun.file(
-			path.join(cleanupRoot, ".gjc", "reports", "team-commit-hygiene", "pick-conflict-team.ledger.json"),
+			path.join(cleanupRoot, ".jwc", "reports", "team-commit-hygiene", "pick-conflict-team.ledger.json"),
 		).json();
 		expect(JSON.stringify(ledger)).toContain('"status":"conflict"');
 		expect(JSON.stringify(ledger)).toContain("integration_cherry_pick");
@@ -2114,7 +2114,7 @@ describe("native gjc team runtime", () => {
 		expect(events).toContain("worker_cross_rebase_applied");
 		expect(events).toContain("worker_cross_rebase_skipped");
 		const ledger = await Bun.file(
-			path.join(cleanupRoot, ".gjc", "reports", "team-commit-hygiene", "cross-rebase-team.ledger.json"),
+			path.join(cleanupRoot, ".jwc", "reports", "team-commit-hygiene", "cross-rebase-team.ledger.json"),
 		).json();
 		expect(JSON.stringify(ledger)).toContain("cross_rebase");
 	});

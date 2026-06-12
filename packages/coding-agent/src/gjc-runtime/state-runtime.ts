@@ -59,9 +59,9 @@ import { getSkillManifest, isKnownWorkflowState, isValidTransition, typedArgsFor
 /**
  * Native implementation of the `gjc state read|write|clear` command surface.
  *
- * Simple file-receipt operations against `.gjc/state/[sessions/<id>/]<mode>-state.json` and
- * `.gjc/state/[sessions/<id>/]skill-active-state.json`. This is the sanctioned CLI mediator for
- * the mutation-guarded `.gjc/state` ACL — agents call it instead of editing those files directly.
+ * Simple file-receipt operations against `.jwc/state/[sessions/<id>/]<mode>-state.json` and
+ * `.jwc/state/[sessions/<id>/]skill-active-state.json`. This is the sanctioned CLI mediator for
+ * the mutation-guarded `.jwc/state` ACL — agents call it instead of editing those files directly.
  */
 
 export interface StateCommandResult {
@@ -338,7 +338,7 @@ function encodeSessionSegment(value: string): string {
 }
 
 function stateDirFor(cwd: string, sessionId: string | undefined): string {
-	const base = path.join(cwd, ".gjc", "state");
+	const base = path.join(cwd, ".jwc", "state");
 	if (!sessionId) return base;
 	return path.join(base, "sessions", encodeSessionSegment(sessionId));
 }
@@ -455,7 +455,7 @@ async function collectDoctorSummary(
 	skill: CanonicalGjcWorkflowSkill | undefined,
 	sessionId: string | undefined,
 ): Promise<DoctorSummary> {
-	const root = path.join(cwd, ".gjc", "state");
+	const root = path.join(cwd, ".jwc", "state");
 	const skills = skill ? [skill] : [...CANONICAL_GJC_WORKFLOW_SKILLS];
 	const problems: DoctorProblem[] = [];
 	let filesScanned = 0;
@@ -775,7 +775,7 @@ async function readAuditWindow(
 ): Promise<{ entries: unknown[]; limit: number; since?: string; truncated: boolean }> {
 	const limit = parseLimitFlag(args);
 	const since = parseSinceFlag(args);
-	const auditPath = path.join(cwd, ".gjc", "state", "audit.jsonl");
+	const auditPath = path.join(cwd, ".jwc", "state", "audit.jsonl");
 	let raw = "";
 	try {
 		raw = await fs.readFile(auditPath, "utf-8");
@@ -1114,7 +1114,7 @@ async function handleStatus(
 	if (!mode) {
 		throw new StateCommandError(
 			2,
-			"gjc state status requires --mode <skill>, positional <skill>, input.skill, or an active workflow in .gjc/state/skill-active-state.json",
+			"gjc state status requires --mode <skill>, positional <skill>, input.skill, or an active workflow in .jwc/state/skill-active-state.json",
 		);
 	}
 	const filePath = modeStateFile(cwd, mode, selectors.sessionId);
@@ -1143,7 +1143,7 @@ async function handleWrite(
 	if (!mode)
 		throw new StateCommandError(
 			2,
-			"gjc state write requires --mode <skill>, positional <skill>, input.skill, or an active workflow in .gjc/state/skill-active-state.json",
+			"gjc state write requires --mode <skill>, positional <skill>, input.skill, or an active workflow in .jwc/state/skill-active-state.json",
 		);
 
 	const filePath = modeStateFile(cwd, mode, sessionId);
@@ -1267,7 +1267,7 @@ async function handleClear(
 	if (!mode)
 		throw new StateCommandError(
 			2,
-			"gjc state clear requires --mode <skill>, positional <skill>, input.skill, or an active workflow in .gjc/state/skill-active-state.json",
+			"gjc state clear requires --mode <skill>, positional <skill>, input.skill, or an active workflow in .jwc/state/skill-active-state.json",
 		);
 
 	const filePath = modeStateFile(cwd, mode, sessionId);
@@ -1366,7 +1366,7 @@ async function handleHandoff(
 	if (!caller) {
 		throw new StateCommandError(
 			2,
-			"gjc state handoff requires --mode <caller>, positional <caller>, input.skill, or an active workflow in .gjc/state/skill-active-state.json",
+			"gjc state handoff requires --mode <caller>, positional <caller>, input.skill, or an active workflow in .jwc/state/skill-active-state.json",
 		);
 	}
 	const calleeRaw = flagValue(args, "--to")?.trim();
@@ -1661,7 +1661,7 @@ async function collectRetentionCandidates(
 	cwd: string,
 	skills: readonly CanonicalGjcWorkflowSkill[],
 ): Promise<RetentionCandidate[]> {
-	const stateRoot = path.join(cwd, ".gjc", "state");
+	const stateRoot = path.join(cwd, ".jwc", "state");
 	const policies = new Map<string, { keep?: number; maxAgeDays?: number }>();
 	for (const skill of skills) {
 		for (const policy of getSkillManifest(skill).retention) {
@@ -1768,7 +1768,7 @@ async function buildGcSummary(
 		skill: rawSkill as CanonicalGjcWorkflowSkill | "all",
 		dry_run: dryRun,
 		eligible: eligible.map(candidate => candidate.relativePath),
-		pruned: pruned.map(filePath => path.relative(path.join(cwd, ".gjc", "state"), filePath)),
+		pruned: pruned.map(filePath => path.relative(path.join(cwd, ".jwc", "state"), filePath)),
 		counts,
 	};
 }
@@ -1808,7 +1808,7 @@ async function handlePrune(
 	if (!mode) {
 		throw new StateCommandError(
 			2,
-			"gjc state prune requires --mode <skill>, positional <skill>, input.skill, or an active workflow in .gjc/state/skill-active-state.json",
+			"gjc state prune requires --mode <skill>, positional <skill>, input.skill, or an active workflow in .jwc/state/skill-active-state.json",
 		);
 	}
 	const filePath = modeStateFile(cwd, mode, selectors.sessionId);
@@ -1877,7 +1877,7 @@ async function handleMigrate(
 	if (!mode) {
 		throw new StateCommandError(
 			2,
-			"gjc state migrate requires --mode <skill>, positional <skill>, input.skill, or an active workflow in .gjc/state/skill-active-state.json",
+			"gjc state migrate requires --mode <skill>, positional <skill>, input.skill, or an active workflow in .jwc/state/skill-active-state.json",
 		);
 	}
 	const filePath = modeStateFile(cwd, mode, selectors.sessionId);

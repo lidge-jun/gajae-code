@@ -15,9 +15,9 @@ afterEach(async () => {
 	await Promise.all(tempRoots.splice(0).map(dir => fs.rm(dir, { recursive: true, force: true })));
 });
 
-// Tests in this file assume root-scoped `.gjc/state` paths. The state runtime
+// Tests in this file assume root-scoped `.jwc/state` paths. The state runtime
 // falls back to the `GJC_SESSION_ID` env var when no `--session-id` flag is
-// provided, which would route writes into `.gjc/state/sessions/<id>/` and
+// provided, which would route writes into `.jwc/state/sessions/<id>/` and
 // break these root-scoped assertions when run inside a shell session that
 // exports `GJC_SESSION_ID` (e.g. the coding-agent dev loop). Clear and
 // restore the env so each test sees a deterministic root scope.
@@ -51,7 +51,7 @@ describe("native gjc state runtime", () => {
 
 	it("reads corrupt mode-state fail-open as empty state", async () => {
 		const root = await tempDir();
-		const stateDir = path.join(root, ".gjc", "state");
+		const stateDir = path.join(root, ".jwc", "state");
 		await fs.mkdir(stateDir, { recursive: true });
 		await fs.writeFile(path.join(stateDir, "ralplan-state.json"), "{not json");
 
@@ -98,7 +98,7 @@ describe("native gjc state runtime", () => {
 		expect(parsed.active).toBe(true);
 		// ralplan-state.json was written but jaw-interview-state.json contained `active:true` too;
 		// verify CLI flag won by reading the underlying file path
-		const ralplanFile = path.join(root, ".gjc", "state", "ralplan-state.json");
+		const ralplanFile = path.join(root, ".jwc", "state", "ralplan-state.json");
 		expect(JSON.parse(await fs.readFile(ralplanFile, "utf-8")).active).toBe(true);
 	});
 
@@ -135,7 +135,7 @@ describe("native gjc state runtime", () => {
 		expect(receipt).toMatchObject({ ok: true, skill: "jaw-interview", active: true, current_phase: "interviewing" });
 		expect(receipt.state).toBeUndefined();
 		const merged = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".jwc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		expect(merged.current_ambiguity).toBe(0.5);
 		expect(merged.threshold_source).toBe("user");
@@ -159,7 +159,7 @@ describe("native gjc state runtime", () => {
 		expect(receipt).toMatchObject({ ok: true, skill: "jaw-interview", active: true });
 		expect(receipt.state).toBeUndefined();
 		const merged = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".jwc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		expect(merged.active).toBe(true);
 		expect(Object.hasOwn(merged, "drop_me")).toBe(false);
@@ -182,7 +182,7 @@ describe("native gjc state runtime", () => {
 		expect(receipt).toMatchObject({ ok: true, skill: "jaw-interview", active: false });
 		expect(receipt.state).toBeUndefined();
 		const replaced = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".jwc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		expect(replaced.active).toBe(false);
 		expect(Object.hasOwn(replaced, "keep_me")).toBe(false);
@@ -208,7 +208,7 @@ describe("native gjc state runtime", () => {
 
 	it("clear flips active:false and removes the entry from skill-active-state", async () => {
 		const root = await tempDir();
-		const activeStateDir = path.join(root, ".gjc", "state");
+		const activeStateDir = path.join(root, ".jwc", "state");
 		await fs.mkdir(activeStateDir, { recursive: true });
 		await fs.writeFile(
 			path.join(activeStateDir, "skill-active-state.json"),
@@ -288,7 +288,7 @@ describe("native gjc state runtime", () => {
 		expect(first.status).toBe(0);
 		expect(second.status).toBe(0);
 		const final = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".jwc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		// `a` always survives because both writers started from it; whichever writer landed last contributes its key
 		expect(final.a).toBe(1);
@@ -319,7 +319,7 @@ describe("native gjc state runtime", () => {
 			root,
 		);
 		const active = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "skill-active-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".jwc", "state", "skill-active-state.json"), "utf-8"),
 		);
 		const entry = (
 			active.active_skills as Array<{
@@ -349,7 +349,7 @@ describe("native gjc state runtime", () => {
 			root,
 		);
 		const active = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "skill-active-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".jwc", "state", "skill-active-state.json"), "utf-8"),
 		);
 		const entry = (
 			active.active_skills as Array<{
@@ -374,7 +374,7 @@ describe("native gjc state runtime", () => {
 		);
 		await runNativeStateCommand(["clear", "--mode", "ralplan"], root);
 		const active = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "skill-active-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".jwc", "state", "skill-active-state.json"), "utf-8"),
 		);
 		expect((active.active_skills as Array<{ skill: string }>).some(e => e.skill === "ralplan")).toBe(false);
 	});
@@ -382,7 +382,7 @@ describe("native gjc state runtime", () => {
 	it("infers the active workflow for write when --mode/positional/input.skill are absent", async () => {
 		const root = await tempDir();
 		// Activate ralplan via the active-state file (simulating UserPromptSubmit hook output)
-		const stateDir = path.join(root, ".gjc", "state");
+		const stateDir = path.join(root, ".jwc", "state");
 		await fs.mkdir(stateDir, { recursive: true });
 		await fs.writeFile(
 			path.join(stateDir, "skill-active-state.json"),
@@ -416,7 +416,7 @@ describe("native gjc state runtime", () => {
 		);
 		const result = await runNativeStateCommand(["clear"], root);
 		expect(result.status).toBe(0);
-		const onDisk = JSON.parse(await fs.readFile(path.join(root, ".gjc", "state", "ralplan-state.json"), "utf-8"));
+		const onDisk = JSON.parse(await fs.readFile(path.join(root, ".jwc", "state", "ralplan-state.json"), "utf-8"));
 		expect(onDisk.active).toBe(false);
 	});
 

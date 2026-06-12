@@ -69,14 +69,14 @@ export function workflowStateStoragePath(cwd: string, skill: CanonicalGjcWorkflo
 	if (normalizedSessionId) {
 		return path.join(
 			cwd,
-			".gjc",
+			".jwc",
 			"state",
 			"sessions",
 			encodePathSegment(normalizedSessionId),
 			workflowModeStateFileName(skill),
 		);
 	}
-	return path.join(cwd, ".gjc", "state", workflowModeStateFileName(skill));
+	return path.join(cwd, ".jwc", "state", workflowModeStateFileName(skill));
 }
 
 export function workflowActiveStatePath(cwd: string, sessionId?: string): string {
@@ -84,14 +84,14 @@ export function workflowActiveStatePath(cwd: string, sessionId?: string): string
 	if (normalizedSessionId) {
 		return path.join(
 			cwd,
-			".gjc",
+			".jwc",
 			"state",
 			"sessions",
 			encodePathSegment(normalizedSessionId),
 			SKILL_ACTIVE_STATE_FILE,
 		);
 	}
-	return path.join(cwd, ".gjc", "state", SKILL_ACTIVE_STATE_FILE);
+	return path.join(cwd, ".jwc", "state", SKILL_ACTIVE_STATE_FILE);
 }
 
 export function buildWorkflowStateReceipt(input: {
@@ -143,10 +143,10 @@ export function sanctionedWorkflowStateCommand(skill: CanonicalGjcWorkflowSkill)
 export function describeWorkflowStateContract(skill: CanonicalGjcWorkflowSkill): string[] {
 	return [
 		`Sanctioned mutation path: jwc state ${skill} read|write --input '<json>'`,
-		`Canonical active HUD state: .gjc/state/${SKILL_ACTIVE_STATE_FILE} and .gjc/state/sessions/<session>/${SKILL_ACTIVE_STATE_FILE}`,
-		`Skill mode state: .gjc/state/${workflowModeStateFileName(skill)} or .gjc/state/sessions/<session>/${workflowModeStateFileName(skill)}`,
+		`Canonical active HUD state: .jwc/state/${SKILL_ACTIVE_STATE_FILE} and .jwc/state/sessions/<session>/${SKILL_ACTIVE_STATE_FILE}`,
+		`Skill mode state: .jwc/state/${workflowModeStateFileName(skill)} or .jwc/state/sessions/<session>/${workflowModeStateFileName(skill)}`,
 		"Receipts include version, skill, owner, command, state_path, storage_path, mutated_at, fresh_until, status, and mutation_id.",
 		"Receipts are fresh for 30 minutes; older receipts are stale and render as HUD warnings.",
-		"Planning artifacts under .gjc/specs/** and .gjc/plans/** remain writable outside the state command.",
+		"Planning artifacts under .jwc/specs/** and .jwc/plans/** remain writable outside the state command.",
 	];
 }

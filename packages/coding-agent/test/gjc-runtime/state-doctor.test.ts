@@ -71,9 +71,9 @@ async function runDoctorUnchanged(
 	root: string,
 	args: string[],
 ): Promise<Awaited<ReturnType<typeof runNativeStateCommand>>> {
-	const before = await snapshotFiles(path.join(root, ".gjc"));
+	const before = await snapshotFiles(path.join(root, ".jwc"));
 	const result = await runNativeStateCommand(args, root);
-	const after = await snapshotFiles(path.join(root, ".gjc"));
+	const after = await snapshotFiles(path.join(root, ".jwc"));
 	expectUnchanged(before, after);
 	return result;
 }
@@ -84,7 +84,7 @@ async function writeStampedState(root: string, skill: string, value: Record<stri
 		root,
 	);
 	expect(result.status).toBe(0);
-	return path.join(root, ".gjc", "state", `${skill}-state.json`);
+	return path.join(root, ".jwc", "state", `${skill}-state.json`);
 }
 
 describe("gjc state doctor", () => {
@@ -95,7 +95,7 @@ describe("gjc state doctor", () => {
 			current_phase: "interviewing",
 		});
 		expect(statePath).toContain("jaw-interview-state.json");
-		await writeJson(path.join(root, ".gjc", "state", "audit.jsonl"), { seeded: true });
+		await writeJson(path.join(root, ".jwc", "state", "audit.jsonl"), { seeded: true });
 
 		const result = await runDoctorUnchanged(root, ["doctor", "--json"]);
 		expect(result.status).toBe(0);
@@ -111,9 +111,9 @@ describe("gjc state doctor", () => {
 
 	it("detects orphan transaction journals and prints the hard prune fix command", async () => {
 		const root = await tempDir();
-		const journalPath = path.join(root, ".gjc", "state", "transactions", "orphan.json");
+		const journalPath = path.join(root, ".jwc", "state", "transactions", "orphan.json");
 		await writeJson(journalPath, { version: 1, mutation_id: "orphan", status: "committed", paths: [] });
-		await writeJson(path.join(root, ".gjc", "state", "audit.jsonl"), { seeded: true });
+		await writeJson(path.join(root, ".jwc", "state", "audit.jsonl"), { seeded: true });
 
 		const text = await runDoctorUnchanged(root, ["doctor"]);
 		expect(text.status).toBe(1);
@@ -137,7 +137,7 @@ describe("gjc state doctor", () => {
 		const state = JSON.parse(await fs.readFile(statePath, "utf-8"));
 		state.current_phase = "critic";
 		await writeJson(statePath, state);
-		await writeJson(path.join(root, ".gjc", "state", "audit.jsonl"), { seeded: true });
+		await writeJson(path.join(root, ".jwc", "state", "audit.jsonl"), { seeded: true });
 
 		const result = await runDoctorUnchanged(root, ["doctor", "--skill", "ralplan", "--json"]);
 		expect(result.status).toBe(1);
@@ -155,9 +155,9 @@ describe("gjc state doctor", () => {
 
 	it("detects schema violations and prints the migrate fix command", async () => {
 		const root = await tempDir();
-		const statePath = path.join(root, ".gjc", "state", "ultragoal-state.json");
+		const statePath = path.join(root, ".jwc", "state", "ultragoal-state.json");
 		await writeJson(statePath, { skill: "ultragoal", version: "one", active: "yes", current_phase: 7 });
-		await writeJson(path.join(root, ".gjc", "state", "audit.jsonl"), { seeded: true });
+		await writeJson(path.join(root, ".jwc", "state", "audit.jsonl"), { seeded: true });
 
 		const result = await runDoctorUnchanged(root, ["doctor", "--json"]);
 		expect(result.status).toBe(1);
@@ -174,7 +174,7 @@ describe("gjc state doctor", () => {
 
 	it("detects stale active-state from raw snapshot and per-skill active entries", async () => {
 		const root = await tempDir();
-		const stateRoot = path.join(root, ".gjc", "state");
+		const stateRoot = path.join(root, ".jwc", "state");
 		const activeEntryPath = path.join(stateRoot, "active", "team.json");
 		await writeJson(activeEntryPath, { skill: "team", active: true, phase: "running" });
 		await writeJson(path.join(stateRoot, "skill-active-state.json"), {

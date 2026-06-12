@@ -10,7 +10,7 @@ import * as path from "node:path";
 const ROOT = process.cwd();
 const TARGET_DIRS = ["packages", "docs", "scripts"];
 const ROOT_FILES = ["biome.json", ".gitignore", "README.md", "README.jwc.md", "AGENTS.md"];
-const EXTS = new Set([".ts", ".js", ".json", ".md", ".sh", ".toml", ".yml", ".yaml"]);
+const EXTS = new Set([".ts", ".js", ".json", ".md", ".sh", ".toml", ".yml", ".yaml", ".py", ".ps1"]);
 const EXCLUDE_PARTS = ["node_modules", ".git/", "har_struct", "devlog", "structure/", "migrate-config-dir", "beta-jwc-sweep"];
 const PATTERN = /\.gjc(?![A-Za-z0-9_])/g;
 
@@ -57,6 +57,12 @@ const POST_FIXES: ReadonlyArray<[string, string, string]> = [
 	["packages/coding-agent/src/extensibility/plugins/installer.ts", "manifest: pkg.jwc || pkg.pi || { version: pkg.version },", "manifest: pkg.jwc || pkg.gjc || pkg.pi || { version: pkg.version },"],
 	["packages/coding-agent/src/extensibility/plugins/loader.ts", "const manifest: PluginManifest | undefined = pluginPkg.jwc || pluginPkg.pi;", "const manifest: PluginManifest | undefined = pluginPkg.jwc || pluginPkg.gjc || pluginPkg.pi;"],
 	["packages/coding-agent/src/extensibility/plugins/manager.ts", "const manifest: PluginManifest = pkg.jwc || pkg.pi || { version: pkg.version };", "const manifest: PluginManifest = pkg.jwc || pkg.gjc || pkg.pi || { version: pkg.version };"],
+	// Round-2 fixups (main-repo run 260612): sites added after the worktree pre-validation.
+	["packages/coding-agent/src/extensibility/plugins/installer.ts", "manifest: pkg.jwc || pkg.pi || { version: pkg.version },", "manifest: pkg.jwc || pkg.gjc || pkg.pi || { version: pkg.version },"],
+	["packages/coding-agent/src/extensibility/plugins/manager.ts", "const manifest: PluginManifest = pluginPkg.jwc || pluginPkg.pi || { version: pluginPkg.version };", "const manifest: PluginManifest = pluginPkg.jwc || pluginPkg.gjc || pluginPkg.pi || { version: pluginPkg.version };"],
+	["packages/coding-agent/src/extensibility/plugins/manager.ts", "const hasManifest = !!(pluginPkg.jwc || pluginPkg.pi);", "const hasManifest = !!(pluginPkg.jwc || pluginPkg.gjc || pluginPkg.pi);"],
+	["packages/coding-agent/src/extensibility/plugins/manager.ts", "const manifest: PluginManifest | undefined = pluginPkg.jwc || pluginPkg.pi;", "const manifest: PluginManifest | undefined = pluginPkg.jwc || pluginPkg.gjc || pluginPkg.pi;"],
+	["scripts/verify-g002-gates.ts", 'const hasGjcBin = typeof bin.jwc === "string";', 'const hasGjcBin = typeof (bin.jwc ?? bin.gjc) === "string"; // transition: bin key renames with 065.1'],
 ];
 for (const [rel, from, to] of POST_FIXES) {
 	const p = path.join(ROOT, rel);
