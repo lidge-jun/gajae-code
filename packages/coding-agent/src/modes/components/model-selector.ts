@@ -1,16 +1,20 @@
 import { ThinkingLevel } from "@gajae-code/agent-core";
 import { clampThinkingLevelForModel, getSupportedEfforts, type Model, modelsAreEqual } from "@gajae-code/ai";
 import {
+	type Component,
 	Container,
 	fuzzyFilter,
 	getKeybindings,
 	Input,
 	matchesKey,
+	padding,
 	Spacer,
 	type Tab,
 	TabBar,
 	Text,
 	type TUI,
+	truncateToWidth,
+	visibleWidth,
 } from "@gajae-code/tui";
 import type { ModelProfileDefinition } from "../../config/model-profiles";
 import type { GjcModelAssignmentTargetId, ModelRegistry } from "../../config/model-registry";
@@ -176,6 +180,15 @@ function createProviderTab(providerId: string): ProviderTabState {
  * - Enter: Open assignment actions for default plus GJC role-agent models
  * - Escape: Close selector
  */
+/** Stateless child that pulls its lines from the host at render time. */
+class PaneComponent implements Component {
+	constructor(private readonly renderPane: (width: number) => string[]) {}
+	invalidate(): void {}
+	render(width: number): string[] {
+		return this.renderPane(width);
+	}
+}
+
 export class ModelSelectorComponent extends Container {
 	#searchInput: Input;
 	#headerContainer: Container;
@@ -187,6 +200,12 @@ export class ModelSelectorComponent extends Container {
 	#filteredCanonicalModels: CanonicalModelItem[] = [];
 	#profileItems: ProfileItem[] = [];
 	#selectedIndex: number = 0;
+	/** ctrl+o toggle: reveal models tagged `unlisted` (hidden by default). */
+	#showUnlisted = false;
+	#hiddenUnlistedCount = 0;
+	/** ALL-tab split view (99.30.04 S7): which pane owns the cursor. */
+	#activePaneId: "profiles" | "models" = "profiles";
+	#profileSelectedIndex = 0;
 	#roles = {} as Record<string, RoleAssignment | undefined>;
 	#settings = null as unknown as Settings;
 	#modelRegistry = null as unknown as ModelRegistry;
@@ -502,11 +521,16 @@ export class ModelSelectorComponent extends Container {
 					.map(profile => ({ kind: "profile" as const, name: profile.name, profile }));
 
 		this.#allModels = models;
-		this.#filteredModels = models;
 		this.#canonicalModels = canonicalModels;
-		this.#filteredCanonicalModels = canonicalModels;
+		// Route through the filter so the unlisted gate applies on initial load
+		// too, not only after a search/tab/ctrl+o interaction.
+		this.#filteredModels = this.#showUnlisted ? models : models.filter(item => item.model.unlisted !== true);
+		this.#filteredCanonicalModels = this.#showUnlisted
+			? canonicalModels
+			: canonicalModels.filter(item => item.model.unlisted !== true);
+		this.#hiddenUnlistedCount = this.#showUnlisted ? 0 : models.length - this.#filteredModels.length;
 		this.#profileItems = profileItems;
-		this.#selectedIndex = Math.min(this.#selectedIndex, Math.max(0, models.length - 1));
+		this.#selectedIndex = Math.min(this.#selectedIndex, Math.max(0, this.#filteredModels.length - 1));
 	}
 
 	#buildProviderTabs(): void {
@@ -556,6 +580,8 @@ export class ModelSelectorComponent extends Container {
 		tabBar.onTabChange = (_tab, index) => {
 			this.#activeTabIndex = index;
 			this.#selectedIndex = 0;
+			this.#profileSelectedIndex = 0;
+			this.#activePaneId = "profiles";
 			this.#applyTabFilter();
 			void this.#refreshSelectedProvider().catch(error => {
 				this.#errorMessage = error instanceof Error ? error.message : String(error);
@@ -590,9 +616,20 @@ export class ModelSelectorComponent extends Container {
 
 		// Start with all models or filter by provider/canonical view
 		let baseModels = this.#allModels;
-		const baseCanonicalModels = this.#canonicalModels;
+		let baseCanonicalModels = this.#canonicalModels;
 		if (activeProviderIds && activeProviderIds.length > 0) {
 			baseModels = this.#allModels.filter(m => activeProviderIds.includes(m.provider));
+		}
+
+		// Unlisted models (not servable on the current auth path) hide by
+		// default; ctrl+o reveals them (99.30.04).
+		const unlistedInView = isCanonicalTab
+			? baseCanonicalModels.filter(item => item.model.unlisted === true).length
+			: baseModels.filter(item => item.model.unlisted === true).length;
+		this.#hiddenUnlistedCount = this.#showUnlisted ? 0 : unlistedInView;
+		if (!this.#showUnlisted) {
+			baseModels = baseModels.filter(item => item.model.unlisted !== true);
+			baseCanonicalModels = baseCanonicalModels.filter(item => item.model.unlisted !== true);
 		}
 
 		// Apply fuzzy filter if query is present
@@ -642,6 +679,10 @@ export class ModelSelectorComponent extends Container {
 
 		const visibleCount = isCanonicalTab ? this.#filteredCanonicalModels.length : this.#filteredModels.length;
 		this.#selectedIndex = Math.min(this.#selectedIndex, Math.max(0, visibleCount - 1));
+		this.#profileSelectedIndex = Math.min(
+			this.#profileSelectedIndex,
+			Math.max(0, this.#getVisibleProfiles().length - 1),
+		);
 		this.#updateList();
 	}
 
@@ -717,90 +758,154 @@ export class ModelSelectorComponent extends Container {
 			: [];
 	}
 
+	#buildModelRowLine(item: ModelItem | CanonicalModelItem, isSelected: boolean): string {
+		const isCanonicalTab = this.#isCanonicalTab();
+		const showProvider = this.#getActiveTabId() === ALL_TAB;
+		const canonicalItem = isCanonicalTab ? (item as CanonicalModelItem) : undefined;
+		const providerItem = isCanonicalTab ? undefined : (item as ModelItem);
+
+		// Build role badges (inverted: color as background, black text)
+		const roleBadgeTokens: string[] = [];
+		for (const role of GJC_MODEL_ASSIGNMENT_TARGET_IDS) {
+			const roleInfo = GJC_MODEL_ASSIGNMENT_TARGETS[role];
+			const assigned = this.#roles[role];
+			if (roleInfo.tag && assigned && modelsAreEqual(assigned.model, item.model)) {
+				const badge = makeInvertedBadge(roleInfo.tag, roleInfo.color ?? "muted");
+				const thinkingLabel = getThinkingLevelMetadata(assigned.thinkingLevel).label;
+				roleBadgeTokens.push(`${badge} ${theme.fg("dim", `(${thinkingLabel})`)}`);
+			}
+		}
+		const badgeText = roleBadgeTokens.length > 0 ? ` ${roleBadgeTokens.join(" ")}` : "";
+
+		let line = "";
+		if (isSelected) {
+			const prefix = theme.fg("accent", `${theme.nav.cursor} `);
+			if (isCanonicalTab) {
+				const variants = theme.fg("dim", ` [${canonicalItem?.variantCount ?? 0}]`);
+				const backing = theme.fg("dim", ` -> ${item.model.provider}/${item.model.id}`);
+				line = `${prefix}${theme.fg("accent", item.id)}${variants}${backing}${badgeText}`;
+			} else if (showProvider) {
+				const providerPrefix = theme.fg("dim", `${providerItem?.provider ?? ""}/`);
+				line = `${prefix}${providerPrefix}${theme.fg("accent", providerItem?.id ?? item.id)}${badgeText}`;
+			} else {
+				line = `${prefix}${theme.fg("accent", item.id)}${badgeText}`;
+			}
+		} else {
+			const prefix = "  ";
+			if (isCanonicalTab) {
+				const variants = theme.fg("dim", ` [${canonicalItem?.variantCount ?? 0}]`);
+				const backing = theme.fg("dim", ` -> ${item.model.provider}/${item.model.id}`);
+				line = `${prefix}${item.id}${variants}${backing}${badgeText}`;
+			} else if (showProvider) {
+				const providerPrefix = theme.fg("dim", `${providerItem?.provider ?? ""}/`);
+				line = `${prefix}${providerPrefix}${providerItem?.id ?? item.id}${badgeText}`;
+			} else {
+				line = `${prefix}${item.id}${badgeText}`;
+			}
+		}
+
+		if (item.model.unlisted === true) {
+			line += theme.fg("dim", " (unlisted)");
+		}
+		return line;
+	}
+
+	#modelWindow(visibleItems: ReadonlyArray<ModelItem | CanonicalModelItem>): { startIndex: number; endIndex: number } {
+		const maxVisible = 10;
+		const startIndex = Math.max(
+			0,
+			Math.min(this.#selectedIndex - Math.floor(maxVisible / 2), visibleItems.length - maxVisible),
+		);
+		return { startIndex, endIndex: Math.min(startIndex + maxVisible, visibleItems.length) };
+	}
+
+	#isTwoPane(): boolean {
+		return this.#getVisibleProfiles().length > 0;
+	}
+
+	/** ALL-tab split body: profiles pane (left) and models pane (right), zipped. */
+	#renderAllTabPanes(width: number): string[] {
+		const visibleProfiles = this.#getVisibleProfiles();
+		const visibleItems = this.#filteredModels;
+		const profilesFocused = this.#activePaneId === "profiles";
+
+		const left: string[] = [];
+		left.push(theme.fg(profilesFocused ? "accent" : "muted", "Profiles"));
+		// Focus indicator + switch hint live in the header row ("위에 표기").
+		for (let i = 0; i < visibleProfiles.length; i++) {
+			const profile = visibleProfiles[i];
+			if (!profile) continue;
+			const isSelected = profilesFocused && i === this.#profileSelectedIndex;
+			const prefix = isSelected ? theme.fg("accent", `${theme.nav.cursor} `) : "  ";
+			const label = isSelected ? theme.fg("accent", profile.name) : profile.name;
+			left.push(`${prefix}${label}`);
+		}
+
+		const right: string[] = [];
+		right.push(
+			`${theme.fg(profilesFocused ? "muted" : "accent", "Models")}${theme.fg("dim", "  ·  space to switch pane")}`,
+		);
+		const { startIndex, endIndex } = this.#modelWindow(visibleItems);
+		for (let i = startIndex; i < endIndex; i++) {
+			const item = visibleItems[i];
+			if (!item) continue;
+			right.push(this.#buildModelRowLine(item, !profilesFocused && i === this.#selectedIndex));
+		}
+		if (startIndex > 0 || endIndex < visibleItems.length) {
+			right.push(theme.fg("muted", `  (${this.#selectedIndex + 1}/${visibleItems.length})`));
+		}
+
+		const leftWidth = Math.max(
+			14,
+			Math.min(
+				Math.floor(width * 0.32),
+				visibleProfiles.reduce((max, profile) => Math.max(max, visibleWidth(profile.name) + 4), 14),
+			),
+		);
+		const separator = theme.fg("dim", "│");
+		const rows = Math.max(left.length, right.length);
+		const lines: string[] = [];
+		for (let i = 0; i < rows; i++) {
+			const leftCell = truncateToWidth(left[i] ?? "", leftWidth);
+			const pad = padding(Math.max(0, leftWidth - visibleWidth(leftCell)));
+			lines.push(truncateToWidth(`${leftCell}${pad} ${separator} ${right[i] ?? ""}`, width));
+		}
+		return lines;
+	}
+
 	#updateList(): void {
 		this.#listContainer.clear();
 		const isCanonicalTab = this.#isCanonicalTab();
 		const visibleProfiles = this.#getVisibleProfiles();
-		const modelSelectedIndex = Math.max(0, this.#selectedIndex - visibleProfiles.length);
+		const modelSelectedIndex = this.#selectedIndex;
 		const visibleItems = isCanonicalTab ? this.#filteredCanonicalModels : this.#filteredModels;
+		const twoPane = this.#isTwoPane();
 
-		const maxVisible = 10;
-		const startIndex = Math.max(
-			0,
-			Math.min(modelSelectedIndex - Math.floor(maxVisible / 2), visibleItems.length - maxVisible),
-		);
-		const endIndex = Math.min(startIndex + maxVisible, visibleItems.length);
-
-		const showProvider = this.#getActiveTabId() === ALL_TAB;
-
-		if (visibleProfiles.length > 0) {
-			this.#listContainer.addChild(new Text(theme.fg("muted", "Profiles"), 0, 0));
-			for (let i = 0; i < visibleProfiles.length; i++) {
-				const profile = visibleProfiles[i];
-				if (!profile) continue;
-				const isSelected = i === this.#selectedIndex;
-				const prefix = isSelected ? theme.fg("accent", `${theme.nav.cursor} `) : "  ";
-				const label = isSelected ? theme.fg("accent", profile.name) : profile.name;
-				this.#listContainer.addChild(new Text(`${prefix}${label}`, 0, 0));
+		if (twoPane) {
+			// ALL tab with profiles: split body (left Profiles / right Models),
+			// re-zipped per render width (99.30.04 S7).
+			this.#listContainer.addChild(new PaneComponent(width => this.#renderAllTabPanes(width)));
+		} else {
+			// Flat list: models only (profiles render in the split body).
+			const { startIndex, endIndex } = this.#modelWindow(visibleItems);
+			for (let i = startIndex; i < endIndex; i++) {
+				const item = visibleItems[i];
+				if (!item) continue;
+				this.#listContainer.addChild(new Text(this.#buildModelRowLine(item, i === this.#selectedIndex), 0, 0));
 			}
-			this.#listContainer.addChild(new Spacer(1));
-		}
-		// Show visible slice of filtered models
-		for (let i = startIndex; i < endIndex; i++) {
-			const item = visibleItems[i];
-			if (!item) continue;
-			const canonicalItem = isCanonicalTab ? (item as CanonicalModelItem) : undefined;
-			const providerItem = isCanonicalTab ? undefined : (item as ModelItem);
-
-			const isSelected = i + visibleProfiles.length === this.#selectedIndex;
-
-			// Build role badges (inverted: color as background, black text)
-			const roleBadgeTokens: string[] = [];
-			for (const role of GJC_MODEL_ASSIGNMENT_TARGET_IDS) {
-				const roleInfo = GJC_MODEL_ASSIGNMENT_TARGETS[role];
-				const assigned = this.#roles[role];
-				if (roleInfo.tag && assigned && modelsAreEqual(assigned.model, item.model)) {
-					const badge = makeInvertedBadge(roleInfo.tag, roleInfo.color ?? "muted");
-					const thinkingLabel = getThinkingLevelMetadata(assigned.thinkingLevel).label;
-					roleBadgeTokens.push(`${badge} ${theme.fg("dim", `(${thinkingLabel})`)}`);
-				}
+			if (startIndex > 0 || endIndex < visibleItems.length) {
+				const scrollInfo = theme.fg("muted", `  (${this.#selectedIndex + 1}/${visibleItems.length})`);
+				this.#listContainer.addChild(new Text(scrollInfo, 0, 0));
 			}
-			const badgeText = roleBadgeTokens.length > 0 ? ` ${roleBadgeTokens.join(" ")}` : "";
-
-			let line = "";
-			if (isSelected) {
-				const prefix = theme.fg("accent", `${theme.nav.cursor} `);
-				if (isCanonicalTab) {
-					const variants = theme.fg("dim", ` [${canonicalItem?.variantCount ?? 0}]`);
-					const backing = theme.fg("dim", ` -> ${item.model.provider}/${item.model.id}`);
-					line = `${prefix}${theme.fg("accent", item.id)}${variants}${backing}${badgeText}`;
-				} else if (showProvider) {
-					const providerPrefix = theme.fg("dim", `${providerItem?.provider ?? ""}/`);
-					line = `${prefix}${providerPrefix}${theme.fg("accent", providerItem?.id ?? item.id)}${badgeText}`;
-				} else {
-					line = `${prefix}${theme.fg("accent", item.id)}${badgeText}`;
-				}
-			} else {
-				const prefix = "  ";
-				if (isCanonicalTab) {
-					const variants = theme.fg("dim", ` [${canonicalItem?.variantCount ?? 0}]`);
-					const backing = theme.fg("dim", ` -> ${item.model.provider}/${item.model.id}`);
-					line = `${prefix}${item.id}${variants}${backing}${badgeText}`;
-				} else if (showProvider) {
-					const providerPrefix = theme.fg("dim", `${providerItem?.provider ?? ""}/`);
-					line = `${prefix}${providerPrefix}${providerItem?.id ?? item.id}${badgeText}`;
-				} else {
-					line = `${prefix}${item.id}${badgeText}`;
-				}
-			}
-
-			this.#listContainer.addChild(new Text(line, 0, 0));
 		}
 
-		// Add scroll indicator if needed
-		if (startIndex > 0 || endIndex < visibleItems.length) {
-			const scrollInfo = theme.fg("muted", `  (${this.#selectedIndex + 1}/${visibleItems.length})`);
-			this.#listContainer.addChild(new Text(scrollInfo, 0, 0));
+		// ctrl+o discoverability hint (only when the toggle has something to do)
+		if (this.#hiddenUnlistedCount > 0) {
+			this.#listContainer.addChild(
+				new Text(theme.fg("dim", `  ctrl+o show ${this.#hiddenUnlistedCount} unsupported`), 0, 0),
+			);
+		} else if (this.#showUnlisted) {
+			this.#listContainer.addChild(new Text(theme.fg("dim", "  ctrl+o hide unsupported"), 0, 0));
 		}
 
 		// Show error message or "no results" if empty
@@ -818,8 +923,8 @@ export class ModelSelectorComponent extends Container {
 					0,
 				),
 			);
-		} else if (this.#selectedIndex < visibleProfiles.length) {
-			const selectedProfile = visibleProfiles[this.#selectedIndex];
+		} else if (twoPane && this.#activePaneId === "profiles") {
+			const selectedProfile = visibleProfiles[this.#profileSelectedIndex];
 			if (selectedProfile && this.#pendingActionItem) {
 				this.#renderProfileActionMenu(selectedProfile);
 			}
@@ -900,10 +1005,12 @@ export class ModelSelectorComponent extends Container {
 	}
 
 	#getSelectedItem(): ModelItem | CanonicalModelItem | ProfileItem | undefined {
-		const visibleProfiles = this.#getVisibleProfiles();
-		if (this.#selectedIndex < visibleProfiles.length) return visibleProfiles[this.#selectedIndex];
-		const modelIndex = this.#selectedIndex - visibleProfiles.length;
-		return this.#isCanonicalTab() ? this.#filteredCanonicalModels[modelIndex] : this.#filteredModels[modelIndex];
+		if (this.#isTwoPane() && this.#activePaneId === "profiles") {
+			return this.#getVisibleProfiles()[this.#profileSelectedIndex];
+		}
+		return this.#isCanonicalTab()
+			? this.#filteredCanonicalModels[this.#selectedIndex]
+			: this.#filteredModels[this.#selectedIndex];
 	}
 
 	handleInput(keyData: string): void {
@@ -916,29 +1023,46 @@ export class ModelSelectorComponent extends Container {
 			return;
 		}
 
+		// ctrl+o reveals unlisted models — selector-scoped "expand" grammar
+		// (composer app.tools.expand / tree-selector filter cycle precedent).
+		if (matchesKey(keyData, "ctrl+o")) {
+			this.#showUnlisted = !this.#showUnlisted;
+			this.#applyTabFilter();
+			return;
+		}
+
+		// ALL-tab split view: space toggles pane focus — model queries never
+		// contain a literal space, so the search input loses nothing. Arrows
+		// and tab keep their original tab-cycling behavior via TabBar.
+		if (this.#isTwoPane() && keyData === " ") {
+			this.#activePaneId = this.#activePaneId === "profiles" ? "models" : "profiles";
+			this.#updateList();
+			return;
+		}
+
 		// Tab bar navigation
 		if (this.#tabBar?.handleInput(keyData)) {
 			return;
 		}
 
-		// Up arrow - navigate list (wrap to bottom when at top)
-		if (matchesKey(keyData, "up")) {
-			const itemCount =
-				this.#getVisibleProfiles().length +
-				(this.#isCanonicalTab() ? this.#filteredCanonicalModels.length : this.#filteredModels.length);
-			if (itemCount === 0) return;
-			this.#selectedIndex = this.#selectedIndex === 0 ? itemCount - 1 : this.#selectedIndex - 1;
-			this.#updateList();
-			return;
-		}
-
-		// Down arrow - navigate list (wrap to top when at bottom)
-		if (matchesKey(keyData, "down")) {
-			const itemCount =
-				this.#getVisibleProfiles().length +
-				(this.#isCanonicalTab() ? this.#filteredCanonicalModels.length : this.#filteredModels.length);
-			if (itemCount === 0) return;
-			this.#selectedIndex = this.#selectedIndex === itemCount - 1 ? 0 : this.#selectedIndex + 1;
+		// Up/down - navigate the focused list (wrap at both ends)
+		if (matchesKey(keyData, "up") || matchesKey(keyData, "down")) {
+			const goingUp = matchesKey(keyData, "up");
+			if (this.#isTwoPane() && this.#activePaneId === "profiles") {
+				const profileCount = this.#getVisibleProfiles().length;
+				if (profileCount === 0) return;
+				this.#profileSelectedIndex = goingUp
+					? (this.#profileSelectedIndex - 1 + profileCount) % profileCount
+					: (this.#profileSelectedIndex + 1) % profileCount;
+			} else {
+				const itemCount = this.#isCanonicalTab()
+					? this.#filteredCanonicalModels.length
+					: this.#filteredModels.length;
+				if (itemCount === 0) return;
+				this.#selectedIndex = goingUp
+					? (this.#selectedIndex - 1 + itemCount) % itemCount
+					: (this.#selectedIndex + 1) % itemCount;
+			}
 			this.#updateList();
 			return;
 		}
