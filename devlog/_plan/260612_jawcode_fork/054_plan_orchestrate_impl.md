@@ -68,6 +68,14 @@
 | A 흐름 | **trivial 판정은 `orchestrate a` 진입 시** — plan diff 기준 predicate(단일 파일·단일 동작·AC 명시), `--deliberate`/high-risk 지정 시 dual 강제, 결과를 `ctx.a_audit_mode`에 기록 [기본값] → **Planner∥Architect 병렬 spawn**(solo → Architect 단독) → NEW `parseWorkerVerdict`(**[확정 D050-23] 단계별 분리**: A는 `PASS\|FAIL` 신규 파서 + orchestrate 전용 audit 프롬프트, P Critic은 ralplan 어휘 `OKAY\|ITERATE\|REJECT` 유지. ※ architect.md 자체 어휘는 CLEAR/WATCH/BLOCK이라 **A 전용 프롬프트로 출력 형식 고정 필수**) → FAIL이면 Boss 플랜 수정 → 델타 재감사(라운드별 산출물 `round-N.md` + `a_round` 갱신), `a_round ≤3` 초과 시 사용자 에스컬레이션 |
 | handoff | `.gjc/specs/jaw-interview-*.md`(`jaw-interview-runtime.ts:408`) → pabcd state `spec_ref` 소비; A 산출물은 `.gjc/plans/pabcd/<run-id>/` + `index.jsonl` 관례. **P 게이트 정본(pending-approval.md)은 ralplan writer 재사용이므로 `.gjc/plans/ralplan/<run-id>/` 경로 유지**(D050-13) |
 
+### B4 스코프 노트 (B-verify 확정, cli-jaw 동형)
+
+> 런타임(CLI)은 **상태머신 + 프롬프트 방출 + verdict 기록**까지만 소유한다. subagent spawn·ralplan 호출·trivial predicate의
+> 의미 판정은 **메인 세션(에이전트)** 몫 — cli-jaw 원본도 동일 분담(orchestrate 명령은 프롬프트 주입만, dispatch는 Boss가).
+> 런타임이 제공하는 기계 표면: `orchestrate audit-prompt planner|architect`(PASS|FAIL 고정 spawn 프롬프트),
+> `orchestrate verdict --worker-output`(stage p=OKAY|ITERATE|REJECT/`p_round≤2`, a=PASS|FAIL/`a_round≤3`, b=DONE|NEEDS_FIX),
+> `--audit-mode solo|dual` 진입 기록. "승인 전 mutation 0"은 런타임 자체가 `.gjc/state` 외 무엇도 쓰지 않음으로 충족.
+
 ### B6 — B/C/D 런타임 (A-1라운드 Planner 지적 보강)
 
 | 항목 | 변경 |
