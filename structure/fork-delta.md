@@ -1,0 +1,103 @@
+# fork-delta — @bitkyc08/jawcode 포크 델타 인덱스 (체리픽 정본)
+
+> upstream: `Yeachan-Heo/gajae-code` · fork: `bitkyc08/jawcode`. 본 문서는 포크가 업스트림에서 이탈한 파일의 **단일 카노니컬 인덱스**다 — 리베이스/체리픽 전 충돌 예상 분석의 첫 진입점. 설계 정본: `devlog/_plan/260612_jawcode_fork/067.1_plan_structure_fork_delta.md`.
+> 갱신 규칙: HARD-EDIT·INVERTED-GUARD·REMOVED·NEW 파일이 포함된 커밋은 본 문서를 **동행 갱신**한다 (SOFT-EDIT는 밴드 일괄 허용). 커밋 트레일러 `Fork-Delta: <종류> <경로>` 규약은 `structure/conventions.md` 참조.
+
+## 종류 정의
+
+| 종류 | 의미 | 리베이스/체리픽 처리 |
+|---|---|---|
+| `NEW` | upstream에 없는 포크 신규 파일 | 자동 보존 / 통째 적용 |
+| `HARD-EDIT` | upstream 파일의 산문·식별자 직접 수정 | **충돌 고확률** — 보존 경계 열 참조 |
+| `REMOVED` | upstream 존재, 포크에서 삭제 | upstream 재추가 시 re-delete |
+| `INVERTED-GUARD` | 가드/허용리스트 논리 반전(gjc→jwc), 테스트 동반 | 충돌 시 포크 논리 우선 |
+| `SOFT-EDIT` | `${APP_NAME}` 동적화·픽스처 갱신 등 | 저위험 |
+
+## 보존 경계 (BOUNDARY: gjc-internal-identifiers — 065.1 확정)
+
+- `packages/coding-agent/src/gjc-runtime/`, `src/extensibility/gjc-plugins/` → **경로 rename 금지** (업스트림 체리픽 경계)
+- `CANONICAL_GJC_WORKFLOW_SKILLS`·`GJC_SKILL_KEYWORD_DEFINITIONS`·`GjcTeam*` 등 심볼 → 변경 금지
+- receipt.owner `"gjc-runtime"`/`"gjc-state-cli"`/`"gjc-hook"` → **절대 변경 금지** (퍼시스트 계약)
+- `ENGINE_NAME = "gjc"`(`packages/utils/src/dirs.ts:20`) → 보존 (065.1-H; XDG 경로는 061.1 Q2)
+- `@gajae-code/*` 내부 import 스코프 → 보존 (063.1 전략 B)
+- `.gjc/` 상태 경로 → 현행 보존, **060.1 Phase β(D-1a/b 승인) 시 `.jwc` 전환 예정**
+
+## 델타 인덱스 (260612 C1~C13 기준)
+
+### prompts/ — HARD-EDIT
+
+| 경로 | 종류 | 밴드 | devlog | merge 지침 | 보존 경계 |
+|---|---|---|---|---|---|
+| `packages/coding-agent/src/prompts/system/system-prompt.md` | HARD-EDIT | 085.5-M2 | 085.5_plan_prompt_rebrand.md | CONFLICT-EXPECTED | `.gjc/`·`defaults/gjc` 리터럴 |
+| `packages/coding-agent/src/prompts/tools/{bash,skill,recall,reflect,retain}.md` | HARD-EDIT | 085.5-M2 | 동일 | CONFLICT-EXPECTED | — |
+| `packages/coding-agent/src/prompts/agents/{planner,architect,critic}.md` | HARD-EDIT+INVERTED-GUARD | 085.5-M1·M3 | 동일 | CONFLICT-EXPECTED | frontmatter는 jwc 접두 |
+| `packages/coding-agent/src/prompts/goals/goal-{continuation,mode-active}.md` | HARD-EDIT | 060-061 | 061_design_goal_merge.md | CONFLICT-EXPECTED | — |
+| `packages/coding-agent/src/prompts/jaw/` (orchestrate-* 6종 + audit 2종) | NEW | 054/057 | 054_plan_orchestrate_impl.md | N/A | — |
+
+### defaults/gjc/skills — HARD-EDIT
+
+| 경로 | 종류 | 밴드 | merge 지침 | 보존 경계 |
+|---|---|---|---|---|
+| `…/defaults/gjc/skills/{jaw-interview,ralplan,team,ultragoal}/SKILL.md` | HARD-EDIT(+INVERTED-GUARD) | 085.5-M4, C13 | CONFLICT-EXPECTED | `GJC_TEAM_*` env·`.gjc/` 경로. jaw-interview는 설정 키 `jwc.interview.*` (c7c748ec) |
+| 부속 md (auto-answer-uncertain 등) | HARD-EDIT | 042/085.5 | MANUAL-REVIEW | — |
+
+### 신규 런타임 (gjc-runtime/ 내 포크 전용) — NEW
+
+| 경로 | 밴드 | devlog |
+|---|---|---|
+| `…/gjc-runtime/agent-identity.ts` | 085.6 | 085.6_plan_identity_leak_zero.md |
+| `…/gjc-runtime/cli-jaw-vocab.ts` | 057 | 057_plan_skill_compat_patch.md |
+| `…/gjc-runtime/stage-skill-map.ts` | 057 P10 | 동일 |
+| `…/gjc-runtime/goal-runtime.ts` | 060-061 | 061_design_goal_merge.md |
+| (기존재 NEW 군) jaw-interview/ralplan/orchestrate/ultragoal/team/state 런타임 일체 | 030~085 | 각 밴드 MOC |
+
+### commands/ · cli
+
+| 경로 | 종류 | 밴드 | merge 지침 |
+|---|---|---|---|
+| `…/commands/goal.ts` | NEW | 060-061 | N/A |
+| `…/commands/{harness,setup,team,worktree,ralplan,state,ultragoal}.ts` | SOFT-EDIT (`${APP_NAME}` 예시) | 085.5-M6 | AUTO |
+| `…/src/cli.ts` (jawOnlyCommands: interview/orchestrate/goal) | HARD-EDIT | 050/060 | MANUAL-REVIEW |
+
+### 가드 — INVERTED-GUARD
+
+| 경로 | 밴드 | merge 지침 |
+|---|---|---|
+| `…/tools/bash-allowed-prefixes.ts` (jwc 접두) | 085.5-M1 | CONFLICT-EXPECTED |
+| `…/skill-state/jaw-interview-mutation-guard.ts` (:254 jwc) | 085.5-M1 | CONFLICT-EXPECTED |
+| `…/hooks/skill-keywords.ts` | 085.5-M4 | CONFLICT-EXPECTED |
+| `packages/coding-agent/test/default-gjc-definitions.test.ts` (jwc 필수·gjc 어휘 금지 반전) | 085.5-M5 | CONFLICT-EXPECTED |
+| `scripts/verify-g002-gates.ts`·`scripts/rebrand-inventory.ts` (gjc 셸 항목 제거) | 085.5-M7 | MANUAL-REVIEW |
+
+### 인증/providers
+
+| 경로 | 종류 | 밴드 | merge 지침 | upstream PR 후보 |
+|---|---|---|---|---|
+| `packages/ai/src/utils/oauth/local-token-detect.ts` | NEW | 094.3 | N/A | ✅ (버그픽스/범용 성격) |
+| `packages/ai/src/utils/oauth/{anthropic,openai-codex,xai}.ts` | HARD-EDIT/NEW | 094.3 | MANUAL-REVIEW | ✅ |
+| `packages/ai/src/providers/kiro.ts` | NEW | 091 | N/A | 검토 |
+| `packages/ai/src/auth-storage.ts` | HARD-EDIT | 094.3 | MANUAL-REVIEW | ✅ |
+
+### REMOVED
+
+| 경로 | 밴드 | 처리 |
+|---|---|---|
+| `packages/gajae-code/` (셸 패키지 4파일) | 085.5-M7 (C10) | upstream 갱신 시 **re-delete**. `packages/jwc`가 단일 진입점 |
+
+### TUI·세션
+
+| 경로 | 종류 | 밴드 |
+|---|---|---|
+| `…/modes/components/welcome.ts`·`assistant-message.ts`·`session/agent-session.ts` | HARD-EDIT | 086/085.6 |
+| `…/modes/theme/defaults/abyss-bite{,-light}.json` | NEW | 086 |
+| `…/discovery/cli-jaw.ts` | NEW | 031 |
+
+### 포크 전용 디렉터리 (전체 NEW — 엔트리 불요)
+
+`structure/`, `devlog/`, `har_struct/`, `packages/jwc/`, `prompts/jaw/`, `prompts/goals/`(HARD-EDIT 2종 제외).
+
+## 리베이스/체리픽 절차 (요약 — 상세: 067.1 §5)
+
+- 리베이스 전: `grep "CONFLICT-EXPECTED" structure/fork-delta.md` ↔ `git diff upstream/main --name-only` 대조
+- upstream→fork 체리픽: 대상 커밋이 HARD-EDIT 경로를 건드리면 보존 경계 열 기준 수동 병합
+- fork→upstream 기여: `upstream PR 후보` ✅ 항목만

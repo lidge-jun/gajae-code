@@ -10,6 +10,16 @@
 - ❌ `AGENTS.md` 수정 금지 — 업스트림 운영 계약(워크플로 스킬 4종, 롤 에이전트 4종,
   `.gjc/` 경로 계약)이며 리베이스 충돌 1순위. jawcode 컨텍스트는 `structure/`에 둔다
 
+### 커밋 트레일러 규약 (fork-delta 동기 — 067.1 §3.1)
+
+HARD-EDIT·INVERTED-GUARD·REMOVED 파일이 포함된 커밋은 트레일러를 붙인다 (NEW/SOFT-EDIT는 선택 — `fork-delta.md` 갱신으로 대체 가능):
+
+```
+Fork-Delta: <NEW|HARD-EDIT|REMOVED|INVERTED-GUARD|SOFT-EDIT> <저장소상대경로>
+```
+
+파싱: `git log --format=%(trailers:key=Fork-Delta)`. 소스 인라인 마커(`// [jawcode-fork]`)는 채택하지 않음 — 예외: 파일 상단 1행 한정 보존 경계 주석.
+
 ## 2. 업스트림 동기화
 
 ### 2.1 worktree remote

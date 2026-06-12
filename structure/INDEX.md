@@ -39,10 +39,13 @@
 | D6 | TUI/Web 세션 비공유, 스킬+OAuth 공유 | [session_storage.md](./session_storage.md) | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/05_interview_conclusions.md:15` |
 | D8 | M2는 Node 포팅 상주 방식 | [packages_overview.md](./packages_overview.md) | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/05_interview_conclusions.md:17` |
 
+**포크 델타 인덱스**: [fork-delta.md](./fork-delta.md) — 업스트림 이탈 파일 전수·체리픽 지침 (커밋 동행 갱신 필수).
+
 ## 동기화 규칙
 
 | 변경 종류 | 같이 갱신할 문서 | 근거 |
 |---|---|---|
+| 포크 델타 파일 변경 (HARD-EDIT/NEW/REMOVED/INVERTED-GUARD) | `fork-delta.md` | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/067.1_plan_structure_fork_delta.md` |
 | 패키지 추가/삭제, `package.json` bin/export 변경 | `INDEX.md`, `packages_overview.md`, `gitstructure.md` | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:7` |
 | `packages/coding-agent/src/sdk.ts` 공개 API 변경 | `sdk_surface.md`, `prompt_flow.md`, `session_storage.md` | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:217` |
 | 시스템 프롬프트/스킬 렌더 변경 | `prompt_flow.md`, `workflows.md`, `extensibility.md` | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/system-prompt.ts:441` |

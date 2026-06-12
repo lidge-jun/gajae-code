@@ -27,6 +27,8 @@
 
 ## 리베이스 가드
 
+> 충돌 예상 파일 사전 점검: `grep "CONFLICT-EXPECTED" structure/fork-delta.md` ↔ `git diff upstream/main --name-only` 대조 ([fork-delta.md](./fork-delta.md) 정본).
+
 | Guard | 적용 | 근거 |
 |---|---|---|
 | upstream 파일 수정 최소화 | jaw 전용 context는 `structure/`, `devlog/`, 신규 패키지에 둔다. | `/Users/jun/Developer/new/700_projects/jawcode/structure/conventions.md:7` |
