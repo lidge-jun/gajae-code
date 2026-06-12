@@ -181,6 +181,7 @@ import type { HookCommandContext } from "../extensibility/hooks/types";
 import type { Skill, SkillWarning } from "../extensibility/skills";
 import { expandSlashCommand, type FileSlashCommand } from "../extensibility/slash-commands";
 import { buildGjcRuntimeSessionEnv, consumePendingGoalModeRequest } from "../gjc-runtime/goal-mode-request";
+import { readPabcdState } from "../gjc-runtime/orchestrate-state";
 import { persistCoordinatorRuntimeStateFromEvent } from "../gjc-runtime/session-state-sidecar";
 import { writeArtifact } from "../gjc-runtime/state-writer";
 import { requestGjcWorkerIntegrationAttempt } from "../gjc-runtime/team-runtime";
@@ -264,6 +265,7 @@ import {
 	SILENT_ABORT_MARKER,
 	SKILL_PROMPT_MESSAGE_TYPE,
 } from "./messages";
+import { buildPabcdStageContent } from "./pabcd-stage-header";
 import { formatSessionDumpText } from "./session-dump-format";
 import type {
 	BranchSummaryEntry,
@@ -4534,6 +4536,46 @@ export class AgentSession {
 	}
 
 	/**
+	 * 99.03 M2 — per-turn PABCD stage header. Reads the lenient pabcd
+	 * envelope each turn (1–2 KB file; simplicity over an mtime cache, same
+	 * trade-off as cli-jaw's getPrefix) and injects a stage banner so the
+	 * orchestration context survives compaction. Corrupt or absent state is
+	 * skipped silently — the header must never break a session.
+	 */
+	async #buildPabcdStageMessage(): Promise<CustomMessage | null> {
+		const cwd = this.sessionManager.getCwd();
+		const sessionId = this.sessionManager.getSessionId();
+		const result = await readPabcdState(cwd, sessionId).catch(() => null);
+		if (!result || !result.ok) return null;
+		const content = buildPabcdStageContent(result.value);
+		if (!content) return null;
+		return {
+			role: "custom",
+			customType: "pabcd-stage-context",
+			content,
+			display: false,
+			attribution: "agent",
+			timestamp: Date.now(),
+		};
+	}
+
+	/** Immediate injection path for stage transitions — goal-mode `sendGoalModeContext` 동형. */
+	async sendPabcdStageContext(options?: { deliverAs?: "steer" | "followUp" | "nextTurn" }): Promise<void> {
+		const message = await this.#buildPabcdStageMessage();
+		if (!message) return;
+		await this.sendCustomMessage(
+			{
+				customType: message.customType,
+				content: message.content,
+				display: message.display,
+				details: message.details,
+				attribution: message.attribution,
+			},
+			options ? { deliverAs: options.deliverAs } : undefined,
+		);
+	}
+
+	/**
 	 * Send a prompt to the agent.
 	 * - Handles extension commands (registered via pi.registerCommand) immediately, even during streaming
 	 * - Expands file-based prompt templates by default
@@ -4775,6 +4817,10 @@ export class AgentSession {
 			const goalModeMessage = this.#buildGoalModeMessage();
 			if (goalModeMessage) {
 				messages.push(goalModeMessage);
+			}
+			const pabcdStageMessage = await this.#buildPabcdStageMessage();
+			if (pabcdStageMessage) {
+				messages.push(pabcdStageMessage);
 			}
 			if (options?.prependMessages) {
 				messages.push(...options.prependMessages);
