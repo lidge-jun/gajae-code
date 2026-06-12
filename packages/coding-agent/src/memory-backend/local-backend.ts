@@ -4,6 +4,8 @@ import {
 	enqueueMemoryConsolidation,
 	startMemoryStartupTask,
 } from "../memories";
+import { loadMemoryConfig } from "../memories/memory-config";
+import { buildLocalTaskSnapshot } from "../memories/local-query";
 import type { MemoryBackend } from "./types";
 
 /**
@@ -20,6 +22,16 @@ export const localBackend: MemoryBackend = {
 	},
 	async buildDeveloperInstructions(agentDir, settings, session) {
 		return buildMemoryToolDeveloperInstructions(agentDir, settings, session);
+	},
+	async beforeAgentStartPrompt(session, promptText) {
+		const prompt = promptText.trim();
+		if (!prompt) return undefined;
+		const agentDir = session.settings.getAgentDir();
+		const cwd = session.sessionManager.getCwd();
+		const memCfg = loadMemoryConfig(session.settings);
+		const body = buildLocalTaskSnapshot(agentDir, cwd, prompt, 4, { searchMode: memCfg.searchMode });
+		if (!body) return undefined;
+		return `<memories>\nTask snapshot (local memory hits for this turn):\n\n${body}\n</memories>`;
 	},
 	async clear(agentDir, cwd) {
 		await clearMemoryData(agentDir, cwd);
