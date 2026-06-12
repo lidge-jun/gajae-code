@@ -98,15 +98,29 @@ orchestrate a
 - [ ] 050 MOC §스코프, 051 §3 P/A행 재반영 — **054 P 단계 작업 항목**
 - [ ] 052/본문 D050-11·12·15 참조처에 개정 포인터 확인
 
+## 속집 3 — 054 A-1라운드 회수 결정 (260612 10:31, D050-22 … 24)
+
+> 054 diff 플랜의 소규모 A 1라운드(Planner∥Architect 병렬 감사 — D050-20 첫 도그푸딩)가 FAIL로 회수한 결정 3건.
+
+| ID | 주제 | 결정 | 표기 |
+|----|------|------|------|
+| D050-22 | **pabcd 상태 등록 구조** | **별도 native-state 레지스트리 신설** — `CANONICAL_GJC_WORKFLOW_SKILLS`(번들 4종) 불변, 051 R14("스킬 아님") 정합, rebrand/G002/dogfood 게이트 무접촉. state-runtime에 orchestrate 전용 경로 추가 | [확정] |
+| D050-23 | **verdict 어휘** | **단계별 분리** — A = `PASS\|FAIL`(`parseWorkerVerdict` 신규 이식 + orchestrate 전용 audit 프롬프트로 출력 형식 고정), P Critic = `OKAY\|ITERATE\|REJECT`(ralplan 생태계 — critic.md·receipt·HUD 재사용) | [확정] |
+| D050-24 | **명령 등록 브랜드 게이트** | **jaw 전용 등록 게이트 신설** — cli.ts 조건부 등록 빌더, gjc 브랜드에서 orchestrate/pabcd 미노출(051 §5 diff-0 원문 유지). interview 무게이트 등록의 소급 여부는 후속 검토 | [확정] |
+
+수용된 [기본값] 3건: P `p_round ≤2`(재FAIL 시 pending-approval 금지+에스컬레이션) / trivial 판정 = `orchestrate a` 진입 시 + `--deliberate` override / envelope 파일명 `pabcd-state.json`(문서상 `pabcd.json`은 논리 계약명).
+
 ## 미확정 (054+)
 
 - Planner/Architect **병렬 감사 프롬프트 조각**, Critic 1-pass 프롬프트 조각, devlog `plan_ref` 자동 번호
 - 슬래시 HUD 구현 — 080 위임 (D050-18)
+- interview 명령의 D050-24 게이트 소급 여부
 
 ## Acceptance
 
 - [x] D050-10 … D050-15 기록
 - [x] D050-16 … D050-18 기록 (cli-jaw 인터뷰 속집)
 - [x] D050-19 … D050-21 기록 (P/A 리뷰어 재배치 속집 2)
+- [x] D050-22 … D050-24 기록 (054 A-1라운드 회수 속집 3)
 - [x] 050/051 본문 패치
 - [ ] `jwc orchestrate p` 구현 (054 diff 플랜)

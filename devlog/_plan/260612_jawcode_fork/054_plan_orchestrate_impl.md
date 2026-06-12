@@ -26,15 +26,15 @@
 > `sdk.ts:1004-1021`·`gjc-dogfood-template.test.ts:17` "4 workflow skills product invariant",
 > `check-visible-definitions.ts:5` 등 **10+ 동기화 지점** + 051 R14("스킬 아님")와 설계 충돌.
 > rebrand-inventory/G002 자체는 skill **디렉터리** 검사라 배열 추가만으론 직접 FAIL 아님(`rebrand-inventory.ts:32,257` / `verify-g002-gates.ts:15`).
-> **구조 선택은 [결정 대기 → D050-22]**: ① 별도 native-state 레지스트리(감사 권장) ② canonical 5종 확장.
+> **[확정 D050-22]: ① 별도 native-state 레지스트리** — canonical 4종 불변, 위 10+ 지점 무접촉.
 
 | 파일 | 변경 |
 |------|------|
-| 상태 등록 구조 | **[D050-22 결정 대기]** — ①이면 NEW `NATIVE_WORKFLOW_COMMANDS` 레지스트리 + orchestrate 전용 state 경로(4종 불변), ②면 `active-state.ts:13` + `state-schema.ts:17` + 위 10+ 지점 동시 갱신 |
-| `packages/coding-agent/src/skill-state/initial-phase.ts:14-21` | `normalized === "pabcd"` → `"i"` (①이면 native 레지스트리 측 등가물) |
-| `packages/coding-agent/src/gjc-runtime/workflow-manifest.ts:144` | pabcd manifest(또는 native 등가물) — states `["i","p","a","b","c","d","complete"]`, forward-only + `i` 복귀 전이(cli-jaw `canTransition:563` 이식), terminal `["complete"]`, retention/hudFields |
-| state 파일 | envelope `.gjc/state/pabcd-state.json` (+ session-scoped) — **052/050 문서의 `pabcd.json`은 논리 계약명, envelope 경로는 runtime 관례 `<skill>-state.json`을 따름** [기본값]. 필드: `current_stage`, `spec_ref`, `plan_ref`, `ctx.a_audit_mode`, `a_round`(≤3), `p_round`(≤2), `p_review_passed` |
-| 쓰기 경로 | `state-writer.ts:391` `writeWorkflowEnvelopeAtomic()` 경유만 — receipt(owner/command/mutation_id) 관례 유지 (②선택 시 `:399` RequiredOnWriteEnvelopeSchema 동기화 필수) |
+| 상태 등록 구조 | **[확정 D050-22]** NEW `NATIVE_WORKFLOW_COMMANDS` 레지스트리(가칭) + orchestrate 전용 state 경로 — `CANONICAL_GJC_WORKFLOW_SKILLS`·`state-schema.ts:17`·SKILL.md 검사·dogfood invariant 전부 무접촉 |
+| native 초기 단계 | `normalized === "pabcd"` → `"i"` — native 레지스트리 측 등가물(`initial-phase.ts:14-21` 패턴 차용, canonical 파일은 무변경) |
+| 전이 모듈 | NEW native manifest — states `["i","p","a","b","c","d","complete"]`, forward-only + `i` 복귀 전이(cli-jaw `canTransition:563` 이식), terminal `["complete"]`, retention/hudFields (`workflow-manifest.ts:116-142` builder 패턴 차용) |
+| state 파일 | envelope `.gjc/state/pabcd-state.json` (+ session-scoped) — **052/050 문서의 `pabcd.json`은 논리 계약명, envelope 경로는 runtime 관례 `<skill>-state.json`을 따름** [기본값 수용]. 필드: `current_stage`, `spec_ref`, `plan_ref`, `ctx.a_audit_mode`, `a_round`(≤3), `p_round`(≤2), `p_review_passed` |
+| 쓰기 경로 | `state-writer.ts:391` `writeWorkflowEnvelopeAtomic()` 경유 또는 native 전용 atomic writer — receipt(owner/command/mutation_id) 관례 유지. **envelope 스키마가 canonical skill enum을 강제하면(`:399`) native writer 분리가 정본** — 구현 시 확인 |
 | 재생성 | `scripts/generate-gjc-workflow-manifest.ts`(generated.json drift gate) 재실행. ~~generate-json-schemas~~ — **workflow skill 스키마 무관(과대 기술 정정)** |
 
 ### B2 — 명령 표면
@@ -42,7 +42,7 @@
 | 파일 | 변경 |
 |------|------|
 | NEW `packages/coding-agent/src/commands/orchestrate.ts` | `commands/interview.ts:1-40` 템플릿 — `APP_NAME` 브랜드 안전 설명, positional `i\|p\|a\|b\|c\|d`, `--deliberate` 플래그(ctx 전달), 코어는 `gjc-runtime/orchestrate-runtime.ts` 위임 |
-| `packages/coding-agent/src/cli.ts:50` 부근 | `{ name: "orchestrate", aliases: ["pabcd"], load: ... }` ⚠️ **F-개정: 051 §1은 "isJawBrand 게이트 등록"이라 했으나 interview 선례는 무게이트 등록**(브랜드 차이는 프롬프트/스킬 레벨) — 051 표기 개정 또는 게이트 신설 결정 필요 |
+| `packages/coding-agent/src/cli.ts:50` 부근 | `{ name: "orchestrate", aliases: ["pabcd"], load: ... }` — **[확정 D050-24] jaw 전용 등록 게이트 신설**: 조건부 등록 빌더(`isJawBrand()` — `discovery/helpers.ts:32-35` 재사용)로 gjc 브랜드에서 미노출. 명령 등록 게이트의 첫 선례가 됨(interview 소급은 후속 검토) |
 | `packages/coding-agent/src/slash-commands/builtin-registry.ts` | `/orchestrate` (+alias `/pabcd`) — subcommands `i..d`, `/goal`(275-295) 패턴, handle/handleTui |
 | `packages/coding-agent/src/hooks/skill-keywords.ts:15-76` | (선택) `$orchestrate` keyword — 채택 여부 미정 |
 
@@ -60,7 +60,7 @@
 |------|------|
 | NEW `packages/coding-agent/src/gjc-runtime/orchestrate-runtime.ts` | 단계 진입·전이·게이트 코어 |
 | P 흐름 | Boss 초안(devlog plan + 요약) → **Critic 1-pass** spawn(`task/agents.ts` EMBEDDED critic.md, fresh spawn·read-only·receipt-only) → **`OKAY` 즉시 final / `ITERATE\|REJECT` 시 Boss revise 후 재검 1회만(`p_round ≤2`), 재FAIL이면 pending-approval 작성 금지 + 사용자 에스컬레이션** [기본값] → `ralplan --write --stage critic/final`(`ralplan-runtime.ts` KNOWN_STAGES:37 재사용) → pending-approval ⛔. ※ "1-pass" = 리뷰어 1명, 라운드는 위 규칙 |
-| A 흐름 | **trivial 판정은 `orchestrate a` 진입 시** — plan diff 기준 predicate(단일 파일·단일 동작·AC 명시), `--deliberate`/high-risk 지정 시 dual 강제, 결과를 `ctx.a_audit_mode`에 기록 [기본값] → **Planner∥Architect 병렬 spawn**(solo → Architect 단독) → NEW `parseWorkerVerdict`(verdict 어휘 **[D050-23 결정 대기]**: 감사 권고 = A는 `PASS\|FAIL` 신규 파서 + orchestrate 전용 audit 프롬프트, P Critic은 ralplan 어휘 `OKAY\|ITERATE\|REJECT` 유지 — 단계별 소유권 분리. ※ architect.md 자체 어휘는 CLEAR/WATCH/BLOCK이라 **A 전용 프롬프트로 출력 형식 고정 필수**) → FAIL이면 Boss 플랜 수정 → 델타 재감사(라운드별 산출물 `round-N.md` + `a_round` 갱신), `a_round ≤3` 초과 시 사용자 에스컬레이션 |
+| A 흐름 | **trivial 판정은 `orchestrate a` 진입 시** — plan diff 기준 predicate(단일 파일·단일 동작·AC 명시), `--deliberate`/high-risk 지정 시 dual 강제, 결과를 `ctx.a_audit_mode`에 기록 [기본값] → **Planner∥Architect 병렬 spawn**(solo → Architect 단독) → NEW `parseWorkerVerdict`(**[확정 D050-23] 단계별 분리**: A는 `PASS\|FAIL` 신규 파서 + orchestrate 전용 audit 프롬프트, P Critic은 ralplan 어휘 `OKAY\|ITERATE\|REJECT` 유지. ※ architect.md 자체 어휘는 CLEAR/WATCH/BLOCK이라 **A 전용 프롬프트로 출력 형식 고정 필수**) → FAIL이면 Boss 플랜 수정 → 델타 재감사(라운드별 산출물 `round-N.md` + `a_round` 갱신), `a_round ≤3` 초과 시 사용자 에스컬레이션 |
 | handoff | `.gjc/specs/jaw-interview-*.md`(`jaw-interview-runtime.ts:408`) → pabcd state `spec_ref` 소비; A 산출물은 `.gjc/plans/pabcd/<run-id>/` + `index.jsonl` 관례. **P 게이트 정본(pending-approval.md)은 ralplan writer 재사용이므로 `.gjc/plans/ralplan/<run-id>/` 경로 유지**(D050-13) |
 
 ### B6 — B/C/D 런타임 (A-1라운드 Planner 지적 보강)
@@ -90,8 +90,8 @@
 ## A 소규모 1라운드 결과 (260612 10:30 — Planner∥Architect 병렬, D050-20 도그푸딩)
 
 - **두 lens 모두 FAIL** → Boss 수정 반영(본 문서 v2): B1 구조 경고·동기화 지점 보강, P/A 루프 종료 조건·trivial 판정 시점 명시, B6(B/C/D 런타임)·B7(문서 패치) 신설, Acceptance 확장
-- **사용자 결정 대기로 승격**: D050-22(상태 등록 구조), D050-23(verdict 어휘), D050-24(명령 등록 브랜드 게이트 — Planner lens는 jaw 전용 등록 권고, Architect lens는 무게이트 선례 확인. 051 §5 "gjc 브랜드: 신규 커맨드 미등록"과 interview 무게이트 등록 현실이 이미 상충)
-- 잔여: 결정 3건 반영 후 **델타 재감사(2라운드)** → PASS 시 B 진입 가능
+- **사용자 결정 회수 → 확정**(053 속집 3): D050-22 native 레지스트리, D050-23 verdict 단계별 분리, D050-24 jaw 전용 등록 게이트 — 본 문서 v3에 반영
+- **2라운드 델타 재감사**: D050-21 첫 적용 — 델타가 trivial이므로 **Architect 단독(solo)** 수행
 
 ## Acceptance (M1)
 
