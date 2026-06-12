@@ -139,3 +139,16 @@ describe("jwc goal adapter (060/061)", () => {
 		expect(result.stderr).toContain("show→status");
 	});
 });
+
+describe("goal status readability (99.00.03 P1-2)", () => {
+	it("leads with the user objective and the 5-field block", async () => {
+		const cwd = mkdtempSync(path.join(os.tmpdir(), "jwc-goal-status-"));
+		await runNativeGoalCommand(["set", "사용자 목표 헤드라인"], cwd);
+		const status = await runNativeGoalCommand(["status"], cwd);
+		expect(status.stdout?.startsWith("Goal:    사용자 목표 헤드라인")).toBe(true);
+		expect(status.stdout).toContain("Status:  active");
+		expect(status.stdout).toContain("Mode:    ultragoal ledger");
+		expect(status.stdout).toContain("ID:      G001");
+		expect(status.stdout).not.toContain("Complete the durable ultragoal plan");
+	});
+});
