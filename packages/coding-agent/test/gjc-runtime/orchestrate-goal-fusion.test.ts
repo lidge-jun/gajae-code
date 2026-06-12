@@ -44,3 +44,35 @@ describe("orchestrate↔goal fusion (99.08-B)", () => {
 		expect(readLedgerEvents(cwd).length).toBe(0);
 	});
 });
+
+describe("session scoping via env (260613 00:23)", () => {
+	it("orchestrate defaults --session-id from JWC_SESSION_ID", async () => {
+		const cwd = tempCwd();
+		const prev = process.env.JWC_SESSION_ID;
+		process.env.JWC_SESSION_ID = "env-sess-42";
+		try {
+			const result = await runNativeOrchestrateCommand(["i"], cwd);
+			expect(result.status).toBe(0);
+			const scoped = path.join(cwd, ".jwc", "state", "sessions", "env-sess-42", "pabcd-state.json");
+			expect(readFileSync(scoped, "utf8")).toContain('"current_phase": "i"');
+		} finally {
+			if (prev === undefined) delete process.env.JWC_SESSION_ID;
+			else process.env.JWC_SESSION_ID = prev;
+		}
+	});
+
+	it("explicit --session-id still wins over env", async () => {
+		const cwd = tempCwd();
+		const prev = process.env.JWC_SESSION_ID;
+		process.env.JWC_SESSION_ID = "env-sess-43";
+		try {
+			const result = await runNativeOrchestrateCommand(["i", "--session-id", "flag-sess"], cwd);
+			expect(result.status).toBe(0);
+			const scoped = path.join(cwd, ".jwc", "state", "sessions", "flag-sess", "pabcd-state.json");
+			expect(readFileSync(scoped, "utf8")).toContain('"current_phase": "i"');
+		} finally {
+			if (prev === undefined) delete process.env.JWC_SESSION_ID;
+			else process.env.JWC_SESSION_ID = prev;
+		}
+	});
+});

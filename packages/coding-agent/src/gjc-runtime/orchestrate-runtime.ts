@@ -107,6 +107,14 @@ function parseArgs(argv: string[]): ParsedArgs | { error: string } {
 				parsed.positional.push(arg);
 		}
 	}
+	// Session scoping by default: shell-run transitions (the 99.03 self-
+	// transition pattern) carry the live session id via the bash-tool env
+	// (JWC_SESSION_ID/GJC_SESSION_ID, bash.ts) — honor it when --session-id
+	// is absent so state never lands on the shared path by accident.
+	if (!parsed.sessionId) {
+		const envSession = (process.env.JWC_SESSION_ID ?? process.env.GJC_SESSION_ID ?? "").trim();
+		if (envSession) parsed.sessionId = envSession;
+	}
 	return parsed;
 }
 

@@ -45,7 +45,7 @@ The IPABCD orchestration surface is a native workflow engine for end-to-end proj
 - c (CHECK): Mechanical gates (bun run check + affected tests) + adversarial review + 3-way reject routing (code issue→b, plan issue→p, spec issue→i).
 - d (DONE): Cycle summary, WONDER+REFLECT reflections, close with `jwc orchestrate d --complete`.
 
-State file: .jwc/state/sessions/<session-id>/pabcd-state.json. Current phase and gate verdicts are readable with `readPabcdState(cwd, sessionId)`.
+State file: .jwc/state/sessions/<session-id>/pabcd-state.json — shell-run `jwc orchestrate` scopes to the live session automatically (JWC_SESSION_ID env); never pass a session id by hand. Current phase and gate verdicts are readable with `readPabcdState(cwd, sessionId)`.
 YOU advance IPABCD phases by running the exact `jwc orchestrate <stage>` command via the shell tool. No other method.
 </native-workflow>
 </public-workflow-surface>
