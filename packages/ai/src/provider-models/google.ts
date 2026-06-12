@@ -57,6 +57,10 @@ export function googleAntigravityModelManagerOptions(
 							token,
 							endpoint: config?.endpoint,
 						}),
+					// Discovery (fetchAvailableModels) is the OAuth source of truth —
+					// bundled ids it no longer returns (incl. denylisted ones baked
+					// into the bundle) hide from the picker instead of lingering.
+					markUnlistedOutsideDynamic: true,
 				}
 			: undefined),
 	};

@@ -588,8 +588,51 @@ export interface XaiModelManagerConfig {
 	baseUrl?: string;
 }
 
+/**
+ * Chat models servable on the xAI OAuth (grok-cli scope) path — progrok's
+ * canonical set (capabilities.ts), live-verified on /v1/chat/completions
+ * (260613, all 200). grok-4.20-multi-agent-0309 is Responses-API-only and
+ * 400s on this path, so it stays unlisted for now.
+ */
+const XAI_OAUTH_LISTED_MODELS = new Set([
+	"grok-4.3",
+	"grok-4.20-0309-reasoning",
+	"grok-4.20-0309-non-reasoning",
+	"grok-build-0.1",
+	"grok-composer-2.5-fast",
+]);
+
+/** xAI platform keys are `xai-…`; the OAuth path stores a JWT access token. */
+function isXaiOAuthAccessToken(apiKey: string): boolean {
+	return apiKey.split(".").length === 3;
+}
+
 export function xaiModelManagerOptions(config?: XaiModelManagerConfig): ModelManagerOptions<"openai-completions"> {
-	return createSimpleOpenAICompletionsOptions("xai", "https://api.x.ai/v1", config);
+	const apiKey = config?.apiKey;
+	// Platform API keys are gated server-side per key — expose the full
+	// discovery. Only the OAuth/subscription path gets the allowlist marking.
+	if (!apiKey || !isXaiOAuthAccessToken(apiKey)) {
+		return createSimpleOpenAICompletionsOptions("xai", "https://api.x.ai/v1", config);
+	}
+	const baseUrl = config?.baseUrl ?? "https://api.x.ai/v1";
+	const references = createBundledReferenceMap<"openai-completions">("xai");
+	return {
+		providerId: "xai",
+		markUnlistedOutsideDynamic: true,
+		fetchDynamicModels: () =>
+			fetchOpenAICompatibleModels({
+				api: "openai-completions",
+				provider: "xai",
+				baseUrl,
+				apiKey,
+				mapModel: (entry, defaults) => {
+					const reference = references.get(defaults.id);
+					const mapped = mapWithBundledReference(entry, defaults, reference);
+					if (!mapped || XAI_OAUTH_LISTED_MODELS.has(mapped.id)) return mapped;
+					return { ...mapped, unlisted: true };
+				},
+			}),
+	};
 }
 
 // ---------------------------------------------------------------------------
@@ -1752,6 +1795,10 @@ export function anthropicModelManagerOptions(
 			map: payload => mapAnthropicModelsDev(payload, baseUrl),
 		},
 		...(apiKey && {
+			// /v1/models works for both API keys and OAuth tokens (sk-ant-oat →
+			// Bearer) and is the auth-path source of truth — bundled legacy ids
+			// it no longer returns hide from the picker instead of lingering.
+			markUnlistedOutsideDynamic: true,
 			fetchDynamicModels: async () => {
 				const modelsDevModels = await fetchModelsDevPayload()
 					.then(payload => mapAnthropicModelsDev(payload, baseUrl))
