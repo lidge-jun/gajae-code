@@ -303,6 +303,10 @@ export class InputController {
 				handleBackgroundCommand: () => this.handleBackgroundCommand(),
 			});
 			if (slashResult === true) {
+				// 083.7 §10: slash-only interactions never reach agent_end, so a
+				// post-overflow gap (selector/dropdown transient growth) would
+				// linger above the composer — compact here. No-op without a gap.
+				this.ctx.ui.compactViewportFill();
 				return;
 			}
 			if (typeof slashResult === "string") {
@@ -1023,11 +1027,20 @@ export class InputController {
 		const expanded = !this.ctx.toolOutputExpanded;
 		this.ctx.thinkingExpanded = expanded;
 		this.setToolsExpanded(expanded);
+		// 083.7 §10 / 99.20.03 표면 7: bulk collapse shrinks the frame in the
+		// overflow zone — compact the gap right away (user-initiated, jump ok).
+		this.ctx.ui.compactViewportFill();
 	}
 
 	setToolsExpanded(expanded: boolean): void {
 		this.ctx.toolOutputExpanded = expanded;
 		for (const child of this.ctx.chatContainer.children) {
+			if (isExpandable(child)) {
+				child.setExpanded(expanded);
+			}
+		}
+		// 99.20.04: the active tool previews live outside the chat container.
+		for (const child of this.ctx.liveToolContainer.children) {
 			if (isExpandable(child)) {
 				child.setExpanded(expanded);
 			}
@@ -1067,6 +1080,8 @@ export class InputController {
 		}
 		this.ctx.streamingComponent?.setThinkingExpanded(expanded);
 		this.ctx.ui.requestRender();
+		// 083.7 §10 / 99.20.03 표면 7: same as ctrl+o — clear the collapse gap.
+		this.ctx.ui.compactViewportFill();
 		this.ctx.showStatus(`Thinking blocks: ${expanded ? "expanded" : "collapsed"}`);
 	}
 

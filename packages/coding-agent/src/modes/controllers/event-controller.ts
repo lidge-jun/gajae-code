@@ -14,6 +14,7 @@ import { TodoReminderComponent } from "../../modes/components/todo-reminder";
 import { ToolExecutionComponent } from "../../modes/components/tool-execution";
 import { TtsrNotificationComponent } from "../../modes/components/ttsr-notification";
 import { getSymbolTheme, theme } from "../../modes/theme/theme";
+import { isJawBrand } from "../../discovery/helpers";
 import type { InteractiveModeContext, TodoPhase } from "../../modes/types";
 import type { PlanApprovalDetails } from "../../plan-mode/approved-plan";
 import type { AgentSessionEvent } from "../../session/agent-session";
@@ -53,6 +54,8 @@ export class EventController {
 	#renderedCustomMessages = new Set<string>();
 	#lastIntent: string | undefined = undefined;
 	#backgroundToolCallIds = new Set<string>();
+	/** 99.20.04 — active tool components currently rendered in the live zone. */
+	#liveToolComponents = new Set<ToolExecutionComponent>();
 	#readToolCallArgs = new Map<string, Record<string, unknown>>();
 	#readToolCallAssistantComponents = new Map<string, AssistantMessageComponent>();
 	#lastAssistantComponent: AssistantMessageComponent | undefined = undefined;
@@ -107,6 +110,25 @@ export class EventController {
 
 	#resetReadGroup(): void {
 		this.#lastReadGroup = undefined;
+	}
+
+	/** 99.20.04 — unset setting falls back to the brand default (jwc: commit). */
+	#commitFoldingEnabled(): boolean {
+		const mode = settings.get("tool.renderMode");
+		return (mode ?? (isJawBrand() ? "commit" : "verbose")) === "commit";
+	}
+
+	/**
+	 * 99.20.04 — move a finished live-zone tool into the chat history as a
+	 * collapsed line (commit-time folding). No-op for components that never
+	 * went through the live zone (verbose mode, read groups).
+	 */
+	#commitLiveTool(component: unknown): void {
+		if (!(component instanceof ToolExecutionComponent) || !this.#liveToolComponents.has(component)) return;
+		this.#liveToolComponents.delete(component);
+		this.ctx.liveToolContainer.removeChild(component);
+		component.setMinimized?.(true);
+		this.ctx.chatContainer.addChild(component);
 	}
 
 	#getReadGroup(): ReadToolGroupComponent {
@@ -539,10 +561,19 @@ export class EventController {
 				event.toolCallId,
 			);
 			component.setExpanded(this.ctx.toolOutputExpanded);
-			// 083.1: a new tool starting collapses the previous one to a one-line summary
-			this.ctx.lastToolComponent?.setMinimized?.(true);
+			if (this.#commitFoldingEnabled()) {
+				// 99.20.04 commit-time folding: the active preview lives in the
+				// live zone only — history stays untouched until completion, so
+				// it grows monotonically (no retroactive shrink).
+				this.#liveToolComponents.add(component);
+				this.ctx.liveToolContainer.addChild(component);
+			} else {
+				// 083.1 (verbose mode): a new tool starting collapses the previous
+				// one to a one-line summary.
+				this.ctx.lastToolComponent?.setMinimized?.(true);
+				this.ctx.chatContainer.addChild(component);
+			}
 			this.ctx.lastToolComponent = component;
-			this.ctx.chatContainer.addChild(component);
 			this.ctx.pendingTools.set(event.toolCallId, component);
 			this.ctx.ui.requestRender();
 		}
@@ -563,6 +594,7 @@ export class EventController {
 			if (isFinalAsyncState) {
 				this.ctx.pendingTools.delete(event.toolCallId);
 				this.#backgroundToolCallIds.delete(event.toolCallId);
+				this.#commitLiveTool(component);
 			}
 			this.ctx.ui.requestRender();
 		}
@@ -618,6 +650,7 @@ export class EventController {
 				} else {
 					this.ctx.pendingTools.delete(event.toolCallId);
 					this.#backgroundToolCallIds.delete(event.toolCallId);
+					this.#commitLiveTool(component);
 				}
 				this.ctx.ui.requestRender();
 			}
@@ -670,6 +703,11 @@ export class EventController {
 		this.#readToolCallArgs.clear();
 		this.#readToolCallAssistantComponents.clear();
 		this.#lastAssistantComponent = undefined;
+		// 99.20.04: commit any tools still sitting in the live zone (aborted /
+		// background leftovers) so the zone is empty between turns.
+		for (const component of Array.from(this.#liveToolComponents)) {
+			this.#commitLiveTool(component);
+		}
 		// 083.1: turn is over — no tool is active anymore, collapse the last one.
 		this.ctx.lastToolComponent?.setMinimized?.(true);
 		this.ctx.lastToolComponent = undefined;

@@ -63,6 +63,8 @@ export interface InteractiveModeContext {
 	ui: TUI;
 	chatContainer: Container;
 	pendingMessagesContainer: Container;
+	/** 99.20.04 commit-time folding: live zone for ACTIVE tool previews (composer cluster). */
+	liveToolContainer: Container;
 	statusContainer: Container;
 	todoContainer: Container;
 	btwContainer: Container;

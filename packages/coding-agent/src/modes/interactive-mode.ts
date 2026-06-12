@@ -243,9 +243,11 @@ export class InteractiveMode implements InteractiveModeContext {
 
 	ui: TUI;
 	chatContainer: Container;
-	/** 083.7 — stretches between transcript and composer cluster to pin the composer to the terminal bottom. */
+	/** 083.7 — stretches above the chat to pin content+composer to the terminal bottom (§11). */
 	#viewportFill = new ViewportFill();
 	pendingMessagesContainer: Container;
+	/** 99.20.04 — live zone for active tool previews (commit-time folding). */
+	liveToolContainer: Container;
 	statusContainer: Container;
 	todoContainer: Container;
 	btwContainer: Container;
@@ -381,6 +383,7 @@ export class InteractiveMode implements InteractiveModeContext {
 		this.ui.setClearOnShrink(settings.get("clearOnShrink"));
 		this.chatContainer = new Container();
 		this.pendingMessagesContainer = new Container();
+		this.liveToolContainer = new Container();
 		this.statusContainer = new Container();
 		this.todoContainer = new Container();
 		this.btwContainer = new Container();
@@ -517,14 +520,21 @@ export class InteractiveMode implements InteractiveModeContext {
 			}
 		}
 
-		this.ui.addChild(this.chatContainer);
-		// 083.7 composer bottom pin — everything mounted below sits on the terminal
-		// floor; the fill absorbs height changes above (tool/thinking collapse) so
-		// the composer row stays constant. Unset setting = brand default (jwc on).
+		// 083.7 composer bottom pin (§11: fill sits ABOVE the chat) — everything
+		// mounted after the fill hugs the terminal floor: transcript tail, slash
+		// output, and the composer stay together at the bottom (CC-like), and
+		// collapse deltas are absorbed by the top gap instead of moving content
+		// to the top of the panel. While the frame fits the viewport the shifted
+		// rows never touch scrollback, so the differential model stays sound.
+		// Unset setting = brand default (jwc on).
 		const composerPinSetting = settings.get("tui.composerPin");
 		this.#viewportFill.setEnabled(!$flag("PI_NO_COMPOSER_PIN") && (composerPinSetting ?? isJawBrand()));
 		this.ui.addChild(this.#viewportFill);
+		this.ui.addChild(this.chatContainer);
 		this.ui.addChild(this.pendingMessagesContainer);
+		// 99.20.04 live zone — active tool previews render here (above the status
+		// loader) and are committed to the chat as collapsed lines on completion.
+		this.ui.addChild(this.liveToolContainer);
 		this.ui.addChild(this.statusContainer);
 		this.ui.addChild(this.todoContainer);
 		this.ui.addChild(this.btwContainer);
