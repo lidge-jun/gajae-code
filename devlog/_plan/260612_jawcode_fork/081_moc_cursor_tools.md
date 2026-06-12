@@ -17,6 +17,7 @@
 | [081.4](./081.4_issue_glob_empty_pattern.md) | Glob 빈 패턴 "Pattern must not be empty" | ✅ 수정·PR |
 | [081.5](./081.5_audit_unbound_elsewhere.md) | cursor 외 동형 패턴(unbound-this/oneof-drop) 감사 | ✅ 감사 완료 |
 | [081.6](./081.6_fix_cursor_host_override.md) | cursor 주입구 host-override (cursor 설정 무시→jwc 우선) | ✅ 수정 (fork 고유) |
+| [081.7](./081.7_issue_cursor_autocompact.md) | cursor에서 자동 compact 미발동 (usage.input=0 → 임계치 판정 실패) | 🔍 원인 확정 / 수정 대기 |
 
 ## 증상 (사용자 보고)
 
