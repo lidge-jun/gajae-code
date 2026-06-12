@@ -286,7 +286,7 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 	},
 	{
 		name: "goal",
-		description: "Toggle goal mode (persistent autonomous objective for this session)",
+		description: "Toggle goal-ledger mode — durable autonomous objective (IPABCD D-stage target or standalone goal)",
 		subcommands: [
 			{ name: "set", description: "Set or replace the goal", usage: "<objective>" },
 			{ name: "show", description: "Show current goal details" },
