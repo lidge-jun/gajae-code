@@ -30,9 +30,39 @@
 | state path | `.gjc/` 유지 | `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:25` |
 | package namespace | `@gajae-code/*` 유지 | `/Users/jun/Developer/new/700_projects/jawcode/structure/conventions.md:24` |
 
+## 개발 흐름 (upstream 참조 + pull)
+
+jawcode는 **worktree에서 포크 패치**를 만들고, **업스트림은 별도 클론**으로 대조한다.
+
+| 층 | 경로 | 역할 |
+|---|---|---|
+| patched SoT | `structure/` (본 트리) | jawcode **현재 형태**의 단일 정본 |
+| upstream mirror | `devlog/_upstream_gjc/` | Yeachan-Heo/gajae-code **gitignored 클론** — diff·file:line 근거 |
+| 양쪽 대조 | `har_struct/gjc_origin/` ↔ `har_struct/jwc_patched/` | MOC 밴드별 upstream vs patched 스냅샷 |
+
+**일상 루틴** (밴드 착수·리베이스 전):
+
+```bash
+# 1) upstream 클론 갱신 (최초: git clone … devlog/_upstream_gjc)
+git -C devlog/_upstream_gjc fetch origin
+git -C devlog/_upstream_gjc log -1 --oneline   # HEAD 기록
+
+# 2) worktree upstream 동기화 (변경 정리 후)
+git fetch upstream && git rebase upstream/main   # 또는 merge
+
+# 3) 대조
+diff -u devlog/_upstream_gjc/packages/coding-agent/src/cli.ts packages/coding-agent/src/cli.ts
+```
+
+- `gjc_origin` 근거 cite: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_upstream_gjc/<path>:<line>`
+- `jwc_patched` 근거 cite: `/Users/jun/Developer/new/700_projects/jawcode/<path>:<line>`
+- upstream 클론 HEAD·밴드 diff 반영 후 `har_struct/gjc_origin/`·`structure/gitstructure.md` 갱신 (상세: [conventions.md §2](./conventions.md), [gitstructure.md](./gitstructure.md))
+
 ## 관련 문서
 
 - 업스트림 운영 계약: `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md` (수정 금지 — conventions.md 참조)
+- **업스트림 코드 클론**: `devlog/_upstream_gjc/` (gitignored — [conventions.md §2](./conventions.md))
+- **양쪽 대조 스냅샷**: [har_struct/](../har_struct/README.md)
 - 활성 플랜: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/`
 - gjc 프로바이더 계층 분석 노트(외부): `/Users/jun/Developer/new/002_proxy/003_gjc/`
 - cli-jaw 본체: `/Users/jun/Developer/new/700_projects/cli-jaw/`

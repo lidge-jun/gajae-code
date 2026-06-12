@@ -39,10 +39,32 @@
 
 | 단계 | 명령 | 주의 |
 |---|---|---|
-| 1 | `git -C /Users/jun/Developer/new/700_projects/jawcode fetch upstream` | 현재 remote는 upstream만 확인됨. |
-| 2 | `git -C /Users/jun/Developer/new/700_projects/jawcode rebase upstream/main` | rebase 전 worktree 변경을 정리해야 한다. 현재 변경이 있으므로 바로 실행 금지. |
+| 0 | `git -C devlog/_upstream_gjc fetch origin` | **참조 클론 pull** — gjc_origin 근거·diff 전에 실행. 최초: `git clone … devlog/_upstream_gjc`. |
+| 1 | `git -C /Users/jun/Developer/new/700_projects/jawcode fetch upstream` | worktree remote. |
+| 2 | `git -C /Users/jun/Developer/new/700_projects/jawcode rebase upstream/main` | rebase 전 worktree 변경을 정리해야 한다. |
 | 3 | conflict 확인 | `.gjc/`, `@gajae-code/*` 유지 정책과 충돌하면 D4를 우선한다. |
 | 4 | gates | workflow/default surface 변경이 있으면 `bun scripts/check-visible-definitions.ts`, `bun scripts/verify-g002-gates.ts`, `bun scripts/rebrand-inventory.ts --strict`, `bun test packages/coding-agent/test/default-gjc-definitions.test.ts`. 근거: `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:128` |
+| 5 | 문서 | 클론 HEAD·밴드 diff → `har_struct/gjc_origin/`, `har_struct/README.md`; patched → `structure/` |
+
+## upstream 참조 클론 (`devlog/_upstream_gjc/`)
+
+| 항목 | 값 | 근거 |
+|---|---|---|
+| 경로 | `devlog/_upstream_gjc/` | jawcode `.gitignore`, `devlog/.gitignore` |
+| remote | `https://github.com/Yeachan-Heo/gajae-code` | upstream remote와 동일 |
+| 클론 HEAD (기록 시점) | `40c8d7f` | `git -C devlog/_upstream_gjc rev-parse --short HEAD` |
+| paired docs | `har_struct/gjc_origin/` | upstream baseline 스냅샷 |
+| patched SoT | `structure/` | worktree 현재 형태 |
+
+개발 중 upstream과의 차이 확인:
+
+```bash
+diff -qr devlog/_upstream_gjc/packages/coding-agent/src/ packages/coding-agent/src/ | head
+grep -n deep-interview devlog/_upstream_gjc/packages/coding-agent/src/defaults/gjc-defaults.ts
+```
+
+- **pull하면서 개발**: 밴드 착수·리베이스 전에 클론 fetch + worktree fetch/rebase를 한 세트로 돌린다.
+- upstream-only 이슈(081 cursor 등)는 클론에서 line 확인 후 fork hotfix 또는 upstream PR.
 
 ## 문서 동기화
 
@@ -52,3 +74,5 @@
 | `.gjc` 경로 정책 변경 | `gitstructure.md`, `session_storage.md`, `workflows.md` |
 | default workflow skill 변경 | `workflows.md`, `prompt_flow.md`, `extensibility.md`, `INDEX.md` |
 | upstream sync 정책 변경 | `gitstructure.md`, `conventions.md` |
+| `devlog/_upstream_gjc` HEAD 갱신 | `har_struct/README.md`, `har_struct/gjc_origin/**`, `gitstructure.md` |
+| patched 밴드 완료 | `structure/*`, `har_struct/jwc_patched/**` |

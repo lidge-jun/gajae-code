@@ -12,10 +12,45 @@
 
 ## 2. 업스트림 동기화
 
+### 2.1 worktree remote
+
 - remote: `upstream` = https://github.com/Yeachan-Heo/gajae-code
 - `origin`은 비어 있음 — jawcode 자체 저장소 생성 시 추가
 - 동기화: `git fetch upstream && git rebase upstream/main` (또는 merge — 첫 동기화 때 결정)
 - `packages/ai/src/models.json`(1.5MB 모델 카탈로그)은 업스트림 추종, 직접 수정 금지
+
+### 2.2 업스트림 참조 클론 (`devlog/_upstream_gjc/`)
+
+포크 개발은 **worktree 패치 + upstream 클론 pull·대조**를 병행한다. `structure/`는 patched SoT, 클론은 upstream baseline 근거다.
+
+| 항목 | 값 |
+|---|---|
+| 경로 | `devlog/_upstream_gjc/` |
+| remote | `https://github.com/Yeachan-Heo/gajae-code` |
+| git 추적 | **gitignored** — jawcode 커밋에 upstream 트리를 넣지 않음 |
+| 용도 | file:line 근거, `diff -u` 대조, upstream-only 버그 재현 (081 등) |
+| 대조 문서 | `har_struct/gjc_origin/` (클론 @ HEAD) ↔ `har_struct/jwc_patched/` (worktree) |
+
+**최초 클론**
+
+```bash
+git clone https://github.com/Yeachan-Heo/gajae-code devlog/_upstream_gjc
+```
+
+**밴드 착수·리베이스 전 pull (권장)**
+
+```bash
+git -C devlog/_upstream_gjc fetch origin
+git -C devlog/_upstream_gjc log -1 --oneline    # HEAD를 devlog·har_struct에 기록
+git fetch upstream && git rebase upstream/main    # worktree — 변경 정리 후
+```
+
+**근거 cite 규칙**
+
+- upstream baseline: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_upstream_gjc/<repo-relative-path>:<line>`
+- fork patched: `/Users/jun/Developer/new/700_projects/jawcode/<path>:<line>`
+
+클론 HEAD 갱신 후: `har_struct/gjc_origin/**/02_code_facts.md` path 인벤토리, `har_struct/README.md` 기준선, 필요 시 `structure/gitstructure.md` HEAD 표를 맞춘다.
 
 ## 3. 코드 컨벤션
 

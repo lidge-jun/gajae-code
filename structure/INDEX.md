@@ -48,5 +48,14 @@
 | 시스템 프롬프트/스킬 렌더 변경 | `prompt_flow.md`, `workflows.md`, `extensibility.md` | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/system-prompt.ts:441` |
 | default workflow skill 변경 | `workflows.md`, `gitstructure.md`, `conventions.md` | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/defaults/gjc-defaults.ts:13` |
 | storage schema 변경 | `session_storage.md`, `sdk_surface.md` | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/session/agent-storage.ts:25` |
+| **`devlog/_upstream_gjc` fetch/pull** | `har_struct/gjc_origin/**`, `har_struct/README.md`, `gitstructure.md` | `/Users/jun/Developer/new/700_projects/jawcode/structure/conventions.md` §2.2 |
+| **포크 밴드 완료** (patched) | `structure/*`, `har_struct/jwc_patched/**` | `/Users/jun/Developer/new/700_projects/jawcode/har_struct/README.md` |
 
-*마지막 갱신: 2026-06-12. 기준 HEAD `2654e6c`, upstream remote `https://github.com/Yeachan-Heo/gajae-code`.*
+### upstream 참조 + pull 개발 (요약)
+
+- **SoT**: `structure/` = jawcode patched 현재 형태.
+- **Baseline**: `devlog/_upstream_gjc/` = gitignored upstream 클론 — fetch 후 diff·file:line cite.
+- **대조**: `har_struct/` = `gjc_origin` ↔ `jwc_patched` 병렬 스냅샷.
+- **worktree**: `git fetch upstream && git rebase upstream/main` — 클론 pull과 같은 창구에서 실행 ([conventions.md §2](./conventions.md)).
+
+*마지막 갱신: 2026-06-12. 기준 HEAD `2654e6c`, upstream remote `https://github.com/Yeachan-Heo/gajae-code`, upstream 클론 `devlog/_upstream_gjc` @ `40c8d7f`.*
