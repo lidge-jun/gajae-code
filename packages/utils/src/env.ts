@@ -182,6 +182,16 @@ for (const file of [projectEnv, agentEnv, piEnv, homeEnv, homeShellEnv]) {
  */
 export const $env: Record<string, string> = Bun.env as Record<string, string>;
 
+// 062.1 safety net: mirror JWC_* values onto their legacy GJC_* names at load
+// time so read sites that are not yet wired through $resolveEnv still honor
+// the canonical JWC_* spelling. Wired sites prefer JWC_* directly.
+for (const key of Object.keys(Bun.env)) {
+	if (key.startsWith("JWC_")) {
+		const legacy = `GJC_${key.slice(4)}`;
+		if (Bun.env[legacy] === undefined) Bun.env[legacy] = Bun.env[key];
+	}
+}
+
 /**
  * Resolve a GJC_*-named variable through the jwc fork alias chain (062.1 M1):
  * `JWC_X ?? GJC_X`. Pass the legacy GJC_* key; the JWC_* canonical name is

@@ -185,3 +185,16 @@ describe("$resolveEnv (062.1 jwc fork alias chain)", () => {
 		expect($resolveEnv("GJC_RESOLVE_TEST" as string)).toBe("direct");
 	});
 });
+
+describe("JWC_ → GJC_ load-time mirror (062.1 safety net)", () => {
+	it("mirrors canonical values onto unset legacy names via fresh import", async () => {
+		const proc = Bun.spawnSync(
+			["bun", "-e", 'await import("./src/env"); console.log(Bun.env.GJC_MIRROR_TEST ?? "unset");'],
+			{
+				cwd: import.meta.dir + "/..",
+				env: { ...process.env, JWC_MIRROR_TEST: "mirrored" },
+			},
+		);
+		expect(proc.stdout.toString().trim()).toBe("mirrored");
+	});
+});

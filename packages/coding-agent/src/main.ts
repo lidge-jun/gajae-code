@@ -12,6 +12,7 @@ import { createInterface } from "node:readline/promises";
 import type { ImageContent } from "@gajae-code/ai";
 import {
 	$env,
+	$resolveEnv,
 	getProjectDir,
 	logger,
 	normalizePathForComparison,
@@ -819,9 +820,11 @@ export async function runRootCommand(
 	logger.time("initializeWithSettings", initializeWithSettings, settingsInstance);
 
 	// Apply model role overrides from CLI args or env vars (ephemeral, not persisted)
-	const smolModel = parsedArgs.smol ?? $env.PI_SMOL_MODEL;
-	const slowModel = parsedArgs.slow ?? $env.PI_SLOW_MODEL;
-	const planModel = parsedArgs.plan ?? $env.PI_PLAN_MODEL;
+	// JWC_ → GJC_ → PI_ chain (062.1 M5): the GJC_*_MODEL names were documented
+	// but never read before this wiring.
+	const smolModel = parsedArgs.smol ?? $resolveEnv("GJC_SMOL_MODEL") ?? $env.PI_SMOL_MODEL;
+	const slowModel = parsedArgs.slow ?? $resolveEnv("GJC_SLOW_MODEL") ?? $env.PI_SLOW_MODEL;
+	const planModel = parsedArgs.plan ?? $resolveEnv("GJC_PLAN_MODEL") ?? $env.PI_PLAN_MODEL;
 	if (smolModel || slowModel || planModel) {
 		settingsInstance.overrideModelRoles({
 			smol: smolModel,

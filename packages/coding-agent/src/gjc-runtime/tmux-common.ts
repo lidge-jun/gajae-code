@@ -54,7 +54,7 @@ export function buildGjcTmuxSessionName(
 	env: NodeJS.ProcessEnv = process.env,
 	context: { branch?: string | null; now?: number; id?: string } = {},
 ): string {
-	const explicit = env.GJC_TMUX_SESSION?.trim();
+	const explicit = (env.JWC_TMUX_SESSION ?? env.GJC_TMUX_SESSION)?.trim();
 	if (explicit) return explicit;
 	const timestamp = (context.now ?? Date.now()).toString(36);
 	const id = context.id ?? randomTmuxSessionSuffix();

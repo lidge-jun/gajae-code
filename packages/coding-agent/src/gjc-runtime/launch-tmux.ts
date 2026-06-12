@@ -102,7 +102,7 @@ interface CommandResolutionContext {
 }
 
 function parseLaunchPolicy(env: NodeJS.ProcessEnv): LaunchPolicy {
-	const raw = env[GJC_LAUNCH_POLICY_ENV]?.trim().toLowerCase();
+	const raw = (env.JWC_LAUNCH_POLICY ?? env[GJC_LAUNCH_POLICY_ENV])?.trim().toLowerCase();
 	if (raw === "direct" || raw === "tmux") return raw;
 	if (env.GJC_NO_TMUX === "1" || env.GJC_NO_TMUX === "true") return "direct";
 	return "tmux";

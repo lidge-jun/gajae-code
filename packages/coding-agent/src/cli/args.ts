@@ -256,16 +256,16 @@ export function getExtraHelpText(): string {
   ANTHROPIC_SEARCH_API_KEY   - Anthropic search provider
 
   ${chalk.dim("# Configuration")}
-  GJC_CODING_AGENT_DIR       - Session storage directory (default: ~/${CONFIG_DIR_NAME}/agent)
-  GJC_PACKAGE_DIR            - Override package directory (for Nix/Guix store paths)
-  GJC_SMOL_MODEL              - Override smol/fast model (see --smol)
-  GJC_SLOW_MODEL              - Override slow/reasoning model (see --slow)
-  GJC_PLAN_MODEL              - Override planning model (see --plan)
-  GJC_NO_PTY                  - Disable PTY-based interactive bash execution
+  JWC_CODING_AGENT_DIR       - Session storage directory (legacy alias: GJC_*) (default: ~/${CONFIG_DIR_NAME}/agent)
+  JWC_PACKAGE_DIR            - Override package directory (for Nix/Guix store paths)
+  JWC_SMOL_MODEL              - Override smol/fast model (see --smol)
+  JWC_SLOW_MODEL              - Override slow/reasoning model (see --slow)
+  JWC_PLAN_MODEL              - Override planning model (see --plan)
+  JWC_NO_PTY                  - Disable PTY-based interactive bash execution
   --tmux                       - Launch interactive startup inside a new tmux session
   ${APP_NAME} session                  - List, inspect, create, remove, or attach tagged ${APP_NAME.toUpperCase()}-managed tmux sessions
-  GJC_LAUNCH_POLICY           - Launch policy for --tmux startup: tmux or direct
-  GJC_TMUX_SESSION            - Explicit tmux session name override for --tmux startup
+  JWC_LAUNCH_POLICY           - Launch policy for --tmux startup: tmux or direct
+  JWC_TMUX_SESSION            - Explicit tmux session name override for --tmux startup
 
   For complete environment variable reference, see:
   ${chalk.dim("docs/environment-variables.md")}
