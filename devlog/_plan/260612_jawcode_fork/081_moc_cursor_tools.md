@@ -23,6 +23,8 @@
 | [081.5](./081.5_audit_unbound_elsewhere.md) | cursor 외 동형 패턴(unbound-this/oneof-drop) 감사 | ✅ 감사 완료 |
 | [081.6](./081.6_fix_cursor_host_override.md) | cursor 주입구 host-override (cursor 설정 무시→jwc 우선) | ✅ 수정 (fork 고유) |
 | [081.7](./081.7_issue_cursor_autocompact.md) | cursor에서 자동 compact 미발동 (usage.input=0 → 임계치 판정 실패) | ✅ 수정 (estimate 폴백, fork 커밋 16ce10d) |
+| [081.8](./081.8_issue_composer_anchor_fabrication.md) | composer가 hashline 앵커 날조·대역외 수정으로 edit 연쇄 거부 (xai 직결 규율 공백) | ✅ 수정 (composer-discipline 주입, fork 고유) |
+| [081.9](./081.9_issue_composer_autocontinue_no_stop.md) | 턴 종료 후 안 멈춤 — threshold 컴팩션 autoContinue 재가동 + reserve가 실요청(32k)이 아닌 카탈로그(64k)를 예약해 임계 과소 | 🔨 옵션 E 구현 (예약·요청 정합화, 임계 136k→168k) |
 
 ## 증상 (사용자 보고)
 

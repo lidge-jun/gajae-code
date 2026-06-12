@@ -256,6 +256,8 @@ export class InteractiveMode implements InteractiveModeContext {
 	isBashMode = false;
 	isBashNoContext = false;
 	toolOutputExpanded = false;
+	// Thinking blocks collapse to one-line summaries by default (devlog 083.5).
+	thinkingExpanded = false;
 	todoExpanded = false;
 	planModeEnabled = false;
 	planModePaused = false;
@@ -485,6 +487,7 @@ export class InteractiveMode implements InteractiveModeContext {
 				recentSessions,
 				this.#getWelcomeLspServers(),
 			);
+			this.#welcomeComponent.getViewportRows = () => this.ui.terminal.rows;
 
 			// Setup UI layout
 			this.ui.addChild(new Spacer(1));

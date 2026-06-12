@@ -12,7 +12,7 @@
 | `cli-jaw dispatch --agent "X" --task "…"` | **task subagent** (planner/architect/critic/executor — `task/agents.ts:48-67`) | 직원=별도 프로세스·temp cwd·HTTP vs subagent=in-session. `--mutable`/`--scope`/plan 자동 주입 **없음** — task 프롬프트에 plan 전문 직접 포함 지시로 치환 |
 | `cli-jaw dispatch --virtual` | task/explore subagent | virtual employee 개념 없음 |
 | `cli-jaw goal set/update/done/pause…` | `jwc goal …` (060 예정, [061](./061_design_goal_merge.md)) | 060 전까지 "[jwc: goal 표면 060 밴드 예정]" stub 안내 |
-| `cli-jaw memory search/read/save` | `jwc memory …` (070 예정, [071](./071_design_memory_merge.md)) | 동일 stub |
+| `cli-jaw memory search/read/save` | `jwc memory …` (070 예정, [99.01.01](./99.01.01_design_memory_merge.md)) | 동일 stub |
 | `cli-jaw bgtask add …` | **없음** | degraded: "[jwc: unavailable — 장기 외부 대기는 로컬 폴링 또는 사용자 수동 재개]" |
 | `cli-jaw browser …` | **없음** (cli-jaw 설치 머신 한정) | degraded 안내 |
 | `cli-jaw project set/clear` | **없음** | "Project root는 프롬프트 주입으로 대체" 안내 |

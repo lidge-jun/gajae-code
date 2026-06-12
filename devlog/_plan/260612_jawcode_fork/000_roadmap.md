@@ -48,7 +48,7 @@
 | [040_moc_interview_merge.md](./040_moc_interview_merge.md) | [130_moc_injection.md](./130_moc_injection.md) ← **M2 done 지점** |
 | [050_moc_plan_pabcd.md](./050_moc_plan_pabcd.md) | [140_moc_federation_adapter.md](./140_moc_federation_adapter.md) |
 | [060_moc_goal_merge.md](./060_moc_goal_merge.md) | [150_moc_promotion.md](./150_moc_promotion.md) |
-| [070_moc_memory.md](./070_moc_memory.md) | |
+| [99.01.00_moc_memory.md](./99.01.00_moc_memory.md) | |
 | [080_moc_tui.md](./080_moc_tui.md) | |
 | [090_moc_auth_release_gate.md](./090_moc_auth_release_gate.md) ← **M1 done 지점 (G1–G9)** | |
 

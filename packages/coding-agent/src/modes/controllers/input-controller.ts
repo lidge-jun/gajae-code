@@ -18,6 +18,7 @@ import { getEditorCommand, openInEditor } from "../../utils/external-editor";
 import { ensureSupportedImageInput, ImageInputTooLargeError, loadImageInput } from "../../utils/image-loading";
 import { resizeImage } from "../../utils/image-resize";
 import { generateSessionTitle, setSessionTerminalTitle } from "../../utils/title-generator";
+import { AssistantMessageComponent } from "../components/assistant-message";
 import { ToolExecutionComponent } from "../components/tool-execution";
 import { ToolTranscriptOverlayComponent } from "../components/tool-transcript-overlay";
 
@@ -1016,7 +1017,12 @@ export class InputController {
 	}
 
 	toggleToolOutputExpansion(): void {
-		this.setToolsExpanded(!this.ctx.toolOutputExpanded);
+		// ctrl+o is the global trigger (devlog 083.5): tools and thinking expand
+		// or collapse together. Thinking state stays in sync so a following
+		// ctrl+t toggles from what is actually on screen.
+		const expanded = !this.ctx.toolOutputExpanded;
+		this.ctx.thinkingExpanded = expanded;
+		this.setToolsExpanded(expanded);
 	}
 
 	setToolsExpanded(expanded: boolean): void {
@@ -1030,22 +1036,38 @@ export class InputController {
 	}
 
 	toggleThinkingBlockVisibility(): void {
-		this.ctx.hideThinkingBlock = !this.ctx.hideThinkingBlock;
-		settings.set("hideThinkingBlock", this.ctx.hideThinkingBlock);
-		this.ctx.session.agent.hideThinkingSummary = this.ctx.hideThinkingBlock;
-
-		// Rebuild chat from session messages
-		this.ctx.chatContainer.clear();
-		this.ctx.rebuildChatFromMessages();
-
-		// If streaming, re-add the streaming component with updated visibility and re-render
-		if (this.ctx.streamingComponent && this.ctx.streamingMessage) {
-			this.ctx.streamingComponent.setHideThinkingBlock(this.ctx.hideThinkingBlock);
-			this.ctx.streamingComponent.updateContent(this.ctx.streamingMessage);
-			this.ctx.chatContainer.addChild(this.ctx.streamingComponent);
+		// Legacy escape hatch: if thinking blocks were fully hidden via the
+		// hideThinkingBlock setting (old ctrl+t semantics), the first press
+		// brings them back as collapsed summaries instead of toggling a state
+		// the user cannot see.
+		if (this.ctx.hideThinkingBlock) {
+			this.ctx.hideThinkingBlock = false;
+			settings.set("hideThinkingBlock", false);
+			this.ctx.session.agent.hideThinkingSummary = false;
+			this.ctx.thinkingExpanded = false;
+			this.ctx.chatContainer.clear();
+			this.ctx.rebuildChatFromMessages();
+			if (this.ctx.streamingComponent && this.ctx.streamingMessage) {
+				this.ctx.streamingComponent.setHideThinkingBlock(false);
+				this.ctx.streamingComponent.updateContent(this.ctx.streamingMessage);
+				this.ctx.chatContainer.addChild(this.ctx.streamingComponent);
+			}
+			this.ctx.showStatus("Thinking blocks: collapsed");
+			return;
 		}
 
-		this.ctx.showStatus(`Thinking blocks: ${this.ctx.hideThinkingBlock ? "hidden" : "visible"}`);
+		// ctrl+t toggles thinking blocks only (devlog 083.5): collapsed one-line
+		// summaries (default) ↔ full traces. Tools are untouched; ctrl+o sweeps both.
+		const expanded = !this.ctx.thinkingExpanded;
+		this.ctx.thinkingExpanded = expanded;
+		for (const child of this.ctx.chatContainer.children) {
+			if (child instanceof AssistantMessageComponent) {
+				child.setThinkingExpanded(expanded);
+			}
+		}
+		this.ctx.streamingComponent?.setThinkingExpanded(expanded);
+		this.ctx.ui.requestRender();
+		this.ctx.showStatus(`Thinking blocks: ${expanded ? "expanded" : "collapsed"}`);
 	}
 
 	#getEditorTerminalPath(): string | null {
@@ -1085,7 +1107,7 @@ export class InputController {
 				? [ttyHandle.fd, ttyHandle.fd, ttyHandle.fd]
 				: ["inherit", "inherit", "inherit"];
 
-			const result = await openInEditor(editorCmd, currentText, { extension: ".gjc.md", stdio });
+			const result = await openInEditor(editorCmd, currentText, { extension: ".jwc.md", stdio });
 			if (result !== null) {
 				this.ctx.editor.setText(result);
 			}

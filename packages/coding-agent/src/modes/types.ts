@@ -88,6 +88,8 @@ export interface InteractiveModeContext {
 	isBashMode: boolean;
 	isBashNoContext: boolean;
 	toolOutputExpanded: boolean;
+	/** Thinking blocks expanded vs collapsed-to-summary (devlog 083.5; collapsed by default). */
+	thinkingExpanded: boolean;
 	todoExpanded: boolean;
 	planModeEnabled: boolean;
 	goalModeEnabled: boolean;

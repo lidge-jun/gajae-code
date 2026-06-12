@@ -1131,7 +1131,7 @@ describe("AskTool jaw-interview structured questions (meta contract)", () => {
 		);
 
 		expect(select).toHaveBeenCalledTimes(1);
-		expect(select.mock.calls[0]?.[1]).toEqual(["1. Condition A", "2. Condition B", "3. Other (type your own)"]);
+		expect(select.mock.calls[0]?.[1]).toEqual(["1. Condition A", "2. Condition B"]);
 		const prompt = select.mock.calls[0]?.[0] ?? "";
 		expect(prompt).toContain("Jaw Interview · Round 3 · Ambiguity 38%");
 		expect(prompt).toContain("Component: Review UI");
@@ -1171,14 +1171,22 @@ describe("AskTool jaw-interview structured questions (meta contract)", () => {
 		expect(prompt).toContain("Jaw Interview · Round 3 · Ambiguity 38%");
 		expect(prompt).toContain("Target: 성공 기준");
 		expect(prompt).toContain(question);
-		expect(select.mock.calls[0]?.[1]).toEqual(["1. 조건 A", "2. 조건 B", "3. Other (type your own)"]);
+		expect(select.mock.calls[0]?.[1]).toEqual(["1. 조건 A", "2. 조건 B"]);
 	});
 
-	it("accepts the numbered structured free-text option as custom input", async () => {
+	it("accepts docked free-text under numbered options (082.3)", async () => {
 		const tool = new AskTool(createSession());
-		const select = vi.fn(async (_prompt: string, options: string[]) => options[2]);
-		const editor = vi.fn(async () => "Use my own boundary");
-		const context = createContext({ select, editor });
+		const select = vi.fn(
+			async (
+				_prompt: string,
+				_options: string[],
+				dialogOptions?: { listSlotCustomInput?: { onSubmit: (text: string) => void } },
+			) => {
+				dialogOptions?.listSlotCustomInput?.onSubmit("Use my own boundary");
+				return undefined;
+			},
+		);
+		const context = createContext({ select });
 
 		const result = await tool.execute(
 			"call-jaw-interview-other",
@@ -1197,8 +1205,7 @@ describe("AskTool jaw-interview structured questions (meta contract)", () => {
 			context,
 		);
 
-		expect(select.mock.calls[0]?.[1]).toEqual(["1. Performance", "2. Security", "3. Other (type your own)"]);
-		expect(editor).toHaveBeenCalledTimes(1);
+		expect(select.mock.calls[0]?.[1]).toEqual(["1. Performance", "2. Security"]);
 		expect(result.details?.selectedOptions).toEqual([]);
 		expect(result.details?.customInput).toBe("Use my own boundary");
 	});
@@ -1229,7 +1236,7 @@ describe("AskTool jaw-interview structured questions (meta contract)", () => {
 		);
 
 		const dialogOptions = select.mock.calls[0]?.[2];
-		expect(dialogOptions?.scrollTitleRows).toBe(Number.MAX_SAFE_INTEGER);
+		expect(dialogOptions?.scrollTitleRows).toBe(48);
 		expect(dialogOptions?.helpText).toContain("wheel/PgUp/PgDn scroll question");
 	});
 

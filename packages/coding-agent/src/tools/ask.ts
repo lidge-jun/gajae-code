@@ -103,7 +103,8 @@ export interface AskToolDetails {
 
 const OTHER_OPTION = "Other (type your own)";
 const RECOMMENDED_SUFFIX = " (Recommended)";
-const JAW_INTERVIEW_SELECTOR_SCROLL_TITLE_ROWS = Number.MAX_SAFE_INTEGER;
+/** Upper bound for interview ask title viewport; actual rows come from terminal budget in ExtensionUiController. */
+const JAW_INTERVIEW_SELECTOR_SCROLL_TITLE_ROWS = 48;
 
 function getDoneOptionLabel(): string {
 	return `${theme.status.success} Done selecting`;
@@ -171,6 +172,8 @@ interface AskSingleQuestionOptions {
 	navigation?: NavigationControls;
 	scrollTitleRows?: number;
 	otherOptionLabel?: string;
+	/** jaw-interview: docked free-text under numbered options (no Other row). */
+	useDockedCustomInput?: boolean;
 }
 
 interface UIContext {
@@ -189,6 +192,10 @@ interface UIContext {
 			onRight?: () => void;
 			helpText?: string;
 			customInput?: { optionLabel: string; onSubmit: (text: string) => void };
+			customInputListSlot?: boolean;
+			listSlotCustomInput?: { label?: string; onSubmit: (text: string) => void };
+			customInputDocked?: boolean;
+			dockedCustomInput?: { label?: string; prompt?: string; onSubmit: (text: string) => void };
 		},
 	): Promise<string | undefined>;
 	editor(
@@ -206,7 +213,7 @@ async function askSingleQuestion(
 	multi: boolean,
 	options: AskSingleQuestionOptions = {},
 ): Promise<SelectionResult> {
-	const { recommended, timeout, signal, initialSelection, navigation, scrollTitleRows } = options;
+	const { recommended, timeout, signal, initialSelection, navigation, scrollTitleRows, useDockedCustomInput } = options;
 	const doneLabel = getDoneOptionLabel();
 	const otherOptionLabel = options.otherOptionLabel ?? OTHER_OPTION;
 	let selectedOptions = [...(initialSelection?.selectedOptions ?? [])];
@@ -237,6 +244,7 @@ async function askSingleQuestion(
 			: "up/down navigate  enter select  esc cancel";
 		const helpText =
 			scrollTitleRows === undefined ? baseHelpText : `${baseHelpText}  wheel/PgUp/PgDn scroll question`;
+		const useDockedCustomInput = options.useDockedCustomInput === true;
 		const dialogOptions = {
 			initialIndex,
 			timeout,
@@ -246,12 +254,24 @@ async function askSingleQuestion(
 			scrollTitleRows,
 			onTimeout,
 			helpText,
-			customInput: {
-				optionLabel: otherOptionLabel,
-				onSubmit: (text: string) => {
-					inlineInput = text;
-				},
-			},
+			...(useDockedCustomInput
+				? {
+						customInputListSlot: true,
+						listSlotCustomInput: {
+							label: `${optionLabels.length + 1}. 출력창`,
+							onSubmit: (text: string) => {
+								inlineInput = text;
+							},
+						},
+					}
+				: {
+						customInput: {
+							optionLabel: otherOptionLabel,
+							onSubmit: (text: string) => {
+								inlineInput = text;
+							},
+						},
+					}),
 			onLeft: navigation?.allowBack
 				? () => {
 						navigationAction = "back";
@@ -366,7 +386,9 @@ async function askSingleQuestion(
 		selectedOptions = Array.from(selected);
 	} else {
 		const displayLabels = addRecommendedSuffix(optionLabels, recommended);
-		const optionsWithNavigation = [...displayLabels, otherOptionLabel];
+		const optionsWithNavigation = options.useDockedCustomInput
+			? displayLabels
+			: [...displayLabels, otherOptionLabel];
 
 		let initialIndex = recommended;
 		const previouslySelected = selectedOptions[0];
@@ -394,7 +416,12 @@ async function askSingleQuestion(
 		}
 		if (choice === undefined) {
 			if (!timedOut) {
-				return { selectedOptions, customInput, timedOut, cancelled: true };
+				if (useDockedCustomInput && inlineInput !== undefined) {
+					customInput = inlineInput;
+					selectedOptions = [];
+				} else {
+					return { selectedOptions, customInput, timedOut, cancelled: true };
+				}
 			}
 		} else if (choice === otherOptionLabel) {
 			if (!selectTimedOut) {
@@ -571,9 +598,7 @@ export class AskTool implements AgentTool<typeof askSchema, AskToolDetails> {
 					initialSelection,
 					navigation: options?.navigation,
 					scrollTitleRows: jawInterviewPrompt === null ? undefined : JAW_INTERVIEW_SELECTOR_SCROLL_TITLE_ROWS,
-					otherOptionLabel: shouldNumberOptions
-						? formatNumberedOptionLabel(OTHER_OPTION, optionLabels.length)
-						: undefined,
+					useDockedCustomInput: shouldNumberOptions && !(q.multi ?? false) ? true : undefined,
 				});
 				const selectedOptions = shouldNumberOptions
 					? displaySelectedOptions.map(selected => {

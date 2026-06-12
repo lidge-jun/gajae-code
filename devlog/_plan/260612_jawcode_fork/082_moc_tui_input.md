@@ -8,8 +8,9 @@
 
 | # | 이슈 | 원인 요지 | 상태 |
 |---|------|-----------|------|
-| [082.1](./082.1_issue_tui_ctrl_ime.md) | 한글 IME에서 Ctrl 단축키·종료 미작동 | legacy 터미널이 0x03 대신 자모 바이트 전달, native 매처가 C0만 인식 | ✅ 종료 안전망(ESC 2연타) / 일반 Ctrl=Kitty 권고 |
+| [082.1](./082.1_issue_tui_ctrl_ime.md) | 한글 IME에서 Ctrl 단축키·종료 미작동 | legacy 터미널이 0x03 대신 자모 바이트 전달, native 매처가 C0만 인식 | ✅ 종료 안전망(ESC 2연타) + 자모 chord 힌트(D안: 상태줄 "switch to English (한/A) or esc esc" 4초) / 일반 Ctrl=Kitty 권고 |
 | [082.2](./082.2_issue_first_char_cursor_jump.md) | 첫 글자 입력 시 캐럿 우측 점프→복귀 | 플레이스홀더 프레임이 커서 마커를 꺼 미동기화 → 첫 글자 IME preedit 스냅 | ✅ 수정 (placeholder 마커 유지) |
+| [082.3](./082.3_plan_interview_ask_docked_input.md) | 인터뷰 ask: ↑↓ **N+1=입력 슬롯** + `CustomEditor` embed (§9) | v2 구현 (`customInputListSlot`) | ✅ |
 
 ## 공통 배경
 

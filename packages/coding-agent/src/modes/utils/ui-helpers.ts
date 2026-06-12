@@ -264,6 +264,7 @@ export class UiHelpers {
 				const assistantComponent = new AssistantMessageComponent(message, this.ctx.hideThinkingBlock, () =>
 					this.ctx.ui.requestRender(),
 				);
+				assistantComponent.setThinkingExpanded(this.ctx.thinkingExpanded);
 				this.ctx.chatContainer.addChild(assistantComponent);
 				break;
 			}

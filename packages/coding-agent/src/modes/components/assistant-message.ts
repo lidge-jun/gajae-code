@@ -17,6 +17,10 @@ export class AssistantMessageComponent extends Container {
 	#usageInfo?: Usage;
 	#convertedKittyImages = new Map<string, ImageContent>();
 	#kittyConversionsInFlight = new Set<string>();
+	/** Thinking blocks collapsed to one-line summaries by default (devlog 083.5). */
+	#thinkingExpanded = false;
+	/** True while this component renders the live streaming segment. */
+	#streaming = false;
 	#responseHeader = new Text(theme.bold(theme.fg("statusLineModel", resolveAgentDisplayName().toLowerCase())), 1, 0);
 
 	constructor(
@@ -44,6 +48,37 @@ export class AssistantMessageComponent extends Container {
 
 	setHideThinkingBlock(hide: boolean): void {
 		this.hideThinkingBlock = hide;
+	}
+
+	/**
+	 * Thinking collapse (devlog 083.5): completed thinking blocks render as a
+	 * one-line summary by default, mirroring tool minimization (083.1).
+	 * ctrl+t expands/collapses thinking only; ctrl+o sweeps everything via the
+	 * duck-typed `setExpanded` protocol shared with tool components.
+	 */
+	setThinkingExpanded(expanded: boolean): void {
+		if (this.#thinkingExpanded === expanded) return;
+		this.#thinkingExpanded = expanded;
+		if (this.#lastMessage) {
+			this.updateContent(this.#lastMessage);
+		}
+	}
+
+	/** Global expand sweep entry (ctrl+o) — same protocol as ToolExecutionComponent. */
+	setExpanded(expanded: boolean): void {
+		this.setThinkingExpanded(expanded);
+	}
+
+	/**
+	 * While streaming, the trailing thinking block always shows its live tail;
+	 * it settles into the collapsed summary once the stream moves past it.
+	 */
+	setStreaming(streaming: boolean): void {
+		if (this.#streaming === streaming) return;
+		this.#streaming = streaming;
+		if (this.#lastMessage) {
+			this.updateContent(this.#lastMessage);
+		}
 	}
 
 	setToolResultImages(toolCallId: string, images: ImageContent[]): void {
@@ -163,19 +198,38 @@ export class AssistantMessageComponent extends Container {
 					.slice(i + 1)
 					.some(c => (c.type === "text" && c.text.trim()) || (c.type === "thinking" && c.thinking.trim()));
 
+				// The live tail of a streaming segment always shows in full; it
+				// settles into the collapsed summary once the stream moves past it.
+				const isStreamingTail = this.#streaming && i === message.content.length - 1;
+
 				if (this.hideThinkingBlock) {
 					// Show static "Thinking..." label when hidden
 					this.#contentContainer.addChild(new Text(theme.italic(theme.fg("thinkingText", "Thinking...")), 1, 0));
 					if (hasVisibleContentAfter) {
 						this.#contentContainer.addChild(new Spacer(1));
 					}
-				} else {
+				} else if (this.#thinkingExpanded || isStreamingTail) {
 					// Thinking traces in thinkingText color, italic
 					this.#contentContainer.addChild(
 						new Markdown(content.thinking.trim(), 1, 0, getMarkdownTheme(), {
 							color: (text: string) => theme.fg("thinkingText", text),
 							italic: true,
 						}),
+					);
+					if (hasVisibleContentAfter) {
+						this.#contentContainer.addChild(new Spacer(1));
+					}
+				} else {
+					// Collapsed one-line summary (devlog 083.5), visually aligned with
+					// minimized tool rows. ctrl+t (thinking) or ctrl+o (everything)
+					// expands it back to the full trace.
+					const lineCount = content.thinking.trim().split("\n").length;
+					this.#contentContainer.addChild(
+						new Text(
+							`${theme.italic(theme.fg("thinkingText", "Thinking"))} ${theme.fg("dim", `… +${lineCount} line${lineCount === 1 ? "" : "s"}`)}`,
+							1,
+							0,
+						),
 					);
 					if (hasVisibleContentAfter) {
 						this.#contentContainer.addChild(new Spacer(1));

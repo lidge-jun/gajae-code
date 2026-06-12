@@ -30,6 +30,9 @@ const HOOK_SELECTOR_MOUSE_REPORTING_DISABLE = "\x1b[?1000l\x1b[?1006l";
 const HOOK_SELECTOR_CHROME_ROWS = 7;
 const HOOK_SELECTOR_OUTLINE_ROWS = 2;
 const HOOK_SELECTOR_INLINE_INPUT_ROWS = 2;
+/** 082.3 v2: footer rows (출력창 heading + editor) inside the option list box. */
+const HOOK_SELECTOR_OUTPUT_PANEL_ROWS = 4;
+const OTHER_OPTION = "Other (type your own)";
 
 export class ExtensionUiController {
 	#extensionTerminalInputUnsubscribers = new Set<() => void>();
@@ -604,7 +607,11 @@ export class ExtensionUiController {
 		const listChromeRows = dialogOptions?.outline === true ? HOOK_SELECTOR_OUTLINE_ROWS : 0;
 		// Reserve rows for the inline custom-input editor so opening it doesn't
 		// push the scrollable title past the viewport into terminal scrollback.
-		const inlineInputRows = dialogOptions?.customInput ? HOOK_SELECTOR_INLINE_INPUT_ROWS : 0;
+		const inlineInputRows = dialogOptions?.customInputListSlot
+			? HOOK_SELECTOR_OUTPUT_PANEL_ROWS
+			: dialogOptions?.customInput || dialogOptions?.customInputDocked
+				? HOOK_SELECTOR_INLINE_INPUT_ROWS
+				: 0;
 		const availableTitleRows =
 			this.ctx.ui.terminal.rows - scrollOptionRows - listChromeRows - inlineInputRows - HOOK_SELECTOR_CHROME_ROWS;
 		const scrollTitleRows =
@@ -657,6 +664,30 @@ export class ExtensionUiController {
 								this.hideHookSelector();
 								dialogOptions.customInput?.onSubmit(text);
 								finish(optionLabel);
+							},
+						}
+					: undefined,
+
+				customInputListSlot: dialogOptions?.customInputListSlot,
+				listSlotCustomInput: dialogOptions?.listSlotCustomInput
+					? {
+							label: dialogOptions.listSlotCustomInput.label,
+							onSubmit: text => {
+								this.hideHookSelector();
+								dialogOptions.listSlotCustomInput?.onSubmit(text);
+								finish(undefined);
+							},
+						}
+					: undefined,
+				customInputDocked: dialogOptions?.customInputDocked,
+				dockedCustomInput: dialogOptions?.dockedCustomInput
+					? {
+							label: dialogOptions.dockedCustomInput.label,
+							prompt: dialogOptions.dockedCustomInput.prompt,
+							onSubmit: text => {
+								this.hideHookSelector();
+								dialogOptions.dockedCustomInput?.onSubmit(text);
+								finish(undefined);
 							},
 						}
 					: undefined,

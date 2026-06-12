@@ -153,3 +153,51 @@ describe("HookSelectorComponent inline custom input", () => {
 		expect(after).toContain("esc back to options");
 	});
 });
+
+describe("HookSelectorComponent docked custom input", () => {
+	const DOCKED_OPTIONS = ["1. Option A", "2. Option B"];
+
+	function createDockedSelector(): { component: HookSelectorComponent; calls: Callbacks } {
+		const calls: Callbacks = { selected: [], cancelled: 0, submitted: [] };
+		const component = new HookSelectorComponent(
+			TITLE,
+			DOCKED_OPTIONS,
+			option => calls.selected.push(option),
+			() => calls.cancelled++,
+			{
+				customInputDocked: true,
+				dockedCustomInput: {
+					onSubmit: text => calls.submitted.push(text),
+				},
+				scrollTitleRows: Number.MAX_SAFE_INTEGER,
+			},
+		);
+		return { component, calls };
+	}
+
+	it("shows the prompt editor without an Other list row", () => {
+		const { component } = createDockedSelector();
+		const rendered = renderText(component);
+		expect(rendered).toContain("1. Option A");
+		expect(rendered).toContain("2. Option B");
+		expect(rendered).not.toContain("Other (type your own)");
+		expect(rendered).toContain("> ");
+	});
+
+	it("submits docked text on enter without selecting an option", () => {
+		const { component, calls } = createDockedSelector();
+		component.handleInput("\t");
+		component.handleInput("m");
+		component.handleInput("y");
+		component.handleInput(" ");
+		component.handleInput("a");
+		component.handleInput("n");
+		component.handleInput("s");
+		component.handleInput("w");
+		component.handleInput("e");
+		component.handleInput("r");
+		component.handleInput("\r");
+		expect(calls.submitted).toEqual(["my answer"]);
+		expect(calls.selected).toEqual([]);
+	});
+});

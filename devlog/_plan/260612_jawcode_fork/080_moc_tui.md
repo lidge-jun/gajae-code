@@ -28,6 +28,8 @@
 > 시안 3종 HTML 미리보기 제시 → 사용자 확정 **abyss-bite(시안-우선 + 바이트 포인트) + fin 마크**.
 > 테마 2종(다크/라이트)·brand 조건부 기본값(theme.ts + settings-schema)·welcome 배너 분기·`$ gjc` 스윕·가드 확장.
 > 아래 §A 1–4항 전부 + 열린 질문 1·2 해소. ⬜ e2e 스크린샷만 잔여.
+> ↳ 후속 [086.1](./086.1_issue_banner_scroll.md): 짧은 터미널 배너 스크롤백 잘림 → 수직 반응형 컴팩트
+> 배너(5행, BRANDED 게이트) 패치 ✅ · 렌더러 단일 원인은 라이브 로그 대기.
 
 1. **jaw 테마 신설**: `modes/theme/defaults/jaw-<이름>.json` — red-claw.json을 베이스로 jaw 팔레트
    (방향 미정 — 열린 질문 2). 시맨틱 컬러 무결성 유지 (gjc REBRANDING_PLAN 원칙 3: 브랜드색 ≠ error/warning/diff 색)

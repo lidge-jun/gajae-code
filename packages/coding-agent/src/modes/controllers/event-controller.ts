@@ -269,6 +269,8 @@ export class EventController {
 			this.ctx.streamingComponent = new AssistantMessageComponent(undefined, this.ctx.hideThinkingBlock, () =>
 				this.ctx.ui.requestRender(),
 			);
+			this.ctx.streamingComponent.setThinkingExpanded(this.ctx.thinkingExpanded);
+			this.ctx.streamingComponent.setStreaming(true);
 			this.ctx.streamingMessage = event.message;
 			this.ctx.chatContainer.addChild(this.ctx.streamingComponent);
 			this.ctx.streamingComponent.updateContent(this.ctx.streamingMessage);
@@ -348,9 +350,13 @@ export class EventController {
 					// The tools above this segment are done — collapse the last one (083.1).
 					this.ctx.lastToolComponent?.setMinimized?.(true);
 					this.ctx.lastToolComponent = undefined;
+					// The previous segment is settled — its trailing thinking collapses (083.5).
+					this.ctx.streamingComponent.setStreaming(false);
 					this.ctx.streamingComponent = new AssistantMessageComponent(undefined, this.ctx.hideThinkingBlock, () =>
 						this.ctx.ui.requestRender(),
 					);
+					this.ctx.streamingComponent.setThinkingExpanded(this.ctx.thinkingExpanded);
+					this.ctx.streamingComponent.setStreaming(true);
 					this.ctx.chatContainer.addChild(this.ctx.streamingComponent);
 				}
 			}
@@ -455,6 +461,8 @@ export class EventController {
 		if (event.message.role === "user") return;
 		if (this.ctx.streamingComponent && event.message.role === "assistant") {
 			this.ctx.streamingMessage = event.message;
+			// Message settled — the trailing thinking block collapses to its summary (083.5).
+			this.ctx.streamingComponent.setStreaming(false);
 			let errorMessage: string | undefined;
 			const aborted = this.ctx.streamingMessage.stopReason === "aborted";
 			const silentlyAborted = aborted && isSilentAbort(this.ctx.streamingMessage.errorMessage);

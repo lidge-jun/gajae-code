@@ -69,6 +69,7 @@ import type {
 import {
 	calculateRateLimitBackoffMs,
 	clearAnthropicFastModeFallback,
+	effectiveMaxOutputTokens,
 	getSupportedEfforts,
 	isContextOverflow,
 	isUsageLimitError,
@@ -309,13 +310,13 @@ export type AgentSessionEvent =
 
 /**
  * Safe path component pattern used to validate session-id segments before
- * joining them into `.gjc/state` paths. Mirrors the regex used by the
+ * joining them into `.jwc/state` paths. Mirrors the regex used by the
  * `gjc state` runtime selector resolver.
  */
 const SAFE_PATH_COMPONENT = /^[A-Za-z0-9_-][A-Za-z0-9._-]{0,63}$/;
 
 function isUnderProjectGjc(cwd: string, targetPath: string): boolean {
-	const relative = path.relative(path.join(path.resolve(cwd), ".gjc"), path.resolve(targetPath));
+	const relative = path.relative(path.join(path.resolve(cwd), ".jwc"), path.resolve(targetPath));
 	return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative));
 }
 
@@ -1351,7 +1352,7 @@ export class AgentSession {
 			return undefined;
 		}
 		try {
-			const stateDir = path.join(this.sessionManager.getCwd(), ".gjc", "state");
+			const stateDir = path.join(this.sessionManager.getCwd(), ".jwc", "state");
 			const segments = active.sessionId
 				? [stateDir, "sessions", encodeURIComponent(active.sessionId).replaceAll(".", "%2E")]
 				: [stateDir];
@@ -4620,11 +4621,11 @@ export class AgentSession {
 		const skill = name.trim();
 		const sessionId = this.sessionManager.getSessionId();
 		// Canonical GJC workflow skills (jaw-interview, ralplan, ultragoal, team)
-		// own their `.gjc/state/skill-active-state.json` row through the
+		// own their `.jwc/state/skill-active-state.json` row through the
 		// `gjc state handoff` and `gjc state clear` runtime verbs. The prompt
 		// observer must not overwrite an existing row (that clobbered handoff
 		// lineage `handoff_from`/`handoff_at` and desynced the HUD). But a fresh
-		// `/skill:<name>` invocation has no row yet, so seed `.gjc/state`
+		// `/skill:<name>` invocation has no row yet, so seed `.jwc/state`
 		// idempotently here: `ensureWorkflowSkillActivationState` writes the
 		// initial mode-state + active row only when the skill is not already
 		// active, so the mutation guard and Stop hook engage immediately instead
@@ -6518,7 +6519,16 @@ export class AgentSession {
 		// line already trusts and use whichever is larger. The estimate is taken
 		// after #pruneToolOutputs so pruned outputs are already excluded from it.
 		const contextTokens = Math.max(usageTokens, this.#estimateMessagesTokens());
-		if (shouldCompact(contextTokens, contextWindow, compactionSettings, this.model?.maxTokens ?? 0)) {
+		// Reserve the output budget requests actually use (catalog maxTokens capped
+		// at 32k by default), not the raw catalog value — see effectiveMaxOutputTokens.
+		if (
+			shouldCompact(
+				contextTokens,
+				contextWindow,
+				compactionSettings,
+				this.model ? effectiveMaxOutputTokens(this.model) : 0,
+			)
+		) {
 			// Try promotion first — if a larger model is available, switch instead of compacting
 			const promoted = await this.#tryContextPromotion(assistantMessage);
 			if (!promoted) {

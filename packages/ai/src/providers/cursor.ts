@@ -30,6 +30,7 @@ import { AssistantMessageEventStream } from "../utils/event-stream";
 import { parseStreamingJson } from "../utils/json-parse";
 import { formatErrorMessageWithRetryAfter } from "../utils/retry-after";
 import { toolWireSchema } from "../utils/schema/wire";
+import { COMPOSER_EDIT_DISCIPLINE_PROMPT, isComposerHarnessModel } from "./composer-discipline";
 import type { McpToolDefinition } from "./cursor/gen/agent_pb";
 import {
 	AgentClientMessageSchema,
@@ -2295,15 +2296,21 @@ const CURSOR_HOST_OVERRIDE_PROMPT = `You are running inside ${APP_NAME}, a stand
 - Do NOT assume Cursor's native tool set or tool names. Use ONLY the tools explicitly advertised to you in this session.
 - Follow ONLY the ${APP_NAME} system instructions provided in this conversation and the ${APP_NAME} project configuration (e.g. its AGENTS.md / settings). Where ${APP_NAME} guidance and Cursor defaults conflict, ${APP_NAME} always wins.`;
 
-export function buildCursorSystemPromptJsons(systemPrompt: readonly string[] | undefined): string[] {
+export function buildCursorSystemPromptJsons(systemPrompt: readonly string[] | undefined, modelId?: string): string[] {
 	const systemPrompts = normalizeSystemPrompts(systemPrompt);
 	// Always lead with the host-override directive so the model is pinned to this
 	// agent's rules/tools regardless of what system prompts follow (or none).
-	const override = JSON.stringify({ role: "system", content: CURSOR_HOST_OVERRIDE_PROMPT });
-	if (systemPrompts.length === 0) {
-		return [override, JSON.stringify({ role: "system", content: "You are a helpful assistant." })];
+	const heads = [JSON.stringify({ role: "system", content: CURSOR_HOST_OVERRIDE_PROMPT })];
+	// Composer models additionally need anchor/edit discipline pinned ahead of
+	// the host prompt (see composer-discipline.ts). Only when a host system
+	// prompt exists — bare completions have no edit tools to discipline.
+	if (systemPrompts.length > 0 && modelId !== undefined && isComposerHarnessModel(modelId)) {
+		heads.push(JSON.stringify({ role: "system", content: COMPOSER_EDIT_DISCIPLINE_PROMPT }));
 	}
-	return [override, ...systemPrompts.map(content => JSON.stringify({ role: "system", content }))];
+	if (systemPrompts.length === 0) {
+		return [...heads, JSON.stringify({ role: "system", content: "You are a helpful assistant." })];
+	}
+	return [...heads, ...systemPrompts.map(content => JSON.stringify({ role: "system", content }))];
 }
 
 function buildRootPromptMessagesJson(
@@ -2515,7 +2522,7 @@ function buildGrpcRequest(
 } {
 	const blobStore = state.blobStore;
 
-	const systemPromptIds = buildCursorSystemPromptJsons(context.systemPrompt).map(json =>
+	const systemPromptIds = buildCursorSystemPromptJsons(context.systemPrompt, model.id).map(json =>
 		storeCursorBlob(blobStore, new TextEncoder().encode(json)),
 	);
 

@@ -49,7 +49,8 @@ function createFixture(opts: {
 }) {
 	const updateContent = vi.fn();
 	const setUsageInfo = vi.fn();
-	const streamingComponent = { updateContent, setUsageInfo };
+	const setStreaming = vi.fn();
+	const streamingComponent = { updateContent, setUsageInfo, setStreaming };
 	const requestRender = vi.fn();
 
 	const ctx = {

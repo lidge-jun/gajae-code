@@ -135,6 +135,27 @@ export interface ExtensionUIDialogOptions {
 		optionLabel: string;
 		onSubmit: (text: string) => void;
 	};
+	/**
+	 * When true, keep the option list visible and show a free-text input below it
+	 * from the start (no separate "Other" row). Non-TUI bridges drop this hint.
+	 */
+	customInputDocked?: boolean;
+	/** Handler and optional chrome for `customInputDocked` mode. */
+	dockedCustomInput?: {
+		label?: string;
+		prompt?: string;
+		onSubmit: (text: string) => void;
+	};
+	/**
+	 * v2 interview ask (082.3): last list row is a composer-style free-text slot.
+	 * Non-TUI bridges drop this hint.
+	 */
+	customInputListSlot?: boolean;
+	listSlotCustomInput?: {
+		label?: string;
+		onSubmit: (text: string) => void;
+	};
+
 }
 
 /** Raw terminal input listener for extensions. */

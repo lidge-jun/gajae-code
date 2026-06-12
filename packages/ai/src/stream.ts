@@ -455,6 +455,22 @@ export async function completeSimple<TApi extends Api>(
 
 const MIN_OUTPUT_TOKENS = 1024;
 export const OUTPUT_FALLBACK_BUFFER = 4000;
+
+/** Cap applied to a model's catalog maxTokens when the caller doesn't request an explicit output budget. */
+export const DEFAULT_MAX_OUTPUT_TOKENS_CAP = 32000;
+
+/**
+ * jwc fork (devlog 081.9 §3): the output-token budget a request will actually
+ * use — the caller's explicit maxTokens, otherwise the model's catalog
+ * maxTokens capped at DEFAULT_MAX_OUTPUT_TOKENS_CAP (matching the request
+ * default in mapOptionsForApi). Compaction reserves and the status-line
+ * threshold MUST use this same number: reserving the uncapped catalog
+ * maxTokens permanently wastes the difference (e.g. 32k on a 64k-output
+ * model) and fires auto-compaction far too early.
+ */
+export function effectiveMaxOutputTokens(model: { maxTokens: number }, requested?: number): number {
+	return requested || Math.min(model.maxTokens, DEFAULT_MAX_OUTPUT_TOKENS_CAP);
+}
 const ANTHROPIC_USE_INTERLEAVED_THINKING = Bun.env.PI_NO_INTERLEAVED_THINKING !== "1";
 
 export const ANTHROPIC_THINKING: Record<Effort, number> = {
@@ -563,7 +579,7 @@ function mapOptionsForApi<TApi extends Api>(
 		minP: options?.minP,
 		presencePenalty: options?.presencePenalty,
 		repetitionPenalty: options?.repetitionPenalty,
-		maxTokens: options?.maxTokens || Math.min(model.maxTokens, 32000),
+		maxTokens: effectiveMaxOutputTokens(model, options?.maxTokens),
 		signal: options?.signal,
 		apiKey: apiKey || options?.apiKey,
 		cacheRetention: options?.cacheRetention ?? model.cacheRetention,

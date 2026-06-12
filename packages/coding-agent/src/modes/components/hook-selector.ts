@@ -26,6 +26,9 @@ import {
 import { getEditorCommand, openInEditor } from "../../utils/external-editor";
 import { CountdownTimer } from "./countdown-timer";
 import { DynamicBorder } from "./dynamic-border";
+import { createAskOutputPanelEditor } from "./composer-chrome";
+import type { CustomEditor } from "./custom-editor";
+
 
 const SGR_MOUSE_PRESS_PATTERN = /^\x1b\[<(\d+);\d+;\d+M$/;
 const MOUSE_WHEEL_TITLE_SCROLL_ROWS = 3;
@@ -73,13 +76,36 @@ export interface HookSelectorOptions {
 		optionLabel: string;
 		onSubmit: (text: string) => void;
 	};
+	/**
+	 * When true, show a free-text editor below the option list from the start (no
+	 * separate "Other" list row). Use with `dockedCustomInput`.
+	 */
+	customInputDocked?: boolean;
+	/** Free-text input mounted under the list when `customInputDocked` is true. */
+	dockedCustomInput?: {
+		label?: string;
+		prompt?: string;
+		onSubmit: (text: string) => void;
+	};
+	/**
+	 * v2 interview UX (082.3): last list index is a free-text slot; ↑↓ includes it.
+	 * Editor uses composer chrome; shown in `#inputArea` only while the slot is focused.
+	 */
+	customInputListSlot?: boolean;
+	/** Handler for `customInputListSlot` (same contract as `dockedCustomInput.onSubmit`). */
+	listSlotCustomInput?: {
+		label?: string;
+		onSubmit: (text: string) => void;
+	};
 }
 
 class OutlinedList extends Container {
 	#lines: string[] = [];
+	#footerLines: string[] = [];
 
-	setLines(lines: string[]): void {
+	setLines(lines: string[], footerLines: string[] = []): void {
 		this.#lines = lines;
+		this.#footerLines = footerLines;
 		this.invalidate();
 	}
 
@@ -87,7 +113,8 @@ class OutlinedList extends Container {
 		const borderColor = (text: string) => theme.fg("border", text);
 		const horizontal = borderColor(theme.boxSharp.horizontal.repeat(Math.max(1, width)));
 		const innerWidth = Math.max(1, width - 2);
-		const content = this.#lines.map(line => {
+		const all = [...this.#lines, ...this.#footerLines];
+		const content = all.map(line => {
 			const normalized = replaceTabs(line);
 			const fitted = truncateToWidth(normalized, innerWidth);
 			const pad = Math.max(0, innerWidth - visibleWidth(fitted));
@@ -168,15 +195,29 @@ class FocusAwareList extends Container {
 	#selectedIndex = 0;
 	#maxVisibleRows = 0;
 	#outline: boolean;
+	#listSlot: boolean;
+	#listSlotLabel = "";
 
 	constructor(outline: boolean) {
 		super();
 		this.#outline = outline;
+		this.#listSlot = false;
 	}
 
-	setState(options: string[], selectedIndex: number, maxVisibleRows: number): void {
+	#footerLines: string[] = [];
+
+	setState(
+		options: string[],
+		selectedIndex: number,
+		maxVisibleRows: number,
+		footerLines: string[] = [],
+	): void {
 		this.#options = options;
-		this.#selectedIndex = Math.max(0, Math.min(selectedIndex, options.length - 1));
+		this.#listSlot = false;
+		this.#listSlotLabel = "";
+		this.#footerLines = footerLines;
+		const maxIndex = Math.max(0, options.length - 1);
+		this.#selectedIndex = Math.max(0, Math.min(selectedIndex, maxIndex));
 		this.#maxVisibleRows = Math.max(1, maxVisibleRows);
 		this.invalidate();
 	}
@@ -196,15 +237,15 @@ class FocusAwareList extends Container {
 
 		// Render the focused label up front so we can measure how many rows it
 		// will consume at the current width and budget siblings accordingly.
-		const focusedLabel = renderInlineMarkdown(this.#options[this.#selectedIndex] ?? "", mdTheme, t =>
-			theme.fg("accent", t),
-		);
+		const focusedRaw = this.#options[this.#selectedIndex] ?? "";
+		const focusedLabel = renderInlineMarkdown(focusedRaw, mdTheme, t => theme.fg("accent", t));
 		const focusedWrappedSegments = wrapTextWithAnsi(focusedLabel, availableLabelWidth);
 
 		// Reserve one row for the option position marker only when the focused
 		// block itself must be compacted. Moderate focused labels keep the legacy
 		// wrap-focused behavior and spend the full viewport on label context.
 		const totalOptions = this.#options.length;
+		const totalItems = totalOptions;
 		const mustCompactFocused = focusedWrappedSegments.length > this.#maxVisibleRows;
 		const positionMarkerSlot = mustCompactFocused && totalOptions > 1 ? 1 : 0;
 		const focusedBudget = Math.max(1, this.#maxVisibleRows - positionMarkerSlot);
@@ -217,7 +258,7 @@ class FocusAwareList extends Container {
 
 		// Distribute sibling slots around focus, preferring closest options.
 		const availableAbove = this.#selectedIndex;
-		const availableBelow = totalOptions - this.#selectedIndex - 1;
+		const availableBelow = totalItems - this.#selectedIndex - 1;
 		let above = Math.min(availableAbove, Math.floor(siblingBudget / 2));
 		let below = Math.min(availableBelow, siblingBudget - above);
 		// Transfer unused quota across the focus when one side has fewer
@@ -229,29 +270,28 @@ class FocusAwareList extends Container {
 
 		const startIndex = this.#selectedIndex - above;
 		const endIndex = this.#selectedIndex + below + 1;
-		const showMarker = startIndex > 0 || endIndex < totalOptions;
+		const showMarker = startIndex > 0 || endIndex < totalItems;
 
 		const rows: string[] = [];
 		for (let i = startIndex; i < endIndex; i++) {
 			if (i === this.#selectedIndex) {
-				// Emit focused wrapped rows. Cursor only on row 0; continuation
-				// rows are whitespace-aligned under the label start.
 				for (let r = 0; r < focusedSegments.length; r++) {
 					const segment = focusedSegments[r] ?? "";
 					rows.push(r === 0 ? styledSelectedPrefix + segment : continuationPrefix + segment);
 				}
 			} else {
 				const label = renderInlineMarkdown(this.#options[i] ?? "", mdTheme, t => theme.fg("text", t));
-				// Non-focused rows stay single-line. Truncate here so the
-				// outline (post-padded by `#wrapOutline`) and non-outline
-				// paths render the same `…` hint for over-wide labels.
 				const fittedLabel = truncateToWidth(label, availableLabelWidth);
 				rows.push(nonSelectedPrefix + fittedLabel);
 			}
 		}
 
 		if (showMarker && rows.length < this.#maxVisibleRows) {
-			rows.push(theme.fg("dim", `  (${this.#selectedIndex + 1}/${totalOptions})`));
+			rows.push(theme.fg("dim", `  (${this.#selectedIndex + 1}/${totalItems})`));
+		}
+
+		if (this.#footerLines.length > 0) {
+			rows.push(...this.#footerLines);
 		}
 
 		return this.#outline ? this.#wrapOutline(rows, width) : rows;
@@ -315,8 +355,15 @@ export class HookSelectorComponent extends Container {
 	#outline: boolean;
 	#scrollTitleRows: number | undefined;
 	#customInput: { optionLabel: string; onSubmit: (text: string) => void } | undefined;
+	#customInputDocked: boolean;
+	#dockedCustomInput: { label?: string; prompt?: string; onSubmit: (text: string) => void } | undefined;
+	#customInputListSlot: boolean;
+	#listSlotCustomInput: { label?: string; onSubmit: (text: string) => void } | undefined;
+	#listSlotEditor: CustomEditor | undefined;
+	#outputFooterLines: string[] = [];
 	#inputArea: Container;
 	#inlineEditor: Editor | undefined;
+	#editorFocused: boolean;
 	#helpTextComponent: Text;
 	#baseHelpText: string;
 	#tui: TUI | undefined;
@@ -330,7 +377,9 @@ export class HookSelectorComponent extends Container {
 		super();
 
 		this.#options = options;
-		this.#selectedIndex = Math.min(opts?.initialIndex ?? 0, options.length - 1);
+		const listSlot = opts?.customInputListSlot === true;
+		const maxInit = listSlot ? options.length : Math.max(0, options.length - 1);
+		this.#selectedIndex = Math.min(opts?.initialIndex ?? 0, maxInit);
 		this.#maxVisible = Math.max(3, opts?.maxVisible ?? 12);
 		this.#onSelectCallback = onSelect;
 		this.#onCancelCallback = onCancel;
@@ -341,6 +390,12 @@ export class HookSelectorComponent extends Container {
 		this.#wrapFocused = opts?.wrapFocused === true;
 		this.#outline = opts?.outline === true;
 		this.#customInput = opts?.customInput;
+		this.#customInputDocked = opts?.customInputDocked === true;
+		this.#dockedCustomInput = opts?.dockedCustomInput;
+		this.#customInputListSlot = opts?.customInputListSlot === true;
+		this.#listSlotCustomInput = opts?.listSlotCustomInput;
+		this.#listSlotEditor = undefined;
+		this.#editorFocused = false;
 		this.#tui = opts?.tui;
 
 		this.addChild(new DynamicBorder());
@@ -366,6 +421,10 @@ export class HookSelectorComponent extends Container {
 				() => {
 					opts?.onTimeout?.();
 					// Auto-select current option on timeout (typically the first/recommended option)
+					if (this.#onOutputPanelFocus()) {
+						this.#onCancelCallback();
+						return;
+					}
 					const selected = this.#options[this.#selectedIndex];
 					if (selected) {
 						this.#onSelectCallback(selected);
@@ -393,17 +452,29 @@ export class HookSelectorComponent extends Container {
 		this.addChild(this.#inputArea);
 		this.addChild(new Spacer(1));
 		this.#baseHelpText = opts?.helpText ?? "up/down navigate  enter select  esc cancel";
-		this.#helpTextComponent = new Text(theme.fg("dim", this.#baseHelpText), 1, 0);
+		const initialHelp =
+			opts?.customInputListSlot === true
+				? theme.fg("dim", `${this.#baseHelpText}  ▲▼`)
+				: theme.fg("dim", this.#baseHelpText);
+		this.#helpTextComponent = new Text(initialHelp, 1, 0);
 		this.addChild(this.#helpTextComponent);
 		this.addChild(new Spacer(1));
 		this.addChild(new DynamicBorder());
 
 		this.#updateList();
+		if (this.#customInputListSlot && this.#listSlotCustomInput) {
+			this.#mountOutputPanelChrome();
+		} else if (this.#customInputDocked && this.#dockedCustomInput) {
+			this.#mountDockedInputArea();
+		}
 	}
 
 	#updateList(): void {
 		if (this.#wrapFocused && this.#focusAwareList) {
-			this.#focusAwareList.setState(this.#options, this.#selectedIndex, this.#maxVisible);
+			const listIndex = this.#onOutputPanelFocus()
+				? Math.max(0, this.#options.length - 1)
+				: this.#selectedIndex;
+			this.#focusAwareList.setState(this.#options, listIndex, this.#maxVisible, this.#outputFooterLines);
 			return;
 		}
 
@@ -428,11 +499,12 @@ export class HookSelectorComponent extends Container {
 			lines.push(prefix + label);
 		}
 
-		if (startIndex > 0 || endIndex < this.#options.length) {
-			lines.push(theme.fg("dim", `  (${this.#selectedIndex + 1}/${this.#options.length})`));
+		const totalItems = this.#options.length;
+		if (startIndex > 0 || endIndex < totalItems) {
+			lines.push(theme.fg("dim", `  (${this.#selectedIndex + 1}/${totalItems})`));
 		}
 		if (this.#outlinedList) {
-			this.#outlinedList.setLines(lines);
+			this.#outlinedList.setLines(lines, this.#outputFooterLines);
 			return;
 		}
 		this.#listContainer?.clear();
@@ -441,6 +513,146 @@ export class HookSelectorComponent extends Container {
 		}
 	}
 
+
+	#stopCountdownForTyping(): void {
+		if (this.#countdown) {
+			this.#countdown.dispose();
+			this.#countdown = undefined;
+			this.#titleComponent.setText(this.#baseTitle);
+		}
+	}
+
+	#inputModeHelpText(): string {
+		const scrollHint = this.#scrollTitleRows === undefined ? "" : "  wheel/PgUp/PgDn scroll question";
+		return `enter submit  esc back to options  ctrl+g external editor${scrollHint}`;
+	}
+
+	#inputSubmitHandler(): ((text: string) => void) | undefined {
+		if (this.#customInputListSlot) return this.#listSlotCustomInput?.onSubmit;
+		if (this.#customInputDocked) return this.#dockedCustomInput?.onSubmit;
+		return this.#customInput?.onSubmit;
+	}
+
+	#listSlotLabel(): string {
+		const n = this.#options.length + 1;
+		const custom = this.#listSlotCustomInput?.label?.trim();
+		return custom && custom.length > 0 ? custom : `${n}. 출력창`;
+	}
+
+	#selectionMaxIndex(): number {
+		return this.#customInputListSlot ? this.#options.length : Math.max(0, this.#options.length - 1);
+	}
+
+	#onOutputPanelFocus(): boolean {
+		return this.#customInputListSlot && this.#selectedIndex === this.#options.length;
+	}
+
+	#ensureListSlotEditor(): void {
+		if (this.#listSlotEditor) return;
+		this.#listSlotEditor = createAskOutputPanelEditor();
+	}
+
+	#mountOutputPanelChrome(): void {
+		if (!this.#listSlotCustomInput) return;
+		this.#ensureListSlotEditor();
+		this.#syncOutputPanelPresentation();
+	}
+
+	#syncOutputPanelPresentation(width?: number): void {
+		if (!this.#customInputListSlot) return;
+		const w = width ?? 80;
+		const inner = Math.max(1, w - 4);
+		const heading = this.#listSlotLabel();
+		const onPanel = this.#onOutputPanelFocus();
+		const mdTheme = getMarkdownTheme();
+		const prefix = onPanel ? theme.fg("accent", `${theme.nav.cursor} `) : "  ";
+		const headingLine =
+			prefix + renderInlineMarkdown(heading, mdTheme, t => (onPanel ? theme.fg("accent", t) : theme.fg("dim", t)));
+		const footer: string[] = [headingLine];
+		if (onPanel && this.#listSlotEditor) {
+			for (const line of this.#listSlotEditor.render(inner)) {
+				footer.push(`  ${line}`);
+			}
+		}
+		this.#outputFooterLines = footer;
+		this.#inputArea.clear();
+		this.#updateList();
+		this.invalidate();
+	}
+
+	#focusOutputPanelEditor(): void {
+		if (!this.#listSlotEditor) return;
+		this.#stopCountdownForTyping();
+		this.#editorFocused = true;
+		this.#listSlotEditor.focused = true;
+		this.#helpTextComponent.setText(theme.fg("dim", this.#inputModeHelpText()));
+		this.#syncOutputPanelPresentation();
+		this.#tui?.requestRender();
+	}
+
+	#blurOutputPanelEditor(): void {
+		if (!this.#customInputListSlot) return;
+		this.#editorFocused = false;
+		if (this.#listSlotEditor) this.#listSlotEditor.focused = false;
+		this.#helpTextComponent.setText(theme.fg("dim", this.#listSlotNavHelpText()));
+		this.#syncOutputPanelPresentation();
+		this.#tui?.requestRender();
+	}
+
+	#listSlotNavHelpText(): string {
+		return `${this.#baseHelpText}  ▲▼`;
+	}
+
+	#createPromptEditor(promptGutter: string): Editor {
+		const editor = new Editor(getEditorTheme());
+		editor.setBorderVisible(false);
+		editor.setPromptGutter(promptGutter);
+		editor.disableSubmit = true;
+		return editor;
+	}
+
+	#mountDockedInputArea(): void {
+		const docked = this.#dockedCustomInput;
+		if (!docked) return;
+		this.#stopCountdownForTyping();
+		this.#inputArea.clear();
+		if (docked.label) {
+			this.#inputArea.addChild(new Text(theme.fg("dim", docked.label), 1, 0));
+		}
+		const editor = this.#createPromptEditor(docked.prompt ?? "> ");
+		this.#inlineEditor = editor;
+		this.#inputArea.addChild(new Spacer(1));
+		this.#inputArea.addChild(editor);
+		const dockedHint = "  tab type own answer";
+		this.#helpTextComponent.setText(
+			theme.fg("dim", `${this.#baseHelpText}${dockedHint}`),
+		);
+		this.invalidate();
+	}
+
+	#focusDockedEditor(): void {
+		if (!this.#inlineEditor || !this.#customInputDocked) return;
+		this.#editorFocused = true;
+		this.#stopCountdownForTyping();
+		this.#helpTextComponent.setText(theme.fg("dim", this.#inputModeHelpText()));
+		this.invalidate();
+	}
+
+	#blurDockedEditor(): void {
+		if (!this.#customInputDocked) return;
+		this.#editorFocused = false;
+		const dockedHint = "  tab type own answer";
+		this.#helpTextComponent.setText(
+			theme.fg("dim", `${this.#baseHelpText}${dockedHint}`),
+		);
+		this.invalidate();
+	}
+
+	#submitInlineText(editor: Editor): void {
+		const text = editor.getText().trim();
+		if (!text) return;
+		this.#inputSubmitHandler()?.(text);
+	}
 	handleInput(keyData: string): void {
 		// Reset countdown on any interaction
 		this.#countdown?.reset();
@@ -460,17 +672,71 @@ export class HookSelectorComponent extends Container {
 			this.#scrollableTitle?.scrollBy(this.#scrollTitleRows);
 			return;
 		}
-		if (this.#inlineEditor) {
-			this.#handleInputModeKey(keyData, this.#inlineEditor);
-			return;
+
+		if (this.#editorFocused && this.#customInputListSlot && this.#listSlotEditor) {
+			if (matchesKey(keyData, "up") || keyData === "k") {
+				if (this.#onOutputPanelFocus()) {
+					this.#selectedIndex = Math.max(0, this.#options.length - 1);
+					this.#blurOutputPanelEditor();
+					this.#updateList();
+					return;
+				}
+			}
+			if (matchesKey(keyData, "down") || keyData === "j") {
+				return;
+			}
+		}
+
+		if (this.#editorFocused) {
+			const activeEditor =
+				this.#customInputListSlot && this.#onOutputPanelFocus() && this.#listSlotEditor
+					? this.#listSlotEditor
+					: this.#inlineEditor;
+			if (activeEditor) {
+				this.#handleInputModeKey(keyData, activeEditor);
+				return;
+			}
+		}
+
+		if (matchesKey(keyData, "tab") && !matchesKey(keyData, "shift+tab")) {
+			if (this.#customInputDocked && this.#inlineEditor) {
+				this.#focusDockedEditor();
+				return;
+			}
+		}
+		if (matchesKey(keyData, "shift+tab")) {
+			if (this.#customInputDocked && this.#editorFocused) {
+				this.#blurDockedEditor();
+				return;
+			}
 		}
 		if (matchesKey(keyData, "up") || keyData === "k") {
-			this.#selectedIndex = Math.max(0, this.#selectedIndex - 1);
-			this.#updateList();
+			if (this.#selectedIndex > 0) {
+				const wasSlot = this.#onOutputPanelFocus();
+				this.#selectedIndex = Math.max(0, this.#selectedIndex - 1);
+				if (wasSlot) this.#blurOutputPanelEditor();
+				if (this.#onOutputPanelFocus()) this.#focusOutputPanelEditor();
+				this.#updateList();
+			}
 		} else if (matchesKey(keyData, "down") || keyData === "j") {
-			this.#selectedIndex = Math.min(this.#options.length - 1, this.#selectedIndex + 1);
-			this.#updateList();
+			const atLast = this.#selectedIndex >= this.#selectionMaxIndex();
+			if (this.#customInputDocked && this.#inlineEditor && atLast && !this.#customInputListSlot) {
+				this.#focusDockedEditor();
+				return;
+			}
+			if (!atLast) {
+				const wasSlot = this.#onOutputPanelFocus();
+				this.#selectedIndex = Math.min(this.#selectionMaxIndex(), this.#selectedIndex + 1);
+				if (wasSlot) this.#blurOutputPanelEditor();
+				if (this.#onOutputPanelFocus()) this.#focusOutputPanelEditor();
+				this.#updateList();
+			}
 		} else if (matchesKey(keyData, "enter") || matchesKey(keyData, "return") || keyData === "\n") {
+			if (this.#onOutputPanelFocus()) {
+				const editor = this.#listSlotEditor;
+				if (editor) this.#submitInlineText(editor);
+				return;
+			}
 			const selected = this.#options[this.#selectedIndex];
 			if (!selected) return;
 			if (this.#customInput && selected === this.#customInput.optionLabel) {
@@ -494,46 +760,61 @@ export class HookSelectorComponent extends Container {
 		// Escape backs out to option selection instead of cancelling the dialog,
 		// so a stray Esc never throws away the question context.
 		if (matchesKey(keyData, "escape") || matchesAppInterrupt(keyData)) {
+			if (this.#customInputListSlot && editor === this.#listSlotEditor) {
+				this.#blurOutputPanelEditor();
+				this.#selectedIndex = Math.max(0, this.#options.length - 1);
+				this.#updateList();
+				return;
+			}
+			if (this.#customInputDocked) {
+				this.#blurDockedEditor();
+				return;
+			}
 			this.#exitInputMode();
 			return;
 		}
+
 		if (matchesAppExternalEditor(keyData)) {
 			void this.#openExternalEditor(editor);
 			return;
 		}
 		if (matchesKey(keyData, "enter") || matchesKey(keyData, "return")) {
-			this.#customInput?.onSubmit(editor.getText());
+			if (this.#customInputListSlot && editor === this.#listSlotEditor) {
+				this.#submitInlineText(editor);
+			} else if (this.#customInputDocked) {
+				this.#submitInlineText(editor);
+			} else {
+				this.#customInput?.onSubmit(editor.getText());
+			}
 			return;
 		}
 		editor.handleInput(keyData);
+		if (this.#customInputListSlot && editor === this.#listSlotEditor) {
+			this.#syncOutputPanelPresentation();
+			this.#tui?.requestRender();
+		}
 	}
 
 	#enterInputMode(): void {
 		if (this.#inlineEditor) return;
-		// Stop the auto-select countdown for good: the user is actively typing,
-		// matching the old behavior where the separate editor had no timeout.
-		if (this.#countdown) {
-			this.#countdown.dispose();
-			this.#countdown = undefined;
-			this.#titleComponent.setText(this.#baseTitle);
-		}
-		const editor = new Editor(getEditorTheme());
-		editor.setBorderVisible(false);
-		editor.setPromptGutter("> ");
-		editor.disableSubmit = true;
+		this.#stopCountdownForTyping();
+		const editor = this.#createPromptEditor("> ");
 		this.#inlineEditor = editor;
+		this.#editorFocused = true;
 		this.#inputArea.addChild(new Spacer(1));
 		this.#inputArea.addChild(editor);
-		const scrollHint = this.#scrollTitleRows === undefined ? "" : "  wheel/PgUp/PgDn scroll question";
-		this.#helpTextComponent.setText(
-			theme.fg("dim", `enter submit  esc back to options  ctrl+g external editor${scrollHint}`),
-		);
+		this.#helpTextComponent.setText(theme.fg("dim", this.#inputModeHelpText()));
 		this.invalidate();
 	}
 
 	#exitInputMode(): void {
 		if (!this.#inlineEditor) return;
+		if (this.#customInputDocked) {
+			this.#blurDockedEditor();
+			return;
+		}
 		this.#inlineEditor = undefined;
+		this.#editorFocused = false;
 		this.#inputArea.clear();
 		this.#helpTextComponent.setText(theme.fg("dim", this.#baseHelpText));
 		this.invalidate();
@@ -554,6 +835,14 @@ export class HookSelectorComponent extends Container {
 			this.#tui.start();
 			this.#tui.requestRender(true);
 		}
+	}
+
+
+	override render(width: number): string[] {
+		if (this.#customInputListSlot) {
+			this.#syncOutputPanelPresentation(width);
+		}
+		return super.render(width);
 	}
 
 	dispose(): void {
