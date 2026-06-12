@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { migrateConfigDirOnce } from "../src/migrate-config-dir";
+import { migrateConfigDirOnce, remapLegacySessionFileEnv } from "../src/migrate-config-dir";
 
 function tempHome(): string {
 	return mkdtempSync(path.join(os.tmpdir(), "jwc-migrate-"));
@@ -44,5 +44,28 @@ describe("migrateConfigDirOnce (061.1 M4 — .gjc → .jwc)", () => {
 		const result = migrateConfigDirOnce({ cwd: project, targetDirName: ".jwc", home });
 		expect(result.project).toBe("migrated");
 		expect(existsSync(path.join(project, ".jwc", "settings.json"))).toBe(true);
+	});
+});
+
+describe("remapLegacySessionFileEnv (061.1 §4-2 — stale absolute session paths)", () => {
+	it("repoints env vars into the migrated dir when the file exists there", () => {
+		const home = tempHome();
+		mkdirSync(path.join(home, ".jwc", "agent", "sessions"), { recursive: true });
+		writeFileSync(path.join(home, ".jwc", "agent", "sessions", "s.jsonl"), "");
+		const env: Record<string, string | undefined> = {
+			GJC_SESSION_FILE: path.join(home, ".gjc", "agent", "sessions", "s.jsonl"),
+		};
+		remapLegacySessionFileEnv({ targetDirName: ".jwc", home, env });
+		expect(env.GJC_SESSION_FILE).toBe(path.join(home, ".jwc", "agent", "sessions", "s.jsonl"));
+	});
+
+	it("leaves env untouched when the migrated file is missing or path is foreign", () => {
+		const home = tempHome();
+		const foreign = path.join(home, "elsewhere", "s.jsonl");
+		const stale = path.join(home, ".gjc", "agent", "sessions", "missing.jsonl");
+		const env: Record<string, string | undefined> = { GJC_SESSION_FILE: stale, JWC_SESSION_FILE: foreign };
+		remapLegacySessionFileEnv({ targetDirName: ".jwc", home, env });
+		expect(env.GJC_SESSION_FILE).toBe(stale);
+		expect(env.JWC_SESSION_FILE).toBe(foreign);
 	});
 });

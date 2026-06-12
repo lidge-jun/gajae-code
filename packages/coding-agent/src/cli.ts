@@ -1,4 +1,8 @@
 #!/usr/bin/env bun
+// One-time `.gjc` → `.jwc` state-dir migration (061.1 M4). MUST be the first
+// import: later imports initialize the shared logger, which creates
+// `~/.jwc/logs` and would make the rename bail on "target exists".
+import "./migrate-config-dir-startup";
 import { installH2Fetch } from "@gajae-code/ai";
 import { APP_NAME, ENGINE_NAME, MIN_BUN_VERSION, procmgr, VERSION } from "@gajae-code/utils";
 

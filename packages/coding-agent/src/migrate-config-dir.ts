@@ -55,3 +55,26 @@ export function migrateConfigDirOnce(input: { cwd: string; targetDirName: string
 		path.resolve(input.cwd) === path.resolve(home) ? "skipped" : migrateOne(input.cwd, input.targetDirName);
 	return { user, project };
 }
+
+const SESSION_FILE_ENV_KEYS = ["GJC_SESSION_FILE", "JWC_SESSION_FILE"] as const;
+
+/**
+ * Repoint session-file env vars that still reference the legacy `~/.gjc` tree
+ * (061.1 §4-2: in-flight processes hand absolute paths to subprocesses). Only
+ * remaps when the file actually exists at the migrated location.
+ */
+export function remapLegacySessionFileEnv(input: {
+	targetDirName: string;
+	home?: string;
+	env?: NodeJS.ProcessEnv;
+}): void {
+	const home = input.home ?? os.homedir();
+	const env = input.env ?? process.env;
+	const legacyRoot = path.join(home, LEGACY_DIR_NAME) + path.sep;
+	for (const key of SESSION_FILE_ENV_KEYS) {
+		const value = env[key];
+		if (!value?.startsWith(legacyRoot)) continue;
+		const candidate = path.join(home, input.targetDirName, value.slice(legacyRoot.length));
+		if (fs.existsSync(candidate)) env[key] = candidate;
+	}
+}
