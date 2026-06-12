@@ -1,5 +1,6 @@
 import * as crypto from "node:crypto";
 import * as path from "node:path";
+import { APP_NAME } from "@gajae-code/utils";
 import type { WorkflowHudSummary } from "../skill-state/active-state";
 import { buildUltragoalHudSummary as buildWorkflowUltragoalHudSummary } from "../skill-state/workflow-hud";
 import { renderCliWriteReceipt } from "./cli-write-receipt";
@@ -1394,10 +1395,10 @@ function renderUltragoalHelp(args: readonly string[]): string | null {
 		args[0] === "help" ? args.find((arg, index) => index > 0 && !arg.startsWith("-")) : commandName(args);
 	if (subject === "checkpoint") {
 		return [
-			"Run native GJC Ultragoal workflow commands",
+			`Run native ${APP_NAME.toUpperCase()} Ultragoal workflow commands`,
 			"",
 			"USAGE",
-			"  $ gjc ultragoal checkpoint --goal-id <id> --status <status> --evidence <text> [FLAGS]",
+			`  $ ${APP_NAME} ultragoal checkpoint --goal-id <id> --status <status> --evidence <text> [FLAGS]`,
 			"",
 			"FLAGS",
 			"      --goal-id=<value>            Durable .gjc/ultragoal goal id, e.g. G001",
@@ -1414,16 +1415,16 @@ function renderUltragoalHelp(args: readonly string[]): string | null {
 			"  goal.updatedAt may be epoch milliseconds or an ISO timestamp and must be fresh.",
 			"",
 			"EXAMPLES",
-			'  $ gjc ultragoal checkpoint --goal-id G001 --status blocked --evidence "waiting on review"',
-			'  $ gjc ultragoal checkpoint --goal-id G001 --status complete --evidence "tests passed" --gjc-goal-json ./goal.json --quality-gate-json ./quality-gate.json --json',
+			`  $ ${APP_NAME} ultragoal checkpoint --goal-id G001 --status blocked --evidence "waiting on review"`,
+			`  $ ${APP_NAME} ultragoal checkpoint --goal-id G001 --status complete --evidence "tests passed" --gjc-goal-json ./goal.json --quality-gate-json ./quality-gate.json --json`,
 			"",
 		].join("\n");
 	}
 	return [
-		"Run native GJC Ultragoal workflow commands",
+		`Run native ${APP_NAME.toUpperCase()} Ultragoal workflow commands`,
 		"",
 		"USAGE",
-		"  $ gjc ultragoal <command> [FLAGS]",
+		`  $ ${APP_NAME} ultragoal <command> [FLAGS]`,
 		"",
 		"COMMANDS",
 		"  status",

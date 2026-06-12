@@ -6,9 +6,9 @@ export default class Ralplan extends Command {
 	static description = `Run native ${APP_NAME.toUpperCase()} RALPLAN consensus planning workflow`;
 	static strict = false;
 	static examples = [
-		'$ gjc ralplan "<task description>"',
-		'$ gjc ralplan --interactive --deliberate "<task description>"',
-		'$ gjc ralplan --write --stage planner --stage_n 1 --artifact "<markdown or path>"',
+		`$ ${APP_NAME} ralplan "<task description>"`,
+		`$ ${APP_NAME} ralplan --interactive --deliberate "<task description>"`,
+		`$ ${APP_NAME} ralplan --write --stage planner --stage_n 1 --artifact "<markdown or path>"`,
 	];
 
 	async run(): Promise<void> {
