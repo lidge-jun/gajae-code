@@ -2,17 +2,18 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
+import { runNativeOrchestrateCommand } from "../../src/gjc-runtime/orchestrate-runtime";
 import {
 	canTransitionPabcd,
 	PABCD_STAGES,
 	type PabcdStage,
 	pabcdStatePath,
+	parseCriticVerdict,
 	parseWorkerVerdict,
 	readPabcdState,
 	VALID_PABCD_TRANSITIONS,
 	writeNativeWorkflowEnvelopeAtomic,
 } from "../../src/gjc-runtime/orchestrate-state";
-import { runNativeOrchestrateCommand } from "../../src/gjc-runtime/orchestrate-runtime";
 import { WORKFLOW_STATE_VERSION } from "../../src/skill-state/workflow-state-version";
 
 describe("pabcd transition table (cli-jaw canTransition port)", () => {
@@ -85,6 +86,21 @@ describe("parseWorkerVerdict (cli-jaw port)", () => {
 	});
 });
 
+describe("parseCriticVerdict (D050-23 stage-p vocabulary)", () => {
+	it("parses critic tokens with negative verdicts first", () => {
+		expect(parseCriticVerdict("verdict: OKAY")).toBe("okay");
+		expect(parseCriticVerdict("ITERATE — sharpen AC 3")).toBe("iterate");
+		expect(parseCriticVerdict("REJECT: scope hole")).toBe("reject");
+		// Mixed prose fail-closes to the negative verdict.
+		expect(parseCriticVerdict("would be OKAY but REJECT for now")).toBe("reject");
+	});
+
+	it("ignores prose without strict tokens", () => {
+		expect(parseCriticVerdict("looks okay to me")).toBeNull();
+		expect(parseCriticVerdict("")).toBeNull();
+	});
+});
+
 describe("native pabcd envelope writer (D050-22)", () => {
 	let cwd: string;
 
@@ -128,8 +144,8 @@ describe("native pabcd envelope writer (D050-22)", () => {
 					skill: "pabcd",
 					version: WORKFLOW_STATE_VERSION,
 					updated_at: new Date().toISOString(),
-					// biome-ignore lint/suspicious/noExplicitAny: deliberately invalid input for the fail-closed gate
-					current_phase: "z" as any,
+					// Deliberately invalid stage for the fail-closed gate.
+					current_phase: "z" as unknown as PabcdStage,
 					active: true,
 				},
 				{ command: "orchestrate z" },
@@ -236,5 +252,43 @@ describe("orchestrate runtime full cycle", () => {
 		const status = await run(["status", "--json"]);
 		const parsed = JSON.parse(status.stdout ?? "{}") as { ctx: { a_audit_mode?: string } };
 		expect(parsed.ctx.a_audit_mode).toBe("dual");
+	});
+
+	it("enters p directly with a spec (D050-2 handoff, no i round-trip)", async () => {
+		const entry = await run(["p", "--spec-ref", ".gjc/specs/jaw-interview-direct.md"]);
+		expect(entry.status).toBe(0);
+		const status = await run(["status", "--json"]);
+		const parsed = JSON.parse(status.stdout ?? "{}") as { stage: string; spec_ref: string | null };
+		expect(parsed.stage).toBe("p");
+		expect(parsed.spec_ref).toBe(".gjc/specs/jaw-interview-direct.md");
+	});
+
+	it("records stage-p critic verdicts and escalates at the p-round cap (D050-19)", async () => {
+		await run(["p"]);
+		const iterateFile = path.join(cwd, "critic-iterate.txt");
+		await fs.writeFile(iterateFile, "ITERATE — AC 2 is ambiguous", "utf-8");
+		const first = await run(["verdict", "--worker-output", iterateFile]);
+		expect(first.stdout).toContain("verdict=iterate");
+		const second = await run(["verdict", "--worker-output", iterateFile]);
+		expect(second.stdout).toContain("round cap reached");
+		expect(second.stdout).toContain("do NOT write pending-approval");
+
+		const okayFile = path.join(cwd, "critic-okay.txt");
+		await fs.writeFile(okayFile, "OKAY", "utf-8");
+		expect((await run(["verdict", "--worker-output", okayFile])).stdout).toContain("verdict=okay");
+		const status = await run(["status", "--json"]);
+		const parsed = JSON.parse(status.stdout ?? "{}") as { ctx: { p_review_passed?: boolean } };
+		expect(parsed.ctx.p_review_passed).toBe(true);
+	});
+
+	it("serves the stage-a audit prompts with the PASS|FAIL contract (D050-23)", async () => {
+		for (const lens of ["planner", "architect"] as const) {
+			const result = await run(["audit-prompt", lens]);
+			expect(result.status).toBe(0);
+			expect(result.stdout).toContain("READ-ONLY");
+			expect(result.stdout).toContain("`PASS` or `FAIL`");
+		}
+		expect((await run(["audit-prompt"])).status).toBe(2);
+		expect((await run(["audit-prompt", "critic"])).status).toBe(2);
 	});
 });

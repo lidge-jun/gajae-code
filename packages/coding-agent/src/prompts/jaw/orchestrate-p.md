@@ -12,7 +12,8 @@ Steps:
 3. Quality review — spawn ONE Critic subagent (1-pass, D050-19):
    - Fresh spawn, read-only, receipt-only. Reuse the embedded `critic.md` prompt (verdict vocabulary: OKAY | ITERATE | REJECT).
    - Scope: plan quality ONLY — missing acceptance criteria, scope holes, ambiguous steps. Feasibility and integration risks belong to stage A, not here.
-   - On OKAY → proceed to final. On ITERATE/REJECT → revise the draft yourself and re-review ONCE (p_round ≤ 2). If it still fails, do NOT write pending-approval — escalate to the user.
+   - Record the critic verdict with `orchestrate verdict --worker-output <review-file>` (stage p parses OKAY|ITERATE|REJECT and tracks `p_round`/`p_review_passed`).
+   - On OKAY → proceed to final. On ITERATE/REJECT → revise the draft yourself and re-review ONCE (p_round ≤ 2). If the cap is reached, do NOT write pending-approval — escalate to the user.
 4. Finalize: `ralplan --write --stage critic` for the review receipt, then `ralplan --write --stage final` → `.gjc/plans/ralplan/<run-id>/pending-approval.md` (execution-gate source of truth, D050-13). Present the user a summary + Mermaid diagram + the devlog plan path.
 
 ⛔ STOP. Present the plan and WAIT for user approval. No project-source mutation in P — only the devlog plan file and the sanctioned ralplan writer.

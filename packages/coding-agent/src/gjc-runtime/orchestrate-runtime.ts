@@ -9,6 +9,8 @@
  */
 import * as fs from "node:fs/promises";
 import orchestrateA from "../prompts/jaw/orchestrate-a.md" with { type: "text" };
+import auditArchitect from "../prompts/jaw/orchestrate-audit-architect.md" with { type: "text" };
+import auditPlanner from "../prompts/jaw/orchestrate-audit-planner.md" with { type: "text" };
 import orchestrateB from "../prompts/jaw/orchestrate-b.md" with { type: "text" };
 import orchestrateC from "../prompts/jaw/orchestrate-c.md" with { type: "text" };
 import orchestrateD from "../prompts/jaw/orchestrate-d.md" with { type: "text" };
@@ -18,11 +20,13 @@ import { WORKFLOW_STATE_VERSION } from "../skill-state/workflow-state-version";
 import {
 	canTransitionPabcd,
 	PABCD_MAX_A_ROUNDS,
+	PABCD_MAX_P_ROUNDS,
 	PABCD_STAGES,
 	type PabcdCtx,
 	type PabcdEnvelope,
 	type PabcdStage,
 	pabcdStatePath,
+	parseCriticVerdict,
 	parseWorkerVerdict,
 	readPabcdState,
 	writeNativeWorkflowEnvelopeAtomic,
@@ -41,6 +45,16 @@ const STAGE_PROMPTS: Readonly<Record<Exclude<PabcdStage, "complete">, string>> =
 	b: orchestrateB,
 	c: orchestrateC,
 	d: orchestrateD,
+};
+
+/**
+ * Stage-a spawn prompts with the PASS|FAIL output contract fixed (D050-23).
+ * Fetch via `orchestrate audit-prompt planner|architect` so spawned auditors
+ * never fall back to the ralplan-vocabulary embedded agent prompts.
+ */
+export const ORCHESTRATE_AUDIT_PROMPTS: Readonly<Record<"planner" | "architect", string>> = {
+	planner: auditPlanner,
+	architect: auditArchitect,
 };
 
 interface ParsedArgs {
@@ -183,12 +197,38 @@ async function recordVerdict(cwd: string, args: ParsedArgs): Promise<Orchestrate
 	if ("error" in current) return { stderr: `${current.error}\n`, status: 2 };
 	if (!current.envelope) return { stderr: "no active pabcd state — nothing to record a verdict against\n", status: 1 };
 	const envelope = current.envelope;
+	const ctx: PabcdCtx = { ...(envelope.ctx ?? {}) };
+	const stage = envelope.current_phase;
+
+	// Stage p uses the critic vocabulary (D050-23): OKAY|ITERATE|REJECT.
+	if (stage === "p") {
+		const criticVerdict = parseCriticVerdict(text);
+		if (criticVerdict === null) {
+			return { stderr: "no critic verdict token found (stage p expects OKAY|ITERATE|REJECT)\n", status: 1 };
+		}
+		if (criticVerdict === "okay") {
+			ctx.p_review_passed = true;
+		} else {
+			ctx.p_review_passed = false;
+			ctx.p_round = (ctx.p_round ?? 0) + 1;
+			if (ctx.p_round >= PABCD_MAX_P_ROUNDS) {
+				const written = await persist(cwd, { ...envelope, ctx }, args, "verdict", stage, stage);
+				if ("error" in written) return { stderr: `${written.error}\n`, status: 2 };
+				return {
+					stdout: `verdict=${criticVerdict} p_round=${ctx.p_round} — round cap reached (≤${PABCD_MAX_P_ROUNDS}): do NOT write pending-approval, escalate to the user (D050-19)\n`,
+					status: 0,
+				};
+			}
+		}
+		const written = await persist(cwd, { ...envelope, ctx }, args, "verdict", stage, stage);
+		if ("error" in written) return { stderr: `${written.error}\n`, status: 2 };
+		return { stdout: `verdict=${criticVerdict} recorded for stage p\n`, status: 0 };
+	}
+
 	const verdict = parseWorkerVerdict(text);
 	if (verdict === null) {
 		return { stderr: "no verdict token found in worker output (expected PASS|FAIL|DONE|NEEDS_FIX)\n", status: 1 };
 	}
-	const ctx: PabcdCtx = { ...(envelope.ctx ?? {}) };
-	const stage = envelope.current_phase;
 	if (stage === "a" && (verdict === "pass" || verdict === "fail")) {
 		ctx.audit_status = verdict;
 		if (verdict === "fail") {
@@ -252,8 +292,19 @@ export async function runNativeOrchestrateCommand(argv: string[], cwd: string): 
 
 	if (sub === "verdict") return await recordVerdict(cwd, parsed);
 
+	if (sub === "audit-prompt") {
+		const lens = parsed.positional[1]?.toLowerCase();
+		if (lens !== "planner" && lens !== "architect") {
+			return { stderr: "orchestrate audit-prompt requires a lens: planner | architect\n", status: 2 };
+		}
+		return { stdout: ORCHESTRATE_AUDIT_PROMPTS[lens], status: 0 };
+	}
+
 	if (!isStage(sub)) {
-		return { stderr: `unknown stage '${sub}' (expected ${PABCD_STAGES.join("|")}, status, verdict)\n`, status: 2 };
+		return {
+			stderr: `unknown stage '${sub}' (expected ${PABCD_STAGES.join("|")}, status, verdict, audit-prompt)\n`,
+			status: 2,
+		};
 	}
 	const target: PabcdStage = sub;
 

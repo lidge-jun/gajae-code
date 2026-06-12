@@ -139,6 +139,21 @@ export function parseWorkerVerdict(text: string): PabcdWorkerVerdict | null {
 	return null;
 }
 
+/**
+ * Stage-p critic verdict parser (D050-23: P keeps the ralplan critic
+ * vocabulary OKAY|ITERATE|REJECT — separate from the stage-a PASS|FAIL parser).
+ * Negative verdicts are checked first so mixed prose fail-closes.
+ */
+export type PabcdCriticVerdict = "okay" | "iterate" | "reject";
+
+export function parseCriticVerdict(text: string): PabcdCriticVerdict | null {
+	if (!text || typeof text !== "string") return null;
+	if (/\bREJECT\b/.test(text)) return "reject";
+	if (/\bITERATE\b/.test(text)) return "iterate";
+	if (/\bOKAY\b/.test(text)) return "okay";
+	return null;
+}
+
 // ─── Native envelope schemas (mirror state-schema, skill fixed to "pabcd") ──
 
 const nativeSkillEnum = z.literal("pabcd");
