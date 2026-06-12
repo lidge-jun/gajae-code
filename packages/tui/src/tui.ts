@@ -5,6 +5,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { performance } from "node:perf_hooks";
 import { $flag, getDebugLogPath } from "@gajae-code/utils";
+import { VIEWPORT_FILL_SENTINEL } from "./components/viewport-fill";
 import { isKeyRelease, matchesKey } from "./keys";
 import { renderMetrics } from "./metrics";
 import type { Terminal } from "./terminal";
@@ -1114,6 +1115,32 @@ export class TUI extends Container {
 		return lines;
 	}
 
+	/**
+	 * Replace the first ViewportFill sentinel with enough blank lines to pad
+	 * the frame to the viewport height, pinning everything after it to the
+	 * terminal bottom (devlog 083.7). Extra sentinels are dropped (misuse
+	 * guard); when no sentinel is present the input is returned as-is.
+	 */
+	#expandViewportFill(lines: string[], height: number): string[] {
+		const first = lines.indexOf(VIEWPORT_FILL_SENTINEL);
+		if (first === -1) return lines;
+		const expandStart = renderMetrics.now();
+		const result: string[] = [];
+		let sentinels = 0;
+		for (const line of lines) {
+			if (line === VIEWPORT_FILL_SENTINEL) sentinels++;
+			else result.push(line);
+		}
+		// Fill counts against content lines only (all sentinels excluded).
+		const fill = Math.max(0, height - result.length);
+		if (fill > 0) {
+			const blanks = new Array<string>(fill).fill("");
+			result.splice(first, 0, ...blanks);
+		}
+		if (renderMetrics.enabled) renderMetrics.recordHelper("viewportFill", renderMetrics.now() - expandStart);
+		return result;
+	}
+
 	#doRender(): void {
 		if (this.#stopped || !this.terminalAvailable) return;
 		const width = this.terminal.columns;
@@ -1131,6 +1158,13 @@ export class TUI extends Container {
 		const renderTreeStart = renderMetrics.now();
 		let newLines = this.render(width);
 		if (renderMetrics.enabled) renderMetrics.recordHelper("renderTree", renderMetrics.now() - renderTreeStart);
+
+		// Expand the viewport-fill sentinel (devlog 083.7) to the viewport
+		// remainder. Must run before overlay compositing (overlays position
+		// against the final frame) and before cursor extraction (absolute rows
+		// must be final). No sentinel present → input returned untouched, so the
+		// legacy path stays byte-identical.
+		newLines = this.#expandViewportFill(newLines, height);
 
 		// Composite overlays into the rendered lines (before differential compare)
 		if (this.overlayStack.length > 0) {

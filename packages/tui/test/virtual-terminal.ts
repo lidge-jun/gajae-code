@@ -217,6 +217,13 @@ export class VirtualTerminal implements Terminal {
 	}
 
 	/**
+	 * Viewport-relative row of the hardware cursor (0-based).
+	 */
+	getCursorRow(): number {
+		return this.xterm.buffer.active.cursorY;
+	}
+
+	/**
 	 * Clear the terminal viewport
 	 */
 	clear(): void {

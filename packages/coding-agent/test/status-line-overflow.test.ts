@@ -96,7 +96,11 @@ describe("status line session accent", () => {
 		component.updateSettings({
 			preset: "custom",
 			leftSegments: ["gajae"],
-			rightSegments: ["session_name"],
+			// jwc fork (devlog 081.10): session_name renders nothing, so use a
+			// segment that is always visible to keep the right group (and thus
+			// the gap fill) populated. The accent still derives from the session
+			// name independently of the segments.
+			rightSegments: ["path"],
 			separator: "powerline-thin",
 			sessionAccent,
 		});
@@ -117,9 +121,21 @@ describe("status line session accent", () => {
 		// Positive: gap is rendered with the theme border color.
 		expect(border).toContain(`${theme.getFgAnsi("border")}${theme.boxRound.horizontal}`);
 		// Negative: the gap-painting pattern (accent ANSI directly followed by a horizontal
-		// glyph) must not appear. The session_name segment may still emit the accent ANSI
-		// for its own text — we only care that the gap is not accent-painted.
+		// glyph) must not appear.
 		expect(border).not.toContain(`${accentAnsi}${theme.boxRound.horizontal}`);
+	});
+
+	it("never renders the session title text in the status line (jwc fork, devlog 081.10)", () => {
+		const component = new StatusLineComponent(createStatusLineSession("ㅎㅇㅎㅇ! 무엇을 도와드릴까요?"));
+		component.updateSettings({
+			preset: "custom",
+			leftSegments: ["gajae"],
+			rightSegments: ["session_name", "path"],
+			separator: "powerline-thin",
+			sessionAccent: true,
+		});
+		const border = component.getTopBorder(120).content;
+		expect(border).not.toContain("무엇을 도와드릴까요");
 	});
 });
 

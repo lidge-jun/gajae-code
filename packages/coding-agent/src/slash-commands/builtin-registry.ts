@@ -480,6 +480,18 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 		},
 	},
 	{
+		// jwc fork (devlog 086.2): manual escape hatch for stale TUI fragments left
+		// in terminal scrollback (VS Code reflow, IME cursor drift, resize races).
+		// Forces requestRender(true) → full clear (2J/H/3J) + repaint of the whole
+		// transcript, the same recovery path used after Ctrl-Z/external-editor resume.
+		name: "redraw",
+		description: "Force a full screen repaint (clears stale TUI fragments)",
+		handleTui: (_command, runtime) => {
+			runtime.ctx.editor.setText("");
+			runtime.ctx.ui.requestRender(true);
+		},
+	},
+	{
 		name: "fast",
 		description: "Toggle priority service tier (OpenAI service_tier=priority, Anthropic speed=fast)",
 		acpDescription: "Toggle fast mode",

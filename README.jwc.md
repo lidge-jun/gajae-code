@@ -16,6 +16,8 @@ bun packages/jwc/bin/jwc.js            # TUI
 bun packages/jwc/bin/jwc.js --version  # jwc/<engine version>
 ```
 
+기여: [CONTRIBUTING.jwc.md](./CONTRIBUTING.jwc.md) · beta 문서 마감: [structure/beta_v0.1_closeout.md](structure/beta_v0.1_closeout.md)
+
 ## 아이덴티티 설정
 
 `/settings` Identity 탭(또는 `identity.{name,emoji,vibe,language}` config 키)으로 에이전트 이름/말투/언어를
@@ -26,4 +28,4 @@ bun packages/jwc/bin/jwc.js --version  # jwc/<engine version>
 - M1 (000–099): jwc 단독 완성 — 리네이밍 · 프롬프팅 · 스킬 3계층 · Interview/Plan/Goal 병합 · 메모리 · TUI · 인증 시딩
 - M2 (100–150): cli-jaw 상주 런타임 이식 — Node 포팅 · JawRuntime · jaw.db 세션 · 주입 · 승격
 
-정본 계획: `devlog/_plan/260612_jawcode_fork/000_roadmap.md` · 코드 지도: `structure/INDEX.md`
+정본 계획: `devlog/_plan/260612_jawcode_fork/000_roadmap.md` · 코드 지도: `structure/INDEX.md` · **레디니스**: `structure/jwc_readiness.md` · **99 결정**: `structure/m1_closeout.md` · **beta v0.1 문서 마감**: `structure/beta_v0.1_closeout.md` · 로직: `structure/fork_logic_changelog.md` · 문서 삼축: `structure/doc_map.md` · 대조: `struct_har/README.md` · omp: `struct_har/omp_origin/README.md`

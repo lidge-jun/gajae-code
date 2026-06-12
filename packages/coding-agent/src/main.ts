@@ -5,6 +5,7 @@
  * createAgentSession() options. The SDK does the heavy lifting.
  */
 
+import { existsSync } from "node:fs";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
@@ -56,6 +57,12 @@ import type { EventBus } from "./utils/event-bus";
 
 async function checkForNewVersion(currentVersion: string): Promise<string | undefined> {
 	if (!settings.get("startup.checkUpdate")) {
+		return;
+	}
+	// Workspace/dev checkout — `test/` is not shipped in any published tarball
+	// (upstream publishes src/scripts/examples; jwc publishes bin/dist). Update
+	// banners are noise there and `update` could clobber the dev symlink.
+	if (existsSync(new URL("../test", import.meta.url))) {
 		return;
 	}
 	try {

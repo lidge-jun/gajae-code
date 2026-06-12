@@ -6,7 +6,6 @@ import type { AgentMessage } from "@gajae-code/agent-core";
 import { completeSimple, Effort, type Model } from "@gajae-code/ai";
 import { getAgentDbPath, getMemoriesDir, logger, parseJsonlLenient, prompt } from "@gajae-code/utils";
 import type { ModelRegistry } from "../config/model-registry";
-import { resolveModelRoleValue } from "../config/model-resolver";
 import type { Settings } from "../config/settings";
 import consolidationTemplate from "../prompts/memories/consolidation.md" with { type: "text" };
 import readPathTemplate from "../prompts/memories/read-path.md" with { type: "text" };
@@ -34,44 +33,15 @@ import {
 	tryClaimGlobalPhase2Job,
 	upsertThreads,
 } from "./storage";
+import { syncArtifactFilesToFts } from "./local-query";
+import { removeMemoryArtifactFtsRow } from "./memory-fts";
+import {
+	persistMemoryModelResolution,
+	resolveMemoryModelFromPattern,
+	resolveMemoryModelPattern,
+} from "./memory-model-resolution";
+import { loadMemoryConfig, type MemoryRuntimeConfig } from "./memory-config";
 
-interface MemoryRuntimeConfig {
-	enabled: boolean;
-	maxRolloutsPerStartup: number;
-	maxRolloutAgeDays: number;
-	minRolloutIdleHours: number;
-	threadScanLimit: number;
-	maxRawMemoriesForGlobal: number;
-	stage1Concurrency: number;
-	stage1LeaseSeconds: number;
-	stage1RetryDelaySeconds: number;
-	phase2LeaseSeconds: number;
-	phase2RetryDelaySeconds: number;
-	phase2HeartbeatSeconds: number;
-	rolloutPayloadPercent: number;
-	phase1InputTokenLimit: number;
-	fallbackTokenLimit: number;
-	summaryInjectionTokenLimit: number;
-}
-
-const DEFAULTS: MemoryRuntimeConfig = {
-	enabled: false,
-	maxRolloutsPerStartup: 64,
-	maxRolloutAgeDays: 30,
-	minRolloutIdleHours: 12,
-	threadScanLimit: 300,
-	maxRawMemoriesForGlobal: 200,
-	stage1Concurrency: 8,
-	stage1LeaseSeconds: 120,
-	stage1RetryDelaySeconds: 120,
-	phase2LeaseSeconds: 180,
-	phase2RetryDelaySeconds: 180,
-	phase2HeartbeatSeconds: 30,
-	rolloutPayloadPercent: 0.7,
-	phase1InputTokenLimit: 4_000,
-	fallbackTokenLimit: 16_000,
-	summaryInjectionTokenLimit: 5_000,
-};
 
 interface Stage1Stats {
 	claimed: number;
@@ -233,6 +203,7 @@ async function runPhase1(options: {
 			modelRegistry,
 			session,
 			fallbackRole: "default",
+			config,
 		});
 		if (!phase1Model) {
 			logger.debug("Phase1 skipped: no model available");
@@ -372,7 +343,7 @@ async function runPhase2(options: {
 
 		await syncPhase2Artifacts(memoryRoot, outputs);
 		if (outputs.length === 0) {
-			await cleanupConsolidatedArtifacts(memoryRoot);
+			await cleanupConsolidatedArtifacts(agentDir, memoryRoot);
 			const marked = markGlobalPhase2Succeeded(db, {
 				ownershipToken: claim.ownershipToken,
 				newWatermark,
@@ -389,6 +360,7 @@ async function runPhase2(options: {
 			modelRegistry,
 			session,
 			fallbackRole: "default",
+			config,
 		});
 		if (!phase2Model) {
 			markPhase2FailureWithFallback(db, {
@@ -433,7 +405,7 @@ async function runPhase2(options: {
 				apiKey: phase2ApiKey,
 				metadata: session.agent?.metadataForProvider(phase2Model.provider),
 			});
-			await applyConsolidation(memoryRoot, consolidated);
+			await applyConsolidation(agentDir, memoryRoot, consolidated);
 			if (heartbeatLostOwnership) {
 				throw new Error("Phase2 lease ownership lost before completion");
 			}
@@ -681,9 +653,21 @@ async function syncPhase2Artifacts(memoryRoot: string, outputs: Stage1OutputRow[
 	await Bun.write(path.join(memoryRoot, "raw_memories.md"), rawBody);
 }
 
-async function cleanupConsolidatedArtifacts(memoryRoot: string): Promise<void> {
+async function cleanupConsolidatedArtifacts(agentDir: string, memoryRoot: string): Promise<void> {
 	await fs.rm(path.join(memoryRoot, "MEMORY.md"), { force: true });
 	await fs.rm(path.join(memoryRoot, "memory_summary.md"), { force: true });
+	try {
+		const dbPath = getAgentDbPath(agentDir);
+		const db = openMemoryDb(dbPath);
+		try {
+			removeMemoryArtifactFtsRow(db, "memory");
+			removeMemoryArtifactFtsRow(db, "summary");
+		} finally {
+			closeMemoryDb(db);
+		}
+	} catch {
+		// best-effort FTS cleanup when DB is unavailable
+	}
 	await fs.rm(path.join(memoryRoot, "skills"), { recursive: true, force: true });
 }
 
@@ -793,6 +777,7 @@ async function runConsolidationModel(options: {
 }
 
 async function applyConsolidation(
+	agentDir: string,
 	memoryRoot: string,
 	consolidated: {
 		memoryMd: string;
@@ -808,6 +793,13 @@ async function applyConsolidation(
 ): Promise<void> {
 	await Bun.write(path.join(memoryRoot, "MEMORY.md"), `${consolidated.memoryMd.trim()}\n`);
 	await Bun.write(path.join(memoryRoot, "memory_summary.md"), `${consolidated.memorySummary.trim()}\n`);
+	const dbPath = getAgentDbPath(agentDir);
+	const db = openMemoryDb(dbPath);
+	try {
+		syncArtifactFilesToFts(db, memoryRoot);
+	} finally {
+		closeMemoryDb(db);
+	}
 	const skillsDir = path.join(memoryRoot, "skills");
 	await fs.mkdir(skillsDir, { recursive: true });
 	const keep = new Set<string>();
@@ -1072,40 +1064,23 @@ async function resolveMemoryModel(options: {
 	modelRegistry: ModelRegistry;
 	session: AgentSession;
 	fallbackRole: string;
+	config: MemoryRuntimeConfig;
 }): Promise<Model | undefined> {
-	const { modelRegistry, session, fallbackRole } = options;
-	const requestedModel = session.settings.getModelRole(fallbackRole) || session.settings.getModelRole("default");
-	if (requestedModel) {
-		const resolved = resolveModelRoleValue(requestedModel, modelRegistry.getAll(), {
-			settings: session.settings,
-			matchPreferences: { usageOrder: session.settings.getStorage()?.getModelUsageOrder() },
-			modelRegistry,
+	const { modelRegistry, session, fallbackRole, config } = options;
+	const cwd = session.sessionManager.getCwd();
+	const agentDir = session.settings.getAgentDir();
+	const { pattern, source } = resolveMemoryModelPattern(session.settings, fallbackRole, config.modelRolePattern);
+	const model = resolveMemoryModelFromPattern(pattern, session, modelRegistry);
+	if (model && pattern) {
+		await persistMemoryModelResolution(agentDir, cwd, {
+			pattern,
+			provider: model.provider,
+			modelId: model.id,
+			resolvedAt: unixNow(),
+			source,
 		});
-		if (resolved.model) return resolved.model;
 	}
-	return session.model ?? modelRegistry.getAll()[0];
-}
-
-function loadMemoryConfig(settings: Settings): MemoryRuntimeConfig {
-	return {
-		enabled: settings.get("memory.backend") === "local" || settings.get("memories.enabled") === true,
-		maxRolloutsPerStartup: settings.get("memories.maxRolloutsPerStartup") ?? DEFAULTS.maxRolloutsPerStartup,
-		maxRolloutAgeDays: settings.get("memories.maxRolloutAgeDays") ?? DEFAULTS.maxRolloutAgeDays,
-		minRolloutIdleHours: settings.get("memories.minRolloutIdleHours") ?? DEFAULTS.minRolloutIdleHours,
-		threadScanLimit: settings.get("memories.threadScanLimit") ?? DEFAULTS.threadScanLimit,
-		maxRawMemoriesForGlobal: settings.get("memories.maxRawMemoriesForGlobal") ?? DEFAULTS.maxRawMemoriesForGlobal,
-		stage1Concurrency: settings.get("memories.stage1Concurrency") ?? DEFAULTS.stage1Concurrency,
-		stage1LeaseSeconds: settings.get("memories.stage1LeaseSeconds") ?? DEFAULTS.stage1LeaseSeconds,
-		stage1RetryDelaySeconds: settings.get("memories.stage1RetryDelaySeconds") ?? DEFAULTS.stage1RetryDelaySeconds,
-		phase2LeaseSeconds: settings.get("memories.phase2LeaseSeconds") ?? DEFAULTS.phase2LeaseSeconds,
-		phase2RetryDelaySeconds: settings.get("memories.phase2RetryDelaySeconds") ?? DEFAULTS.phase2RetryDelaySeconds,
-		phase2HeartbeatSeconds: settings.get("memories.phase2HeartbeatSeconds") ?? DEFAULTS.phase2HeartbeatSeconds,
-		rolloutPayloadPercent: settings.get("memories.rolloutPayloadPercent") ?? DEFAULTS.rolloutPayloadPercent,
-		phase1InputTokenLimit: settings.get("memories.phase1InputTokenLimit") ?? DEFAULTS.phase1InputTokenLimit,
-		fallbackTokenLimit: settings.get("memories.fallbackTokenLimit") ?? DEFAULTS.fallbackTokenLimit,
-		summaryInjectionTokenLimit:
-			settings.get("memories.summaryInjectionTokenLimit") ?? DEFAULTS.summaryInjectionTokenLimit,
-	};
+	return model;
 }
 
 export function getMemoryRoot(agentDir: string, cwd: string): string {

@@ -421,7 +421,7 @@ describe("AskTool custom input", () => {
 		expect(abort).not.toHaveBeenCalled();
 	});
 
-	it("uses inline selector input for Other without opening the editor screen", async () => {
+	it("uses the inline list slot for custom input without opening the editor screen", async () => {
 		const tool = new AskTool(createSession());
 		const abort = vi.fn();
 		const editor = vi.fn(async () => "editor text");
@@ -433,12 +433,13 @@ describe("AskTool custom input", () => {
 			},
 		];
 		const context = createContext({
-			select: async (_prompt, _options, dialogOptions) => {
-				// Simulate the TUI selector collecting the text inline below the
-				// option list, then resolving with the Other label.
-				expect(dialogOptions?.customInput?.optionLabel).toBe("Other (type your own)");
-				dialogOptions?.customInput?.onSubmit("inline answer");
-				return "Other (type your own)";
+			select: async (_prompt, options, dialogOptions) => {
+				// 99.20.01: every single-select ask uses the v2 grammar — numbered
+				// options plus an inline composer slot, no appended Other row.
+				expect(options).toEqual(["1. yes", "2. no"]);
+				expect(dialogOptions?.customInputListSlot).toBe(true);
+				dialogOptions?.listSlotCustomInput?.onSubmit("inline answer");
+				return undefined;
 			},
 			editor,
 			abort,
@@ -1240,11 +1241,14 @@ describe("AskTool jaw-interview structured questions (meta contract)", () => {
 		expect(dialogOptions?.helpText).toContain("wheel/PgUp/PgDn scroll question");
 	});
 
-	it("leaves plain questions without meta unstructured and unnumbered", async () => {
+	it("keeps plain questions headerless but numbered with the v2 input slot (99.20.01)", async () => {
 		const tool = new AskTool(createSession());
 		const select = vi.fn(
-			async (_prompt: string, options: string[], _dialogOptions?: { scrollTitleRows?: number; helpText?: string }) =>
-				options[0],
+			async (
+				_prompt: string,
+				options: string[],
+				_dialogOptions?: { scrollTitleRows?: number; helpText?: string; customInputListSlot?: boolean },
+			) => options[0],
 		);
 		const context = createContext({ select });
 
@@ -1264,9 +1268,12 @@ describe("AskTool jaw-interview structured questions (meta contract)", () => {
 			context,
 		);
 
+		// No interview header without meta, but the input grammar is unified:
+		// numbered options + inline list slot instead of a legacy Other row.
 		expect(select.mock.calls[0]?.[0]).toBe("Which ordinary option should be selected?");
-		expect(select.mock.calls[0]?.[1]).toEqual(["A", "B", "Other (type your own)"]);
+		expect(select.mock.calls[0]?.[1]).toEqual(["1. A", "2. B"]);
 		const dialogOptions = select.mock.calls[0]?.[2];
+		expect(dialogOptions?.customInputListSlot).toBe(true);
 		expect(dialogOptions?.scrollTitleRows).toBeUndefined();
 		expect(dialogOptions?.helpText).not.toContain("scroll question");
 	});

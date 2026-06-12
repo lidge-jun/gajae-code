@@ -12,8 +12,6 @@ import {
 } from "@gajae-code/utils";
 import { type ThemeColor, theme } from "../../../modes/theme/theme";
 import { shortenPath } from "../../../tools/render-utils";
-import { getSessionAccentAnsi, getSessionAccentHex } from "../../../utils/session-color";
-import { sanitizeStatusText } from "../../shared";
 import { getContextUsageLevel, getContextUsageThemeColor } from "./context-thresholds";
 import type { RenderedSegment, SegmentContext, StatusLineSegment, StatusLineSegmentId } from "./types";
 
@@ -478,12 +476,13 @@ const cacheWriteSegment: StatusLineSegment = {
 const sessionNameSegment: StatusLineSegment = {
 	id: "session_name",
 	render(ctx) {
-		const sessionManager = ctx.session.sessionManager;
-		const name = sessionManager?.getSessionName();
-		if (!name) return { content: "", visible: false };
-
-		const ansi = getSessionAccentAnsi(getSessionAccentHex(name)) ?? theme.getFgAnsi("accent");
-		return { content: `${ansi}${sanitizeStatusText(name)}\x1b[39m`, visible: true };
+		// jwc fork (devlog 081.10): never render the session title text in the
+		// status line. Auto-generated titles can be a whole assistant reply
+		// (composer greeting hallucination, 081.2 family), which pushes the
+		// right-side stats (token rate / context % / cost) off the bar. The
+		// session accent gap color still uses the name independently.
+		void ctx;
+		return { content: "", visible: false };
 	},
 };
 

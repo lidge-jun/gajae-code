@@ -1,4 +1,5 @@
 import { Database } from "bun:sqlite";
+import { ensureMemoryFtsIndexes, syncStage1FtsRow } from "./memory-fts";
 
 export interface MemoryThread {
 	id: string;
@@ -84,7 +85,14 @@ CREATE TABLE IF NOT EXISTS jobs (
 	last_success_watermark INTEGER,
 	PRIMARY KEY (kind, job_key)
 );
+
+CREATE TABLE IF NOT EXISTS memory_hit_counts (
+	ref TEXT PRIMARY KEY,
+	hit_count INTEGER NOT NULL,
+	last_hit_at INTEGER NOT NULL
+);
 `);
+	ensureMemoryFtsIndexes(db);
 	return db;
 }
 
@@ -98,6 +106,7 @@ DELETE FROM stage1_outputs;
 DELETE FROM threads;
 DELETE FROM jobs WHERE kind IN ('memory_stage1', 'memory_consolidate_global');
 `);
+	ensureMemoryFtsIndexes(db);
 }
 
 export function upsertThreads(db: Database, threads: MemoryThread[]): void {
@@ -335,6 +344,8 @@ ON CONFLICT(thread_id) DO UPDATE SET
 	generated_at = excluded.generated_at
 WHERE excluded.source_updated_at >= stage1_outputs.source_updated_at
 `).run(threadId, sourceUpdatedAt, rawMemory, rolloutSummary, rolloutSlug, nowSec);
+
+		syncStage1FtsRow(db, { threadId, rawMemory, rolloutSummary });
 
 		enqueueGlobalWatermark(db, sourceUpdatedAt, cwd, { forceDirtyWhenNotAdvanced: true });
 		return true;

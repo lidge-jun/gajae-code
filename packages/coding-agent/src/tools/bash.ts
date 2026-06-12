@@ -112,6 +112,20 @@ function isInteractiveResult(result: BashResult | BashInteractiveResult): result
 	return "timedOut" in result;
 }
 
+/**
+ * jwc fork (devlog 081.11): a timed-out command used to surface only its
+ * partial output when any was captured, so models treated the kill as a
+ * successful completion (e.g. an `|| echo done` fallback firing mid-kill) and
+ * built further reasoning on it. Always lead with an explicit KILLED notice.
+ */
+function formatTimedOutResult(partialOutput: string, timeoutSec: number): string {
+	const notice =
+		`Command KILLED after ${timeoutSec}s timeout — it did NOT complete. ` +
+		`Any output below is PARTIAL; do not treat it as success. ` +
+		`Re-run with a narrower scope or a higher timeout.`;
+	return partialOutput ? `${notice}\n\n${partialOutput}` : notice;
+}
+
 function normalizeBashEnv(env: Record<string, string> | undefined): Record<string, string> | undefined {
 	if (!env || Object.keys(env).length === 0) return undefined;
 	const normalized: Record<string, string> = {};
@@ -269,7 +283,7 @@ export class BashTool implements AgentTool<BashToolSchema, BashToolDetails> {
 			throw new ToolError(normalizeResultOutput(result) || "Command aborted");
 		}
 		if (isInteractiveResult(result) && result.timedOut) {
-			throw new ToolError(normalizeResultOutput(result) || `Command timed out after ${timeoutSec} seconds`);
+			throw new ToolError(formatTimedOutResult(normalizeResultOutput(result), timeoutSec));
 		}
 		if (result.exitCode === undefined) {
 			throw new ToolError(`${outputText}\n\nCommand failed: missing exit status`);
@@ -1005,7 +1019,7 @@ export class BashTool implements AgentTool<BashToolSchema, BashToolDetails> {
 			throw new ToolError(normalizeResultOutput(result) || "Command aborted");
 		}
 		if (isInteractiveResult(result) && result.timedOut) {
-			throw new ToolError(normalizeResultOutput(result) || `Command timed out after ${timeoutSec} seconds`);
+			throw new ToolError(formatTimedOutResult(normalizeResultOutput(result), timeoutSec));
 		}
 		return this.#buildCompletedResult(result, timeoutSec, {
 			requestedTimeoutSec,

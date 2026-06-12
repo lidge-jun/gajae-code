@@ -667,6 +667,18 @@ export const SETTINGS_SCHEMA = {
 				"Wrap file paths in OSC 8 hyperlinks for terminal-native click-to-open (auto: detect support; off: never; always: unconditional)",
 		},
 	},
+
+	// Unset = brand default (jwc: pinned, engine brand: legacy flow). Devlog 083.7.
+	"tui.composerPin": {
+		type: "boolean",
+		default: undefined,
+		ui: {
+			tab: "appearance",
+			label: "Pin Composer to Bottom",
+			description:
+				"Keep the input composer pinned to the terminal bottom, filling the gap above with blank space (default: on for jwc)",
+		},
+	},
 	// Display rendering
 	"display.tabWidth": {
 		type: "number",

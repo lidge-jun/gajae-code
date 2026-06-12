@@ -2,7 +2,7 @@
  * Phase β sweep (069.1 P9~P11): flip runtime-facing `.gjc` path literals to
  * `.jwc`. Boundary-safe: never rewrites identifiers like `plan.gjcObjective`
  * (`.gjc` must NOT be followed by [A-Za-z0-9_]). Idempotent.
- * Exclusions: devlog/, structure/, har_struct/, migrate-config-dir.*, this script.
+ * Exclusions: devlog/, structure/, struct_har/, migrate-config-dir.*, this script.
  */
 import { readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import * as path from "node:path";
@@ -11,7 +11,7 @@ const ROOT = process.cwd();
 const TARGET_DIRS = ["packages", "docs", "scripts"];
 const ROOT_FILES = ["biome.json", ".gitignore", "README.md", "README.jwc.md", "AGENTS.md"];
 const EXTS = new Set([".ts", ".js", ".json", ".md", ".sh", ".toml", ".yml", ".yaml", ".py", ".ps1"]);
-const EXCLUDE_PARTS = ["node_modules", ".git/", "har_struct", "devlog", "structure/", "migrate-config-dir", "beta-jwc-sweep"];
+const EXCLUDE_PARTS = ["node_modules", ".git/", "struct_har", "devlog", "structure/", "migrate-config-dir", "beta-jwc-sweep"];
 const PATTERN = /\.gjc(?![A-Za-z0-9_])/g;
 
 let changed = 0;

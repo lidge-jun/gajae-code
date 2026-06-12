@@ -172,7 +172,7 @@ interface AskSingleQuestionOptions {
 	navigation?: NavigationControls;
 	scrollTitleRows?: number;
 	otherOptionLabel?: string;
-	/** jaw-interview: docked free-text under numbered options (no Other row). */
+	/** v2 grammar (99.20.01, all single-select): inline composer slot in the list, no Other row. */
 	useDockedCustomInput?: boolean;
 }
 
@@ -399,7 +399,11 @@ async function askSingleQuestion(
 			initialIndex = displayLabels.length;
 		}
 		if (initialIndex !== undefined) {
-			const maxIndex = Math.max(optionsWithNavigation.length - 1, 0);
+			// With the v2 list slot the input row sits at index options.length, so a
+			// stored customInput may legitimately point one past the last option.
+			const maxIndex = options.useDockedCustomInput
+				? optionsWithNavigation.length
+				: Math.max(optionsWithNavigation.length - 1, 0);
 			initialIndex = Math.max(0, Math.min(initialIndex, maxIndex));
 		}
 
@@ -573,7 +577,10 @@ export class AskTool implements AgentTool<typeof askSchema, AskToolDetails> {
 					? formatInterviewSelectorPrompt({ question: q.question, meta: q.meta })
 					: null;
 				const displayQuestion = jawInterviewPrompt ?? q.question;
-				const shouldNumberOptions = jawInterviewPrompt !== null;
+				// 99.20.01: every single-select ask uses the v2 grammar (numbered
+				// options + inline composer slot) — only the interview header above
+				// stays meta-gated, since it needs round/component data to render.
+				const shouldNumberOptions = !(q.multi ?? false);
 				const optionLabels = shouldNumberOptions ? numberOptionLabels(rawOptionLabels) : rawOptionLabels;
 				const initialSelection =
 					shouldNumberOptions && options?.previous
@@ -598,7 +605,7 @@ export class AskTool implements AgentTool<typeof askSchema, AskToolDetails> {
 					initialSelection,
 					navigation: options?.navigation,
 					scrollTitleRows: jawInterviewPrompt === null ? undefined : JAW_INTERVIEW_SELECTOR_SCROLL_TITLE_ROWS,
-					useDockedCustomInput: shouldNumberOptions && !(q.multi ?? false) ? true : undefined,
+					useDockedCustomInput: shouldNumberOptions ? true : undefined,
 				});
 				const selectedOptions = shouldNumberOptions
 					? displaySelectedOptions.map(selected => {

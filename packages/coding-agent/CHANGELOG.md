@@ -2,7 +2,18 @@
 
 ## [Unreleased]
 
+### Added
+
+- Added FTS5 semantic (full-text) search for local memory stage1 rows (`src/memories/memory-fts.ts`): BM25-ranked queries with synonym-expanded terms, LIKE fallback, manual upsert FTS sync, and `memory reindex` support; artifact search remains line-based.
+- Added per-turn local memory Task Snapshot prompt injection (99.01 M6): `buildLocalTaskSnapshot` / `buildMemoryTaskSnapshot` diversify top hits (episode cap 2, one per ref) and wrap them in `<memories>` via `localBackend.buildTaskSnapshot`.
+- Added `memory list`, `memory status`, and `memory reindex` for the local backend (99.01 M8), with FTS5 stage1 search and manual-save FTS sync via `syncStage1FtsRow`.
+- Added unified local memory CLI surface (99.01 M7): `memory browse [--limit N]`, shared `loadMemoryConfig` in `src/memories/memory-config.ts`, lexicographic search tie-breaks, and ref alias normalization for read/context.
+- Added `memory search --cloud` to route a single search through Hindsight recall even when `memory.backend` is `local` or `off` (requires `hindsight.apiUrl`).
+- Added local memory search path scoping: `searchMemoriesCore` / `filterScopePaths` restrict episode and manual hits by thread rollout path (profile `memory` and shared `summary` artifacts always pass); CLI `memory search <query> [--scope path[,path...]]`.
+
 ### Changed
+
+- Local memory search: artifact `MEMORY.md` / `memory_summary.md` bodies are indexed in FTS5 (`memory_artifacts_fts`), synced on consolidation and `memory reindex`; new setting `memories.searchMode` (`hybrid` | `fts` | `like`) controls stage1 and artifact query backends.
 
 - **jaw-interview ask (TUI, 082.3 v2)**: options `1…N` only in the list; **`N+1. 출력창`** is a separate bordered composer panel below (not a list row). ↑↓ includes the output panel; trimmed text-only submit; empty/whitespace Enter skips. Interview question scroll uses a bounded title viewport (fixes `MAX_SAFE_INTEGER` starving scroll rows).
 

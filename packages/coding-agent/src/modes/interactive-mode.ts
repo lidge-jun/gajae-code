@@ -24,14 +24,16 @@ import {
 	Spacer,
 	Text,
 	TUI,
+	ViewportFill,
 	visibleWidth,
 } from "@gajae-code/tui";
-import { APP_NAME, adjustHsv, getProjectDir, hsvToRgb, isEnoent, logger, postmortem, prompt } from "@gajae-code/utils";
+import { $flag, APP_NAME, adjustHsv, getProjectDir, hsvToRgb, isEnoent, logger, postmortem, prompt } from "@gajae-code/utils";
 import chalk from "chalk";
 import { AsyncJobManager } from "../async";
 import { KeybindingsManager } from "../config/keybindings";
 import { isSettingsInitialized, type Settings, settings } from "../config/settings";
 import { DEFAULT_GJC_DEFINITION_NAMES } from "../defaults/gjc-defaults";
+import { isJawBrand } from "../discovery/helpers";
 import type {
 	ExtensionUIContext,
 	ExtensionUIDialogOptions,
@@ -241,6 +243,8 @@ export class InteractiveMode implements InteractiveModeContext {
 
 	ui: TUI;
 	chatContainer: Container;
+	/** 083.7 — stretches between transcript and composer cluster to pin the composer to the terminal bottom. */
+	#viewportFill = new ViewportFill();
 	pendingMessagesContainer: Container;
 	statusContainer: Container;
 	todoContainer: Container;
@@ -514,6 +518,12 @@ export class InteractiveMode implements InteractiveModeContext {
 		}
 
 		this.ui.addChild(this.chatContainer);
+		// 083.7 composer bottom pin — everything mounted below sits on the terminal
+		// floor; the fill absorbs height changes above (tool/thinking collapse) so
+		// the composer row stays constant. Unset setting = brand default (jwc on).
+		const composerPinSetting = settings.get("tui.composerPin");
+		this.#viewportFill.setEnabled(!$flag("PI_NO_COMPOSER_PIN") && (composerPinSetting ?? isJawBrand()));
+		this.ui.addChild(this.#viewportFill);
 		this.ui.addChild(this.pendingMessagesContainer);
 		this.ui.addChild(this.statusContainer);
 		this.ui.addChild(this.todoContainer);
