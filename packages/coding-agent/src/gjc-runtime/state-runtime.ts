@@ -852,6 +852,16 @@ function buildHudForMode(
 			const rounds = pick("rounds", isArray);
 			const targetComponent = pick("last_targeted_component_id", isString);
 			const weakestDimension = pick("weakest_dimension", isString);
+			// 99.04.03 — rounds rows may carry { ambiguity, dimensions: {goal..ontology: 0..3} }.
+			const lastRound = isPlainObject(rounds?.at(-1)) ? (rounds.at(-1) as Record<string, unknown>) : undefined;
+			const prevRound = isPlainObject(rounds?.at(-2)) ? (rounds.at(-2) as Record<string, unknown>) : undefined;
+			const dimensions = isPlainObject(lastRound?.dimensions)
+				? (lastRound.dimensions as { goal?: number; constraint?: number; success?: number; ontology?: number })
+				: undefined;
+			const lastAmbiguity = isNumber(lastRound?.ambiguity) ? lastRound.ambiguity : undefined;
+			const prevAmbiguity = isNumber(prevRound?.ambiguity) ? prevRound.ambiguity : undefined;
+			const ambiguityDelta =
+				lastAmbiguity !== undefined && prevAmbiguity !== undefined ? lastAmbiguity - prevAmbiguity : undefined;
 			return buildJawInterviewHudSummary({
 				phase,
 				ambiguity,
@@ -859,6 +869,8 @@ function buildHudForMode(
 				roundCount: rounds?.length,
 				targetComponent,
 				weakestDimension,
+				dimensions,
+				ambiguityDelta,
 				updatedAt,
 			});
 		}

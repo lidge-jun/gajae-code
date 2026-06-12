@@ -13,6 +13,10 @@ interface JawInterviewHudState extends WorkflowGateHudState {
 	roundCount?: number;
 	targetComponent?: string;
 	weakestDimension?: string;
+	/** 99.04.03 — per-dimension 0..3 scores from the last interview round. */
+	dimensions?: { goal?: number; constraint?: number; success?: number; ontology?: number };
+	/** 99.04.03 — ambiguity change vs the previous round (negative = improving). */
+	ambiguityDelta?: number;
 	specStatus?: string;
 	updatedAt?: string;
 }
@@ -94,10 +98,36 @@ export function buildJawInterviewHudSummary(state: JawInterviewHudState): Workfl
 			chip("round", state.roundCount === undefined ? undefined : String(state.roundCount), 30),
 			chip("target", state.targetComponent, 40),
 			chip("weakest", state.weakestDimension, 50),
+			chip(
+				"\u0394",
+				typeof state.ambiguityDelta === "number"
+					? `${state.ambiguityDelta <= 0 ? "\u2193" : "\u2191"}${Math.abs(state.ambiguityDelta).toFixed(2)}`
+					: undefined,
+				35,
+				typeof state.ambiguityDelta === "number" ? (state.ambiguityDelta <= 0 ? "success" : "warning") : undefined,
+			),
 			chip("spec", state.specStatus, 60),
 		]),
+		...(state.dimensions
+			? {
+					details: compactChips([chip("dims", formatDimensionGauges(state.dimensions), 40)]),
+				}
+			: {}),
 		...(state.updatedAt ? { updated_at: state.updatedAt } : {}),
 	};
+}
+
+/** `G\u25b0\u25b0\u25b1 C\u25b0\u25b1\u25b1 \u2026` — 0..3 mini gauges, 1-width chars only (99.04.01 \u00a75). */
+function formatDimensionGauges(dims: NonNullable<JawInterviewHudState["dimensions"]>): string | undefined {
+	const order = ["goal", "constraint", "success", "ontology"] as const;
+	const parts: string[] = [];
+	for (const key of order) {
+		const raw = dims[key];
+		if (typeof raw !== "number" || !Number.isFinite(raw)) continue;
+		const level = Math.max(0, Math.min(3, Math.round(raw)));
+		parts.push(`${key[0].toUpperCase()}${"\u25b0".repeat(level)}${"\u25b1".repeat(3 - level)}`);
+	}
+	return parts.length > 0 ? parts.join(" ") : undefined;
 }
 
 export function buildRalplanHudSummary(state: RalplanHudState): WorkflowHudSummary {

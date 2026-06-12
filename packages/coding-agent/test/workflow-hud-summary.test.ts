@@ -70,3 +70,40 @@ describe("workflow HUD summary builders", () => {
 		expect(hud.chips?.map(chip => chip.label)).toEqual(["blocked", "phase", "workers", "tasks", "latest"]);
 	});
 });
+
+describe("jaw-interview 4-dimension gauges (99.04.03)", () => {
+	it("renders mini gauges in details when dimensions are present", () => {
+		const summary = buildJawInterviewHudSummary({
+			phase: "interviewing",
+			dimensions: { goal: 3, constraint: 1, success: 2, ontology: 0 },
+		});
+		const dims = summary.details?.find(c => c.label === "dims");
+		expect(dims?.value).toBe("G▰▰▰ C▰▱▱ S▰▰▱ O▱▱▱");
+	});
+
+	it("clamps out-of-range scores and skips non-numeric dimensions", () => {
+		const summary = buildJawInterviewHudSummary({
+			phase: "interviewing",
+			dimensions: { goal: 9, constraint: -2, success: Number.NaN },
+		});
+		const dims = summary.details?.find(c => c.label === "dims");
+		expect(dims?.value).toBe("G▰▰▰ C▱▱▱");
+	});
+
+	it("omits details entirely without dimensions (backward compat)", () => {
+		const summary = buildJawInterviewHudSummary({ phase: "interviewing", roundCount: 2 });
+		expect(summary.details).toBeUndefined();
+	});
+
+	it("shows the ambiguity delta arrow with severity", () => {
+		const down = buildJawInterviewHudSummary({ phase: "interviewing", ambiguityDelta: -0.12 });
+		const downChip = down.chips.find(c => c.label === "Δ");
+		expect(downChip?.value).toBe("↓0.12");
+		expect(downChip?.severity).toBe("success");
+
+		const up = buildJawInterviewHudSummary({ phase: "interviewing", ambiguityDelta: 0.05 });
+		const upChip = up.chips.find(c => c.label === "Δ");
+		expect(upChip?.value).toBe("↑0.05");
+		expect(upChip?.severity).toBe("warning");
+	});
+});
