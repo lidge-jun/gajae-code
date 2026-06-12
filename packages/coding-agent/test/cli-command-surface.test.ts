@@ -58,8 +58,9 @@ describe("GJC public CLI command surface", () => {
 		expect(jawOutput).toContain("orchestrate");
 		expect(jawOutput).toContain("interview");
 
-		const engineEnv = { ...process.env };
-		delete engineEnv.GJC_BRAND_NAME;
+		// Fork default is the jaw brand (062.1 §4) — the engine surface needs an explicit opt-in.
+		const engineEnv = { ...process.env, GJC_BRAND_NAME: "gjc" };
+		delete engineEnv.JWC_BRAND_NAME;
 		const engine = Bun.spawnSync(["bun", cliEntry, "--help"], {
 			cwd: repoRoot,
 			env: engineEnv,
@@ -123,8 +124,8 @@ describe("GJC public CLI command surface", () => {
 		expect(output).toContain("--dry-run");
 		expect(output).toContain(".gjc/state/team");
 		expect(output).toContain("do not commit");
-		expect(output).toContain("existing tmux/GJC --tmux session");
-		expect(output).toContain("gjc --tmux");
+		expect(output).toContain("existing tmux/JWC --tmux session");
+		expect(output).toContain("jwc --tmux");
 	}, 30_000);
 
 	it("does not capture absolute-path prompts as startup slash commands", () => {

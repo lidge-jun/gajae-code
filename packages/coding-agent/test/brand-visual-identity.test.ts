@@ -21,11 +21,18 @@ import { WelcomeComponent } from ${JSON.stringify(
 await initTheme();
 const w = new WelcomeComponent("0.0.0", "test-model", "test-provider");
 const text = w.render(120).join("\\n");
+const fullLineCount = w.render(120).length;
+w.getViewportRows = () => 12;
+const shortLines = w.render(120);
+const shortText = shortLines.join("\\n");
 console.log(
 	JSON.stringify({
 		theme: getCurrentThemeName(),
 		hasJawWordmark: text.includes("Jawcode") && text.includes("bite · build · ship"),
 		hasClawWordmark: text.includes("Gajae forge") && text.includes("shape · act · prove"),
+		fullLineCount,
+		shortLineCount: shortLines.length,
+		shortKeepsIdentity: shortText.includes("Jawcode") || shortText.includes("Gajae forge"),
 	}),
 );
 `;
@@ -34,6 +41,9 @@ function probeBrand(brandName: string | undefined): {
 	theme: string;
 	hasJawWordmark: boolean;
 	hasClawWordmark: boolean;
+	fullLineCount: number;
+	shortLineCount: number;
+	shortKeepsIdentity: boolean;
 } {
 	const env: Record<string, string | undefined> = { ...process.env };
 	delete env.GJC_BRAND_NAME;
@@ -56,9 +66,21 @@ describe("brand-conditional visual identity", () => {
 	});
 
 	it("upstream gjc keeps red-claw theme with the claw banner (no regression)", () => {
-		const result = probeBrand(undefined);
+		const result = probeBrand("gjc");
 		expect(result.theme).toBe("red-claw");
 		expect(result.hasJawWordmark).toBe(false);
 		expect(result.hasClawWordmark).toBe(true);
+	});
+
+	it("jwc banner collapses to the compact variant in short viewports (devlog 086.1)", () => {
+		const result = probeBrand("jwc");
+		expect(result.shortLineCount).toBeLessThan(result.fullLineCount);
+		expect(result.shortLineCount).toBeLessThanOrEqual(5);
+		expect(result.shortKeepsIdentity).toBe(true);
+	});
+
+	it("gjc banner ignores viewport height (diff-0: no compact variant upstream)", () => {
+		const result = probeBrand("gjc");
+		expect(result.shortLineCount).toBe(result.fullLineCount);
 	});
 });

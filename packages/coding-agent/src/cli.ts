@@ -65,8 +65,9 @@ const jawOnlyCommands: CommandEntry[] = [
 ];
 
 function isJawBrandEnv(): boolean {
-	const brand = process.env.GJC_BRAND_NAME;
-	return !!brand && brand !== ENGINE_NAME;
+	// Mirrors discovery/helpers.ts isJawBrand() — fork default "jwc" (062.1 §4).
+	const brand = process.env.JWC_BRAND_NAME ?? process.env.GJC_BRAND_NAME ?? "jwc";
+	return brand !== ENGINE_NAME;
 }
 
 const commands: CommandEntry[] = [...baseCommands, ...(isJawBrandEnv() ? jawOnlyCommands : [])];

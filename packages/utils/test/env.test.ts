@@ -3,7 +3,7 @@ import * as fs from "node:fs";
 import * as os from "node:os";
 import * as path from "node:path";
 import { pathToFileURL } from "node:url";
-import { filterProcessEnv, parseEnvFile, parseShellEnvFile } from "../src/env";
+import { $resolveEnv, filterProcessEnv, parseEnvFile, parseShellEnvFile } from "../src/env";
 
 const tempDirs: string[] = [];
 
@@ -156,5 +156,32 @@ describe("filterProcessEnv", () => {
 			"ProgramFiles(x86)": "C:\\Program Files (x86)",
 			"CommonProgramFiles(x86)": "C:\\Program Files (x86)\\Common Files",
 		});
+	});
+});
+
+describe("$resolveEnv (062.1 jwc fork alias chain)", () => {
+	afterEach(() => {
+		delete Bun.env.JWC_RESOLVE_TEST;
+		delete Bun.env.GJC_RESOLVE_TEST;
+	});
+
+	it("prefers JWC_ over GJC_", () => {
+		Bun.env.JWC_RESOLVE_TEST = "jwc-value";
+		Bun.env.GJC_RESOLVE_TEST = "gjc-value";
+		expect($resolveEnv("GJC_RESOLVE_TEST")).toBe("jwc-value");
+	});
+
+	it("falls back to GJC_ when JWC_ is unset", () => {
+		Bun.env.GJC_RESOLVE_TEST = "gjc-value";
+		expect($resolveEnv("GJC_RESOLVE_TEST")).toBe("gjc-value");
+	});
+
+	it("returns undefined when neither is set", () => {
+		expect($resolveEnv("GJC_RESOLVE_TEST")).toBeUndefined();
+	});
+
+	it("resolves non-GJC keys as-is", () => {
+		Bun.env.GJC_RESOLVE_TEST = "direct";
+		expect($resolveEnv("GJC_RESOLVE_TEST" as string)).toBe("direct");
 	});
 });

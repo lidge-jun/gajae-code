@@ -76,7 +76,8 @@ describe("jaw-brand skill discovery (substitution model)", () => {
 		expect(names).not.toContain("dev-pabcd");
 	});
 
-	it("gjc brand (no env): cli-jaw and .agents sources stay invisible (diff-0)", async () => {
+	it("gjc brand (explicit opt-in): cli-jaw and .agents sources stay invisible", async () => {
+		process.env.GJC_BRAND_NAME = "gjc"; // fork default is jaw — engine brand needs explicit opt-in (062.1 §4)
 		writeSkill(cliJawSkillsDir(), "jaw-global");
 		writeSkill(agentsSkillsDir(), "agents-skill");
 		writeSkill(nativeUserSkillsDir(), "native-user");

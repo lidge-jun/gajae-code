@@ -19,8 +19,8 @@ import { engines, version } from "../package.json" with { type: "json" };
 /** Engine name — fixed identifier for paths, log filenames, release assets (e.g. "gjc") */
 export const ENGINE_NAME: string = "gjc";
 
-/** App name shown to users (brandable via GJC_BRAND_NAME, e.g. "jwc"); defaults to the engine name */
-export const APP_NAME: string = process.env.GJC_BRAND_NAME || ENGINE_NAME;
+/** App name shown to users (brandable via JWC_BRAND_NAME/GJC_BRAND_NAME); the jwc fork defaults to "jwc" (062.1 §4) */
+export const APP_NAME: string = process.env.JWC_BRAND_NAME || process.env.GJC_BRAND_NAME || "jwc";
 
 /** Config directory name (e.g. ".gjc") */
 export const CONFIG_DIR_NAME: string = ".gjc";
@@ -94,7 +94,7 @@ export function setProjectDir(dir: string): void {
 
 /** Get the config directory name relative to home (e.g. ".gjc" or PI_CONFIG_DIR override). */
 export function getConfigDirName(): string {
-	return process.env.GJC_CONFIG_DIR ?? process.env.PI_CONFIG_DIR ?? CONFIG_DIR_NAME;
+	return process.env.JWC_CONFIG_DIR ?? process.env.GJC_CONFIG_DIR ?? process.env.PI_CONFIG_DIR ?? CONFIG_DIR_NAME;
 }
 
 /** Get the config agent directory name relative to home (e.g. ".gjc/agent" or PI_CONFIG_DIR + "/agent"). */
@@ -193,7 +193,7 @@ class DirResolver {
 	}
 }
 
-let dirs = new DirResolver(process.env.GJC_CODING_AGENT_DIR);
+let dirs = new DirResolver(process.env.JWC_CODING_AGENT_DIR ?? process.env.GJC_CODING_AGENT_DIR);
 
 // Anchor home for the resolver. Captured at module load to stay stable across
 // test mocks of `os.homedir()`. `getPluginsDir(home)` compares against this so
@@ -341,7 +341,7 @@ export function getGpuCachePath(): string {
  * cache file without touching the rest of the config root.
  */
 export function getGithubCacheDbPath(): string {
-	const override = process.env.GJC_GITHUB_CACHE_DB;
+	const override = process.env.JWC_GITHUB_CACHE_DB ?? process.env.GJC_GITHUB_CACHE_DB;
 	if (override) return override;
 	return dirs.rootSubdir(path.join("cache", "github-cache.db"), "cache");
 }

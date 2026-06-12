@@ -30,8 +30,10 @@ import { buildPluginDirRoot } from "./plugin-dir-roots";
  * brands per test case.
  */
 export function isJawBrand(): boolean {
-	const brand = process.env.GJC_BRAND_NAME;
-	return !!brand && brand !== ENGINE_NAME;
+	// Fork default is the jaw brand (062.1 §4); JWC_BRAND_NAME wins, GJC_ is
+	// the legacy alias, and an explicit "gjc" opts back into the engine brand.
+	const brand = process.env.JWC_BRAND_NAME ?? process.env.GJC_BRAND_NAME ?? "jwc";
+	return brand !== ENGINE_NAME;
 }
 
 /**

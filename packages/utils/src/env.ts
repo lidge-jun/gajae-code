@@ -183,6 +183,19 @@ for (const file of [projectEnv, agentEnv, piEnv, homeEnv, homeShellEnv]) {
 export const $env: Record<string, string> = Bun.env as Record<string, string>;
 
 /**
+ * Resolve a GJC_*-named variable through the jwc fork alias chain (062.1 M1):
+ * `JWC_X ?? GJC_X`. Pass the legacy GJC_* key; the JWC_* canonical name is
+ * derived. Non-GJC keys resolve as-is.
+ */
+export function $resolveEnv(gjcKey: string): string | undefined {
+	if (gjcKey.startsWith("GJC_")) {
+		const jwcValue = Bun.env[`JWC_${gjcKey.slice(4)}`];
+		if (jwcValue !== undefined) return jwcValue;
+	}
+	return Bun.env[gjcKey];
+}
+
+/**
  * Resolve the first environment variable value from the given keys.
  * @param keys - The keys to resolve.
  * @returns The first environment variable value, or undefined if no value is found.
