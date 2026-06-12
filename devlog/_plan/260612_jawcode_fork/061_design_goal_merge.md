@@ -120,7 +120,9 @@ packages/coding-agent/test/gjc-runtime/goal-runtime.test.ts
 
 [기본값 확정, 결정 불요]: 멀티골 유지 + status는 active 1개 뷰 / jwc goal ↔ cli-jaw 인스턴스 goal 비공유(D6) / clear·reset 미노출.
 
-## 7. 구현 모듈 (M) — B 착수
+## 7. 구현 모듈 (M) — 구현 결과 (260612 15:3x, 커밋 0207d326): M1-M3·M5-M7 ✅ / M4 ⬜(병렬 TUI 작업 종료 후)
+
+구현 노트: done의 quality-gate 자동 연결 규약 = `.gjc/state/pabcd-quality-gate.json` 존재 시 자동, --quality-gate-json override. pause 게이트 영속 = `.gjc/state/goal-pause-gate.json` (세션 GoalModeState 필드는 M4에서 연결).
 
 ### M1. `gjc-runtime/goal-runtime.ts` (신규, ≤400줄)
 
