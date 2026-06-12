@@ -23,4 +23,4 @@ Closing:
 - If significant issues surfaced: suggest "Improve the spec: `orchestrate i`".
 - Otherwise: state completion plainly. The orchestration returns to idle (stage `complete`).
 
-When done → run: `orchestrate d --complete` (or start a new cycle with `orchestrate i`).
+When done → run `jwc orchestrate d --complete` yourself via the shell tool to close the orchestration. To start a new cycle: run `jwc orchestrate i`.

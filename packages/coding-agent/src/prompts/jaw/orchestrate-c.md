@@ -14,4 +14,4 @@ Stage 3 — Verdict:
 - Report: gates run (commands + results), acceptance criteria met/not-met, residual risks.
 - All green → proceed automatically. Anything red → route back per stage 1.
 
-When done → run: `orchestrate d`
+When all gates are green → run `jwc orchestrate d` yourself via the shell tool immediately (no user approval required for C→D).

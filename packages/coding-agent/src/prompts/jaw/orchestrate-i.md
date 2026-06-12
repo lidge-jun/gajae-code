@@ -13,4 +13,5 @@ Steps:
 Rules:
 - I is read-only with respect to project source files.
 - Returning to I from any later stage preserves context (plan, audit status).
+- If the user says "pabcd 진행해" or otherwise requests to advance, run `jwc orchestrate p` via the shell tool yourself after confirming requirements are sufficient.
 - Auto-transition I→P is forbidden; the user (or main session, in goal mode with evidence) must invoke `orchestrate p` explicitly.

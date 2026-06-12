@@ -13,4 +13,4 @@ Steps:
 4. On NEEDS_FIX: YOU fix the issues, then re-verify. On DONE: report results to the user.
 
 ⛔ STOP after reporting. WAIT for user approval.
-⛔ When approved, run: `orchestrate c`
+⛔ When the user approves (verification_status=done is required), run `jwc orchestrate c` yourself via the shell tool.

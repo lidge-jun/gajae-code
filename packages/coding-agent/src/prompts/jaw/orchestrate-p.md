@@ -17,4 +17,4 @@ Steps:
 4. Finalize: `ralplan --write --stage critic` for the review receipt, then `ralplan --write --stage final` → `.jwc/plans/ralplan/<run-id>/pending-approval.md` (execution-gate source of truth, D050-13). Present the user a summary + Mermaid diagram + the devlog plan path.
 
 ⛔ STOP. Present the plan and WAIT for user approval. No project-source mutation in P — only the devlog plan file and the sanctioned ralplan writer.
-⛔ When approved, run: `orchestrate a`
+⛔ When the user approves the plan, run `jwc orchestrate a` yourself via the shell tool.

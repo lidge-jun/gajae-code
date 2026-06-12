@@ -16,4 +16,4 @@ Steps:
 4. On PASS: record the audit verdict, report findings + resolutions to the user.
 
 ⛔ STOP after reporting. WAIT for user approval.
-⛔ When approved, run: `orchestrate b`
+⛔ When the user approves (audit_status=pass is required), run `jwc orchestrate b` yourself via the shell tool.
