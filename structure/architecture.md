@@ -1,6 +1,6 @@
 # Jawcode 아키텍처 (현재 형태)
 
-> 2026-06-12 기준. gajae-code 0.4.4 (`498d86b`) 포크 직후 스냅샷.
+> 2026-06-12 기준. gajae-code 0.4.4 fork, HEAD `2654e6c`.
 > 미래 희망이 아닌 **현재 코드의 형태**를 기록한다. 로드맵은 devlog 참조.
 
 ## 1. 정체
@@ -73,7 +73,7 @@ packages/
 - `src/extensibility/slash-commands.ts` + `src/slash-commands/` — 슬래시커맨드 레지스트리
 - `src/extensibility/custom-tools/` — 커스텀 도구 주입
 - `src/tools/` — read/bash/edit/write/grep/browser/ast-edit 등 내장 도구
-- 기본 워크플로 스킬 4종: deep-interview / ralplan / ultragoal / team (AGENTS.md 계약)
+- 기본 워크플로 스킬 4종: jaw-interview / ralplan / ultragoal / team (fork runtime; upstream `AGENTS.md`는 `deep-interview` 표기 유지)
 
 세부 표는 [extensibility.md](./extensibility.md)와 [workflows.md](./workflows.md)가 정본이다.
 

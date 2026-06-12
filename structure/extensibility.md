@@ -1,6 +1,6 @@
 # Extensibility
 
-> 확장 표면은 capability API가 중심이다. 단, GJC skills는 현재 native `.gjc` source만 허용하고, D5 목표인 `~/.cli-jaw/skills` 우선 규칙은 아직 구현 전이다.
+> 확장 표면은 capability API가 중심이다. jaw brand(`jwc`)에서는 `~/.cli-jaw/skills` global root가 native user root를 대체하고, D5의 project-level 우선순위는 아직 미완이다.
 
 ## Capability / Source Path
 
@@ -16,7 +16,8 @@
 |---|---|---|
 | skill shape | `name`, `description`, `filePath`, `baseDir`, `source`, `hide`, `_source`, embedded `content`. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:13` |
 | active snapshot | active session skills는 process-global `activeSkills`에 저장되고 `skill://` handler가 읽는다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:41`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:43` |
-| native-only filter | `loadSkills()`는 provider가 `native`가 아니면 false를 반환한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:122`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:124` |
+| native-only filter | `loadSkills()`는 jaw brand가 아니면 native `.gjc` source만 허용한다. jaw brand에서는 `cli-jaw`/`agents` provider도 활성화된다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:124`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:142` |
+| cli-jaw global root | jaw brand + `~/.cli-jaw/skills` 존재 시 native user root를 대체한다. 없으면 native user root fallback. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/discovery/cli-jaw.ts:4`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:129` |
 | capability load | skills는 `loadCapability(skillCapability.id, {cwd})`로 수집된다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:132` |
 | source scan | project ancestor `.gjc/skills`와 user `~/.gjc/agent/skills`를 scan한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/discovery/builtin.ts:284`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/discovery/builtin.ts:286`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/discovery/builtin.ts:299` |
 | collision | 같은 skill name이 이미 있으면 뒤 skill은 skip하고 warning을 쌓는다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:184`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:186` |
@@ -64,5 +65,5 @@
 
 | 목표 | 현재 코드 | gap |
 |---|---|---|
-| `~/.cli-jaw/skills` 우선 | native user skill path는 `~/.gjc/agent/skills`, project는 `.gjc/skills`다. | D5 구현 전이므로 `~/.cli-jaw/skills` 우선순위, conflict override, cli-jaw SKILL.md frontmatter 호환이 필요하다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/05_interview_conclusions.md:14`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/discovery/builtin.ts:299` |
-| cli-jaw embedded skill 공유 | `loadSkills()`는 provider `native`만 허용한다. | cli-jaw skill source를 native-compatible provider로 넣거나 customDirectories 우선순위를 재설계해야 한다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:122`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:204` |
+| `~/.cli-jaw/skills` global 우선 | jaw brand에서 `cli-jaw` provider가 `~/.cli-jaw/skills`를 scan하고, 디렉터리가 있으면 native user root를 suppress한다. | project-level `.gjc/skills` vs global 우선순위, frontmatter 호환, collision override 세부는 D5 완료 전. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/discovery/cli-jaw.ts:17`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:134` |
+| cli-jaw embedded skill 공유 | jaw brand에서만 `cli-jaw`/`agents` provider skill surface가 활성화된다. | gjc bin 경로에서는 여전히 native-only. M2 임베딩 시 brand detection/`customDirectories` 정책 재검토 필요. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:142`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/discovery/helpers.ts:106` |
