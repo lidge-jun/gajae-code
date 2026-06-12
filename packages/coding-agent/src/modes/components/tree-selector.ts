@@ -469,7 +469,7 @@ class TreeList implements Component {
 			const isSelected = i === this.#selectedIndex;
 
 			// Build line: cursor + prefix + path marker + label + content
-			const cursor = isSelected ? theme.fg("accent", "› ") : "  ";
+			const cursor = isSelected ? theme.fg("accent", `${theme.nav.cursor} `) : "  ";
 
 			// If multiple roots, shift display (roots at 0, not 1)
 			const displayIndent = this.#multipleRoots ? Math.max(0, flatNode.indent - 1) : flatNode.indent;
@@ -822,7 +822,7 @@ class LabelInput implements Component {
 		const availableWidth = width - indent.length;
 		lines.push(truncateToWidth(`${indent}${theme.fg("muted", "Label (empty to remove):")}`, width));
 		lines.push(...this.#input.render(availableWidth).map(line => truncateToWidth(`${indent}${line}`, width)));
-		lines.push(truncateToWidth(`${indent}${theme.fg("dim", "enter: save  esc: cancel")}`, width));
+		lines.push(truncateToWidth(`${indent}${theme.fg("dim", "  enter save  esc cancel")}`, width));
 		return lines;
 	}
 
@@ -876,7 +876,7 @@ export class TreeSelectorComponent extends Container {
 			new TruncatedText(
 				theme.fg(
 					"muted",
-					"Up/Down: move. Left/Right: page. Shift+L: label. Ctrl+O/Shift+Ctrl+O: filter. Alt+D/T/U/L/A: filter. Type to search",
+					"  up/down move  left/right page  shift+L label  ctrl+O filter  alt+D/T/U/L/A filter  type search",
 				),
 				0,
 				0,

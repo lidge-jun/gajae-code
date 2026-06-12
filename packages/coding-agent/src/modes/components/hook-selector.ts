@@ -719,26 +719,24 @@ export class HookSelectorComponent extends Container {
 			}
 		}
 		if (matchesKey(keyData, "up") || keyData === "k") {
-			if (this.#selectedIndex > 0) {
-				const wasSlot = this.#onOutputPanelFocus();
-				this.#selectedIndex = Math.max(0, this.#selectedIndex - 1);
-				if (wasSlot) this.#blurOutputPanelEditor();
-				if (this.#onOutputPanelFocus()) this.#focusOutputPanelEditor();
-				this.#updateList();
-			}
+			const wasSlot = this.#onOutputPanelFocus();
+			// Wraps to bottom at the top (nav grammar 99.20.02 ②)
+			this.#selectedIndex = this.#selectedIndex === 0 ? this.#selectionMaxIndex() : this.#selectedIndex - 1;
+			if (wasSlot) this.#blurOutputPanelEditor();
+			if (this.#onOutputPanelFocus()) this.#focusOutputPanelEditor();
+			this.#updateList();
 		} else if (matchesKey(keyData, "down") || keyData === "j") {
 			const atLast = this.#selectedIndex >= this.#selectionMaxIndex();
 			if (this.#customInputDocked && this.#inlineEditor && atLast && !this.#customInputListSlot) {
 				this.#focusDockedEditor();
 				return;
 			}
-			if (!atLast) {
-				const wasSlot = this.#onOutputPanelFocus();
-				this.#selectedIndex = Math.min(this.#selectionMaxIndex(), this.#selectedIndex + 1);
-				if (wasSlot) this.#blurOutputPanelEditor();
-				if (this.#onOutputPanelFocus()) this.#focusOutputPanelEditor();
-				this.#updateList();
-			}
+			const wasSlot = this.#onOutputPanelFocus();
+			// Wraps to top at the bottom
+			this.#selectedIndex = atLast ? 0 : this.#selectedIndex + 1;
+			if (wasSlot) this.#blurOutputPanelEditor();
+			if (this.#onOutputPanelFocus()) this.#focusOutputPanelEditor();
+			this.#updateList();
 		} else if (matchesKey(keyData, "enter") || matchesKey(keyData, "return") || keyData === "\n") {
 			if (this.#onOutputPanelFocus()) {
 				const editor = this.#listSlotEditor;

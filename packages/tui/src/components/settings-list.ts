@@ -152,7 +152,7 @@ export class SettingsList implements Component {
 
 		// Add hint
 		lines.push("");
-		lines.push(truncateToWidth(this.#theme.hint("  Enter/Space to change · Esc to cancel"), width));
+		lines.push(truncateToWidth(this.#theme.hint("  enter/space change  esc cancel"), width));
 
 		return lines;
 	}
