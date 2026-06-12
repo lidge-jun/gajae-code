@@ -610,6 +610,7 @@ export async function runNativeJawInterviewCommand(
 ): Promise<JawInterviewCommandResult> {
 	try {
 		if (isJawInterviewSpecWriteInvocation(args)) return await handleSpecWrite(args, cwd);
+		if (args[0] === "cancel") return await handleInterviewCancel(args, cwd);
 		const resolved = await resolveJawInterviewArgs(args, cwd);
 		if (!resolved.idea) {
 			throw new JawInterviewCommandError(2, 'jwc interview requires an idea, e.g. `jwc interview "<idea>"`.');
@@ -647,4 +648,35 @@ export async function runNativeJawInterviewCommand(
 		if (error instanceof JawInterviewCommandError) return { status: error.exitStatus, stderr: `${error.message}\n` };
 		return { status: 1, stderr: `${error instanceof Error ? error.message : String(error)}\n` };
 	}
+}
+
+/**
+ * `jwc interview cancel` (99.07 U2) — close an in-flight interview cleanly:
+ * delete the session-scoped (env JWC_SESSION_ID or --session-id) state file
+ * and sync the HUD inactive. Replaces the `--force` phase-bypass workaround
+ * (260613 00:34 live incident: model tried an unknown "cancelled" phase).
+ */
+async function handleInterviewCancel(args: readonly string[], cwd: string): Promise<JawInterviewCommandResult> {
+	let sessionId: string | undefined;
+	for (let i = 1; i < args.length; i++) {
+		if (args[i] === "--session-id" && args[i + 1]) sessionId = args[++i];
+	}
+	if (!sessionId) {
+		const envSession = (process.env.JWC_SESSION_ID ?? process.env.GJC_SESSION_ID ?? "").trim();
+		if (envSession) sessionId = envSession;
+	}
+	const targets = sessionId
+		? [jawInterviewStatePath(cwd, sessionId), jawInterviewStatePath(cwd, undefined)]
+		: [jawInterviewStatePath(cwd, undefined)];
+	const lines: string[] = [];
+	for (const target of targets) {
+		try {
+			await fs.unlink(target);
+			lines.push(`cancelled: ${target}`);
+		} catch {
+			lines.push(`no interview state: ${target}`);
+		}
+	}
+	await syncJawInterviewHud({ cwd, sessionId, phase: "complete" });
+	return { status: 0, stdout: `${lines.join("\n")}\njaw-interview closed (HUD inactive).\n` };
 }
