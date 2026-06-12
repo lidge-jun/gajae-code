@@ -96,6 +96,27 @@
 
 `structure/`, `devlog/`, `har_struct/`, `packages/jwc/`, `prompts/jaw/`, `prompts/goals/`(HARD-EDIT 2종 제외).
 
+
+### 풀 jwc 포팅 (P2~P12, 260612 16:4x~18:0x — goal 3f6989ac)
+
+| 경로 | 종류 | 밴드 | merge 지침 | 비고 |
+|---|---|---|---|---|
+| `packages/utils/src/dirs.ts` | HARD-EDIT | 062.1-M2 | CONFLICT-EXPECTED | APP_NAME 기본 "jwc" + JWC_ env 체인 |
+| `packages/utils/src/env.ts` | HARD-EDIT | 062.1-M1 | CONFLICT-EXPECTED | $resolveEnv + JWC→GJC 로드타임 미러 |
+| `packages/coding-agent/src/discovery/helpers.ts` | HARD-EDIT | 062.1 §4 | CONFLICT-EXPECTED | isJawBrand 기본 jwc + 매니페스트 키 jwc→gjc→pi |
+| `packages/coding-agent/src/gjc-runtime/goal-mode-request.ts` | HARD-EDIT | 062.1-M4 (D-4) | CONFLICT-EXPECTED | JWC_SESSION_* 양쪽 SET |
+| `packages/coding-agent/src/modes/bridge/bridge-mode.ts` | HARD-EDIT | 062.1-M3 | MANUAL-REVIEW | $resolveEnv 체인 |
+| `packages/coding-agent/src/internal-urls/gjc-protocol.ts` | HARD-EDIT | 065.1-D | CONFLICT-EXPECTED | scheme jwc + legacy gjc alias |
+| `packages/coding-agent/src/task/gjc-command.ts` | HARD-EDIT | 065.1-E | MANUAL-REVIEW | DEFAULT_CMD jwc |
+| `packages/coding-agent/src/hooks/codex-native-hooks-config.ts` | HARD-EDIT | 064.1-M2 | MANUAL-REVIEW | 관리 명령 jwc codex-native-hook |
+| `packages/coding-agent/src/skill-state/jaw-interview-mutation-guard.ts` | HARD-EDIT | 064.1 S-14 | CONFLICT-EXPECTED | 에러 문구 jwc |
+| `packages/coding-agent/src/config/settings.ts` | HARD-EDIT | 낙진 수리 | MANUAL-REVIEW | 테마 마이그레이션 브랜드-인식 |
+| `docs/environment-variables.md` | HARD-EDIT | 062.1-M7 | AUTO | JWC_ 전수 93건 + legacy 노트 |
+| `packages/jwc/package.json`·`packages/jwc/src/cli-entry.ts` | HARD-EDIT/NEW | 063.1 (P12, D-3) | MANUAL-REVIEW | 번들 퍼블리시 독립화 |
+| `scripts/ci-release-publish.ts` | HARD-EDIT | 063.1 | MANUAL-REVIEW | preBuild 선행 + jwc bundle |
+| `packages/coding-agent/src/migrate-config-dir.ts` | NEW | 061.1-M4 (β 키트) | N/A | .gjc→.jwc 원타임 마이그레이터 (".gjc" 리터럴 보존 — 스윕 제외 파일) |
+| `scripts/beta-jwc-sweep.ts` | NEW | 069.1 P9~P11 (β 키트) | N/A | 경계 안전 스윕 + 픽스업 일체형 (worktree 검증) |
+
 ## 리베이스/체리픽 절차 (요약 — 상세: 067.1 §5)
 
 - 리베이스 전: `grep "CONFLICT-EXPECTED" structure/fork-delta.md` ↔ `git diff upstream/main --name-only` 대조
