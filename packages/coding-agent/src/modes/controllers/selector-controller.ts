@@ -17,6 +17,7 @@ import {
 	MarketplaceManager,
 } from "../../extensibility/plugins/marketplace";
 import { DynamicBorder } from "../../modes/components/dynamic-border";
+import { ScrollablePanelComponent } from "../components/scrollable-panel";
 import {
 	getAvailableThemes,
 	getCurrentThemeName,
@@ -117,6 +118,32 @@ export class SelectorController {
 		this.ctx.editorContainer.addChild(component);
 		this.ctx.ui.setFocus(focus);
 		this.ctx.ui.requestRender();
+	}
+
+	/** 99.20.07 P2: docked read-once report panel (loading -> content/message). */
+	showReadOncePanel(title: string, load: () => Promise<((width: number) => string[]) | string>): void {
+		this.showSelector(done => {
+			const container = new Container();
+			container.addChild(new DynamicBorder());
+			const panel = new ScrollablePanelComponent(title, {
+				close: () => {
+					done();
+					this.ctx.ui.requestRender();
+				},
+				requestRender: () => this.ctx.ui.requestRender(),
+			});
+			container.addChild(panel);
+			container.addChild(new DynamicBorder());
+			void load()
+				.then(result => {
+					if (typeof result === "string") panel.setMessage(result);
+					else panel.setContent(result);
+				})
+				.catch(error => {
+					panel.setMessage(`Failed to load: ${error instanceof Error ? error.message : String(error)}`);
+				});
+			return { component: container, focus: panel };
+		});
 	}
 
 	showProviderOnboarding(): void {

@@ -2517,6 +2517,10 @@ export class InteractiveMode implements InteractiveModeContext {
 		this.#selectorController.showSessionSelector();
 	}
 
+	showReadOncePanel(title: string, load: () => Promise<((width: number) => string[]) | string>): void {
+		this.#selectorController.showReadOncePanel(title, load);
+	}
+
 	handleResumeSession(sessionPath: string): Promise<void> {
 		this.#btwController.dispose();
 		this.resetObserverRegistry();

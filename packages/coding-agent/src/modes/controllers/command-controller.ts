@@ -47,14 +47,11 @@ import { copyToClipboard } from "../../utils/clipboard";
 import { openPath } from "../../utils/open";
 import { setSessionTerminalTitle } from "../../utils/title-generator";
 
+// 99.20.07 P2: read-once markdown reports dock in place of the editor.
 function showMarkdownPanel(ctx: InteractiveModeContext, title: string, markdown: string): void {
-	ctx.chatContainer.addChild(new Spacer(1));
-	ctx.chatContainer.addChild(new DynamicBorder());
-	ctx.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", title)), 1, 0));
-	ctx.chatContainer.addChild(new Spacer(1));
-	ctx.chatContainer.addChild(new Markdown(markdown.trim(), 1, 1, getMarkdownTheme()));
-	ctx.chatContainer.addChild(new DynamicBorder());
-	ctx.ui.requestRender();
+	ctx.showReadOncePanel(title, async () => (width: number) =>
+		new Markdown(markdown.trim(), 1, 1, getMarkdownTheme()).render(width),
+	);
 }
 
 export class CommandController {
@@ -450,9 +447,7 @@ export class CommandController {
 			}
 		}
 
-		this.ctx.chatContainer.addChild(new Spacer(1));
-		this.ctx.chatContainer.addChild(new Text(info, 1, 0));
-		this.ctx.ui.requestRender();
+		this.ctx.showReadOncePanel("Session", async () => (width: number) => new Text(info, 0, 0).render(width));
 	}
 
 	async handleJobsCommand(): Promise<void> {
@@ -469,9 +464,10 @@ export class CommandController {
 
 		if (snapshot.running.length === 0 && snapshot.recent.length === 0) {
 			info += `\n${theme.fg("dim", "No async jobs yet.")}\n`;
-			this.ctx.chatContainer.addChild(new Spacer(1));
-			this.ctx.chatContainer.addChild(new Text(info, 1, 0));
-			this.ctx.ui.requestRender();
+			const emptyInfo = info;
+			this.ctx.showReadOncePanel("Background Jobs", async () => (width: number) =>
+				new Text(emptyInfo.trimEnd(), 0, 0).render(width),
+			);
 			return;
 		}
 
@@ -491,9 +487,10 @@ export class CommandController {
 			}
 		}
 
-		this.ctx.chatContainer.addChild(new Spacer(1));
-		this.ctx.chatContainer.addChild(new Text(info.trimEnd(), 1, 0));
-		this.ctx.ui.requestRender();
+		const jobsInfo = info;
+		this.ctx.showReadOncePanel("Background Jobs", async () => (width: number) =>
+			new Text(jobsInfo.trimEnd(), 0, 0).render(width),
+		);
 	}
 
 	async handleUsageCommand(reports?: UsageReport[] | null): Promise<void> {
@@ -574,13 +571,9 @@ export class CommandController {
 			? ""
 			: `\n\n${theme.fg("dim", "Use")} ${theme.bold("/changelog full")} ${theme.fg("dim", "to view the complete changelog.")}`;
 
-		this.ctx.chatContainer.addChild(new Spacer(1));
-		this.ctx.chatContainer.addChild(new DynamicBorder());
-		this.ctx.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", title)), 1, 0));
-		this.ctx.chatContainer.addChild(new Spacer(1));
-		this.ctx.chatContainer.addChild(new Markdown(changelogMarkdown + hint, 1, 1, getMarkdownTheme()));
-		this.ctx.chatContainer.addChild(new DynamicBorder());
-		this.ctx.ui.requestRender();
+		this.ctx.showReadOncePanel(title, async () => (width: number) =>
+			new Markdown(changelogMarkdown + hint, 1, 1, getMarkdownTheme()).render(width),
+		);
 	}
 
 	handleHotkeysCommand(): void {
@@ -600,13 +593,7 @@ export class CommandController {
 			return;
 		}
 		const output = renderContextUsage(breakdown, theme);
-		this.ctx.chatContainer.addChild(new Spacer(1));
-		this.ctx.chatContainer.addChild(new DynamicBorder());
-		this.ctx.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "Context Usage")), 1, 0));
-		this.ctx.chatContainer.addChild(new Spacer(1));
-		this.ctx.chatContainer.addChild(new Text(output, 1, 0));
-		this.ctx.chatContainer.addChild(new DynamicBorder());
-		this.ctx.ui.requestRender();
+		this.ctx.showReadOncePanel("Context Usage", async () => (width: number) => new Text(output, 0, 0).render(width));
 	}
 
 	async handleMemoryCommand(text: string): Promise<void> {
@@ -621,12 +608,9 @@ export class CommandController {
 				this.ctx.showWarning("Memory payload is empty; durable memory is unavailable or unconfirmed.");
 				return;
 			}
-			this.ctx.chatContainer.addChild(new Spacer(1));
-			this.ctx.chatContainer.addChild(new DynamicBorder());
-			this.ctx.chatContainer.addChild(new Text(theme.bold(theme.fg("accent", "Memory Injection Payload")), 1, 0));
-			this.ctx.chatContainer.addChild(new Spacer(1));
-			this.ctx.chatContainer.addChild(new Markdown(payload, 1, 1, getMarkdownTheme()));
-			this.ctx.chatContainer.addChild(new DynamicBorder());
+			this.ctx.showReadOncePanel("Memory Injection Payload", async () => (width: number) =>
+				new Markdown(payload, 1, 1, getMarkdownTheme()).render(width),
+			);
 			this.ctx.ui.requestRender();
 			return;
 		}

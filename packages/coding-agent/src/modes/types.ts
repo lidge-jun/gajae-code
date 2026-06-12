@@ -253,6 +253,7 @@ export interface InteractiveModeContext {
 	showUserMessageSelector(): void;
 	showTreeSelector(): void;
 	showSessionSelector(): void;
+	showReadOncePanel(title: string, load: () => Promise<((width: number) => string[]) | string>): void;
 	handleResumeSession(sessionPath: string): Promise<void>;
 	handleResumeByIdCommand(sessionArg: string): Promise<void>;
 	handleSessionDeleteCommand(): Promise<void>;
