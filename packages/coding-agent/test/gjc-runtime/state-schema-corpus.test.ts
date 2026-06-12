@@ -2,7 +2,8 @@ import { describe, expect, it } from "bun:test";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { migrateWorkflowState } from "@gajae-code/coding-agent/gjc-runtime/state-migrations";
-import { normalizeWorkflowSkillSlug,
+import {
+	normalizeWorkflowSkillSlug,
 	RequiredOnWriteEnvelopeSchema,
 	WorkflowStateEnvelopeSchema,
 } from "@gajae-code/coding-agent/gjc-runtime/state-schema";
