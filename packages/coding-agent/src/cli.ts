@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import { installH2Fetch } from "@gajae-code/ai";
-import { APP_NAME, MIN_BUN_VERSION, procmgr, VERSION } from "@gajae-code/utils";
+import { APP_NAME, ENGINE_NAME, MIN_BUN_VERSION, procmgr, VERSION } from "@gajae-code/utils";
 
 // Activate HTTP/2 for all `fetch()` calls (provider streams, OAuth, model
 // discovery, web tools). Bun's HTTP/2 client is gated on a startup flag we
@@ -29,7 +29,7 @@ if (Bun.semver.order(Bun.version, MIN_BUN_VERSION) < 0) {
 
 process.title = APP_NAME;
 
-const commands: CommandEntry[] = [
+const baseCommands: CommandEntry[] = [
 	{ name: "codex-native-hook", load: () => import("./commands/codex-native-hook").then(m => m.default) },
 	{ name: "state", load: () => import("./commands/state").then(m => m.default) },
 	{ name: "setup", load: () => import("./commands/setup").then(m => m.default) },
@@ -47,10 +47,28 @@ const commands: CommandEntry[] = [
 		aliases: ["contribution-prep"],
 		load: () => import("./commands/contribution-prep").then(m => m.default),
 	},
-	{ name: "interview", aliases: ["deep-interview"], load: () => import("./commands/interview").then(m => m.default) },
 	{ name: "update", load: () => import("./commands/update").then(m => m.default) },
 	{ name: "launch", load: () => import("./commands/launch").then(m => m.default) },
 ];
+
+/**
+ * Jaw-brand-only command surface (D050-24, interview retrofitted per D050-25).
+ * Not registered for the engine brand — gjc keeps CLI diff-0. Mirrors
+ * `discovery/helpers.ts isJawBrand()`; duplicated as a local check so the CLI
+ * entry keeps its lazy import graph (helpers pulls the capability/discovery
+ * module tree).
+ */
+const jawOnlyCommands: CommandEntry[] = [
+	{ name: "interview", aliases: ["deep-interview"], load: () => import("./commands/interview").then(m => m.default) },
+	{ name: "orchestrate", aliases: ["pabcd"], load: () => import("./commands/orchestrate").then(m => m.default) },
+];
+
+function isJawBrandEnv(): boolean {
+	const brand = process.env.GJC_BRAND_NAME;
+	return !!brand && brand !== ENGINE_NAME;
+}
+
+const commands: CommandEntry[] = [...baseCommands, ...(isJawBrandEnv() ? jawOnlyCommands : [])];
 
 async function showHelp(config: CliConfig): Promise<void> {
 	const { renderRootHelp } = await import("@gajae-code/utils/cli");

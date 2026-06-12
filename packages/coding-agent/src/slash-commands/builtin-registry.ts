@@ -10,7 +10,8 @@ import {
 	type GjcModelAssignmentTargetId,
 } from "../config/model-registry";
 import { extractExplicitThinkingSelector, formatModelSelectorValue, parseModelPattern } from "../config/model-resolver";
-import { clearPluginRootsAndCaches, resolveActiveProjectRegistryPath } from "../discovery/helpers.js";
+import { clearPluginRootsAndCaches, isJawBrand, resolveActiveProjectRegistryPath } from "../discovery/helpers.js";
+import { runNativeOrchestrateCommand } from "../gjc-runtime/orchestrate-runtime";
 import { resolveMemoryBackend } from "../memory-backend";
 import type { InteractiveModeContext } from "../modes/types";
 import { formatModelOnboardingGuidance } from "../setup/model-onboarding-guidance";
@@ -292,6 +293,37 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 				runtime.ctx.editor.addToHistory(command.text);
 			}
 			runtime.ctx.editor.setText("");
+		},
+	},
+	{
+		name: "orchestrate",
+		aliases: ["pabcd"],
+		description: "Native IPABCD orchestration — enter a stage (jaw brand only)",
+		subcommands: [
+			{ name: "i", description: "Interview — gather requirements (jaw-interview engine)" },
+			{ name: "p", description: "Plan — main session drafts, Critic 1-pass review" },
+			{ name: "a", description: "Plan audit — Planner ∥ Architect read-only auditors" },
+			{ name: "b", description: "Build — main session implements, subagent verifies" },
+			{ name: "c", description: "Check — mechanical gates + adversarial review" },
+			{ name: "d", description: "Done — summary + WONDER/REFLECT, close out" },
+			{ name: "status", description: "Show current orchestration state" },
+		],
+		inlineHint: "<i|p|a|b|c|d|status>",
+		allowArgs: true,
+		handle: async (command, runtime) => {
+			const args = (command.args ?? "").trim();
+			const argv = args.length > 0 ? args.split(/\s+/) : [];
+			const result = await runNativeOrchestrateCommand(argv, process.cwd());
+			if (result.stderr) await runtime.output(result.stderr.trimEnd());
+			const sub = argv[0]?.toLowerCase();
+			const stageEntered = result.status === 0 && !!sub && sub !== "status" && sub !== "verdict";
+			if (stageEntered && result.stdout) {
+				// Stage prompts steer the session itself, not the transcript log.
+				await runtime.session.prompt(result.stdout);
+			} else if (result.stdout) {
+				await runtime.output(result.stdout.trimEnd());
+			}
+			return commandConsumed();
 		},
 	},
 	{
@@ -1096,8 +1128,13 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 
 const QUARANTINED_UTILITY_SLASH_COMMANDS = new Set(["agents"]);
 
+/** Jaw-brand-only slash surface (D050-24) — hidden for the engine brand (gjc diff-0). */
+const JAW_ONLY_SLASH_COMMANDS = new Set(["orchestrate"]);
+
 const ACTIVE_BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = BUILTIN_SLASH_COMMAND_REGISTRY.filter(
-	command => !QUARANTINED_UTILITY_SLASH_COMMANDS.has(command.name),
+	command =>
+		!QUARANTINED_UTILITY_SLASH_COMMANDS.has(command.name) &&
+		(isJawBrand() || !JAW_ONLY_SLASH_COMMANDS.has(command.name)),
 );
 
 const BUILTIN_SLASH_COMMAND_LOOKUP = new Map<string, SlashCommandSpec>();
