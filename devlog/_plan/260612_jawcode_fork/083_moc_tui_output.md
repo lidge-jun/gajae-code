@@ -17,6 +17,18 @@ previewLines + ctrl+o 펼침, JSON 트리 collapse, thinking 토글) 두 가지 
 | [083.3](./083.3_issue_thinking_interleave.md) | 추론 인터리빙 소실 | 도구 뒤 thinking이 상단 단일 어시스턴트 블록에 합쳐짐 — 단일 streamingComponent 구조가 원인 → 세그먼트 분할(A안) 적용 | ✅ 수정 완료 |
 | [083.4](./083.4_plan_effort_command.md) | `/effort` 커맨드 | 추론 강도 직접 지정 표면 부재 → Codex 표준 어휘로 슬래시 커맨드 추가 (none/minimal 별칭 포함) | ✅ 구현 완료 |
 
+## 업스트림 스택 PR (260612 제출, base=dev)
+
+| PR | 내용 | fork 커밋 | 의존 |
+|----|------|----------|------|
+| [#521](https://github.com/Yeachan-Heo/gajae-code/pull/521) | 083.2 도구 간 공백 1줄 | a590aea | — |
+| [#522](https://github.com/Yeachan-Heo/gajae-code/pull/522) | 083.1 자동 접힘 + ctrl+↑ 포커스 + alt+t 오버레이 | 3a85824·8bef330·e74b2d9·d317e42e | #521 |
+| [#523](https://github.com/Yeachan-Heo/gajae-code/pull/523) | 083.3 추론 인터리빙 세그먼트 분할 | b06d48c | #522 |
+
+fork에서는 GitHub 진짜 스택(base=fork 브랜치)이 불가 → 전부 base=dev, 브랜치 체인 + "depends on" 표기
+방식. 선행 PR 머지 시 후행 diff 자동 축소. dev 기존 실패 18건(searchExa 등 네트워크/키 의존)은 무관 확인.
+(/effort는 별도 [#520](https://github.com/Yeachan-Heo/gajae-code/pull/520).)
+
 ## 관련 레버 (참고)
 
 - **thinking 기본 펼침**: `hideThinkingBlock` 기본값 `false` (`settings-schema.ts:729`) → 추론 트레이스가
