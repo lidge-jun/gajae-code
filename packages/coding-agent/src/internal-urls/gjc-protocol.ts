@@ -1,23 +1,23 @@
 /**
- * Protocol handler for gjc:// URLs.
+ * Protocol handler for jwc:// URLs (065.1 D — legacy gjc:// stays as a redirect alias).
  *
  * Serves statically embedded documentation files bundled at build time.
  *
  * URL forms:
- * - gjc:// - Lists all available documentation files
- * - gjc://<file>.md - Reads a specific documentation file
+ * - jwc:// - Lists all available documentation files
+ * - jwc://<file>.md - Reads a specific documentation file
  */
 import * as path from "node:path";
 import { EMBEDDED_DOC_FILENAMES, EMBEDDED_DOCS } from "./docs-index.generated";
 import type { InternalResource, InternalUrl, ProtocolHandler } from "./types";
 
 /**
- * Handler for gjc:// URLs.
+ * Handler for jwc:// URLs.
  *
  * Resolves documentation file names to their content, or lists available docs.
  */
 export class GjcProtocolHandler implements ProtocolHandler {
-	readonly scheme = "gjc";
+	readonly scheme: string = "jwc";
 	readonly immutable = true;
 
 	async resolve(url: InternalUrl): Promise<InternalResource> {
@@ -38,7 +38,7 @@ export class GjcProtocolHandler implements ProtocolHandler {
 			throw new Error("No documentation files found");
 		}
 
-		const listing = EMBEDDED_DOC_FILENAMES.map(f => `- [${f}](gjc://${f})`).join("\n");
+		const listing = EMBEDDED_DOC_FILENAMES.map(f => `- [${f}](jwc://${f})`).join("\n");
 		const content = `# Documentation\n\n${EMBEDDED_DOC_FILENAMES.length} files available:\n\n${listing}\n`;
 
 		return {
@@ -52,7 +52,7 @@ export class GjcProtocolHandler implements ProtocolHandler {
 	async #readDoc(filename: string, url: InternalUrl): Promise<InternalResource> {
 		// Validate: no traversal, no absolute paths
 		if (path.isAbsolute(filename)) {
-			throw new Error("Absolute paths are not allowed in gjc:// URLs");
+			throw new Error("Absolute paths are not allowed in jwc:// URLs");
 		}
 
 		const normalized = path.posix.normalize(filename.replaceAll("\\", "/"));
@@ -80,4 +80,12 @@ export class GjcProtocolHandler implements ProtocolHandler {
 			size: Buffer.byteLength(content, "utf-8"),
 		};
 	}
+}
+
+/**
+ * Legacy alias: gjc:// resolves identically to jwc:// during the transition
+ * window (065.1 D). Remove after the deprecation period.
+ */
+export class LegacyGjcProtocolAliasHandler extends GjcProtocolHandler {
+	override readonly scheme: string = "gjc";
 }

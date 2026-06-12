@@ -7,7 +7,7 @@
  */
 import { AgentProtocolHandler } from "./agent-protocol";
 import { ArtifactProtocolHandler } from "./artifact-protocol";
-import { GjcProtocolHandler } from "./gjc-protocol";
+import { GjcProtocolHandler, LegacyGjcProtocolAliasHandler } from "./gjc-protocol";
 import { IssueProtocolHandler, PrProtocolHandler } from "./issue-pr-protocol";
 import { LocalProtocolHandler } from "./local-protocol";
 import { MemoryProtocolHandler } from "./memory-protocol";
@@ -22,6 +22,7 @@ export class InternalUrlRouter {
 
 	constructor() {
 		this.register(new GjcProtocolHandler());
+		this.register(new LegacyGjcProtocolAliasHandler());
 		this.register(new AgentProtocolHandler());
 		this.register(new ArtifactProtocolHandler());
 		this.register(new MemoryProtocolHandler());
