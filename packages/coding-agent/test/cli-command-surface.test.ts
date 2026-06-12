@@ -7,16 +7,16 @@ import { parseArgs } from "../src/cli/args";
 const repoRoot = path.resolve(import.meta.dir, "..", "..", "..");
 const cliEntry = path.join(repoRoot, "packages", "coding-agent", "src", "cli.ts");
 
-function extractRegisteredCommands(source: string): string[] {
-	const commandsBlock = source.match(/const commands: CommandEntry\[\] = \[([\s\S]*?)\];/);
+function extractCommandBlock(source: string, blockName: string): string[] {
+	const commandsBlock = source.match(new RegExp(`const ${blockName}: CommandEntry\\[\\] = \\[([\\s\\S]*?)\\];`));
 	if (!commandsBlock) return [];
 	return [...commandsBlock[1].matchAll(/\bname:\s*"([^"]+)"/g)].map(match => match[1]);
 }
 
 describe("GJC public CLI command surface", () => {
-	it("registers launch plus retained workflow/runtime utility endpoints", async () => {
+	it("registers launch plus retained workflow/runtime utility endpoints (engine brand)", async () => {
 		const source = await Bun.file(cliEntry).text();
-		expect(extractRegisteredCommands(source)).toEqual([
+		expect(extractCommandBlock(source, "baseCommands")).toEqual([
 			"codex-native-hook",
 			"state",
 			"setup",
@@ -30,11 +30,47 @@ describe("GJC public CLI command surface", () => {
 			"config",
 			"mcp-serve",
 			"contribute-pr",
-			"interview",
 			"update",
 			"launch",
 		]);
 	});
+
+	it("gates the jaw-only surface behind the brand check (D050-24/25)", async () => {
+		const source = await Bun.file(cliEntry).text();
+		// interview (retrofit, D050-25) and orchestrate (D050-24) register only for jaw brands.
+		expect(extractCommandBlock(source, "jawOnlyCommands")).toEqual(["interview", "orchestrate"]);
+		expect(source).toContain("isJawBrandEnv() ? jawOnlyCommands : []");
+		// gjc diff-0: the base surface must not leak the jaw-only commands.
+		const base = extractCommandBlock(source, "baseCommands");
+		expect(base).not.toContain("interview");
+		expect(base).not.toContain("orchestrate");
+	});
+
+	it("exposes orchestrate command help under the jaw brand only", () => {
+		const jaw = Bun.spawnSync(["bun", cliEntry, "--help"], {
+			cwd: repoRoot,
+			env: { ...process.env, GJC_BRAND_NAME: "jwc" },
+			stderr: "pipe",
+			stdout: "pipe",
+		});
+		const jawOutput = `${jaw.stdout.toString()}\n${jaw.stderr.toString()}`;
+		expect(jaw.exitCode, jawOutput).toBe(0);
+		expect(jawOutput).toContain("orchestrate");
+		expect(jawOutput).toContain("interview");
+
+		const engineEnv = { ...process.env };
+		delete engineEnv.GJC_BRAND_NAME;
+		const engine = Bun.spawnSync(["bun", cliEntry, "--help"], {
+			cwd: repoRoot,
+			env: engineEnv,
+			stderr: "pipe",
+			stdout: "pipe",
+		});
+		const engineOutput = `${engine.stdout.toString()}\n${engine.stderr.toString()}`;
+		expect(engine.exitCode, engineOutput).toBe(0);
+		expect(engineOutput).not.toContain("orchestrate");
+		expect(engineOutput).not.toContain("interview");
+	}, 30_000);
 
 	it("exposes the update command help without launching the TUI", () => {
 		const result = Bun.spawnSync(["bun", cliEntry, "update", "--help"], {
@@ -53,9 +89,17 @@ describe("GJC public CLI command surface", () => {
 	}, 30_000);
 
 	it("documents the native CLI surface in command help", async () => {
-		for (const command of ["ralplan", "jaw-interview", "state"]) {
-			const result = Bun.spawnSync(["bun", cliEntry, command, "--help"], {
+		// interview/orchestrate are jaw-brand-only (D050-24/25), so their help probes set the brand env.
+		const probes: Array<{ command: string; env?: Record<string, string> }> = [
+			{ command: "ralplan" },
+			{ command: "state" },
+			{ command: "interview", env: { GJC_BRAND_NAME: "jwc" } },
+			{ command: "orchestrate", env: { GJC_BRAND_NAME: "jwc" } },
+		];
+		for (const probe of probes) {
+			const result = Bun.spawnSync(["bun", cliEntry, probe.command, "--help"], {
 				cwd: repoRoot,
+				env: { ...process.env, ...probe.env },
 				stderr: "pipe",
 				stdout: "pipe",
 			});
