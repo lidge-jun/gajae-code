@@ -48,6 +48,7 @@ import { CustomProviderWizardComponent, type CustomProviderWizardSubmit } from "
 import { ExtensionDashboard } from "../components/extensions";
 import { HistorySearchComponent } from "../components/history-search";
 import { JobsOverlayComponent } from "../components/jobs-overlay";
+import { LoginDialogComponent } from "../components/login-dialog";
 import { ModelSelectorComponent, type ModelSelectorSelection } from "../components/model-selector";
 import { OAuthSelectorComponent } from "../components/oauth-selector";
 import { PluginSelectorComponent } from "../components/plugin-selector";
@@ -1157,63 +1158,52 @@ export class SelectorController {
 	}
 
 	async #handleOAuthLogin(providerId: string): Promise<void> {
-		this.ctx.showStatus(`Logging in to ${providerId}…`);
 		const manualInput = this.ctx.oauthManualInput;
 		const useManualInput = CALLBACK_SERVER_PROVIDERS.has(providerId as OAuthProvider);
-		try {
-			await this.ctx.session.modelRegistry.authStorage.login(providerId as OAuthProvider, {
-				onAuth: (info: { url: string; instructions?: string }) => {
-					this.ctx.chatContainer.addChild(new Spacer(1));
-					this.ctx.chatContainer.addChild(new Text(theme.fg("dim", info.url), 1, 0));
-					const hyperlink = `\x1b]8;;${info.url}\x07Click here to login\x1b]8;;\x07`;
-					this.ctx.chatContainer.addChild(new Text(theme.fg("accent", hyperlink), 1, 0));
-					if (info.instructions) {
-						this.ctx.chatContainer.addChild(new Spacer(1));
-						this.ctx.chatContainer.addChild(new Text(theme.fg("warning", info.instructions), 1, 0));
-					}
-					if (useManualInput) {
-						this.ctx.chatContainer.addChild(new Spacer(1));
-						this.ctx.chatContainer.addChild(new Text(theme.fg("dim", MANUAL_LOGIN_TIP), 1, 0));
-					}
+		// 99.20.07 P1: the whole login flow docks in place of the editor via
+		// LoginDialogComponent; only the final outcome rides showStatus/showError.
+		let closeDock: () => void = () => {};
+		let dialog!: LoginDialogComponent;
+		let cancelled = false;
+		const dockCancelled = new Promise<never>((_, reject) => {
+			this.showSelector(done => {
+				closeDock = done;
+				dialog = new LoginDialogComponent(this.ctx.ui, providerId, (_success, message) => {
+					// esc/ctrl+c inside the dialog — close the dock and abandon the wait.
+					cancelled = true;
+					done();
 					this.ctx.ui.requestRender();
-					this.ctx.openInBrowser(info.url);
-				},
-				onPrompt: async (prompt: { message: string; placeholder?: string }) => {
-					this.ctx.chatContainer.addChild(new Spacer(1));
-					this.ctx.chatContainer.addChild(new Text(theme.fg("warning", prompt.message), 1, 0));
-					if (prompt.placeholder) {
-						this.ctx.chatContainer.addChild(new Text(theme.fg("dim", prompt.placeholder), 1, 0));
-					}
-					this.ctx.ui.requestRender();
-					const { promise, resolve } = Promise.withResolvers<string>();
-					const codeInput = new Input();
-					codeInput.onSubmit = () => {
-						const code = codeInput.getValue();
-						this.ctx.editorContainer.clear();
-						this.ctx.editorContainer.addChild(this.ctx.editor);
-						this.ctx.ui.setFocus(this.ctx.editor);
-						resolve(code);
-					};
-					this.ctx.editorContainer.clear();
-					this.ctx.editorContainer.addChild(codeInput);
-					this.ctx.ui.setFocus(codeInput);
-					this.ctx.ui.requestRender();
-					return promise;
-				},
-				onProgress: (message: string) => {
-					this.ctx.chatContainer.addChild(new Text(theme.fg("dim", message), 1, 0));
-					this.ctx.ui.requestRender();
-				},
-				onManualCodeInput: useManualInput ? () => manualInput.waitForInput(providerId) : undefined,
+					reject(new Error(message ?? "Login cancelled"));
+				});
+				return { component: dialog, focus: dialog };
 			});
+		});
+		try {
+			await Promise.race([
+				this.ctx.session.modelRegistry.authStorage.login(providerId as OAuthProvider, {
+					// showAuth opens the browser itself (best-effort openPath).
+					onAuth: (info: { url: string; instructions?: string }) => {
+						const instructions = useManualInput
+							? [info.instructions, MANUAL_LOGIN_TIP].filter(Boolean).join("\n")
+							: info.instructions;
+						dialog.showAuth(info.url, instructions || undefined);
+					},
+					onPrompt: (prompt: { message: string; placeholder?: string }) =>
+						dialog.showPrompt(prompt.message, prompt.placeholder),
+					onProgress: (message: string) => {
+						dialog.showProgress(message);
+					},
+					onManualCodeInput: useManualInput ? () => manualInput.waitForInput(providerId) : undefined,
+				}),
+				dockCancelled,
+			]);
 			await this.ctx.session.modelRegistry.refresh();
-			this.ctx.chatContainer.addChild(new Spacer(1));
-			this.ctx.chatContainer.addChild(
-				new Text(theme.fg("success", `${theme.status.success} Successfully logged in to ${providerId}`), 1, 0),
+			closeDock();
+			this.ctx.showStatus(
+				`${theme.status.success} Successfully logged in to ${providerId}\nCredentials saved to ${getAgentDbPath()}`,
 			);
-			this.ctx.chatContainer.addChild(new Text(theme.fg("dim", `Credentials saved to ${getAgentDbPath()}`), 1, 0));
-			this.ctx.ui.requestRender();
 		} catch (error: unknown) {
+			if (!cancelled) closeDock();
 			this.ctx.showError(`Login failed: ${error instanceof Error ? error.message : String(error)}`);
 		} finally {
 			if (useManualInput) {

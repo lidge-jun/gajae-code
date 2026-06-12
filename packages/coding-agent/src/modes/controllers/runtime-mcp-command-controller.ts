@@ -18,6 +18,7 @@ import {
 	updateMCPServer,
 } from "../../runtime-mcp/config-writer";
 import { MCPOAuthFlow } from "../../runtime-mcp/oauth-flow";
+import { LoginDialogComponent } from "../components/login-dialog";
 import {
 	clearSmitheryApiKey,
 	createSmitheryCliAuthSession,
@@ -542,74 +543,41 @@ export class MCPCommandController {
 					callbackPath,
 				},
 				{
+					// 99.20.07 P1: OAuth progress docks in place of the editor
+					// (LoginDialogComponent); showAuth opens the browser itself.
 					onAuth: (info: { url: string; instructions?: string }) => {
-						// Show auth URL prominently in chat
-						this.ctx.chatContainer.addChild(new Spacer(1));
-						this.ctx.chatContainer.addChild(
-							new Text(theme.fg("accent", "━━━ OAuth Authorization Required ━━━"), 1, 0),
-						);
-						this.ctx.chatContainer.addChild(new Spacer(1));
-						this.ctx.chatContainer.addChild(
-							new Text(theme.fg("muted", "Preparing browser authorization..."), 1, 0),
-						);
-						this.ctx.chatContainer.addChild(new Spacer(1));
-						this.ctx.chatContainer.addChild(
-							new Text(
-								theme.fg("muted", "Waiting for authorization... (Press Ctrl+C to cancel, 5 minute timeout)"),
-								1,
-								0,
-							),
-						);
-						this.ctx.chatContainer.addChild(new Spacer(1));
-						this.ctx.chatContainer.addChild(
-							new Text(theme.fg("accent", "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"), 1, 0),
-						);
-						this.ctx.ui.requestRender();
-						// Try to open browser automatically
-						try {
-							openPath(info.url);
-
-							// Show confirmation that browser should open
-							this.ctx.chatContainer.addChild(new Spacer(1));
-							this.ctx.chatContainer.addChild(
-								new Text(theme.fg("success", "→ Opening browser automatically..."), 1, 0),
-							);
-							this.ctx.chatContainer.addChild(new Spacer(1));
-							this.ctx.chatContainer.addChild(
-								new Text(theme.fg("muted", "Alternative if browser did not open:"), 1, 0),
-							);
-							this.ctx.chatContainer.addChild(
-								new Text(theme.fg("success", "Copy this exact URL in your browser:"), 1, 0),
-							);
-							this.ctx.chatContainer.addChild(new Text(theme.fg("accent", info.url), 1, 0));
-							this.ctx.ui.requestRender();
-						} catch (_error) {
-							// Show error if browser doesn't open
-							this.ctx.chatContainer.addChild(new Spacer(1));
-							this.ctx.chatContainer.addChild(
-								new Text(theme.fg("warning", "→ Could not open browser automatically"), 1, 0),
-							);
-							this.ctx.chatContainer.addChild(
-								new Text(theme.fg("success", "Copy this exact URL in your browser:"), 1, 0),
-							);
-							this.ctx.chatContainer.addChild(new Text(theme.fg("accent", info.url), 1, 0));
-							this.ctx.ui.requestRender();
-						}
+						dialog.showAuth(info.url, info.instructions);
+						dialog.showWaiting("Waiting for authorization… (5 minute timeout)");
 					},
 					onProgress: (message: string) => {
-						this.ctx.chatContainer.addChild(new Spacer(1));
-						this.ctx.chatContainer.addChild(new Text(theme.fg("muted", message), 1, 0));
-						this.ctx.ui.requestRender();
+						dialog.showProgress(message);
 					},
 				},
 			);
 
-			// Execute OAuth flow with 5 minute timeout
-			const credentials = await withTimeout(flow.login(), 5 * 60 * 1000, "OAuth flow timed out after 5 minutes");
-
-			this.ctx.chatContainer.addChild(new Spacer(1));
-			this.ctx.chatContainer.addChild(new Text(theme.fg("success", "✓ Authorization completed in browser."), 1, 0));
+			const dialog = new LoginDialogComponent(this.ctx.ui, "MCP server", () => {
+				// esc — close the dock; the flow itself times out in the background.
+				unmountDialog();
+			});
+			const unmountDialog = () => {
+				this.ctx.editorContainer.clear();
+				this.ctx.editorContainer.addChild(this.ctx.editor);
+				this.ctx.ui.setFocus(this.ctx.editor);
+				this.ctx.ui.requestRender();
+			};
+			this.ctx.editorContainer.clear();
+			this.ctx.editorContainer.addChild(dialog);
+			this.ctx.ui.setFocus(dialog);
 			this.ctx.ui.requestRender();
+
+			// Execute OAuth flow with 5 minute timeout
+			let credentials: Awaited<ReturnType<typeof flow.login>>;
+			try {
+				credentials = await withTimeout(flow.login(), 5 * 60 * 1000, "OAuth flow timed out after 5 minutes");
+			} finally {
+				unmountDialog();
+			}
+			this.ctx.showStatus("✓ Authorization completed in browser.");
 
 			// Generate a unique credential ID
 			const credentialId = `mcp_oauth_${Date.now()}_${Math.random().toString(36).slice(2, 11)}`;
