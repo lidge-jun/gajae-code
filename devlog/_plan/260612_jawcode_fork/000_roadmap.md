@@ -52,6 +52,15 @@
 | [080_moc_tui.md](./080_moc_tui.md) | |
 | [090_moc_auth_release_gate.md](./090_moc_auth_release_gate.md) ← **M1 done 지점 (G1–G9)** | |
 
+
+## Chase (`struct_har/chase/10_` · `20_`)
+
+| MOC (정본) | 플랜 |
+|---|---|
+| [10_gjc_chase_MOC](../../struct_har/chase/10_gjc_chase_MOC.md) | `10.001_`… |
+| [20_omp_chase_MOC](../../struct_har/chase/20_omp_chase_MOC.md) | `20.001_`… |
+
+완료 → [struct_har/chase/_legacy](../../struct_har/chase/_legacy/). [05_numbering](../../struct_har/chase/05_devlog_numbering.md). 99와 병렬.
 설계 정본 (밴드 횡단): [051_design_command_port.md](./051_design_command_port.md) — D10 명령 이식 (050/060/070 기반) ·
 [111_design_runtime_attach.md](./111_design_runtime_attach.md) — M2 런타임 부착 통합 설계 (100–130 기반)
 

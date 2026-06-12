@@ -1,6 +1,8 @@
 # 112 MOC — GUI (cli-jaw 네이티브 런타임 GUI + Claude Desktop 연계)
 
-> 상태: ⬜ [제안]. 입력: 사용자 "GUI 구현 혹은 cli-jaw 앱에서 네이티브로 런타임 GUI, Claude Desktop 관련 조사" (260612 06시).
+> 상태: ⬜ [제안] + **D112-1 [확정 260612 21시] 2-트랙 표면 구분** (§Chat/Code 2-트랙).
+> 입력: 사용자 "GUI 구현 혹은 cli-jaw 앱에서 네이티브로 런타임 GUI, Claude Desktop 관련 조사" (260612 06시)
+> + "cli-jaw 내부에 code 모드 — electron cli-jaw와는 별개로 jwc를 실행하는 모드" (260612 21시, 스크린샷 기준).
 > 조사: 웹 리서치 서브에이전트 (Claude Desktop 표면 / 네이티브 GUI 옵션 / 선행 사례 3트랙).
 > 소속: 110 밴드 (JawRuntime 상주 서비스의 표면 트랙) — jwc가 cli-jaw에 임베드되면 GUI는 cli-jaw 대시보드/셸이 표면이 된다.
 
@@ -80,13 +82,86 @@ Agent SDK로 커스텀 GUI를 만드는 것은 공식 권장 패턴이나, 배�
 3. **보조**: Claude Desktop용 `.mcpb` 번들 + MCP Apps 상태 패널 — 주 GUI 아님, 역할 분담
 4. 개인용 로컬 빌드는 공증/$99 불필요 (quarantine 미적용, ad-hoc 서명으로 충분)
 
+## Chat/Code 2-트랙 [확정 D112-1, 260612 — 사용자 명시]
+
+**두 트랙은 별개 구현이다. 혼동 금지.**
+
+| 트랙 | 무엇 | jwc가 들어가는 방식 | UI 작업 |
+|------|------|---------------------|---------|
+| **Chat 모드** | 기존 cli-jaw 대화 표면 (boss/직원, 대시보드) | **엔진 교체** — 110/111 in-process 부착 + 130 주입. 유저는 같은 채팅 UX, 밑에서 jwc 상주 | 신규 UI 없음 (기존 electron 셸/PWA 그대로) |
+| **Code 모드** | Claude Code 데스크톱 스타일 코딩 세션 패널 — **260612 스크린샷 기준 별도 구현** | jwc `AgentSessionEvent` 스트림을 직접 렌더 (boss 파이프라인 경유 안 함) | **신규** — 본 밴드의 1급 deliverable |
+
+Code 모드 구성 요소 (스크린샷 대응):
+
+1. Chat ↔ **Code** 모드 토글 (상단)
+2. **작업장 피커**: `Local · <repo 폴더> · <branch> · worktree` — `createAgentSession(cwd)` + `jwc worktree`,
+   로컬/폴더/워크트리 표시를 1급으로
+3. 세션 사이드바 + Recents (jwc 세션 jsonl / `/resume` 데이터)
+4. 스트리밍 채팅 렌더 — 도구 셀·thinking 접기(083 문법의 웹 컴포넌트 재현), 권한 승인 다이얼로그
+5. 사용량 대시보드 (세션·메시지·토큰·스트릭 — `jaw.db` + jwc usage 통계)
+
+단계 경로: **① ACP-선행 프로토타입** (`jwc acp` stdio — 100 밴드 완료 전 즉시 가능, 프로세스 1개 추가)
+→ **② in-process 승격** (100/110 완료 후, sidecar 이벤트를 서버가 SSE로 중계).
+
+**[확정 260612 — 사용자, 모드별 렌더링 전략] 명칭은 "jaw 모드 ↔ Code 모드":**
+
+| 모드 | 렌더링 | 근거 |
+|------|--------|------|
+| **jaw 모드** | 기존 cli-jaw web UI(`public/` 대시보드)를 **iframe/웹뷰 임베드** | 이미 별도 웹앱(PWA·SSE) — 재작성 0, 서버 SoT 유지, 웹↔electron 패리티 자동 |
+| **Code 모드** | **네이티브 React — electron 렌더러의 현행 매니저 문법으로 통합** (1급 뷰, iframe 금지) | 신규 표면 — 도구 셀·thinking 접기·권한 다이얼로그·키보드를 1급 제어, iframe 브리지 마찰 없음 |
+
+(MCP Apps의 iframe 패턴은 Claude Desktop **보조 트랙 전용** — 본선과 무관.) 전송 계층(ACP stdio ↔
+in-process)은 **transport 어댑터 경계 뒤로 격리** — ①→② 승격 시 UI 무변경이 완료 기준.
+
+모드 경계 착수 시 확인 3건: ① 디자인 토큰 공유(웹뷰 jaw ↔ 네이티브 Code 테마 일관), ② 모드 전환 시
+각 모드 상태 보존, ③ 크로스 모드 딥링크("jaw 채팅에서 이 레포를 Code 모드로 열기" — webview postMessage
+또는 서버 SSE 경유 브리지 1개).
+
+D130-1 정합: Chat=boss 파이프라인 스코프(cli-jaw DB 정본), Code=세션 로컬 스코프(jwc 상태 파일) —
+**모드 분리가 스코프 분리와 1:1로 대응**하므로 상태 충돌 없음.
+
+## 인스턴스 vs 세션 [확정 D112-2, 260612 — 사용자 명시]
+
+**cli-jaw와 jwc의 본질 차이는 수명·정체성이다:**
+
+| | cli-jaw (인스턴스) | jwc (세션) |
+|---|---|---|
+| 수명 | **영속** — 상주하는 자체 인격체 | **일회용·병렬** — 워크트리/폴더마다 띄웠다 버림 |
+| 메모리 | **주체** — soul/profile/episodes 축적, 기억의 정본 | **소비자** — 주입받아 쓰고, 세션 종료와 함께 휘발 가능 |
+| 스킬/조작 | 설치·관리·sync가 일어나는 곳 (`~/.cli-jaw/skills`) | 주입된 스킬을 읽어 수행만 |
+| 동시성 | 1개 (서버당) | N개 동시 (Code 모드 멀티 세션·워크트리) |
+
+설계 파급:
+
+1. **임베디드(M2) 메모리 방향**: 영속 기억의 정본은 cli-jaw — jwc 세션에는 **하향 주입**(Profile/Soul/Task
+   Snapshot, 130 스코프 A 패턴과 동형). jwc 자체 consolidation(gjc stage1/phase2)은 임베디드 모드에서
+   **비활성 [확정 260612 — 사용자]** — 세션은 주입만 받는 소비자, 자체 축적 없음 (이중 기억 방지).
+   기억할 가치는 cli-jaw flush/reflect가 수확. (격하안·현행 유지안 기각 — 세션이 일회용인데 정체성을 축적하면 모순.)
+   (단독 실행 jwc(M1)는 현행 자체 메모리 유지 — 이 원칙은 임베디드 아키텍처에만 적용.)
+2. **상향은 보고**: jwc 세션의 작업 결과가 기억할 가치가 있으면 cli-jaw의 flush/reflect 파이프라인이
+   수확 — 세션이 직접 cli-jaw 메모리에 쓰지 않음 (D130-1 단방향 원칙의 메모리판).
+3. Code 모드 UI 함의: 세션은 가볍게 만들고 가볍게 버리는 UX (새 세션 비용 ≈ 0) — 세션별 영속 설정을
+   최소화하고 인스턴스 레벨(cli-jaw 설정)에서 상속.
+
 ## 완료 기준
 
 - electron 앱 기동 → cli-jaw 서버 attach/spawn + 대시보드 렌더 + jwc sidecar로 대화 1회 e2e
 - (보조 트랙 착수 시) Claude Desktop에 `.mcpb` 설치 → jaw 툴 1회 호출 + MCP Apps 패널 1회 렌더
+- **Code 모드 (D112-1)**: 모드 토글 → 폴더/워크트리 선택 → jwc 세션 1회 e2e (도구 셀 접기 렌더 + 권한 다이얼로그 동작)
 
 ## 열린 질문 (착수 전 인터뷰)
 
 1. 착수 시점 — M2 110–139(상주 런타임) 완료 전 electron 셸을 먼저 완성할지, 후행할지
-2. electron 셸의 jwc sidecar 탑재 방식 — `bun --compile` 단일 바이너리 vs 시스템 bun 의존
-3. Claude Desktop 보조 트랙(`.mcpb`+MCP Apps)을 본 밴드에 포함할지 별도 밴드로 뺄지
+   → **[확정 260612 — 사용자] Code 모드 선행**: M1(99 밴드) 마감 후 **Code 모드(ACP 프로토타입)
+   먼저 → 100/110 런타임 통합 → Code 모드 in-process 승격 + Chat 엔진 교체** 순. 근거: ① ACP 경로는 100
+   Node 포팅 없이 즉시 가능(런타임 통합은 100이 게이트라 무거움), ② Code 모드에서 만드는 웹 렌더 자산
+   (도구 셀·thinking 접기·권한 다이얼로그)이 이후 통합 표면에 그대로 재사용 — 통합의 "표면 절반"을 선납,
+   ③ D112-2상 Code 모드(일회용 세션)는 130 메모리/스킬 주입 없이도 성립 — 의존성 독립, ④ 사용자 체감
+   가치가 즉시 발생(Chat 엔진 교체는 UI 무변화라 체감이 늦음).
+2. ~~electron 셸의 jwc sidecar 탑재 방식~~ → **[해소 260612 — 사용자]** npm 설치 경로가 bun을 이미 책임짐
+   (jwc 패키지 `engines.bun` + `dist/jwc.bundle.js` bun-타깃 번들, P12 퍼블리시 독립화) — sidecar는
+   **기존 npm 배포 메커니즘 재사용**, electron은 설치본을 spawn. `bun --compile` 단일 바이너리는
+   패키징 시점 옵션으로 강등 (오프라인 배포 필요 시에만 재검).
+3. ~~Claude Desktop 보조 트랙(`.mcpb`+MCP Apps)~~ → **[드랍 확정 260612 — 사용자]** "Code 모드가 그것" —
+   cli-jaw electron 앱이 이미 데스크톱 표면이고 Code 모드가 그 역할을 수행. Desktop 트랙은 백로그에서도 제외
+   (§Claude Desktop 절은 조사 기록으로만 보존).

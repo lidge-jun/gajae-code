@@ -4,6 +4,7 @@
 > 태그라인 [기본값] `bite · build · ship` (사용자 미지정 — 변경 요청 시 문자열 1곳 수정).
 > 소속: 080 ([080_moc_tui.md](./080_moc_tui.md) §A). ⬜ e2e: jwc 재시작 후 다크/라이트 육안 확인 + 스크린샷.
 > ↳ 후속 이슈 [086.1](./086.1_issue_banner_scroll.md): 짧은 터미널 배너 스크롤백 잘림 → 수직 반응형 컴팩트 배너 패치 ✅.
+> ↳ 후속 이슈 [086.2](./086.2_issue_scrollback_fragments_redraw.md): 스크롤백 TUI 조각 잔존 → `/redraw` 수동 복구 커맨드 ✅.
 > 입력: 사용자 "080 §A + 010 리네이밍 묶음으로 플랜. dev-frontend·dev-uiux-design 스킬과 cli-jaw 디자인 철학을 보고" (260612).
 > ⚠️ **fork 고유 변경 — 업스트림 PR 안 올림** (brand 조건부, gjc 모드 diff-0 원칙).
 

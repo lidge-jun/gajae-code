@@ -33,7 +33,7 @@
 | A2 | C2–C5 | W2 분리 커밋(094.3/094.4/086/084/M6) + **미추적 파일 추적** |
 | A3 | C6–C10 | 085.5 M1–M7 (시스템 프롬프트·번들·**gjc bin 제거**·가드 반전) |
 | A4 | C11 | 057 스킬/스테이지 어휘 호환 |
-| A5 | C12 | identity leak 테스트 + README/structure/주석 + **har_struct 재생성** |
+| A5 | C12 | identity leak 테스트 + README/structure/주석 + **struct_har 재생성** |
 
 **게이트 (매 A 단계 후):** `bun run check:ts` · 관련 `bun test <path>` · C12 후 jwc TUI "너는 누구야" → Jaw, GJC 비언급.
 

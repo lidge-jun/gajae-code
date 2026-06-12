@@ -25,6 +25,8 @@
 | [081.7](./081.7_issue_cursor_autocompact.md) | cursor에서 자동 compact 미발동 (usage.input=0 → 임계치 판정 실패) | ✅ 수정 (estimate 폴백, fork 커밋 16ce10d) |
 | [081.8](./081.8_issue_composer_anchor_fabrication.md) | composer가 hashline 앵커 날조·대역외 수정으로 edit 연쇄 거부 (xai 직결 규율 공백) | ✅ 수정 (composer-discipline 주입, fork 고유) |
 | [081.9](./081.9_issue_composer_autocontinue_no_stop.md) | 턴 종료 후 안 멈춤 — threshold 컴팩션 autoContinue 재가동 + reserve가 실요청(32k)이 아닌 카탈로그(64k)를 예약해 임계 과소 | 🔨 옵션 E 구현 (예약·요청 정합화, 임계 136k→168k) |
+| [081.10](./081.10_issue_statusline_title_leak.md) | 상태줄 session_name 세그먼트가 composer 인사말 타이틀 전문을 렌더 → 우측 스탯 잘림 | ✅ 수정 (세그먼트 미렌더, fork) |
+| [081.11](./081.11_issue_composer_bash_timeout_loops.md) | composer 대량 셸 작업 타임아웃 루프 — `\|\| echo` 폴백이 kill을 성공으로 둔갑, unpruned find/`-exec \;` 반복 | ✅ A+B 구현 (bash KILLED 명시 + discipline 셸 조항) |
 
 ## 증상 (사용자 보고)
 
@@ -98,5 +100,9 @@ grep 핸들러에서 `pattern.trim()`이 비면 content search 대신 `find` 도
 
 ## 테스트 설치 (jwc symlink)
 
-`~/.bun/bin/jwc → packages/jwc/bin/jwc.js` (레포 워크스페이스가 TS 소스 직결). 전역 `gjc`는 02:08
-복사본이라 수정 미반영 — **테스트는 반드시 `jwc`로**. 소스 수정은 재빌드 없이 즉시 반영.
+`~/.bun/bin/jwc → packages/jwc/bin/jwc.js`. 전역 `gjc`는 02:08 복사본이라 수정 미반영 — **테스트는 반드시 `jwc`로**.
+⚠️ **(260612 17시 이후) dist 우선 로드**: `bin/jwc.js`는 `packages/jwc/dist/jwc.bundle.js`가 존재하면
+**번들을 우선** 로드하고 없을 때만 TS 소스로 폴백한다. dist가 생긴 뒤로는 "소스 수정 즉시 반영"이
+더 이상 참이 아님 — 소스 패치 후 `cd packages/jwc && bun run bundle`로 재번들해야 jwc에 반영된다
+(또는 dist 삭제로 소스 폴백). 실제로 081.10 패치가 스테일 번들 탓에 미반영으로 보고된 사례 있음.
+현 상태 (260612 21시): 사용자 지시로 **dist 삭제 → 소스 직결 복귀** — 번들을 다시 만들기 전까지는 재빌드 불필요.

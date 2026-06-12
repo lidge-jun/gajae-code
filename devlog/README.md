@@ -20,8 +20,9 @@ jawcode 전용 컨텍스트는 전부 이 폴더 아래에 둔다.
 | 경로 | 역할 |
 |---|---|
 | [structure/](../structure/README.md) | jawcode **patched SoT** — 코드 지도·계약 |
-| [har_struct/](../har_struct/README.md) | `gjc_origin` ↔ `jwc_patched` MOC 밴드 대조 |
+| [struct_har/](../struct_har/README.md) | `gjc_origin` ↔ `jwc_patched` MOC 밴드 대조 |
 | `devlog/_upstream_gjc/` | upstream **코드 클론** — fetch 후 diff·file:line cite ([conventions §2.2](../structure/conventions.md)) |
+| `devlog/_upstream_omp/` | oh-my-pi **참조 클론** — [struct_har/omp_origin/](../struct_har/omp_origin/README.md) |
 
 ## upstream 참조 클론 (`_upstream_gjc/`)
 
@@ -30,7 +31,7 @@ jawcode 전용 컨텍스트는 전부 이 폴더 아래에 둔다.
 - **경로**: `devlog/_upstream_gjc/` (gitignored — `devlog/.gitignore`)
 - **remote**: `https://github.com/Yeachan-Heo/gajae-code`
 - **용도**: upstream baseline file:line, `diff -u` 대조, upstream-only 버그 재현
-- **paired docs**: `har_struct/gjc_origin/` @ 클론 HEAD
+- **paired docs**: `struct_har/gjc_origin/` @ 클론 HEAD
 
 **최초 클론**
 
@@ -42,7 +43,7 @@ git clone https://github.com/Yeachan-Heo/gajae-code devlog/_upstream_gjc
 
 ```bash
 git -C devlog/_upstream_gjc fetch origin
-git -C devlog/_upstream_gjc log -1 --oneline    # HEAD를 devlog·har_struct에 기록
+git -C devlog/_upstream_gjc log -1 --oneline    # HEAD를 devlog·struct_har에 기록
 git fetch upstream && git rebase upstream/main  # worktree — 변경 정리 후
 ```
 

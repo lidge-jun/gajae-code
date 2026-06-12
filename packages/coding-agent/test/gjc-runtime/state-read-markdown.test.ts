@@ -25,7 +25,7 @@ afterEach(async () => {
 	await Promise.all(tempRoots.splice(0).map(dir => fs.rm(dir, { recursive: true, force: true })));
 });
 
-describe("gjc state read markdown", () => {
+describe("jwc state read markdown", () => {
 	it("defaults read output to markdown and keeps --json parseable", async () => {
 		const root = await tempDir();
 		await runNativeStateCommand(

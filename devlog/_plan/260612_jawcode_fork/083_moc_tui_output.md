@@ -17,6 +17,8 @@ previewLines + ctrl+o 펼침, JSON 트리 collapse, thinking 토글) 두 가지 
 | [083.3](./083.3_issue_thinking_interleave.md) | 추론 인터리빙 소실 | 도구 뒤 thinking이 상단 단일 어시스턴트 블록에 합쳐짐 — 단일 streamingComponent 구조가 원인 → 세그먼트 분할(A안) 적용 | ✅ 수정 완료 |
 | [083.4](./083.4_plan_effort_command.md) | `/effort` 커맨드 | 추론 강도 직접 지정 표면 부재 → Codex 표준 어휘로 슬래시 커맨드 추가 (none/minimal 별칭 포함) | ✅ 구현 완료 |
 | [083.5](./083.5_plan_thinking_collapse.md) | thinking 블럭 접기 | 기본 접힘(1줄 `Thinking … +N lines`) · ctrl+t=thinking만 토글 · ctrl+o=전체(도구+thinking) · 스트리밍 tail은 항상 전문 | ✅ 구현 완료 (260612) |
+| [083.6](./083.6_issue_autocollapse_editor_jump.md) | 자동접힘의 입력창 출렁임 | 턴 중간 minimize가 프레임 높이를 진동시켜 컴포저(흐름 마지막 줄)가 위아래로 이동 — 옵션 A(턴말 일괄)~B(하단 고정) 기록 | 🔍 분석 기록 |
+| [083.7](./083.7_plan_composer_bottom_pin.md) | 하단 고정 컴포저 | ViewportFill 센티널 스페이서로 입력창을 터미널 바닥에 상시 고정 (B안 상세 설계 — 렌더러 코어 무수정, 센티널 치환 1줄) | ⬜ 계획 |
 
 ## 업스트림 스택 PR (260612 제출, base=dev)
 

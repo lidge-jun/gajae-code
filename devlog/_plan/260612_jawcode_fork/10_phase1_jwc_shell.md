@@ -1,4 +1,5 @@
 # 10 — Phase 1: jwc 셸 구축
+> ⚠️ **번호 주의**: 010 셸 ✅. gjc chase → [struct_har/chase/10_gjc_chase_MOC.md](../../struct_har/chase/10_gjc_chase_MOC.md)
 
 > 목표: 업스트림 파일 0개 수정으로 `jwc` CLI와 임베딩 호환 표면을 만든다.
 > cli-jaw가 미래에 import할 경로는 **`jwc/sdk` 하나로 고정** — 업스트림 내부 구조가

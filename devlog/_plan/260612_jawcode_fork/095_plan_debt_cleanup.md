@@ -10,7 +10,7 @@
 | **D1 미커밋 혼재** | 수정 22 + 미추적 5 파일, 3개 워크스트림(086 비주얼 / 094.3 로컬토큰 / 094.4 quota / 085.5-M6 부분) | 단일 커밋 부적합 — 분리 커밋 필요. 086 테마 JSON 2종·094.3 `local-token-detect.ts`는 미추적이라 빌드 의존 깨짐 상태 |
 | **D2 biome 레드** | error 16 · warning 3 (check:tools에서 check:ts 차단) | 선행 차단: **커밋된** kiro provider 9건+format. 미커밋 연동 6건(welcome/controllers/theme/registry/local-token-detect) |
 | **D3 구원칙 코드·테스트** | 가드/테스트 ~10파일 깨질 예정, 기능 버그 3지점 미착수 | `default-gjc-definitions.test.ts`(214·319-371)·`bash-allowed-prefixes`·`bash-interceptor`·`agent-fields`·`state-handoff-thrift`·`gjc-dogfood-template`·`verify-g002-gates.ts`·`rebrand-inventory.ts` = M5 반전 대상. 유지: `skills-discovery-jaw`·`cli-command-surface`·`brand-visual-identity`·TUI/tool byte 스냅샷(브랜드 무관) |
-| **D4 문서 부채** | devlog 구플랜 20+파일 + `README.jwc.md:7-8` + `structure/gitstructure.md:45-46` + 코드 주석 4곳 + `har_struct/` 27+파일 | "무수정 추종·diff-0·무회귀·런타임 치환"을 현행처럼 서술 |
+| **D4 문서 부채** | devlog 구플랜 20+파일 + `README.jwc.md:7-8` + `structure/gitstructure.md:45-46` + 코드 주석 4곳 + `struct_har/` 27+파일 | "무수정 추종·diff-0·무회귀·런타임 치환"을 현행처럼 서술 |
 
 브랜드 분기(`isJawBrand`/`GJC_BRAND_NAME`) 자체는 대부분 **유지 대상**(기능 게이트: jaw 전용 CLI/slash·스킬 디스커버리·TUI 비주얼·APP_NAME 표시) — 폐기되는 역할은 "gjc 산문 보존·byte-동일 assert"뿐.
 
@@ -21,7 +21,7 @@
 | **W1** | biome 그린 | 커밋된 kiro 9건+format → 단독 커밋. 미커밋 연동 6건은 W2 각 커밋에 포함 | `bun run check:ts` exit 0 |
 | **W2** | 미커밋 분리 커밋 | ① 094.3 로컬토큰(+`local-token-detect.ts` 추적) ② 094.4 quota ③ 086 비주얼(+테마 JSON 2종, `brand-visual-identity.test.ts`) ④ 084 모델셀렉터 테스트 ⑤ 085.5-M6 부분(commands 3종 — [열린 질문 3] 답대로 재작업 여부) | 워크스트림당 1커밋, 각 테스트 green |
 | **W3** | 085.5 M1→M2+M5→M3→M4→M6 **+ M7(gjc bin 제거)** | 기능 버그 → 하드 수정+가드 반전 → 조립 코드 → 번들 스킬 → commands 잔여 → **gjc 진입 표면 제거(§2-#1 파급 포함)** | 085.5 §3 테스트 표 + `jwc --version` 스모크 (gjc 스모크 폐기) |
-| **W4** | 문서·주석 정합 | devlog 구플랜에 "[구원칙 — 02:04 개정으로 폐기]" 헤더 배너 일괄(파일별 본문 재작성은 안 함 — 역사 기록 보존), `README.jwc.md` 관계 절 개정, `structure/gitstructure.md` 게이트 목록 갱신, 코드 주석 4곳(cli.ts:56 등), `har_struct/` 처리([열린 질문 6]) | grep "무수정 추종\|diff-0" 현행 서술 0 (배너 처리 제외) |
+| **W4** | 문서·주석 정합 | devlog 구플랜에 "[구원칙 — 02:04 개정으로 폐기]" 헤더 배너 일괄(파일별 본문 재작성은 안 함 — 역사 기록 보존), `README.jwc.md` 관계 절 개정, `structure/gitstructure.md` 게이트 목록 갱신, 코드 주석 4곳(cli.ts:56 등), `struct_har/` 처리([열린 질문 6]) | grep "무수정 추종\|diff-0" 현행 서술 0 (배너 처리 제외) |
 
 W1·W2는 085.5 본 작업(W3)과 독립 — 즉시 착수 가능. W3가 W4의 선행(가드 반전 후 문서가 사실과 일치).
 
@@ -34,7 +34,7 @@ W1·W2는 085.5 본 작업(W3)과 독립 — 즉시 착수 가능. W3가 W4의 �
 | 3 | M6 예시 | **`${APP_NAME}` 동적 유지** — 이미 구현된 미커밋 3건 활용 (jwc 실행 출력은 리터럴과 동일) |
 | 4 | 브랜드 게이트(isJawBrand 등) | **전부 유지** — 기능 게이트는 산문 정체성과 무관 (gjc bin 제거 후 사실상 상시 jaw지만 env 게이트 구조 보존) |
 | 5 | G002/rebrand-inventory 계약 | jwc 어휘 기준 **반전** + gjc bin 표면 검증 항목 **폐기** (#1 제거와 정합) |
-| 6 | `har_struct/` 27+파일 | W3 완료 후 **재생성** (자동 생성 스냅샷 — 수기 수정 금지) |
+| 6 | `struct_har/` 27+파일 | W3 완료 후 **재생성** (자동 생성 스냅샷 — 수기 수정 금지) |
 | 7 | 병렬성 | **병렬 허용** — W1·W2 선행 후 W3와 086/094 TUI 잔여 작업 병렬 |
 
 **#1 파급 (W3에 M7 추가)**: gjc bin 제거 시 — `test/brand-visual-identity.test.ts`(086 미추적)의 gjc 브랜드 probe 케이스 제거/축소, `gjc-dogfood-template` 등 gjc 표면 스모크 정리, 085.5 M1 allowlist는 **jwc 단독 접두로 단순화 가능**(gjc 접두 인정 불요), 021 검증 항목의 `gjc --version` 스모크 폐기. `Dockerfile.robogjc`·`python/robogjc`는 별개 시스템 — 무관.
