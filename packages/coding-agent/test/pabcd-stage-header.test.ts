@@ -51,3 +51,25 @@ describe("pabcd stage header (99.03 M2)", () => {
 		expect(content).toContain("[PABCD — I: INTERVIEW]");
 	});
 });
+
+describe("goal co-display (99.08-A)", () => {
+	it("prefixes the goal summary when a goal is provided", () => {
+		const content = buildPabcdStageContent(envelope({ current_phase: "b" }), {
+			objective: "ship the importer with full test coverage and docs",
+		});
+		expect(content).toContain("· PABCD — B: BUILD");
+		expect(content).toMatch(/\[GOAL: ship the importer with full test cov.*…/);
+	});
+
+	it("keeps the original header without a goal or with a blank objective", () => {
+		expect(buildPabcdStageContent(envelope({ current_phase: "b" }), null)).toContain("[PABCD — B: BUILD");
+		expect(buildPabcdStageContent(envelope({ current_phase: "b" }), { objective: "   " })).toContain(
+			"[PABCD — B: BUILD",
+		);
+	});
+
+	it("keeps short objectives unellipsized", () => {
+		const content = buildPabcdStageContent(envelope({ current_phase: "c" }), { objective: "short goal" });
+		expect(content).toContain("[GOAL: short goal · PABCD — C: CHECK]");
+	});
+});

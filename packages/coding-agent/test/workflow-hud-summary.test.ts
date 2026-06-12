@@ -97,12 +97,12 @@ describe("jaw-interview 4-dimension gauges (99.04.03)", () => {
 
 	it("shows the ambiguity delta arrow with severity", () => {
 		const down = buildJawInterviewHudSummary({ phase: "interviewing", ambiguityDelta: -0.12 });
-		const downChip = down.chips.find(c => c.label === "Δ");
+		const downChip = down.chips?.find(c => c.label === "Δ");
 		expect(downChip?.value).toBe("↓0.12");
 		expect(downChip?.severity).toBe("success");
 
 		const up = buildJawInterviewHudSummary({ phase: "interviewing", ambiguityDelta: 0.05 });
-		const upChip = up.chips.find(c => c.label === "Δ");
+		const upChip = up.chips?.find(c => c.label === "Δ");
 		expect(upChip?.value).toBe("↑0.05");
 		expect(upChip?.severity).toBe("warning");
 	});

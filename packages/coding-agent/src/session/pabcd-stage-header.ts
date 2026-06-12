@@ -7,6 +7,14 @@
  * without an AgentSession; the session wires it via `#buildPabcdStageMessage`.
  */
 import type { NativePabcdEnvelopeParsed } from "../gjc-runtime/orchestrate-state";
+import { truncateObjective } from "../modes/components/status-line/workflow-readers";
+
+/** 99.08-A: goal context for header co-display (objective only — full text stays in goal-mode-context). */
+export interface PabcdHeaderGoal {
+	objective: string;
+}
+
+const GOAL_SUMMARY_MAX = 40;
 
 const STAGE_LABELS: Record<string, string> = {
 	I: "INTERVIEW",
@@ -30,7 +38,10 @@ const NEXT_HINTS: Record<string, string> = {
  * Build the stage-header content for an active envelope, or null when no
  * header should be injected (inactive, complete, or unknown stage).
  */
-export function buildPabcdStageContent(envelope: NativePabcdEnvelopeParsed): string | null {
+export function buildPabcdStageContent(
+	envelope: NativePabcdEnvelopeParsed,
+	goal?: PabcdHeaderGoal | null,
+): string | null {
 	if (!envelope.active) return null;
 	const stage = (envelope.current_phase ?? "").toUpperCase();
 	if (!stage || stage === "COMPLETE") return null;
@@ -49,5 +60,9 @@ export function buildPabcdStageContent(envelope: NativePabcdEnvelopeParsed): str
 	}
 	const gates = gateChips.length > 0 ? ` · ${gateChips.join(" · ")}` : "";
 
-	return `[PABCD — ${stage}: ${label}${gates}]\n${NEXT_HINTS[stage] ?? ""}`.trimEnd();
+	// 99.08-A — co-display when a durable goal runs alongside the pipeline;
+	// pabcd-only sessions keep the original header shape.
+	const goalPrefix = goal?.objective?.trim() ? `GOAL: ${truncateObjective(goal.objective, GOAL_SUMMARY_MAX)} · ` : "";
+
+	return `[${goalPrefix}PABCD — ${stage}: ${label}${gates}]\n${NEXT_HINTS[stage] ?? ""}`.trimEnd();
 }

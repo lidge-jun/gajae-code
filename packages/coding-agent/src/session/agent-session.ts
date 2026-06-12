@@ -4547,7 +4547,8 @@ export class AgentSession {
 		const sessionId = this.sessionManager.getSessionId();
 		const result = await readPabcdState(cwd, sessionId).catch(() => null);
 		if (!result || !result.ok) return null;
-		const content = buildPabcdStageContent(result.value);
+		const activeGoal = this.getGoalModeState()?.goal;
+		const content = buildPabcdStageContent(result.value, activeGoal ? { objective: activeGoal.objective } : null);
 		if (!content) return null;
 		return {
 			role: "custom",
