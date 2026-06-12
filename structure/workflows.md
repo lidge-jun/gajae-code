@@ -22,17 +22,17 @@
 | Workflow skill | 목적 | bundled source | 근거 |
 |---|---|---|---|
 | `jaw-interview` | IPABCD **I** — Socratic interview → `.jwc/specs/` | `defaults/gjc/skills/jaw-interview/SKILL.md` | `gjc-defaults.ts:13` |
-| `ralplan` | IPABCD **P** — consensus plan → `.jwc/plans/ralplan/` pending approval | `ralplan/SKILL.md` | re-facing 산문 **99.03** (slug 유지) |
+| `ralplan` | IPABCD **P** — consensus plan → `.jwc/plans/ralplan/` pending approval | `ralplan/SKILL.md` | jwc surface 산문 **99.03** (slug 유지) |
 | `ultragoal` | Goal ledger (ultragoal 엔진) → `.jwc/ultragoal/` | `ultragoal/SKILL.md` | 060 + 99 |
 | `team` | IPABCD **B** — tmux workers → `.jwc/state/team/` | `team/SKILL.md` | |
 
-## Upstream contract vs fork runtime
+## Upstream baseline vs jwc runtime
 
-| 계층 | upstream `AGENTS.md` `[기본값]` | fork runtime `[기본값]` | 호환 |
+| 계층 | upstream gajae-code `[기본값]` | jwc runtime `[기본값]` | 호환 |
 |---|---|---|---|
 | bundled skill slug | `deep-interview` | `jaw-interview` | `/skill:deep-interview` alias, legacy state read-normalize |
 | system prompt routing | `deep-interview` | `jaw-interview` | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/prompts/system/system-prompt.md:63` |
-| CLI subcommand | (upstream `deep-interview`) | `jwc interview` alias `deep-interview` — **jaw 브랜드 전용 등록**(D050-24/25 `jawOnlyCommands` 게이트; gjc는 `/skill:jaw-interview` 경로만) | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/cli.ts` `jawOnlyCommands` |
+| CLI subcommand | (upstream `deep-interview`) | `jwc interview` alias `deep-interview` — **jaw 브랜드 전용 등록**(D050-24/25 `jawOnlyCommands` 게이트; legacy upstream bin은 `/skill:jaw-interview` 경로만) | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/cli.ts` `jawOnlyCommands` |
 | persisted state slug | `deep-interview` (legacy) | write는 `jaw-interview` only | `normalizeWorkflowSkillSlug()` read-compat — `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/gjc-runtime/state-schema.ts:17`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/gjc-runtime/state-schema.ts:24` |
 
 ## Bundling / Load Contract

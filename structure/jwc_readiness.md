@@ -33,7 +33,7 @@
 
 ## 인프라 확인 (감사)
 
-- **스플릿브레인 없음**: Phase β `.jwc` 스윕 완료; jwc는 `~/.jwc/`만 사용. `~/.jwc/`는 upstream gjc 바이너리 격리.
+- **스플릿브레인 없음**: Phase β `.jwc` 스윕 완료; jwc는 `~/.jwc/`만 사용. `~/.jwc/`는 upstream gajae-code 계열 바이너리와 격리.
 - **테스트**: `ask.test`, `state-read-markdown` 등 wip 이후 **통과** (99.02 잔여는 스키마·biome·docs).
 - **β goal** `3f6989ac` (struct_har/Node): 99와 **별도** — [99.00.00 §제외](../devlog/_plan/260612_jawcode_fork/99.00.00_moc_stabilization.md).
 
@@ -49,6 +49,6 @@
 ## struct_har
 
 - 99 밴드 스냅샷: [struct_har/jwc_patched/099_stabilization/](../struct_har/jwc_patched/099_stabilization/)
-- 갭·gjc/omp 참조: [struct_har/chase/](../struct_har/chase/README.md)
+- 갭·upstream/omp 참조: [struct_har/chase/](../struct_har/chase/README.md)
 
 *갱신: 레디니스·MOC 변경 시 본 문서 요약 + 99.00.01 정본을 함께 맞춘다.*

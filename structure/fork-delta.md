@@ -124,6 +124,11 @@
 | `packages/tui/src/components/viewport-fill.ts` | NEW | 083.7 (컴포저 하단 고정) | N/A | 센티널 스페이서 — tui 코어는 센티널 부재 시 no-op (diff-0 보존) |
 | `packages/tui/src/tui.ts` | HARD-EDIT | 083.7 | MANUAL-REVIEW | `#expandViewportFill` 1메서드 + #doRender 호출 1줄 (오버레이 합성 이전 고정 계약) |
 | `packages/coding-agent/src/modes/interactive-mode.ts` | HARD-EDIT | 083.7 | MANUAL-REVIEW | chatContainer 직후 ViewportFill 마운트 + 브랜드 기본(jaw=on/gjc=off)·`tui.composerPin`·`PI_NO_COMPOSER_PIN` 해석 |
+| `packages/coding-agent/src/modes/interactive-mode.ts`·`modes/types.ts` | HARD-EDIT | 083.7 §11 + 99.20.04 | MANUAL-REVIEW | fill을 chat 위로(B2-lite) + liveToolContainer 신설 |
+| `packages/coding-agent/src/modes/controllers/event-controller.ts`·`input-controller.ts` | HARD-EDIT | 99.20.04 + 99.20.03 | MANUAL-REVIEW | 커밋 폴딩(라이브 존 라우팅·커밋점 2곳·agent_end 잔여) + 압축 트리거(슬래시·ctrl+o/t) |
+| `packages/coding-agent/src/config/settings-schema.ts` | HARD-EDIT | 083.7/99.20.04 | AUTO | `tui.composerPin`·`tool.renderMode` (브랜드 기본) |
+| `packages/coding-agent/src/modes/components/settings-selector.ts`·`packages/tui/src/components/settings-list.ts` | HARD-EDIT | 99.20.04 핫픽스 (260613) | AUTO | undefined currentValue 가드 ("default" 표기) — truncateToWidth 크래시 회귀 방지 |
+| `packages/coding-agent/src/modes/interactive-mode.ts` | HARD-EDIT (예정) | 99.30.01 | MANUAL-REVIEW | `#renderTodoList` 전부 `completed` 시 1줄 접힘 — [todo_pipeline.md](./todo_pipeline.md) |
 
 ## 리베이스/체리픽 절차 (요약 — 상세: 067.1 §5)
 

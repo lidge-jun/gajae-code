@@ -21,7 +21,7 @@ M1 done = 090–099 release gate. **실질 드라이버 임계점**은 99 전체
 | **99.03-M1** | 시스템 프롬프트에 **native IPABCD orchestration** discovery | [prompt_flow.md](./prompt_flow.md) §99.03 | ⬜ — [99.03.01 PASS v2](../devlog/_plan/260612_jawcode_fork/99.03.01_impl_workflow_surface.md) |
 | **99.03-M2** | [확정] 매 턴 `pabcd-stage-context` (cli-jaw `getPrefix()` 동형) | `agent-session.ts` (설계만) | ⬜ |
 | **99.03-M3** | 스테이지 프롬프트 말미 자가 전이 (`jwc orchestrate <next>`) | `prompts/jaw/orchestrate-*.md` | ⬜ |
-| **99.03 re-facing** | [확정] hard rename ❌ — 스킬 **속성·경로 무변경**, 산문에 IPABCD 우산만 | `system-prompt.md` | ⬜ (ralplan slug·`.jwc/plans/ralplan/` 유지) |
+| **99.03 jwc surface** | [확정] hard rename ❌ — 스킬 **속성·경로 무변경**, 산문에 IPABCD 우산만 | `system-prompt.md` | ⬜ (ralplan slug·`.jwc/plans/ralplan/` 유지) |
 | **99.01** | `jwc memory search/read/save/context` + `jwc chat search` | [memory_pipeline.md](./memory_pipeline.md) | 🟡 구현 중 ([99.01.03](../devlog/_plan/260612_jawcode_fork/99.01.03_impl_memory_merge.md)) |
 | **99.04** | HUD — 문서 legacy `.gjc/` → `.jwc/` 정정 + 세그먼트 | struct_har 085 이관 | 설계 ✅ / 구현 ⬜ |
 | **99.02** | CI: `config.schema.json` + biome + docs 마감 | — | 코드 ✅ / 마감 ⬜ |
@@ -82,7 +82,7 @@ M1 done = 090–099 release gate. **실질 드라이버 임계점**은 99 전체
 
 | 축 | 경로 |
 |---|---|
-| gjc upstream | `struct_har/gjc_origin/<band>/` |
+| upstream gajae-code | `struct_har/gjc_origin/<band>/` |
 | jaw fork | `struct_har/jwc_patched/<band>/` |
 | **omp 상류** | `struct_har/omp_origin/<band>/` (참조, fork 아님) |
 | **chase** | `struct_har/chase/` — `10_*` `20_*` · [05](../struct_har/chase/05_devlog_numbering.md) |

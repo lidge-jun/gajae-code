@@ -1,6 +1,6 @@
 # Memory Pipeline
 
-> jwc(gjc 엔진) 메모리 서브시스템의 쓰기/읽기 경로와, 99.01 밴드(`jwc memory` 동사 표면)가 얹힐 접합점.
+> jwc 메모리 서브시스템의 쓰기/읽기 경로와, 99.01 밴드(`jwc memory` 동사 표면)가 얹힐 접합점.
 > cli-jaw 원본 메모리의 대조 요약 포함. 실측: 260612 병렬 조사 (devlog [99.01.00](../devlog/_plan/260612_jawcode_fork/99.01.00_moc_memory.md) 밴드 근거).
 
 ## 쓰기 경로 (자동 — startup 트리거 단일)
@@ -51,11 +51,11 @@ sdk.ts:1570 buildDeveloperInstructions
 
 | 축 | cli-jaw | jwc 1차 결정 |
 |----|---------|--------------|
-| 저장 | `JAW_HOME/memory/structured/` markdown + frontmatter(kind/source/trust) | gjc SQLite 엔진 그대로 (md 호환 레이어 없음 — 070 확정 1) |
+| 저장 | `JAW_HOME/memory/structured/` markdown + frontmatter(kind/source/trust) | upstream SQLite 엔진 그대로 (md 호환 레이어 없음 — 070 확정 1) |
 | 색인 | `index.sqlite` FTS5 2종 — `chunks_fts`(unicode61) + `chunks_trigram`(trigram, CJK 전담) + `memory_synonyms` | 1차 SQL LIKE (FTS5/RRF/CJK trigram 후속 — 070 확정 4) |
 | 랭킹 | BM25 + trigram RRF 융합(k=60) + kind 우선치(profile -4.0 … episode 0) + recency 반감기(episode 7d/semantic 30d/shared 90d) + 정확일치 보너스 | kind 우선치 + recency 2요소만 |
 | 주입 | 매 턴 `buildMemoryInjection` — Profile(800c) + Soul(1000c) + Task Snapshot(검색 4건/2800c, kind 다양화 캡) | summary 1파일 (Task Snapshot은 99.01 M6) |
-| 쓰기 파이프라인 | flush(서브에이전트가 episodes/live에 기록, 10메시지마다) + reflect(24h 스로틀 regex 분류) | 비이식 (gjc stage1/phase2 유지 — 070 확정 7) |
+| 쓰기 파이프라인 | flush(서브에이전트가 episodes/live에 기록, 10메시지마다) + reflect(24h 스로틀 regex 분류) | 비이식 (upstream stage1/phase2 유지 — 070 확정 7) |
 | chat search | `jaw.db` messages LIKE (FTS 없음, 활성 세션 한정) | 세션 jsonl grep — 세션 횡단이라 오히려 넓음 |
 
 **degradation 핵심 (1차 LIKE 채택 시 잃는 것)**: CJK trigram 매칭, BM25 관련도, 동의어 확장
