@@ -146,47 +146,47 @@ previewLines + ctrl+o 펼침, JSON 트리 collapse, thinking 토글) 두 가지 
 ## 부록 — 용어·교차참조 1
 
 - **[기본값]**: 업스트림 gjc가 실제로 하는 동작; 결정 없으면 유지
-- **밴드 `083_output`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `083_output`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
 
 
 ## 부록 — 용어·교차참조 2
 
 - **[제안]**: repo 기본값에서 벗어나는 변경안; 채택은 인터뷰 필요
-- **밴드 `083_output`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `083_output`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
 
 
 ## 부록 — 용어·교차참조 3
 
 - **MOC**: Map of Content — 밴드 스코프/완료기준 정본
-- **밴드 `083_output`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `083_output`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
 
 
 ## 부록 — 용어·교차참조 4
 
 - **L1/L2/L3**: 040 rename 계층: 표면 / 영속 state / RPC wire (042)
-- **밴드 `083_output`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `083_output`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
 
 
 ## 부록 — 용어·교차참조 5
 
 - **D5**: 글로벌 스킬 루트 ~/.cli-jaw/skills
-- **밴드 `083_output`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `083_output`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
 
 
 ## 부록 — 용어·교차참조 6
 
 - **D10**: cli-jaw 명령 어휘 통일 (orchestrate/goal/memory)
-- **밴드 `083_output`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `083_output`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
 
 
 ## 부록 — 용어·교차참조 7
 
 - **SoT**: structure/ = patched 단일 source of truth
-- **밴드 `083_output`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `083_output`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`

@@ -22,7 +22,7 @@
 ## 하위 문서
 ## 증상 (사용자 보고)
 ## 디버깅 여정 (오진 → 실증 → 확정)
-## 근본 원인 4종 (전부 **업스트림 gjc** 코드 — `_upstream_gjc` HEAD 498d86b/v0.4.4에서 동일 라인 확인)
+## 근본 원인 4종 (전부 **업스트림 gjc** 코드 — `_upstream_gjc` HEAD 40c8d7f/v0.4.4에서 동일 라인 확인)
 ## 해결 방법 (적용된 수정)
 ### 081.1 — native toolCall 폴백 렌더 (`cursor.ts`)
 ### 081.3 — exec 핸들러 this 보존 (`agent.ts`) ★ 도구가 실제로 돌게 한 핵심
@@ -264,12 +264,12 @@ return [override, ...systemPrompts.map(...)];   // 항상 override가 맨 앞
 ## 부록 — 용어·교차참조 1
 
 - **[기본값]**: 업스트림 gjc가 실제로 하는 동작; 결정 없으면 유지
-- **밴드 `081_cursor`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `081_cursor`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
 
 
 ## 부록 — 용어·교차참조 2
 
 - **[제안]**: repo 기본값에서 벗어나는 변경안; 채택은 인터뷰 필요
-- **밴드 `081_cursor`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `081_cursor`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`

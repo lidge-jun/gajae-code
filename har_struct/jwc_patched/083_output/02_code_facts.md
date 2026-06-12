@@ -1,5 +1,6 @@
 # 083_output — code facts (jwc_patched)
 
+> **upstream 대조**: [`devlog/_upstream_gjc/`](../../devlog/_upstream_gjc/) @ `40c8d7f`
 > MOC `083_moc_tui_output.md`에서 추출한 경로·팩트 + devlog `083*` 플랜.
 
 ## 1. 경로 인벤토리 (MOC 인용)

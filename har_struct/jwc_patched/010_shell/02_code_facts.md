@@ -1,5 +1,6 @@
 # 010_shell — code facts (jwc_patched)
 
+> **upstream 대조**: [`devlog/_upstream_gjc/`](../../devlog/_upstream_gjc/) @ `40c8d7f`
 > MOC `010_moc_shell_rename.md`에서 추출한 경로·팩트 + devlog `010*` 플랜.
 
 ## 1. 경로 인벤토리 (MOC 인용)

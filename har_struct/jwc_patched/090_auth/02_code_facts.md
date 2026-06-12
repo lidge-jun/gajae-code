@@ -1,5 +1,6 @@
 # 090_auth — code facts (jwc_patched)
 
+> **upstream 대조**: [`devlog/_upstream_gjc/`](../../devlog/_upstream_gjc/) @ `40c8d7f`
 > MOC `090_moc_auth_release_gate.md`에서 추출한 경로·팩트 + devlog `090*` 플랜.
 
 ## 1. 경로 인벤토리 (MOC 인용)

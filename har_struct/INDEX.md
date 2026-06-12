@@ -1,6 +1,17 @@
-# har_struct INDEX
+# har_struct INDEX (lexicographic)
 
-> min 100 lines/doc · 94 files
+> 생성: 2026-03-13 · fork `e90ee99` · upstream `devlog/_upstream_gjc` @ `40c8d7f`
+
+## upstream 기준선
+
+| 항목 | 값 |
+|---|---|
+| 클론 경로 | [`devlog/_upstream_gjc/`](../devlog/_upstream_gjc/) |
+| 절대경로 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_upstream_gjc/` |
+| HEAD | `40c8d7f` |
+| remote | `https://github.com/Yeachan-Heo/gajae-code` |
+| gjc_origin | 위 클론 = code facts 정본 |
+| jwc_patched | jawcode worktree root |
 
 ## gjc_origin
 

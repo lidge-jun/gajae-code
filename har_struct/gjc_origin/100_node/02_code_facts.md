@@ -1,143 +1,134 @@
 # 100_node — code facts (gjc_origin)
 
-> MOC `100_moc_node_porting.md`에서 추출한 경로·팩트 + devlog `100*` 플랜.
+> **upstream 정본**: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_upstream_gjc/` @ `40c8d7f`  
+> MOC 보조: `devlog/_plan/260612_jawcode_fork/100_moc_*.md`
 
-## 1. 경로 인벤토리 (MOC 인용)
+## 1. upstream 경로 인벤토리 (`devlog/_upstream_gjc/`)
 
-| # | path |
-|---:|---|
-| 1 | `(MOC에 경로 없음 — structure/ 참조)` |
+| # | upstream path | line | excerpt |
+|---:|---|---:|---|
+| 1 | `devlog/_upstream_gjc/packages/ai/package.json` | 35 | `		"check": "biome check . && bun run check:types",` |
+| 2 | `devlog/_upstream_gjc/packages/ai/package.json` | 38 | `		"test": "bun test",` |
+| 3 | `devlog/_upstream_gjc/packages/ai/package.json` | 41 | `		"generate-models": "bun scripts/generate-models.ts"` |
+| 4 | `devlog/_upstream_gjc/packages/ai/package.json` | 52 | `		"@types/bun": "catalog:"` |
+| 5 | `devlog/_upstream_gjc/packages/ai/package.json` | 54 | `	"engines": {` |
+| 6 | `devlog/_upstream_gjc/packages/ai/package.json` | 55 | `		"bun": ">=1.3.14"` |
+| 7 | `devlog/_upstream_gjc/packages/coding-agent/package.json` | 34 | `		"build": "bun scripts/build-binary.ts",` |
+| 8 | `devlog/_upstream_gjc/packages/coding-agent/package.json` | 35 | `		"check": "biome check . && bun run check:types",` |
+| 9 | `devlog/_upstream_gjc/packages/coding-agent/package.json` | 38 | `		"test": "bun test",` |
+| 10 | `devlog/_upstream_gjc/packages/coding-agent/package.json` | 39 | `		"generate-schemas": "bun ../../scripts/generate-json-schemas.ts",` |
+| 11 | `devlog/_upstream_gjc/packages/coding-agent/package.json` | 40 | `		"check:schemas": "bun ../../scripts/generate-json-schemas.ts --check",` |
+| 12 | `devlog/_upstream_gjc/packages/coding-agent/package.json` | 41 | `		"fix": "biome check --write --unsafe . && bun run format-prompts && bun run generate-docs-index",` |
+| 13 | `devlog/_upstream_gjc/packages/coding-agent/package.json` | 42 | `		"fmt": "biome format --write . && bun run format-prompts",` |
+| 14 | `devlog/_upstream_gjc/packages/coding-agent/package.json` | 43 | `		"format-prompts": "bun scripts/format-prompts.ts",` |
+| 15 | `devlog/_upstream_gjc/packages/coding-agent/package.json` | 44 | `		"generate-docs-index": "bun scripts/generate-docs-index.ts",` |
+| 16 | `devlog/_upstream_gjc/packages/coding-agent/package.json` | 45 | `		"prepack": "bun scripts/generate-docs-index.ts",` |
+| 17 | `devlog/_upstream_gjc/packages/coding-agent/package.json` | 46 | `		"generate-template": "bun scripts/generate-template.ts",` |
+| 18 | `devlog/_upstream_gjc/packages/coding-agent/package.json` | 47 | `		"install:defaults": "bun src/cli.ts setup defaults"` |
 
-## 2. devlog 플랜·diff 발췌
-
-### `100_moc_node_porting.md`
-
-```markdown
-# 100 MOC — Node 포팅 베이스라인 (M2 진입)
-
-> 상태: ⬜. 결정 근거: D8 [확정] — 상주 네이티브의 유일한 길. 구 03 §결정 1의 치환 매핑 승계.
-
-## 코드 사실 (구 01/03 조사 승계)
-
-- 업스트림은 명시적 Bun 전용, 전 패키지 raw .ts 배포(빌드 산출물 없음)
-- `check:node20-baseline`은 "Node 지원 허위 주장 방지" 가드일 뿐 — 지원 보장 아님
-- `Bun.*` 사용처: ai ~20지점 / agent 4파일 / tui 7파일(포팅 제외)
-- 포팅 범위: `packages/ai` + `packages/agent` + coding-agent 비TUI 경로만
-
-## 치환 매핑
-
-| Bun API | Node 대응 |
-|---------|----------|
-| `Bun.env` | `process.env` |
-| `Bun.file` | `node:fs/promises` |
-| `Bun.spawn` | `node:child_process` |
-| `Bun.hash` | `node:crypto` / xxhash |
-| `Bun.WebSocket` | Node 22 전역 WebSocket (undici) |
-| `Bun.JSONL.parseChunk` | 자체 청크 파서 (base-stream.ts 내 국소화) |
-| `Bun.JSON5` | `json5` npm |
-| `bun:sqlite` | `better-sqlite3` (cli-jaw 기보유, API 근접) |
-
-## 스코프
-
-1. 셰임 레이어: [기본값] `packages/jwc/src/shims/` 에 런타임 감지 셰임 — 듀얼 런타임
-   (Bun에서는 네이티브, Node에서는 셰임). 업스트림 파일 수정은 import 치환 최소 diff
-2. 트랜스파일 빌드: [기본값] esbuild로 `packages/{ai,agent,coding-agent}` → `dist-node/` (tsc는 타입체크만)
-3. 테스트 베이스라인: 업스트림 핵심 테스트(stream.test.ts 1,662줄 등)를 Node 22 러너로 통과
-4. natives(napi-rs Rust)는 Node 로드 가능 형식 — 빌드 파이프라인만 검증
-
-## 완료 기준
-
-- `node dist-node/...` 로 createAgentSession 헬로월드 (실 프로바이더 1개 스트리밍 포함)
-- 업스트림 stream/agent 테스트 Node 22 통과 목록을 본 밴드 문서에 기록
-- Bun 경로 무회귀: `bun test` 기존 통과 유지
-
-## 열린 질문
-
-- 듀얼 런타임 유지비 vs Node 단일화 — [기본값] 듀얼 (TUI가 Bun이므로)
-- 업스트림 리베이스 시 셰임 충돌 처리 규칙 (000 리베이스 정책에 위임)
-```
-
-## 3. 검증 명령
+## 2. fork diff 관찰 (worktree vs upstream)
 
 ```bash
-bun check
-bun test packages/coding-agent
-bun scripts/rebrand-inventory.ts --strict
+# 밴드 공통 diff 패턴
+diff -qr devlog/_upstream_gjc/packages/coding-agent/src/ packages/coding-agent/src/ | head
+git -C devlog/_upstream_gjc rev-parse --short HEAD   # → 40c8d7f
+git rev-parse --short HEAD               # → e90ee99
 ```
+
+| 관찰 | upstream (`devlog/_upstream_gjc`) | fork (worktree) |
+|---|---|---|
+| HEAD | `40c8d7f` | `e90ee99` |
+| jwc wrapper | 없음 | `packages/jwc` ✅ |
+| interview slug | `deep-interview` | `jaw-interview` ✅ |
+
+## 3. 검증 명령 (upstream 클론에서)
+
+```bash
+git -C devlog/_upstream_gjc log -1 --oneline
+grep -n deep-interview devlog/_upstream_gjc/packages/coding-agent/src/defaults/gjc-defaults.ts
+grep -n expectedCliBins devlog/_upstream_gjc/scripts/rebrand-inventory.ts
+bun -C devlog/_upstream_gjc run check   # upstream 자체 검증
+```
+
+## 4. devlog 교차 (스코프·결정)
+
+- MOC: `devlog/_plan/260612_jawcode_fork/100_moc_*`
+- 로드맵: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
+- patched SoT: `structure/` (jwc_patched side)
 
 
 ## 부록 — 용어·교차참조 1
 
 - **[기본값]**: 업스트림 gjc가 실제로 하는 동작; 결정 없으면 유지
-- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
 
 
 ## 부록 — 용어·교차참조 2
 
 - **[제안]**: repo 기본값에서 벗어나는 변경안; 채택은 인터뷰 필요
-- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
 
 
 ## 부록 — 용어·교차참조 3
 
 - **MOC**: Map of Content — 밴드 스코프/완료기준 정본
-- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
 
 
 ## 부록 — 용어·교차참조 4
 
 - **L1/L2/L3**: 040 rename 계층: 표면 / 영속 state / RPC wire (042)
-- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
 
 
 ## 부록 — 용어·교차참조 5
 
 - **D5**: 글로벌 스킬 루트 ~/.cli-jaw/skills
-- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
 
 
 ## 부록 — 용어·교차참조 6
 
 - **D10**: cli-jaw 명령 어휘 통일 (orchestrate/goal/memory)
-- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
 
 
 ## 부록 — 용어·교차참조 7
 
 - **SoT**: structure/ = patched 단일 source of truth
-- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
 
 
 ## 부록 — 용어·교차참조 8
 
 - **har_struct**: gjc_origin vs jwc_patched 병렬 대조 스냅샷
-- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
 
 
 ## 부록 — 용어·교차참조 9
 
 - **rebrand-inventory**: scripts/rebrand-inventory.ts — bin·스킬 4종 기계 검증
-- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
 
 
 ## 부록 — 용어·교차참조 10
 
 - **[확정]**: 인터뷰에서 확정된 결정 — devlog 05_interview_conclusions.md
-- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
 
 
 ## 부록 — 용어·교차참조 11
 
 - **[기본값]**: 업스트림 gjc가 실제로 하는 동작; 결정 없으면 유지
-- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin HEAD
+- **밴드 `100_node`** · side `gjc_origin` · 갱신 규칙: jwc_patched 선행 → gjc_origin `devlog/_upstream_gjc` @ `40c8d7f`
 - **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
