@@ -3,16 +3,20 @@
 > 상태: ✅ 해결 완료·사용자 e2e 검증 (260612 08시). 081.1~081.4 = 4건 수정 묶음.
 > 소속: 080 밴드. 본 문서 = cursor 도구군 이슈의 **인덱스 + "어떻게 해결했나" 정본** (디버깅 여정 + 수정 + 검증법).
 > ⚠️ 번호 규약: cursor 도구 버그가 많아 081 하위(081.1~)로 묶음. 다른 이슈군은 082.n(TUI Ctrl/IME) 등 별도.
+> 📤 **업스트림 PR: [Yeachan-Heo/gajae-code#515](https://github.com/Yeachan-Heo/gajae-code/pull/515)** —
+> 081.1~081.4 버그픽스(4건)를 업스트림에 제출. 081.6 host-override는 fork 고유라 미포함.
+> (업스트림 클론 = `devlog/_upstream_gjc` gitignored, 포크 = `lidge-jun/gajae-code`.)
 
 ## 하위 문서
 
 | # | 이슈 | 상태 |
 |---|------|------|
-| [081.1](./081.1_issue_toolcall_render.md) | TUI에 도구 행 미표시 (cursor 파서 oneof 드롭) | ✅ 수정 |
-| [081.2](./081.2_issue_title_hallucination.md) | 환각 세션 타이틀 저장 (composer 모델) | ✅ 수정 |
-| [081.3](./081.3_issue_exec_unbound.md) | 도구 실행 crash (exec 핸들러 unbound this) ★핵심 | ✅ 수정 |
-| [081.4](./081.4_issue_glob_empty_pattern.md) | Glob 빈 패턴 "Pattern must not be empty" | ✅ 수정 |
-| [081.5](./081.5_audit_unbound_elsewhere.md) | cursor 외 동형 패턴(unbound-this/oneof-drop) 감사 | 🔍 조사 |
+| [081.1](./081.1_issue_toolcall_render.md) | TUI에 도구 행 미표시 (cursor 파서 oneof 드롭) | ✅ 수정·PR |
+| [081.2](./081.2_issue_title_hallucination.md) | 환각 세션 타이틀 저장 (composer 모델) | ✅ 수정·PR |
+| [081.3](./081.3_issue_exec_unbound.md) | 도구 실행 crash (exec 핸들러 unbound this) ★핵심 | ✅ 수정·PR |
+| [081.4](./081.4_issue_glob_empty_pattern.md) | Glob 빈 패턴 "Pattern must not be empty" | ✅ 수정·PR |
+| [081.5](./081.5_audit_unbound_elsewhere.md) | cursor 외 동형 패턴(unbound-this/oneof-drop) 감사 | ✅ 감사 완료 |
+| [081.6](./081.6_fix_cursor_host_override.md) | cursor 주입구 host-override (cursor 설정 무시→jwc 우선) | ✅ 수정 (fork 고유) |
 
 ## 증상 (사용자 보고)
 
