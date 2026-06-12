@@ -380,7 +380,8 @@ describe("native GJC ultragoal runtime", () => {
 		const result = await runNativeUltragoalCommand(["checkpoint", "--help"], root);
 
 		expect(result.status).toBe(0);
-		expect(result.stdout).toContain("gjc ultragoal checkpoint --goal-id");
+		// Brand-agnostic: the help banner prints `$ ${APP_NAME} ultragoal …` (3bdc7563 dynamic APP_NAME).
+		expect(result.stdout).toContain("ultragoal checkpoint --goal-id");
 		expect(result.stdout).toContain("--quality-gate-json");
 		expect(result.stdout).toContain('goal({"op":"get"})');
 		expect(result.stdout).toContain("obligation");
