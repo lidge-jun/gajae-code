@@ -6,6 +6,11 @@
 > 📤 **업스트림 PR: [Yeachan-Heo/gajae-code#515](https://github.com/Yeachan-Heo/gajae-code/pull/515)** —
 > 081.1~081.4 버그픽스(4건)를 업스트림에 제출. 081.6 host-override는 fork 고유라 미포함.
 > (업스트림 클론 = `devlog/_upstream_gjc` gitignored, 포크 = `lidge-jun/gajae-code`.)
+> **PR 경과 (260612 12시)**: ① 오너 "main 아닌 dev 대상" 지적 → ② base를 dev로 변경했더니 충돌 →
+> ③ **오너가 직접 브랜치를 dev 위로 리베이스(force-push, 최종 4283930)** 하여 관리 인수. 현재
+> base=dev·충돌 없음(CLEAN/MERGEABLE)·OPEN. 수정 4건+작성자(lidge-jun) 모두 보존 확인
+> (bind×9, buildNativeToolCallBlock×3, find 라우팅, 타이틀 캡). **우리 쪽 추가 액션 없음 — 리뷰/CI 대기.**
+> 교훈: 이 레포 기여 흐름은 `dev` 대상 (CONTRIBUTING 참조). 다음 PR부터 처음부터 dev로.
 
 ## 하위 문서
 
@@ -17,7 +22,7 @@
 | [081.4](./081.4_issue_glob_empty_pattern.md) | Glob 빈 패턴 "Pattern must not be empty" | ✅ 수정·PR |
 | [081.5](./081.5_audit_unbound_elsewhere.md) | cursor 외 동형 패턴(unbound-this/oneof-drop) 감사 | ✅ 감사 완료 |
 | [081.6](./081.6_fix_cursor_host_override.md) | cursor 주입구 host-override (cursor 설정 무시→jwc 우선) | ✅ 수정 (fork 고유) |
-| [081.7](./081.7_issue_cursor_autocompact.md) | cursor에서 자동 compact 미발동 (usage.input=0 → 임계치 판정 실패) | 🔍 원인 확정 / 수정 대기 |
+| [081.7](./081.7_issue_cursor_autocompact.md) | cursor에서 자동 compact 미발동 (usage.input=0 → 임계치 판정 실패) | ✅ 수정 (estimate 폴백, fork 커밋 16ce10d) |
 
 ## 증상 (사용자 보고)
 
