@@ -244,7 +244,7 @@ describe("CONSUMER/KEY-FIELD MATRIX for compact handoff payloads", () => {
 		expect(skillDoc).toContain("planner");
 		expect(skillDoc).toContain("architect");
 		expect(skillDoc).toContain("critic");
-		expect(skillDoc).toContain("gjc ralplan --write");
+		expect(skillDoc).toContain("jwc ralplan --write");
 		expect(skillDoc).toContain("run_id");
 		expect(skillDoc).toContain("path");
 		expect(skillDoc).toContain("sha256");

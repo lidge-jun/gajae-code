@@ -127,7 +127,7 @@ export function getEmbeddedDefaultGjcSkills(): EmbeddedDefaultGjcSkill[] {
 			level: "warn",
 		});
 		const description =
-			typeof frontmatter.description === "string" ? frontmatter.description : `GJC ${definition.name} workflow`;
+			typeof frontmatter.description === "string" ? frontmatter.description : `jwc ${definition.name} workflow`;
 		return {
 			name: definition.name,
 			description,

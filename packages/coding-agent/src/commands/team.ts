@@ -96,13 +96,13 @@ export default class Team extends Command {
 	};
 
 	static examples = [
-		"gjc --tmux  # start/attach the required tmux-backed leader session first",
-		'gjc team 3:executor "Implement the approved plan"',
-		"gjc team status <team-name> --json",
-		"gjc team monitor <team-name> --json",
-		'gjc team api claim-task --input \'{"team_name":"demo","worker_id":"worker-1"}\' --json',
-		'gjc team 2:executor --dry-run --json "Preview state only"',
-		"gjc team shutdown <team-name>",
+		`${APP_NAME} --tmux  # start/attach the required tmux-backed leader session first`,
+		`${APP_NAME} team 3:executor "Implement the approved plan"`,
+		`${APP_NAME} team status <team-name> --json`,
+		`${APP_NAME} team monitor <team-name> --json`,
+		`${APP_NAME} team api claim-task --input '{"team_name":"demo","worker_id":"worker-1"}' --json`,
+		`${APP_NAME} team 2:executor --dry-run --json "Preview state only"`,
+		`${APP_NAME} team shutdown <team-name>`,
 	];
 
 	async run(): Promise<void> {
@@ -131,7 +131,7 @@ export default class Team extends Command {
 			}
 			writeText([
 				renderTeamStatusMarkdown(snapshot).trimEnd(),
-				"- mode: read-only status; use `gjc team monitor <team>` or `gjc team resume <team>` for recovery/integration",
+				`- mode: read-only status; use \`${APP_NAME} team monitor <team>\` or \`${APP_NAME} team resume <team>\` for recovery/integration`,
 			]);
 			void formatTaskCounts(snapshot.task_counts);
 			return;

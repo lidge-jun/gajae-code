@@ -32,7 +32,7 @@ Jaw Interview implements Ouroboros-inspired Socratic questioning with mathematic
 </Do_Not_Use_When>
 
 <Why_This_Exists>
-AI can build anything. The hard part is knowing what to build. GJC planning Phase 0 expands ideas into specs via analyst + architect, but this single-pass approach struggles with genuinely vague inputs. It asks "what do you want?" instead of "what are you assuming?" Jaw Interview applies Socratic methodology to iteratively expose assumptions and mathematically gate readiness, ensuring the AI has genuine clarity before spending execution cycles.
+AI can build anything. The hard part is knowing what to build. jwc planning Phase 0 expands ideas into specs via analyst + architect, but this single-pass approach struggles with genuinely vague inputs. It asks "what do you want?" instead of "what are you assuming?" Jaw Interview applies Socratic methodology to iteratively expose assumptions and mathematically gate readiness, ensuring the AI has genuine clarity before spending execution cycles.
 
 Inspired by the [Ouroboros project](https://github.com/Q00/ouroboros) which demonstrated that specification quality is the primary bottleneck in AI-assisted development.
 </Why_This_Exists>
@@ -73,11 +73,11 @@ Inspired by the [Ouroboros project](https://github.com/Q00/ouroboros) which demo
 
 ## Native Plugin Invocation Guard (Issue #3030)
 
-If this raw bundled skill is loaded by GJC's native skill loader through `/skill:jaw-interview`, do not treat that path as permission to skip rendered GJC setup. The user-facing invocation is `/skill:jaw-interview`; do not recommend or advertise CLI bridge commands as the jaw-interview entrypoint. Regardless of invocation path, Phase 0 below remains blocking and must resolve `gjc.jawInterview.ambiguityThreshold` from settings before any announcement, state write, question, or ambiguity score.
+If this raw bundled skill is loaded by jwc's native skill loader through `/skill:jaw-interview`, do not treat that path as permission to skip rendered jwc setup. The user-facing invocation is `/skill:jaw-interview`; do not recommend or advertise CLI bridge commands as the jaw-interview entrypoint. Regardless of invocation path, Phase 0 below remains blocking and must resolve `gjc.jawInterview.ambiguityThreshold` from settings before any announcement, state write, question, or ambiguity score.
 
 ## Phase 0: Resolve Ambiguity Threshold (blocking prerequisite)
 
-Complete this phase before Phase 1, before brownfield exploration, before GJC state persistence, before Round 0, and before any ambiguity scoring. Do not continue if the resolved threshold and source are unknown.
+Complete this phase before Phase 1, before brownfield exploration, before jwc state persistence, before Round 0, and before any ambiguity scoring. Do not continue if the resolved threshold and source are unknown.
 
 1. **Read threshold settings in precedence order**:
    - User settings: `[$GJC_CONFIG_DIR|~/.gjc]/settings.json`
@@ -94,7 +94,7 @@ Jaw Interview threshold: <resolvedThresholdPercent> (source: <resolvedThresholdS
 
 4. **Carry threshold source forward mechanically**:
    - Substitute `<resolvedThreshold>`, `<resolvedThresholdPercent>`, and `<resolvedThresholdSource>` throughout the remaining instructions before continuing.
-   - Include `threshold_source` in the first `gjc state write` payload and preserve it on later state updates; do not edit `.gjc/state` files directly unless an explicit force override is active.
+   - Include `threshold_source` in the first `jwc state write` payload and preserve it on later state updates; do not edit `.gjc/state` files directly unless an explicit force override is active.
    - Include both threshold and source in the final spec metadata.
 - Read any `language` object from active jaw-interview state and carry `language.instruction` forward mechanically. If absent, infer the user/session language from `{{ARGUMENTS}}` only when it is obvious. Do not surprise a Korean session with English questions.
 
@@ -120,10 +120,10 @@ Jaw Interview threshold: <resolvedThresholdPercent> (source: <resolvedThresholdS
    - Wait until the summary exists before ambiguity scoring, weakest-dimension selection, brownfield exploration prompts, or any bridge to `ralplan`, `execution`, `execution`, or `team`.
 3.7. **Artifact path discipline**:
    - Final specs MUST resolve to `.gjc/specs/jaw-interview-{slug}.md` exactly.
-   - Write final specs and all ephemeral interview artifacts through the active GJC workflow/state CLI when available.
+   - Write final specs and all ephemeral interview artifacts through the active jwc workflow/state CLI when available.
    - Direct `.gjc/` file edits are forbidden unless an explicit force override is active; do not use `write`, `edit`, or `ast_edit` against `.gjc/specs`, `.gjc/plans`, `.gjc/state`, or other `.gjc/` paths during normal workflow operation.
 
-4. **Initialize state** via `gjc state write`:
+4. **Initialize state** via `jwc state write`:
 
 ```json
 {
@@ -412,7 +412,7 @@ Apply `language.instruction` when present before showing this progress report so
 
 ### Step 2e: Update State
 
-Update interview state with the new round, global scores, per-component `topology.components[].clarity_scores`, `topology.components[].weakest_dimension`, ontology snapshot, `topology.last_targeted_component_id`, `auto_researched_rounds`, `auto_answered_rounds`, and `architect_failures` via `gjc state write`; never patch `.gjc/state` directly unless an explicit force override is active.
+Update interview state with the new round, global scores, per-component `topology.components[].clarity_scores`, `topology.components[].weakest_dimension`, ontology snapshot, `topology.last_targeted_component_id`, `auto_researched_rounds`, `auto_answered_rounds`, and `architect_failures` via `jwc state write`; never patch `.gjc/state` directly unless an explicit force override is active.
 
 ### Step 2f: Check Soft Limits
 
@@ -570,20 +570,20 @@ After the spec is written, mark it `pending approval` and present execution opti
    - Description: "Continue interviewing to improve clarity (current: {score}%)"
    - Action: Return to Phase 2 interview loop.
 
-**IMPORTANT:** On explicit execution selection, **MUST** use the chosen bundled GJC workflow skill entrypoint (`/skill:ralplan`, `/skill:ultragoal`, or `/skill:team`) inside the agent session. `gjc ralplan` is a native CLI that accepts the documented skill flags and seeds local `.gjc/state` receipts; agent sessions should still drive the consensus loop through `/skill:ralplan`. Implementation handoff defaults to `/skill:ultragoal`; `/skill:team` is reserved for when tmux-based interactive worker parallelization is genuinely required, and `gjc team` is a native tmux runtime command used only when the Team workflow explicitly requires the CLI runtime. Do NOT implement directly. The jaw-interview agent is a requirements agent, not an execution agent. If oversized initial context was summarized, pass the spec and prompt-safe summary forward, not the raw oversized source material. Without explicit execution selection, stop with the spec marked `pending approval`.
+**IMPORTANT:** On explicit execution selection, **MUST** use the chosen bundled jwc workflow skill entrypoint (`/skill:ralplan`, `/skill:ultragoal`, or `/skill:team`) inside the agent session. `jwc ralplan` is a native CLI that accepts the documented skill flags and seeds local `.gjc/state` receipts; agent sessions should still drive the consensus loop through `/skill:ralplan`. Implementation handoff defaults to `/skill:ultragoal`; `/skill:team` is reserved for when tmux-based interactive worker parallelization is genuinely required, and `jwc team` is a native tmux runtime command used only when the Team workflow explicitly requires the CLI runtime. Do NOT implement directly. The jaw-interview agent is a requirements agent, not an execution agent. If oversized initial context was summarized, pass the spec and prompt-safe summary forward, not the raw oversized source material. Without explicit execution selection, stop with the spec marked `pending approval`.
 
 ### Phase 5b: Handoff before chain
 
 Before invoking `/skill:ralplan`, `/skill:team`, or `/skill:ultragoal`, the final spec must already be persisted through the native jaw-interview write command. For ordinary user-selected handoff, mark jaw-interview ready for the skill tool's chain guard:
 
 ```
-gjc state jaw-interview write --input '{"current_phase":"handoff"}' --json
+jwc state jaw-interview write --input '{"current_phase":"handoff"}' --json
 ```
 
 For a preselected deliberate ralplan path, prefer the single sanctioned bridge command instead:
 
 ```
-gjc \
+jwc \
 jaw-interview --write --stage final --slug {slug} --spec <markdown-or-path> --deliberate --json
 ```
 
@@ -617,13 +617,13 @@ Skipping any stage is possible but reduces quality assurance:
 
 <Tool_Usage>
 - Use the `ask` tool for each interview question — provides clickable UI with contextual options
-- Preserve the GJC `ask` tool path for native interaction; do not introduce parallel structured-question transport into this skill
+- Preserve the jwc `ask` tool path for native interaction; do not introduce parallel structured-question transport into this skill
 - Use `read/search/find exploration or a bounded read-only planner/architect subagent` for brownfield codebase exploration (run BEFORE asking user about codebase)
 - Use opus model (temperature 0.1) for ambiguity scoring — consistency is critical
 - Round 0 topology confirmation happens before ambiguity scoring; Phase 2 scoring must honor locked topology and rotate targeting across active components when more than one is present
-- Use `gjc state write` / `gjc state read` for interview state persistence; the initial and subsequent jaw-interview state payloads must include `threshold_source` alongside `threshold`; do not edit `.gjc/state` directly without force override.
-- Use the GJC workflow CLI to save the final spec at `.gjc/specs/jaw-interview-{slug}.md` exactly; do not use `write`, `edit`, or `ast_edit` directly on `.gjc/` paths without force override.
-- Use public GJC workflow entrypoints to bridge to ralplan, ultragoal, or team only after explicit execution approval — never implement directly. Implementation handoff defaults to ultragoal; reserve team for when tmux-based interactive worker parallelization is genuinely required.
+- Use `jwc state write` / `jwc state read` for interview state persistence; the initial and subsequent jaw-interview state payloads must include `threshold_source` alongside `threshold`; do not edit `.gjc/state` directly without force override.
+- Use the jwc workflow CLI to save the final spec at `.gjc/specs/jaw-interview-{slug}.md` exactly; do not use `write`, `edit`, or `ast_edit` directly on `.gjc/` paths without force override.
+- Use public jwc workflow entrypoints to bridge to ralplan, ultragoal, or team only after explicit execution approval — never implement directly. Implementation handoff defaults to ultragoal; reserve team for when tmux-based interactive worker parallelization is genuinely required.
 - Challenge agent modes are prompt injections, not separate agent spawns
 - Use internal fragment auto-modes only at their documented hooks: `auto-research-greenfield.md` between Step 2a and 2b for greenfield `research: true` questions, and `auto-answer-uncertain.md` as Step 2b′ after `ask` resolves and before scoring.
 - Fragment auto-modes are loaded on demand as `kind: "skill-fragment"`; they are not public workflow skills, not slash-command/discoverable, and not `skill://` registrations.
@@ -749,10 +749,10 @@ Why bad: 45% ambiguity means nearly half the requirements are unclear. The mathe
 - [ ] Ambiguity score displayed after every round
 - [ ] Every round explicitly names the weakest dimension and why it is the next target
 - [ ] Challenge agents activated at correct thresholds (round 4, 6, 8)
-- [ ] Spec file persisted to `.gjc/specs/jaw-interview-{slug}.md` exactly through the GJC workflow CLI; ephemeral artifacts/state used `gjc state write` or workflow CLI writes, with no direct `.gjc/` edits unless force override was explicitly active
+- [ ] Spec file persisted to `.gjc/specs/jaw-interview-{slug}.md` exactly through the jwc workflow CLI; ephemeral artifacts/state used `jwc state write` or workflow CLI writes, with no direct `.gjc/` edits unless force override was explicitly active
 - [ ] Spec includes: topology, goal, constraints, acceptance criteria, clarity breakdown, transcript
 - [ ] Execution bridge presented via the `ask` tool
-- [ ] Selected execution mode invoked via public GJC workflow entrypoint only after explicit execution approval (never direct implementation)
+- [ ] Selected execution mode invoked via public jwc workflow entrypoint only after explicit execution approval (never direct implementation)
 - [ ] If 3-stage pipeline selected: `/skill:ralplan` invoked with the spec as context, then stopped with the consensus plan marked `pending approval` until the user explicitly approves execution
 - [ ] State cleaned up after approved workflow handoff
 - [ ] Brownfield confirmation questions cite repo evidence (file/path/pattern) before asking the user to decide
@@ -773,7 +773,7 @@ Optional settings in `.gjc/settings.json`:
 
 ```json
 {
-  "gjc": {
+  "jwc": {
     "jawInterview": {
       "ambiguityThreshold": <resolvedThreshold>,
       "maxRounds": 20,
@@ -790,7 +790,7 @@ Optional settings in `.gjc/settings.json`:
 
 ## Resume
 
-If interrupted, run `/skill:jaw-interview` again. The skill resumes from GJC workflow state via `gjc state read`; do not read or edit `.gjc/state` files directly unless an explicit force override is active.
+If interrupted, run `/skill:jaw-interview` again. The skill resumes from jwc workflow state via `jwc state read`; do not read or edit `.gjc/state` files directly unless an explicit force override is active.
 
 ## Integration with staged team routing
 
@@ -823,7 +823,7 @@ The recommended refinement path chains clarity and feasibility gates, then stops
   → Only a separate explicit execution approval may invoke execution (ultragoal by default; team only when tmux-based interactive worker parallelization is required)
 ```
 
-**The ralplan skill receives the spec as context through `/skill:ralplan`** because ralplan is already the GJC Planner → Architect → Critic consensus workflow. The consensus plan includes:
+**The ralplan skill receives the spec as context through `/skill:ralplan`** because ralplan is already the jwc Planner → Architect → Critic consensus workflow. The consensus plan includes:
 - RALPLAN-DR summary (Principles, Decision Drivers, Options)
 - ADR (Decision, Drivers, Alternatives, Why chosen, Consequences)
 - Testable acceptance criteria (inherited from jaw-interview spec)

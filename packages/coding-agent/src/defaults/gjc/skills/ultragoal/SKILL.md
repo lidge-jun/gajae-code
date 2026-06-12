@@ -1,17 +1,17 @@
 ---
 name: ultragoal
-description: Create and execute durable repo-native multi-goal plans over GJC goal mode artifacts.
+description: Create and execute durable repo-native multi-goal plans over jwc goal mode artifacts.
 
-source: "forked from upstream ultragoal skill and rebranded for GJC"
+source: "forked from upstream ultragoal skill and rebranded for jwc"
 ---
 
 # Ultragoal Workflow
 
-Use when the user asks for `ultragoal`, `create-goals`, `complete-goals`, durable multi-goal planning, or sequential execution over GJC goal mode.
+Use when the user asks for `ultragoal`, `create-goals`, `complete-goals`, durable multi-goal planning, or sequential execution over jwc goal mode.
 
 ## Purpose
 
-`ultragoal` turns a brief into repo-native artifacts and then drives a GJC goal safely through the unified `goal` tool. New plans default to a stable pointer-style aggregate GJC goal for the whole durable plan in `.gjc/ultragoal/goals.json`, including later accepted/appended stories under the original brief constraints, while GJC tracks G001/G002 story progress in the ledger. Ultragoal does not require any `/goal` slash-command between runs. For back-to-back ultragoal runs in one session/thread, call `goal({"op":"drop"})` only when `goal({"op":"get"})` still reports an active aggregate; then call `goal({"op":"create"})`. The goal tool stays armed across drop so the next create works in-session, and no slash-command cleanup exists or is required.
+`ultragoal` turns a brief into repo-native artifacts and then drives a jwc goal safely through the unified `goal` tool. New plans default to a stable pointer-style aggregate jwc goal for the whole durable plan in `.gjc/ultragoal/goals.json`, including later accepted/appended stories under the original brief constraints, while jwc tracks G001/G002 story progress in the ledger. Ultragoal does not require any `/goal` slash-command between runs. For back-to-back ultragoal runs in one session/thread, call `goal({"op":"drop"})` only when `goal({"op":"get"})` still reports an active aggregate; then call `goal({"op":"create"})`. The goal tool stays armed across drop so the next create works in-session, and no slash-command cleanup exists or is required.
 
 - `.gjc/ultragoal/brief.md`
 - `.gjc/ultragoal/goals.json`
@@ -21,18 +21,18 @@ Existing aggregate plans with the legacy enumerated objective are migrated to th
 
 ## Always-used command examples
 
-Use these exact `gjc ultragoal` commands before spending tool calls rediscovering syntax:
+Use these exact `jwc ultragoal` commands before spending tool calls rediscovering syntax:
 
 ```sh
-gjc ultragoal status
-gjc ultragoal status --json
-gjc ultragoal create-goals --brief "<brief>"
-gjc ultragoal create-goals --brief-file <path>
-gjc ultragoal complete-goals
-gjc ultragoal complete-goals --retry-failed
-gjc ultragoal checkpoint --goal-id <id> --status complete --evidence "<evidence>" --gjc-goal-json <goal-get-json-or-path> --quality-gate-json <quality-gate-json-or-path>
-gjc ultragoal checkpoint --goal-id <id> --status failed --evidence "<blocker/evidence>"
-gjc ultragoal record-review-blockers --goal-id <id> --title "Resolve final review blockers" --objective "<blocker-resolution objective>" --evidence "<review findings>" --gjc-goal-json <active-goal-get-json-or-path>
+jwc ultragoal status
+jwc ultragoal status --json
+jwc ultragoal create-goals --brief "<brief>"
+jwc ultragoal create-goals --brief-file <path>
+jwc ultragoal complete-goals
+jwc ultragoal complete-goals --retry-failed
+jwc ultragoal checkpoint --goal-id <id> --status complete --evidence "<evidence>" --gjc-goal-json <goal-get-json-or-path> --quality-gate-json <quality-gate-json-or-path>
+jwc ultragoal checkpoint --goal-id <id> --status failed --evidence "<blocker/evidence>"
+jwc ultragoal record-review-blockers --goal-id <id> --title "Resolve final review blockers" --objective "<blocker-resolution objective>" --evidence "<review findings>" --gjc-goal-json <active-goal-get-json-or-path>
 ```
 
 Use these exact goal-tool calls for the inline goal state:
@@ -77,35 +77,35 @@ Use `goal({"op":"get"})` snapshots inside Ultragoal for ledger reconciliation. T
    Stories become `G001`, `G002`, … in order.
 
 2. Run one of:
-   - `gjc ultragoal create-goals --brief "<brief>"`
-   - `gjc ultragoal create-goals --brief-file <path>`
-   - `cat <brief> | gjc ultragoal create-goals --from-stdin`
-   - `gjc ultragoal create-goals --gjc-goal-mode per-story --brief "<brief>"` only when one GJC goal context per story is explicitly preferred
+   - `jwc ultragoal create-goals --brief "<brief>"`
+   - `jwc ultragoal create-goals --brief-file <path>`
+   - `cat <brief> | jwc ultragoal create-goals --from-stdin`
+   - `jwc ultragoal create-goals --gjc-goal-mode per-story --brief "<brief>"` only when one jwc goal context per story is explicitly preferred
 3. Inspect `.gjc/ultragoal/goals.json` and refine if needed.
 
 ## Complete goals
 
-Loop until `gjc ultragoal status` reports all goals complete:
+Loop until `jwc ultragoal status` reports all goals complete:
 
-1. Run `gjc ultragoal complete-goals`.
+1. Run `jwc ultragoal complete-goals`.
 2. Read the printed handoff.
 3. Call `goal({"op":"get"})`.
-4. If no active GJC goal exists, call `goal({"op":"create","objective":"<printed payload objective>"})` with the printed payload. In aggregate mode, if the same aggregate objective is already active, continue the current GJC story without creating a new GJC goal. If `goal({"op":"get"})` shows a stale dropped goal (status `"dropped"`) and a new aggregate must start, no extra cleanup is needed — `goal({"op":"create"})` succeeds directly. If a previous aggregate is still active and you genuinely need a fresh start in the same session, call `goal({"op":"drop"})` first, then `goal({"op":"create"})`.
-5. Complete the current GJC story only.
+4. If no active jwc goal exists, call `goal({"op":"create","objective":"<printed payload objective>"})` with the printed payload. In aggregate mode, if the same aggregate objective is already active, continue the current jwc story without creating a new jwc goal. If `goal({"op":"get"})` shows a stale dropped goal (status `"dropped"`) and a new aggregate must start, no extra cleanup is needed — `goal({"op":"create"})` succeeds directly. If a previous aggregate is still active and you genuinely need a fresh start in the same session, call `goal({"op":"drop"})` first, then `goal({"op":"create"})`.
+5. Complete the current jwc story only.
 6. Run a completion audit against the story objective and real artifacts/tests.
 7. Before any `--status complete` checkpoint, run the mandatory final cleanup/review gate below. In aggregate mode, do **not** call `goal({"op":"complete"})` for intermediate stories; checkpoint each story with a fresh `goal({"op":"get"})` snapshot whose aggregate objective is still `active`. On the final story, use the same fresh active snapshot to create the final aggregate receipt first; only after that receipt exists may `goal({"op":"complete"})` run.
 8. Checkpoint the durable ledger with that fresh active snapshot. Complete checkpoints require `--quality-gate-json`; the runtime hook rejects closure without a clean architect review:
-   `gjc ultragoal checkpoint --goal-id <id> --status complete --evidence "<evidence>" --gjc-goal-json <goal-get-json-or-path> --quality-gate-json <quality-gate-json-or-path>`
-   A successful complete checkpoint is story completion, not automatic run completion. Read the checkpoint output: when it prints `Next ultragoal goal: <id>`, continue that active story under the same aggregate GJC goal; when it prints `All ultragoal goals are complete`, the durable run is terminal. `gjc ultragoal complete-goals` remains the supported manual next-story command if continuation output was missed.
+   `jwc ultragoal checkpoint --goal-id <id> --status complete --evidence "<evidence>" --gjc-goal-json <goal-get-json-or-path> --quality-gate-json <quality-gate-json-or-path>`
+   A successful complete checkpoint is story completion, not automatic run completion. Read the checkpoint output: when it prints `Next ultragoal goal: <id>`, continue that active story under the same aggregate jwc goal; when it prints `All ultragoal goals are complete`, the durable run is terminal. `jwc ultragoal complete-goals` remains the supported manual next-story command if continuation output was missed.
 9. If blocked or failed, checkpoint failure:
-   `gjc ultragoal checkpoint --goal-id <id> --status failed --evidence "<blocker/evidence>"`
+   `jwc ultragoal checkpoint --goal-id <id> --status failed --evidence "<blocker/evidence>"`
 10. For legacy per-story completed-goal blockers, preserve the non-terminal blocker with:
-   `gjc ultragoal checkpoint --goal-id <id> --status blocked --evidence "<completed legacy GJC goal blocks goal create in this thread>" --gjc-goal-json <goal-get-json-or-path>`
-11. Resume failed goals with `gjc ultragoal complete-goals --retry-failed`.
+   `jwc ultragoal checkpoint --goal-id <id> --status blocked --evidence "<completed legacy jwc goal blocks goal create in this thread>" --gjc-goal-json <goal-get-json-or-path>`
+11. Resume failed goals with `jwc ultragoal complete-goals --retry-failed`.
 
 ## Dynamic steering
 
-Use `gjc ultragoal steer` when real findings or blockers prove the current story decomposition should change while the aggregate objective and constraints stay fixed. Steering is explicit-only and evidence-backed; broad natural-language requests are rejected instead of guessed.
+Use `jwc ultragoal steer` when real findings or blockers prove the current story decomposition should change while the aggregate objective and constraints stay fixed. Steering is explicit-only and evidence-backed; broad natural-language requests are rejected instead of guessed.
 
 Allowed mutation kinds are:
 
@@ -119,8 +119,8 @@ Allowed mutation kinds are:
 Examples:
 
 ```sh
-gjc ultragoal steer --kind add_subgoal --title "Investigate blocker" --objective "Validate the blocker and report evidence." --evidence "log/test output" --rationale "The blocker changes the safe execution order." --json
-gjc ultragoal steer --directive-json ./steering.json --json
+jwc ultragoal steer --kind add_subgoal --title "Investigate blocker" --objective "Validate the blocker and report evidence." --evidence "log/test output" --rationale "The blocker changes the safe execution order." --json
+jwc ultragoal steer --directive-json ./steering.json --json
 ```
 
 Steering invariants:
@@ -131,11 +131,11 @@ Steering invariants:
 - Superseded goals remain in `goals.json` with steering metadata and are skipped for scheduling.
 - Blocked goals without replacements are skipped for scheduling but still block final completion until later explicit steering replaces or supersedes them.
 
-UserPromptSubmit uses the same steering API only for structured directives such as `GJC_ULTRAGOAL_STEER: { ... }`, `gjc.ultragoal.steer: { ... }`, or `gjc ultragoal steer: { ... }`. Normal prose does not mutate state, and repeated prompt-submit directives dedupe by prompt signature or idempotency key.
+UserPromptSubmit uses the same steering API only for structured directives such as `GJC_ULTRAGOAL_STEER: { ... }`, `gjc.ultragoal.steer: { ... }`, or `jwc ultragoal steer: { ... }`. Normal prose does not mutate state, and repeated prompt-submit directives dedupe by prompt signature or idempotency key.
 
 ## Role-agent delegation guidance
 
-Ultragoal execution should use GJC's bundled role-agent roster when a durable story is large enough to benefit from delegation:
+Ultragoal execution should use jwc's bundled role-agent roster when a durable story is large enough to benefit from delegation:
 
 - Use `executor` for bounded implementation, refactoring, and fix slices.
 - Use `planner` for story sequencing or handoff refinement when execution uncovers a missing plan branch.
@@ -157,10 +157,10 @@ Use ultragoal and team together for a durable Ultragoal story that benefits from
 The leader checkpoints Ultragoal from Team evidence with a fresh `goal({"op":"get"})` snapshot:
 
 ```sh
-gjc ultragoal checkpoint --goal-id <id> --status complete --evidence "<team evidence mentioning .gjc/ultragoal and <id>>" --gjc-goal-json <fresh-goal-get-json-or-path> --quality-gate-json <quality-gate-json-or-path>
+jwc ultragoal checkpoint --goal-id <id> --status complete --evidence "<team evidence mentioning .gjc/ultragoal and <id>>" --gjc-goal-json <fresh-goal-get-json-or-path> --quality-gate-json <quality-gate-json-or-path>
 ```
 
-Workers do not own ultragoal goal state, do not create worker ultragoal ledgers, and do not checkpoint Ultragoal. Workers must not run `gjc ultragoal checkpoint`; checkpoint authority stays with the leader after worker tasks are terminal. Team launch remains explicit; Ultragoal does not auto-launch Team and performs no hidden goal mutation.
+Workers do not own ultragoal goal state, do not create worker ultragoal ledgers, and do not checkpoint Ultragoal. Workers must not run `jwc ultragoal checkpoint`; checkpoint authority stays with the leader after worker tasks are terminal. Team launch remains explicit; Ultragoal does not auto-launch Team and performs no hidden goal mutation.
 
 ## Internal Ultragoal sub-skill fragments
 
@@ -193,7 +193,7 @@ An ultragoal story cannot be checkpointed `complete` until the active agent has 
 8. Run a final code review pass and fold it into the strict quality gate. Clean means `architectReview.architectureStatus`, `architectReview.productStatus`, and `architectReview.codeStatus` are all `"CLEAR"`, `architectReview.recommendation` is `"APPROVE"`, executor QA statuses are `"passed"`, iteration is `"passed"` with `fullRerun: true`, every evidence field is non-empty, every required matrix row is present, and every blockers array is empty. `COMMENT`, `WATCH`, `REQUEST CHANGES`, `BLOCK`, missing evidence, missing or shallow matrix rows, plan/code mismatches, or non-empty blockers are non-clean.
 9. If any lane finds an issue, do **not** checkpoint `complete` and do **not** call `goal({"op":"complete"})`. Record durable blocker work instead:
    ```sh
-   gjc ultragoal record-review-blockers --goal-id <id> --title "Resolve verification blockers" --objective "<blocker-resolution objective>" --evidence "<architect/executor findings>" --gjc-goal-json <active-goal-get-json-or-path>
+   jwc ultragoal record-review-blockers --goal-id <id> --title "Resolve verification blockers" --objective "<blocker-resolution objective>" --evidence "<architect/executor findings>" --gjc-goal-json <active-goal-get-json-or-path>
    ```
 10. Complete or steer through the blocker story, then rerun the full blocking verification loop. Repeat until all verifier lanes are clean.
 11. Only after the loop is clean, checkpoint the story as complete with a structured quality gate and a fresh active `goal({"op":"get"})` snapshot. The checkpoint creates a receipt; `goals.json.status` alone is not proof. In aggregate mode, the final aggregate receipt must exist before `goal({"op":"complete"})` is allowed.
@@ -304,18 +304,18 @@ Receipts are freshness-scoped:
 When the aggregate ultragoal is complete OR the user requests return to planning/clarification, mark ultragoal ready for handoff so the skill tool's chain guard permits the backward transition:
 
 ```
-gjc state ultragoal write --input '{"current_phase":"handoff"}' --json
+jwc state ultragoal write --input '{"current_phase":"handoff"}' --json
 ```
 
-The skill tool then dispatches `/skill:ralplan` or `/skill:jaw-interview` same-turn and runs `gjc state ultragoal handoff --to <ralplan|jaw-interview> --json` in-process to atomically demote ultragoal, promote the callee, and sync both `skill-active-state.json` files. You do not need to run the handoff verb yourself.
+The skill tool then dispatches `/skill:ralplan` or `/skill:jaw-interview` same-turn and runs `jwc state ultragoal handoff --to <ralplan|jaw-interview> --json` in-process to atomically demote ultragoal, promote the callee, and sync both `skill-active-state.json` files. You do not need to run the handoff verb yourself.
 
 ## Constraints
 
-- The shell command emits a model-facing handoff for the active GJC agent; it does not invoke any `/goal` slash-command and the agent loop must not depend on any `/goal` subcommand.
+- The shell command emits a model-facing handoff for the active jwc agent; it does not invoke any `/goal` slash-command and the agent loop must not depend on any `/goal` subcommand.
 - Use only the unified goal-tool surface from the agent loop: `goal({"op":"get"})`, `goal({"op":"create"})`, `goal({"op":"complete"})`, `goal({"op":"drop"})`, `goal({"op":"resume"})`. `drop` clears the active goal without exiting goal mode so the next `goal({"op":"create"})` works in-session. No slash-command cleanup exists or is required; Ultragoal never calls any `/goal` subcommand.
 - For back-to-back ultragoal runs in the same session/thread, when `goal({"op":"get"})` still reports an active aggregate, call `goal({"op":"drop"})` before `goal({"op":"create"})`; when no active goal exists or the prior aggregate is already complete or dropped, call `goal({"op":"create"})` directly. The goal tool remains callable across drop; no slash-command cleanup exists or is required.
 - Never call `goal({"op":"create"})` when `goal({"op":"get"})` reports a different active goal.
 - Never call `goal({"op":"complete"})` unless the aggregate run or legacy per-story goal is actually complete.
-- In aggregate mode, intermediate and final story checkpoints require a matching `active` GJC goal snapshot; the final story checkpoint creates the final aggregate receipt before `goal({"op":"complete"})` may reconcile the inline goal state.
+- In aggregate mode, intermediate and final story checkpoints require a matching `active` jwc goal snapshot; the final story checkpoint creates the final aggregate receipt before `goal({"op":"complete"})` may reconcile the inline goal state.
 - Completion checkpoints require read-only goal snapshot reconciliation: pass fresh `goal({"op":"get"})` JSON/path with `--gjc-goal-json`; shell commands and hooks must not mutate goal state.
 - Treat `ledger.jsonl` as the durable audit trail; checkpoint after every success or failure.

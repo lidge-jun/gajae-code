@@ -309,14 +309,14 @@ Project executor override body.
 
 		for (const content of [team, ultragoal]) {
 			expect(content).toContain('fresh `goal({"op":"get"})` snapshot');
-			expect(content).toContain("Workers must not run `gjc ultragoal checkpoint`");
+			expect(content).toContain("Workers must not run `jwc ultragoal checkpoint`");
 			expect(content).toContain("checkpoint authority stays with the leader");
 			expect(content).toContain("Ultragoal does not auto-launch Team");
 			expect(content).toContain("performs no hidden goal mutation");
 		}
 	});
 
-	it("keeps bundled jaw-interview skill on GJC-native workflow vocabulary", () => {
+	it("keeps bundled jaw-interview skill on jwc-native workflow vocabulary", () => {
 		const jawInterview = getDefaultGjcDefinitions().find(
 			definition => definition.kind === "skill" && definition.name === "jaw-interview",
 		);
@@ -328,7 +328,7 @@ Project executor override body.
 		}
 		expect(content).toContain("/skill:ralplan");
 		expect(content).toContain("/skill:team");
-		expect(content).toContain("`gjc ralplan` is a native CLI");
+		expect(content).toContain("`jwc ralplan` is a native CLI");
 		expect(content).toContain("Direct `.gjc/` file edits are forbidden");
 		expect(content).toContain("do not edit `.gjc/state` directly without force override");
 		expect(content).toContain("default `0.05`");
@@ -348,7 +348,7 @@ Project executor override body.
 			"Skill(",
 			"gajae-code:",
 			"/gajae-code",
-			"jwc interview",
+			"`gjc ",
 		]) {
 			expect(content).not.toContain(forbidden);
 		}
@@ -361,7 +361,7 @@ Project executor override body.
 		expect(ralplan).toBeDefined();
 		const content = ralplan?.content ?? "";
 
-		expect(content).toContain("gjc ralplan --write --stage <type> --stage_n <N> --artifact");
+		expect(content).toContain("jwc ralplan --write --stage <type> --stage_n <N> --artifact");
 		expect(content).toContain("--stage planner");
 		expect(content).toContain("--stage architect");
 		expect(content).toContain("--stage critic");

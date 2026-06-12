@@ -1,6 +1,7 @@
 /**
  * List and clean up agent-managed git worktrees under `~/.gjc/wt`.
  */
+import { APP_NAME } from "@gajae-code/utils";
 import { Args, Command, Flags } from "@gajae-code/utils/cli";
 import { clearWorktrees, listWorktrees } from "../cli/worktree-cli";
 
@@ -34,11 +35,11 @@ export default class Worktree extends Command {
 	};
 
 	static examples = [
-		"gjc worktree",
-		"gjc worktree list --json",
-		"gjc worktree clear",
-		"gjc worktree clear --dry-run",
-		"gjc worktree clear --all",
+		`${APP_NAME} worktree`,
+		`${APP_NAME} worktree list --json`,
+		`${APP_NAME} worktree clear`,
+		`${APP_NAME} worktree clear --dry-run`,
+		`${APP_NAME} worktree clear --all`,
 	];
 
 	async run(): Promise<void> {

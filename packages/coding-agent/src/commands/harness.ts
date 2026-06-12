@@ -8,9 +8,11 @@
  * (recover/validate/finalize/operate) return an honest `pending-<milestone>` contract
  * until the RuntimeOwner (M3+) lands.
  */
+
 import { execFileSync } from "node:child_process";
 import { randomBytes } from "node:crypto";
 import { existsSync } from "node:fs";
+import { APP_NAME } from "@gajae-code/utils";
 import { Args, Command, Flags } from "@gajae-code/utils/cli";
 import { resolveGjcTmuxCommand, sanitizeTmuxToken } from "../gjc-runtime/tmux-common";
 import { classifyRecovery } from "../harness-control-plane/classifier";
@@ -460,10 +462,10 @@ export default class Harness extends Command {
 	};
 
 	static examples = [
-		`gjc harness start --input '{"harness":"gajae-code","workspace":".","branch":"feat/x"}'`,
-		"gjc harness observe --session <id>",
-		`gjc harness classify --input '{"observation":{"ownerLive":false,"gitDelta":"dirty","risk":"vanished-dirty"}}'`,
-		"gjc harness events --session <id> --follow",
+		`${APP_NAME} harness start --input '{"harness":"gajae-code","workspace":".","branch":"feat/x"}'`,
+		`${APP_NAME} harness observe --session <id>`,
+		`${APP_NAME} harness classify --input '{"observation":{"ownerLive":false,"gitDelta":"dirty","risk":"vanished-dirty"}}'`,
+		`${APP_NAME} harness events --session <id> --follow`,
 	];
 
 	async run(): Promise<void> {
