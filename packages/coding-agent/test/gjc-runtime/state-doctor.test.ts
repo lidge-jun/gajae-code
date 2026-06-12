@@ -90,11 +90,11 @@ async function writeStampedState(root: string, skill: string, value: Record<stri
 describe("gjc state doctor", () => {
 	it("reports clean state with zero exit and deterministic JSON summary", async () => {
 		const root = await tempDir();
-		const statePath = await writeStampedState(root, "deep-interview", {
+		const statePath = await writeStampedState(root, "jaw-interview", {
 			active: true,
 			current_phase: "interviewing",
 		});
-		expect(statePath).toContain("deep-interview-state.json");
+		expect(statePath).toContain("jaw-interview-state.json");
 		await writeJson(path.join(root, ".gjc", "state", "audit.jsonl"), { seeded: true });
 
 		const result = await runDoctorUnchanged(root, ["doctor", "--json"]);

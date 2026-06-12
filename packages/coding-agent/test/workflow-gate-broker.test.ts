@@ -105,7 +105,7 @@ describe("WorkflowGateBroker", () => {
 		const dir = mkdtempSync(path.join(tmpdir(), "gate-store-"));
 		const file = path.join(dir, "gates.json");
 		const b1 = new WorkflowGateBroker("run-xyz", new FileGateStore(file));
-		const gate = b1.openGate({ stage: "deep-interview", kind: "question", schema: { type: "string" } });
+		const gate = b1.openGate({ stage: "jaw-interview", kind: "question", schema: { type: "string" } });
 		// New broker instance, same backing file → sees the pending gate.
 		const b2 = new WorkflowGateBroker("run-xyz", new FileGateStore(file));
 		const res = await b2.resolve({ gate_id: gate.gate_id, answer: "an answer" });

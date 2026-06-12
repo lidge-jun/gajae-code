@@ -221,7 +221,7 @@ import {
 	readVisibleSkillActiveState,
 	syncSkillActiveState,
 } from "../skill-state/active-state";
-import { assertDeepInterviewMutationAllowed } from "../skill-state/deep-interview-mutation-guard";
+import { assertJawInterviewMutationAllowed } from "../skill-state/jaw-interview-mutation-guard";
 import { invalidateHostMetadata } from "../ssh/connection-manager";
 import { resolveThinkingLevelForModel, toReasoningEffort } from "../thinking";
 import {
@@ -3651,11 +3651,11 @@ export class AgentSession {
 	}
 
 	/**
-	 * Wrap a tool with the deep-interview mutation guard. This guard is intentionally
+	 * Wrap a tool with the jaw-interview mutation guard. This guard is intentionally
 	 * outermost so active interviews reject product-code mutation before ACP permission
 	 * prompts or tool execution can run.
 	 */
-	#wrapToolForDeepInterviewMutationGuard<T extends AgentTool>(tool: T): T {
+	#wrapToolForJawInterviewMutationGuard<T extends AgentTool>(tool: T): T {
 		if (!["edit", "write", "ast_edit", "bash"].includes(tool.name)) return tool;
 		return new Proxy(tool, {
 			get: (target, prop) => {
@@ -3667,7 +3667,7 @@ export class AgentSession {
 					onUpdate: never,
 					ctx: never,
 				) => {
-					await assertDeepInterviewMutationAllowed({
+					await assertJawInterviewMutationAllowed({
 						cwd: this.sessionManager.getCwd(),
 						sessionId: this.sessionManager.getSessionId(),
 						tool: target,
@@ -3690,7 +3690,7 @@ export class AgentSession {
 		for (const name of toolNames) {
 			const tool = this.#toolRegistry.get(name);
 			if (tool) {
-				tools.push(this.#wrapToolForDeepInterviewMutationGuard(this.#wrapToolForAcpPermission(tool)));
+				tools.push(this.#wrapToolForJawInterviewMutationGuard(this.#wrapToolForAcpPermission(tool)));
 				validToolNames.push(name);
 			}
 		}
@@ -4294,7 +4294,7 @@ export class AgentSession {
 		if (!this.getActiveToolNames().includes(finalTool.name)) {
 			const activeTools = [
 				...this.agent.state.tools,
-				this.#wrapToolForDeepInterviewMutationGuard(this.#wrapToolForAcpPermission(finalTool)),
+				this.#wrapToolForJawInterviewMutationGuard(this.#wrapToolForAcpPermission(finalTool)),
 			];
 			this.agent.setTools(activeTools);
 			this.#invalidateDiscoveryCaches();
@@ -4619,7 +4619,7 @@ export class AgentSession {
 		if (typeof name !== "string" || !name.trim()) return;
 		const skill = name.trim();
 		const sessionId = this.sessionManager.getSessionId();
-		// Canonical GJC workflow skills (deep-interview, ralplan, ultragoal, team)
+		// Canonical GJC workflow skills (jaw-interview, ralplan, ultragoal, team)
 		// own their `.gjc/state/skill-active-state.json` row through the
 		// `gjc state handoff` and `gjc state clear` runtime verbs. The prompt
 		// observer must not overwrite an existing row (that clobbered handoff

@@ -2,7 +2,7 @@ import { describe, expect, it } from "bun:test";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import { migrateWorkflowState } from "@gajae-code/coding-agent/gjc-runtime/state-migrations";
-import {
+import { normalizeWorkflowSkillSlug,
 	RequiredOnWriteEnvelopeSchema,
 	WorkflowStateEnvelopeSchema,
 } from "@gajae-code/coding-agent/gjc-runtime/state-schema";
@@ -57,7 +57,8 @@ describe("workflow state schema golden corpus", () => {
 			expect(migrated.changed, name).toBe(true);
 			expect(migrated.toVersion, name).toBe(2);
 			expect(migrated.state.version, name).toBe(2);
-			expect(migrated.state.skill, name).toBe(skill);
+			// Legacy slugs (e.g. "deep-interview") normalize to the canonical skill on migration (042 L2).
+			expect(migrated.state.skill, name).toBe(normalizeWorkflowSkillSlug(skill));
 			expect(WorkflowStateEnvelopeSchema.safeParse(migrated.state).success, name).toBe(true);
 
 			for (const [key, value] of Object.entries(before)) {

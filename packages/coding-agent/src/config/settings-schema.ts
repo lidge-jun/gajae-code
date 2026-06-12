@@ -375,6 +375,13 @@ export const SETTINGS_SCHEMA = {
 
 	cycleOrder: { type: "array", default: DEFAULT_CYCLE_ORDER },
 
+	"jwc.interview.ambiguityThreshold": {
+		type: "number",
+		default: 0.05,
+		validate: (value: number) => Number.isFinite(value) && value > 0 && value <= 1,
+	},
+
+	/** @deprecated legacy key — migrated to `jwc.interview.ambiguityThreshold` on load (042 D041-D). */
 	"gjc.deepInterview.ambiguityThreshold": {
 		type: "number",
 		default: 0.05,

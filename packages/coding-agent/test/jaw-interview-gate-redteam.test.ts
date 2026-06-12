@@ -1,10 +1,10 @@
 import { describe, expect, it } from "bun:test";
 import {
 	type AskGateQuestion,
-	DeepInterviewGateError,
 	gateAnswerToResult,
+	JawInterviewGateError,
 	questionToGate,
-} from "@gajae-code/coding-agent/modes/shared/agent-wire/deep-interview-gate";
+} from "@gajae-code/coding-agent/modes/shared/agent-wire/jaw-interview-gate";
 import {
 	MemoryGateStore,
 	WorkflowGateBroker,
@@ -38,7 +38,7 @@ async function resolveQuestion(question: AskGateQuestion, answer: unknown) {
 	return { gate, resolution };
 }
 
-describe("deep-interview question gates red-team", () => {
+describe("jaw-interview question gates red-team", () => {
 	it("round-trips single, multi, and Other free-text answers through the broker to the human-path QuestionResult", async () => {
 		const single = await resolveQuestion(singleQ, { selected: ["JWT"] });
 		expect(single.resolution.status).toBe("accepted");
@@ -106,7 +106,7 @@ describe("deep-interview question gates red-team", () => {
 	});
 
 	it("rejects semantically invalid but schema-shaped answers during decoding", () => {
-		const cases: Array<{ name: string; answer: unknown; code: DeepInterviewGateError["code"] }> = [
+		const cases: Array<{ name: string; answer: unknown; code: JawInterviewGateError["code"] }> = [
 			{ name: "empty selected", answer: { selected: [] }, code: "empty_selection" },
 			{ name: "unknown option", answer: { selected: ["Password"] }, code: "unknown_option" },
 			{
@@ -124,7 +124,7 @@ describe("deep-interview question gates red-team", () => {
 		];
 
 		for (const c of cases) {
-			expect(() => gateAnswerToResult(singleQ, c.answer), c.name).toThrow(DeepInterviewGateError);
+			expect(() => gateAnswerToResult(singleQ, c.answer), c.name).toThrow(JawInterviewGateError);
 			try {
 				gateAnswerToResult(singleQ, c.answer);
 			} catch (error) {

@@ -628,6 +628,22 @@ export class Settings {
 			delete raw.queueMode;
 		}
 
+		// gjc.deepInterview.ambiguityThreshold -> jwc.interview.ambiguityThreshold (nested, 042 D041-D)
+		const legacyGjc = raw.gjc as Record<string, unknown> | undefined;
+		const legacyDeepInterview = legacyGjc?.deepInterview as Record<string, unknown> | undefined;
+		if (legacyDeepInterview && "ambiguityThreshold" in legacyDeepInterview) {
+			raw.jwc ??= {};
+			const jwcRoot = raw.jwc as Record<string, unknown>;
+			jwcRoot.interview ??= {};
+			const interviewRoot = jwcRoot.interview as Record<string, unknown>;
+			if (!("ambiguityThreshold" in interviewRoot)) {
+				interviewRoot.ambiguityThreshold = legacyDeepInterview.ambiguityThreshold;
+			}
+			delete legacyDeepInterview.ambiguityThreshold;
+			if (Object.keys(legacyDeepInterview).length === 0) delete legacyGjc?.deepInterview;
+			if (legacyGjc && Object.keys(legacyGjc).length === 0) delete raw.gjc;
+		}
+
 		// ask.timeout: ms -> seconds (if value > 1000, it's old ms format)
 		if (raw.ask && typeof (raw.ask as Record<string, unknown>).timeout === "number") {
 			const oldValue = (raw.ask as Record<string, unknown>).timeout as number;

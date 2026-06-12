@@ -20,8 +20,8 @@ Optimize for correctness first, maintainability second, and brevity third. Prefe
 <public-workflow-surface>
 GJC exposes exactly four default workflow skills. Do not add, advertise, or route to other default workflow definitions without an explicit product decision.
 
-<skill name="deep-interview" user-entrypoint="/skill:deep-interview" cli-runtime="native: gjc deep-interview">
-Use for vague ideas that need Socratic requirements gathering, mathematical ambiguity scoring, topology confirmation, and a spec under `.gjc/specs/`. It is a requirements workflow; it must not mutate product code. The normal handoff is deep-interview spec → ralplan consensus refinement → pending approval → separately approved execution.
+<skill name="jaw-interview" user-entrypoint="/skill:jaw-interview" cli-runtime="native: gjc jaw-interview">
+Use for vague ideas that need Socratic requirements gathering, mathematical ambiguity scoring, topology confirmation, and a spec under `.gjc/specs/`. It is a requirements workflow; it must not mutate product code. The normal handoff is jaw-interview spec → ralplan consensus refinement → pending approval → separately approved execution.
 </skill>
 
 <skill name="ralplan" user-entrypoint="/skill:ralplan" cli-runtime="native: gjc ralplan">
@@ -36,7 +36,7 @@ Use for durable multi-goal execution ledgers under `.gjc/ultragoal/`, especially
 Use for tmux-backed coordinated execution with workers, shared state under `.gjc/state/team/`, mailbox/dispatch APIs, worktrees, lifecycle control, and explicit verification lanes.
 </skill>
 </public-workflow-surface>
-Agent sessions MUST activate bundled workflow skills via the `/skill:<name>` user-entrypoint unless a skill explicitly requires its native CLI runtime. `gjc deep-interview`, `gjc ralplan`, `gjc ultragoal`, and `gjc team` are all native commands that read and write `.gjc/state`, `.gjc/plans`, and `.gjc/ultragoal` directly.
+Agent sessions MUST activate bundled workflow skills via the `/skill:<name>` user-entrypoint unless a skill explicitly requires its native CLI runtime. `gjc jaw-interview`, `gjc ralplan`, `gjc ultragoal`, and `gjc team` are all native commands that read and write `.gjc/state`, `.gjc/plans`, and `.gjc/ultragoal` directly.
 
 <role-agent-surface>
 GJC also bundles four source-defined role agents for the task/sub-agent tool. These are not workflow skills and are not repo-visible `.gjc` defaults. They are implementation and review lanes loaded from source prompts.
@@ -60,7 +60,7 @@ Use for read-only plan critique. It approves only when execution can proceed wit
 
 <routing>
 - Clear, low-risk implementation request → implement directly with focused verification.
-- Vague requirements → use `deep-interview` before planning or execution.
+- Vague requirements → use `jaw-interview` before planning or execution.
 - Clear requirements but non-trivial architecture/sequence risk → use `ralplan` and stop at pending approval.
 - Durable goal ledger needed → use `ultragoal`; if no approved plan exists, run `ralplan` first.
 - Approved work benefits from coordinated persistent workers → use `team`.
@@ -71,7 +71,7 @@ Use for read-only plan critique. It approves only when execution can proceed wit
 
 <skill-discipline>
 - Never ignore a skill invocation or any skill text. When a skill is active, read it in full and follow its instructions exactly. Do not assume, paraphrase, reorder, or substitute steps.
-- Read-only and interview-style skills (e.g. `deep-interview`, `planner`, `architect`, `critic`) MUST NOT implement, edit product source, commit, or run mutating commands. Honor each skill's read-only or pending-approval boundary even when the fix looks obvious.
+- Read-only and interview-style skills (e.g. `jaw-interview`, `planner`, `architect`, `critic`) MUST NOT implement, edit product source, commit, or run mutating commands. Honor each skill's read-only or pending-approval boundary even when the fix looks obvious.
 - When a task fits a bundled skill, recommend invoking the corresponding `/skill:<name>`; on user approval, invoke it. Never silently bypass an applicable skill.
 - When no skill is active, or the active skill explicitly permits the action, and the action is non-destructive and clearly correct, perform it directly instead of asking.
 </skill-discipline>

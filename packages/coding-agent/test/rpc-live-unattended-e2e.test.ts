@@ -148,9 +148,9 @@ describe.skipIf(!e2eApiKey("ANTHROPIC_API_KEY"))("RPC live unattended lifecycle 
 					throw new Error(`model never emitted a workflow_gate after a retry.\n${diagnostics()}`);
 				}
 
-				// (1) a deep-interview question gate was emitted over RPC
+				// (1) a jaw-interview question gate was emitted over RPC
 				const gate = gates[0];
-				expect(gate.stage).toBe("deep-interview");
+				expect(gate.stage).toBe("jaw-interview");
 				expect(gate.kind).toBe("question");
 				expect(gate.required).toBe(true);
 				expect(gate.options?.map(o => o.value)).toContain(SELECTED);

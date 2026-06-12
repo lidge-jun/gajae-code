@@ -402,7 +402,8 @@ export type RpcCommandType = RpcCommand["type"];
  * `team` parallel execution over RPC is deferred, so it is intentionally absent
  * from this union. Gate construction rejects any other stage value.
  */
-export type RpcWorkflowStage = "deep-interview" | "ralplan" | "ultragoal";
+/** "deep-interview" is the legacy wire value for "jaw-interview" (042 L3 dual-union read-compat). */
+export type RpcWorkflowStage = "jaw-interview" | "deep-interview" | "ralplan" | "ultragoal";
 
 /** Reserved stage names that are explicitly not part of the v1 contract. */
 export const RESERVED_WORKFLOW_STAGES: readonly string[] = ["team"];

@@ -27,7 +27,7 @@ export interface EffectiveSkillConfigInput {
 }
 
 const SANITIZED_CONFIG_VALUE_LIMIT = 80;
-const DEFAULT_DEEP_INTERVIEW_AMBIGUITY_THRESHOLD = 0.05;
+const DEFAULT_JAW_INTERVIEW_AMBIGUITY_THRESHOLD = 0.05;
 
 function sanitizeConfigValue(value: string): string {
 	const compact = value.replace(/[\r\n\t]+/g, " ").trim();
@@ -47,7 +47,7 @@ function formatBoolean(name: string, value: boolean | undefined): string {
 export function buildSanitizedEffectiveSkillConfigContext(input: EffectiveSkillConfigInput | undefined): string {
 	if (!input || input.unavailableReason) {
 		const reason = input?.unavailableReason ? sanitizeConfigValue(input.unavailableReason) : "not available";
-		return `Sanitized effective skill config unavailable (${reason}); bundled GJC workflow activation remains available for deep-interview, ralplan, ultragoal, team.`;
+		return `Sanitized effective skill config unavailable (${reason}); bundled GJC workflow activation remains available for jaw-interview, ralplan, ultragoal, team.`;
 	}
 
 	const settings = input.skillsSettings ?? {};
@@ -59,7 +59,7 @@ export function buildSanitizedEffectiveSkillConfigContext(input: EffectiveSkillC
 	const customDirectoryCount = countNonEmptyStrings(settings.customDirectories);
 
 	return [
-		"Sanitized effective skill config for filesystem/custom skill discovery; bundled GJC workflow activation remains available for exactly deep-interview, ralplan, ultragoal, team.",
+		"Sanitized effective skill config for filesystem/custom skill discovery; bundled GJC workflow activation remains available for exactly jaw-interview, ralplan, ultragoal, team.",
 		`Skill discovery booleans: ${[
 			formatBoolean("enabled", settings.enabled),
 			formatBoolean("enableSkillCommands", settings.enableSkillCommands),
@@ -359,8 +359,8 @@ async function seedSkillActivationState(
 		...(input.threadId ? { thread_id: input.threadId } : {}),
 		...(input.turnId ? { turn_id: input.turnId } : {}),
 	};
-	if (skill === "deep-interview") {
-		modeState.threshold = DEFAULT_DEEP_INTERVIEW_AMBIGUITY_THRESHOLD;
+	if (skill === "jaw-interview") {
+		modeState.threshold = DEFAULT_JAW_INTERVIEW_AMBIGUITY_THRESHOLD;
 		modeState.threshold_source = "default";
 	}
 
@@ -456,7 +456,7 @@ const STOP_RELEASING_PHASES = ["complete", "completed", "failed", "cancelled", "
  * (active:false) or cleared.
  */
 function isHandoffRequiredSkill(skill: GjcWorkflowSkill): boolean {
-	return skill === "deep-interview" || skill === "ralplan";
+	return skill === "jaw-interview" || skill === "ralplan";
 }
 
 /**

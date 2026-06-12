@@ -122,7 +122,7 @@ describe("workflow gate red-team contract", () => {
 	it("accepts a later valid answer after an earlier invalid answer rejected the same pending gate", async () => {
 		const { broker, advanced, audit } = makeBroker();
 		const gate = broker.openGate({
-			stage: "deep-interview",
+			stage: "jaw-interview",
 			kind: "question",
 			schema: { type: "object", required: ["decision"], properties: { decision: { const: "proceed" } } },
 		});

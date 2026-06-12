@@ -46,7 +46,7 @@ interface ThresholdModel {
 	rest: string;
 }
 
-type DeepInterviewModel = RoundQuestionModel | TopologyQuestionModel | ProgressModel | ThresholdModel;
+type JawInterviewModel = RoundQuestionModel | TopologyQuestionModel | ProgressModel | ThresholdModel;
 
 function normalizeText(text: string): string {
 	return text.trim().replaceAll("\r\n", "\n");
@@ -221,7 +221,7 @@ function parseProgress(text: string): ProgressModel | null {
 
 function parseThreshold(text: string): ThresholdModel | null {
 	const normalized = normalizeText(text);
-	const match = /^Deep Interview threshold:\s*(.*?)\s*\(source:\s*(.*?)\)\s*$/im.exec(normalized.split("\n")[0] ?? "");
+	const match = /^Jaw Interview threshold:\s*(.*?)\s*\(source:\s*(.*?)\)\s*$/im.exec(normalized.split("\n")[0] ?? "");
 	if (!match) return null;
 	return {
 		kind: "threshold",
@@ -231,7 +231,7 @@ function parseThreshold(text: string): ThresholdModel | null {
 	};
 }
 
-function parseDeepInterview(text: string): DeepInterviewModel | null {
+function parseJawInterview(text: string): JawInterviewModel | null {
 	return parseProgress(text) ?? parseTopologyQuestion(text) ?? parseRoundQuestion(text) ?? parseThreshold(text);
 }
 
@@ -256,7 +256,7 @@ function renderPipeSummary(title: string, value: string | undefined): string | u
 	);
 }
 
-function renderModel(model: DeepInterviewModel, uiTheme: Theme): Component {
+function renderModel(model: JawInterviewModel, uiTheme: Theme): Component {
 	const container = new Container();
 	if (model.kind === "round-question") {
 		const meta = [
@@ -265,7 +265,7 @@ function renderModel(model: DeepInterviewModel, uiTheme: Theme): Component {
 		]
 			.filter(Boolean)
 			.join(" · ");
-		container.addChild(new Text(uiTheme.fg("toolTitle", uiTheme.bold(`Deep Interview · ${meta}`)), 0, 0));
+		container.addChild(new Text(uiTheme.fg("toolTitle", uiTheme.bold(`Jaw Interview · ${meta}`)), 0, 0));
 		addLabel(container, "Component", model.component, uiTheme);
 		addLabel(container, "Mode", model.mode, uiTheme);
 		addLabel(container, "Target", model.targeting, uiTheme);
@@ -276,7 +276,7 @@ function renderModel(model: DeepInterviewModel, uiTheme: Theme): Component {
 
 	if (model.kind === "topology-question") {
 		container.addChild(
-			new Text(uiTheme.fg("toolTitle", uiTheme.bold("Deep Interview · Round 0 · Topology confirmation")), 0, 0),
+			new Text(uiTheme.fg("toolTitle", uiTheme.bold("Jaw Interview · Round 0 · Topology confirmation")), 0, 0),
 		);
 		addLabel(container, "Ambiguity", "Not scored yet", uiTheme);
 		addLabel(container, "Reading", model.context, uiTheme);
@@ -292,7 +292,7 @@ function renderModel(model: DeepInterviewModel, uiTheme: Theme): Component {
 
 	if (model.kind === "progress") {
 		container.addChild(
-			new Text(uiTheme.fg("toolTitle", uiTheme.bold(`Deep Interview · Round ${model.round} complete`)), 0, 0),
+			new Text(uiTheme.fg("toolTitle", uiTheme.bold(`Jaw Interview · Round ${model.round} complete`)), 0, 0),
 		);
 		addLabel(container, "Ambiguity", model.ambiguity, uiTheme);
 		if (model.dimensions.length > 0) {
@@ -312,31 +312,31 @@ function renderModel(model: DeepInterviewModel, uiTheme: Theme): Component {
 		return container;
 	}
 
-	container.addChild(new Text(uiTheme.fg("toolTitle", uiTheme.bold("Deep Interview · Started")), 0, 0));
+	container.addChild(new Text(uiTheme.fg("toolTitle", uiTheme.bold("Jaw Interview · Started")), 0, 0));
 	addLabel(container, "Threshold", `${model.threshold} · source: ${model.source}`, uiTheme);
 	addLabel(container, "Details", model.rest, uiTheme);
 	return container;
 }
 
-export function renderDeepInterviewAssistantText(text: string, uiTheme: Theme): Component | null {
-	const model = parseDeepInterview(text);
+export function renderJawInterviewAssistantText(text: string, uiTheme: Theme): Component | null {
+	const model = parseJawInterview(text);
 	if (!model || model.kind === "round-question" || model.kind === "topology-question") return null;
 	return renderModel(model, uiTheme);
 }
 
-export function renderDeepInterviewAskQuestion(question: string, uiTheme: Theme): Component | null {
+export function renderJawInterviewAskQuestion(question: string, uiTheme: Theme): Component | null {
 	const model = parseTopologyQuestion(question) ?? parseRoundQuestion(question);
 	if (!model) return null;
 	return renderModel(model, uiTheme);
 }
 
-export function isDeepInterviewAskQuestion(question: string): boolean {
+export function isJawInterviewAskQuestion(question: string): boolean {
 	if (parseTopologyQuestion(question) ?? parseRoundQuestion(question)) return true;
 	const normalized = normalizeText(question);
 	return /(?:^|\n)\s*Round\s+\d+\s*\|.*?\bAmbiguity\b/i.test(normalized);
 }
 
-export function formatDeepInterviewSelectorPrompt(question: string): string | null {
+export function formatJawInterviewSelectorPrompt(question: string): string | null {
 	const model = parseTopologyQuestion(question) ?? parseRoundQuestion(question);
 	if (!model) return null;
 	if (model.kind === "topology-question") {
@@ -350,7 +350,7 @@ export function formatDeepInterviewSelectorPrompt(question: string): string | nu
 					]
 				: [];
 		return [
-			"Deep Interview · Round 0 · Topology confirmation",
+			"Jaw Interview · Round 0 · Topology confirmation",
 			"Ambiguity: not scored yet",
 			model.context ? `Reading:\n${model.context}` : undefined,
 			...componentLines,
@@ -360,7 +360,7 @@ export function formatDeepInterviewSelectorPrompt(question: string): string | nu
 			.join("\n\n");
 	}
 	return [
-		`Deep Interview · Round ${model.round}${model.ambiguity ? ` · Ambiguity ${model.ambiguity.replace(/%$/, "")}%` : ""}`,
+		`Jaw Interview · Round ${model.round}${model.ambiguity ? ` · Ambiguity ${model.ambiguity.replace(/%$/, "")}%` : ""}`,
 		model.component ? `Component: ${model.component}` : undefined,
 		model.mode ? `Mode: ${model.mode}` : undefined,
 		model.targeting ? `Target: ${model.targeting}` : undefined,

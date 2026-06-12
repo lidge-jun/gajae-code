@@ -1,3 +1,4 @@
+import { normalizeWorkflowSkillSlug } from "../gjc-runtime/state-schema";
 import { CANONICAL_GJC_WORKFLOW_SKILLS, type CanonicalGjcWorkflowSkill } from "../skill-state/active-state";
 
 export interface SkillKeywordDefinition {
@@ -13,28 +14,28 @@ export type GjcWorkflowSkill = CanonicalGjcWorkflowSkill;
 
 export const GJC_SKILL_KEYWORD_DEFINITIONS: readonly SkillKeywordDefinition[] = [
 	{
-		keyword: "$deep-interview",
-		skill: "deep-interview",
+		keyword: "$jaw-interview",
+		skill: "jaw-interview",
 		priority: 8,
-		guidance: "Activate GJC deep-interview requirements workflow",
+		guidance: "Activate GJC jaw-interview requirements workflow",
 	},
 	{
 		keyword: "deep interview",
-		skill: "deep-interview",
+		skill: "jaw-interview",
 		priority: 8,
-		guidance: "Activate GJC deep-interview requirements workflow",
+		guidance: "Activate GJC jaw-interview requirements workflow",
 	},
 	{
 		keyword: "interview me",
-		skill: "deep-interview",
+		skill: "jaw-interview",
 		priority: 8,
-		guidance: "Activate GJC deep-interview requirements workflow",
+		guidance: "Activate GJC jaw-interview requirements workflow",
 	},
 	{
 		keyword: "don't assume",
-		skill: "deep-interview",
+		skill: "jaw-interview",
 		priority: 8,
-		guidance: "Activate GJC deep-interview requirements workflow",
+		guidance: "Activate GJC jaw-interview requirements workflow",
 	},
 	{
 		keyword: "$ralplan",
@@ -75,7 +76,7 @@ export const GJC_SKILL_KEYWORD_DEFINITIONS: readonly SkillKeywordDefinition[] = 
 ] as const;
 
 export function isGjcWorkflowSkill(value: string): value is GjcWorkflowSkill {
-	return (GJC_WORKFLOW_SKILLS as readonly string[]).includes(value);
+	return (GJC_WORKFLOW_SKILLS as readonly string[]).includes(normalizeWorkflowSkillSlug(value));
 }
 
 export function compareSkillKeywordMatches(

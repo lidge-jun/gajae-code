@@ -48,7 +48,7 @@ const GJC_REFERENCE_PATTERNS: readonly RegExp[] = [
 	/\bmodeStateFile\b/u,
 	/\bworkflowStateStoragePath\b/u,
 	/\bresolveGjcTeamStateRoot\b/u,
-	/\bdeepInterviewStatePath\b/u,
+	/\bjawInterviewStatePath\b/u,
 	/\bspecsDir\b/u,
 	/\brunDir\b/u,
 	/\bledgerPath\b/u,

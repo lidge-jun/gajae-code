@@ -1,4 +1,5 @@
 import * as path from "node:path";
+import { normalizeWorkflowSkillSlug } from "../gjc-runtime/state-schema";
 import { CANONICAL_GJC_WORKFLOW_SKILLS, type CanonicalGjcWorkflowSkill, SKILL_ACTIVE_STATE_FILE } from "./active-state";
 import { WORKFLOW_STATE_RECEIPT_FRESH_MS, WORKFLOW_STATE_RECEIPT_VERSION } from "./workflow-state-version";
 
@@ -129,8 +130,9 @@ export function workflowReceiptStatus(
 }
 
 export function canonicalWorkflowSkill(value: string): CanonicalGjcWorkflowSkill | null {
-	return (CANONICAL_GJC_WORKFLOW_SKILLS as readonly string[]).includes(value)
-		? (value as CanonicalGjcWorkflowSkill)
+	const normalized = normalizeWorkflowSkillSlug(value);
+	return (CANONICAL_GJC_WORKFLOW_SKILLS as readonly string[]).includes(normalized)
+		? (normalized as CanonicalGjcWorkflowSkill)
 		: null;
 }
 

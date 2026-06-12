@@ -164,13 +164,13 @@ Workers do not own ultragoal goal state, do not create worker ultragoal ledgers,
 
 ## Internal Ultragoal sub-skill fragments
 
-The completion-gate cleanup sweep is driven by `ai-slop-cleaner`, an internal Ultragoal sub-skill bundled as a `kind: "skill-fragment"` prompt with parent skill `ultragoal` (installed at `skill-fragments/ultragoal/ai-slop-cleaner.md`). It is analogous to deep-interview's auto-research fragment: loaded on demand for one specific hook, never a user-facing skill.
+The completion-gate cleanup sweep is driven by `ai-slop-cleaner`, an internal Ultragoal sub-skill bundled as a `kind: "skill-fragment"` prompt with parent skill `ultragoal` (installed at `skill-fragments/ultragoal/ai-slop-cleaner.md`). It is analogous to jaw-interview's auto-research fragment: loaded on demand for one specific hook, never a user-facing skill.
 
 - It is not slash-command discoverable, has no public skill-listing entry, and is never resolvable through `skill://`.
 - It is a read-only detector+reporter over the active story's changed files only: it never edits code, writes files, mutates `.gjc/`, checkpoints, calls goal tools, or spawns workflows.
 - It classifies every finding as blocking or advisory across the full taxonomy (fallback-like masking vs. grounded, duplication, dead code, needless abstraction, boundary violations, UI/design slop, missing tests).
 - The leader and a leader-spawned `executor` own all fixes; the cleaner reruns until zero blocking findings remain. Advisory findings live in the gate report only.
-- Recursion guard: it must not spawn nested `ralplan`/`team`/`deep-interview`/`ultragoal`; broad or architectural findings are handed back to the leader as review blockers.
+- Recursion guard: it must not spawn nested `ralplan`/`team`/`jaw-interview`/`ultragoal`; broad or architectural findings are handed back to the leader as review blockers.
 
 ## Mandatory completion cleanup and review gate
 
@@ -307,7 +307,7 @@ When the aggregate ultragoal is complete OR the user requests return to planning
 gjc state ultragoal write --input '{"current_phase":"handoff"}' --json
 ```
 
-The skill tool then dispatches `/skill:ralplan` or `/skill:deep-interview` same-turn and runs `gjc state ultragoal handoff --to <ralplan|deep-interview> --json` in-process to atomically demote ultragoal, promote the callee, and sync both `skill-active-state.json` files. You do not need to run the handoff verb yourself.
+The skill tool then dispatches `/skill:ralplan` or `/skill:jaw-interview` same-turn and runs `gjc state ultragoal handoff --to <ralplan|jaw-interview> --json` in-process to atomically demote ultragoal, promote the callee, and sync both `skill-active-state.json` files. You do not need to run the handoff verb yourself.
 
 ## Constraints
 

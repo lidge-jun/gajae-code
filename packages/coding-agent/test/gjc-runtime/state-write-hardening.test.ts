@@ -224,12 +224,12 @@ describe("gjc state write hardening", () => {
 			research_findings: [{ source: "x" }],
 			extension_field: { nested: true },
 		};
-		const result = await writeState(root, "deep-interview", extension);
+		const result = await writeState(root, "jaw-interview", extension);
 		expect(result.status).toBe(0);
 		const written = receiptFrom(result.stdout);
-		expect(written).toMatchObject({ ok: true, skill: "deep-interview", current_phase: "interviewing" });
+		expect(written).toMatchObject({ ok: true, skill: "jaw-interview", current_phase: "interviewing" });
 		const onDisk = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "deep-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		expect(onDisk.rounds).toEqual(extension.rounds);
 		expect(onDisk.topology).toEqual(extension.topology);

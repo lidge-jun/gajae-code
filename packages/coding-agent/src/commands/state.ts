@@ -6,13 +6,13 @@ export default class State extends Command {
 	static description = `Read or update ${APP_NAME.toUpperCase()} workflow state receipts under .gjc/state`;
 	static strict = false;
 	static examples = [
-		'$ gjc state read --input \'{"mode":"deep-interview"}\' --json',
-		'$ gjc state write --input \'{"state":{"interview_id":"abc"}}\' --mode deep-interview --json',
-		"$ gjc state clear --mode deep-interview",
-		"$ gjc state deep-interview read --json",
+		'$ gjc state read --input \'{"mode":"jaw-interview"}\' --json',
+		'$ gjc state write --input \'{"state":{"interview_id":"abc"}}\' --mode jaw-interview --json',
+		"$ gjc state clear --mode jaw-interview",
+		"$ gjc state jaw-interview read --json",
 		'$ gjc state ralplan write --input \'{"phase":"planner","active":true}\' --json',
 		"$ gjc state team contract",
-		"$ gjc state deep-interview handoff --to ralplan --json",
+		"$ gjc state jaw-interview handoff --to ralplan --json",
 		"$ gjc state doctor --skill ralplan --json",
 	];
 

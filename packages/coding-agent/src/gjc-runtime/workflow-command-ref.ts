@@ -1,5 +1,6 @@
 import type { CanonicalGjcWorkflowSkill } from "../skill-state/active-state";
 import { CANONICAL_GJC_WORKFLOW_SKILLS } from "../skill-state/active-state";
+import { normalizeWorkflowSkillSlug } from "./state-schema";
 
 export type CommandRefVisibility = "public" | "hidden" | "planned";
 export type CommandRefIncludeWhen = "implemented-only" | "planned";
@@ -69,20 +70,20 @@ const stateHandoff = (
 
 export const WORKFLOW_COMMAND_REF_BLOCKS: readonly CommandRefBlock[] = [
 	{
-		skill: "deep-interview",
+		skill: "jaw-interview",
 		blockId: "state",
-		sourcePath: skillPath("deep-interview"),
+		sourcePath: skillPath("jaw-interview"),
 		renderOrder: 10,
 		markers: {
 			start: "<!-- gjc:cmdref:start state -->",
 			end: "<!-- gjc:cmdref:end state -->",
 		},
 		commands: [
-			stateWrite("deep-interview"),
+			stateWrite("jaw-interview"),
 			{
 				tokens: [
 					"gjc",
-					"deep-interview",
+					"jaw-interview",
 					"--write",
 					"--stage",
 					"final",
@@ -94,32 +95,32 @@ export const WORKFLOW_COMMAND_REF_BLOCKS: readonly CommandRefBlock[] = [
 					"--json",
 				],
 				rendered:
-					"gjc deep-interview --write --stage final --slug {slug} --spec <markdown-or-path> --deliberate --json",
+					"gjc jaw-interview --write --stage final --slug {slug} --spec <markdown-or-path> --deliberate --json",
 				visibility: "public",
 				includeWhen: "implemented-only",
-				note: "Sanctioned deliberate deep-interview to ralplan bridge.",
+				note: "Sanctioned deliberate jaw-interview to ralplan bridge.",
 			},
 		],
 		examples: [
 			{
 				label: "handoff state write",
-				bytes: '```\ngjc state deep-interview write --input \'{"current_phase":"handoff"}\' --json\n```',
+				bytes: '```\ngjc state jaw-interview write --input \'{"current_phase":"handoff"}\' --json\n```',
 			},
 			{
 				label: "deliberate bridge",
-				bytes: "```\ngjc \\\ndeep-interview --write --stage final --slug {slug} --spec <markdown-or-path> --deliberate --json\n```",
+				bytes: "```\ngjc \\\njaw-interview --write --stage final --slug {slug} --spec <markdown-or-path> --deliberate --json\n```",
 			},
 		],
 		aliasesAndBridges: [
 			{
-				from: "deep-interview",
+				from: "jaw-interview",
 				to: "ralplan",
 				rendered:
-					"gjc deep-interview --write --stage final --slug {slug} --spec <markdown-or-path> --deliberate --json",
+					"gjc jaw-interview --write --stage final --slug {slug} --spec <markdown-or-path> --deliberate --json",
 			},
 		],
 		notes: [
-			"Before invoking `/skill:ralplan`, `/skill:team`, or `/skill:ultragoal`, persist the final spec and mark deep-interview ready for handoff.",
+			"Before invoking `/skill:ralplan`, `/skill:team`, or `/skill:ultragoal`, persist the final spec and mark jaw-interview ready for handoff.",
 		],
 	},
 	{
@@ -148,7 +149,7 @@ export const WORKFLOW_COMMAND_REF_BLOCKS: readonly CommandRefBlock[] = [
 		sourcePath: skillPath("ultragoal"),
 		renderOrder: 10,
 		markers: { start: "<!-- gjc:cmdref:start state -->", end: "<!-- gjc:cmdref:end state -->" },
-		commands: [stateWrite("ultragoal"), stateHandoff("ultragoal", ["ralplan", "deep-interview"])],
+		commands: [stateWrite("ultragoal"), stateHandoff("ultragoal", ["ralplan", "jaw-interview"])],
 		examples: [
 			{
 				label: "handoff state write",
@@ -158,8 +159,8 @@ export const WORKFLOW_COMMAND_REF_BLOCKS: readonly CommandRefBlock[] = [
 		aliasesAndBridges: [
 			{
 				from: "ultragoal",
-				to: "ralplan|deep-interview",
-				rendered: "gjc state ultragoal handoff --to <ralplan|deep-interview> --json",
+				to: "ralplan|jaw-interview",
+				rendered: "gjc state ultragoal handoff --to <ralplan|jaw-interview> --json",
 			},
 		],
 		notes: [
@@ -172,7 +173,7 @@ export const WORKFLOW_COMMAND_REF_BLOCKS: readonly CommandRefBlock[] = [
 		sourcePath: skillPath("team"),
 		renderOrder: 10,
 		markers: { start: "<!-- gjc:cmdref:start state -->", end: "<!-- gjc:cmdref:end state -->" },
-		commands: [stateWrite("team"), stateHandoff("team", ["ralplan", "deep-interview", "ultragoal"])],
+		commands: [stateWrite("team"), stateHandoff("team", ["ralplan", "jaw-interview", "ultragoal"])],
 		examples: [
 			{
 				label: "handoff state write",
@@ -182,8 +183,8 @@ export const WORKFLOW_COMMAND_REF_BLOCKS: readonly CommandRefBlock[] = [
 		aliasesAndBridges: [
 			{
 				from: "team",
-				to: "ralplan|deep-interview|ultragoal",
-				rendered: "gjc state team handoff --to <ralplan|deep-interview|ultragoal> --json",
+				to: "ralplan|jaw-interview|ultragoal",
+				rendered: "gjc state team handoff --to <ralplan|jaw-interview|ultragoal> --json",
 			},
 		],
 		notes: [
@@ -235,5 +236,5 @@ export function renderCommandRefBlock(skill: CanonicalGjcWorkflowSkill, blockId 
 }
 
 export function isCanonicalGjcWorkflowSkill(value: string): value is CanonicalGjcWorkflowSkill {
-	return (CANONICAL_GJC_WORKFLOW_SKILLS as readonly string[]).includes(value);
+	return (CANONICAL_GJC_WORKFLOW_SKILLS as readonly string[]).includes(normalizeWorkflowSkillSlug(value));
 }

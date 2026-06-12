@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as url from "node:url";
-import { runNativeDeepInterviewCommand } from "@gajae-code/coding-agent/gjc-runtime/deep-interview-runtime";
+import { runNativeJawInterviewCommand } from "@gajae-code/coding-agent/gjc-runtime/jaw-interview-runtime";
 import { runNativeRalplanCommand } from "@gajae-code/coding-agent/gjc-runtime/ralplan-runtime";
 
 import { getConfigRootDir, setAgentDir } from "@gajae-code/utils";
@@ -14,7 +14,7 @@ const codingAgentRoot = path.resolve(path.dirname(url.fileURLToPath(import.meta.
 const originalAgentDir = process.env.GJC_CODING_AGENT_DIR;
 const fallbackAgentDir = path.join(getConfigRootDir(), "agent");
 async function tempDir(): Promise<string> {
-	const dir = await fs.mkdtemp(path.join(process.cwd(), ".tmp-deep-interview-runtime-"));
+	const dir = await fs.mkdtemp(path.join(process.cwd(), ".tmp-jaw-interview-runtime-"));
 	tempRoots.push(dir);
 	return dir;
 }
@@ -35,9 +35,9 @@ afterEach(async () => {
 	await Promise.all(tempRoots.splice(0).map(dir => fs.rm(dir, { recursive: true, force: true })));
 });
 
-describe("native gjc deep-interview runtime", () => {
-	it("advertises the deep-interview spec persistence and handoff surface in command help", async () => {
-		const source = await fs.readFile(path.join(codingAgentRoot, "src/commands/deep-interview.ts"), "utf-8");
+describe("native gjc jaw-interview runtime", () => {
+	it("advertises the jaw-interview spec persistence and handoff surface in command help", async () => {
+		const source = await fs.readFile(path.join(codingAgentRoot, "src/commands/interview.ts"), "utf-8");
 		// The lightweight CLI help renderer advertises exactly the static flags/examples declared by the command.
 		expect(source).toContain("write: Flags.boolean");
 		expect(source).toContain("stage: Flags.string");
@@ -47,27 +47,27 @@ describe("native gjc deep-interview runtime", () => {
 		expect(source).toContain("handoff: Flags.string");
 	});
 
-	it("handles missing, valid, and corrupt deep-interview state during spec persistence", async () => {
+	it("handles missing, valid, and corrupt jaw-interview state during spec persistence", async () => {
 		const missingRoot = await tempDir();
-		const missing = await runNativeDeepInterviewCommand(
+		const missing = await runNativeJawInterviewCommand(
 			["--write", "--stage", "final", "--slug", "missing-state", "--spec", "# Missing", "--json"],
 			missingRoot,
 		);
 		expect(missing.status).toBe(0);
 		const missingState = JSON.parse(
-			await fs.readFile(path.join(missingRoot, ".gjc", "state", "deep-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(missingRoot, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		expect(missingState.spec_slug).toBe("missing-state");
 
 		const validRoot = await tempDir();
-		const validStatePath = path.join(validRoot, ".gjc", "state", "deep-interview-state.json");
+		const validStatePath = path.join(validRoot, ".gjc", "state", "jaw-interview-state.json");
 		await fs.mkdir(path.dirname(validStatePath), { recursive: true });
 		await fs.writeFile(
 			validStatePath,
 			`${JSON.stringify({ transcript: [{ question: "q", answer: "a" }], current_phase: "interviewing" })}\n`,
 			"utf-8",
 		);
-		const valid = await runNativeDeepInterviewCommand(
+		const valid = await runNativeJawInterviewCommand(
 			["--write", "--stage", "final", "--slug", "valid-state", "--spec", "# Valid", "--json"],
 			validRoot,
 		);
@@ -77,36 +77,36 @@ describe("native gjc deep-interview runtime", () => {
 		expect(validState.spec_slug).toBe("valid-state");
 	});
 
-	it("fails closed on corrupt deep-interview state unless --force is supplied", async () => {
+	it("fails closed on corrupt jaw-interview state unless --force is supplied", async () => {
 		const root = await tempDir();
-		const statePath = path.join(root, ".gjc", "state", "deep-interview-state.json");
+		const statePath = path.join(root, ".gjc", "state", "jaw-interview-state.json");
 		await fs.mkdir(path.dirname(statePath), { recursive: true });
 		await fs.writeFile(statePath, '{"current_phase":', "utf-8");
 
-		const rejected = await runNativeDeepInterviewCommand(
+		const rejected = await runNativeJawInterviewCommand(
 			["--write", "--stage", "final", "--slug", "corrupt-rejected", "--spec", "# Rejected", "--json"],
 			root,
 		);
 		expect(rejected.status).toBe(2);
-		expect(rejected.stderr).toContain("existing deep-interview state is corrupt or tampered");
+		expect(rejected.stderr).toContain("existing jaw-interview state is corrupt or tampered");
 		expect(rejected.stderr).toContain("use --force to overwrite");
 		expect(await fs.readFile(statePath, "utf-8")).toBe('{"current_phase":');
-		await expect(fs.access(path.join(root, ".gjc", "specs", "deep-interview-corrupt-rejected.md"))).rejects.toThrow();
+		await expect(fs.access(path.join(root, ".gjc", "specs", "jaw-interview-corrupt-rejected.md"))).rejects.toThrow();
 
-		const forced = await runNativeDeepInterviewCommand(
+		const forced = await runNativeJawInterviewCommand(
 			["--write", "--stage", "final", "--slug", "corrupt-forced", "--spec", "# Forced", "--force", "--json"],
 			root,
 		);
 		expect(forced.status).toBe(0);
 		const forcedState = JSON.parse(await fs.readFile(statePath, "utf-8"));
 		expect(forcedState.spec_slug).toBe("corrupt-forced");
-		expect(forcedState.receipt).toMatchObject({ skill: "deep-interview", owner: "gjc-runtime" });
+		expect(forcedState.receipt).toMatchObject({ skill: "jaw-interview", owner: "gjc-runtime" });
 		const audit = (await fs.readFile(path.join(root, ".gjc", "state", "audit.jsonl"), "utf-8"))
 			.trim()
 			.split("\n")
 			.map(line => JSON.parse(line) as Record<string, unknown>);
 		expect(
-			audit.some(entry => entry.skill === "deep-interview" && entry.verb === "write" && entry.forced === true),
+			audit.some(entry => entry.skill === "jaw-interview" && entry.verb === "write" && entry.forced === true),
 		).toBe(true);
 	});
 
@@ -115,17 +115,17 @@ describe("native gjc deep-interview runtime", () => {
 		const specPath = path.join(root, "final-spec.md");
 		await fs.writeFile(specPath, "# Final Spec\n\nAcceptance: persist me.\n");
 
-		const result = await runNativeDeepInterviewCommand(
+		const result = await runNativeJawInterviewCommand(
 			["--write", "--stage", "final", "--slug", "persist-me", "--spec", specPath, "--json"],
 			root,
 		);
 		expect(result.status).toBe(0);
 		const payload = JSON.parse(result.stdout ?? "{}");
-		expect(payload.path).toBe(path.join(root, ".gjc", "specs", "deep-interview-persist-me.md"));
+		expect(payload.path).toBe(path.join(root, ".gjc", "specs", "jaw-interview-persist-me.md"));
 		expect(await fs.readFile(payload.path, "utf-8")).toBe("# Final Spec\n\nAcceptance: persist me.\n");
 
 		const state = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "deep-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		expect(state.current_phase).toBe("handoff");
 		expect(state.active).toBe(true);
@@ -136,7 +136,7 @@ describe("native gjc deep-interview runtime", () => {
 
 	it("uses --deliberate to persist the final spec and hand off to ralplan", async () => {
 		const root = await tempDir();
-		const result = await runNativeDeepInterviewCommand(
+		const result = await runNativeJawInterviewCommand(
 			[
 				"--write",
 				"--stage",
@@ -154,16 +154,16 @@ describe("native gjc deep-interview runtime", () => {
 		const payload = JSON.parse(result.stdout ?? "{}");
 		expect(payload.handoff).toMatchObject({ to: "ralplan", mode: "deliberate" });
 
-		const specPath = path.join(root, ".gjc", "specs", "deep-interview-deliberate-spec.md");
+		const specPath = path.join(root, ".gjc", "specs", "jaw-interview-deliberate-spec.md");
 		expect(await fs.readFile(specPath, "utf-8")).toContain("Use ralplan deliberately.");
 
-		const deepInterviewState = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "deep-interview-state.json"), "utf-8"),
+		const jawInterviewState = JSON.parse(
+			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
-		expect(deepInterviewState.active).toBe(false);
-		expect(deepInterviewState.current_phase).toBe("handoff");
-		expect(deepInterviewState.handoff_to).toBe("ralplan");
-		expect(deepInterviewState.spec_path).toBe(specPath);
+		expect(jawInterviewState.active).toBe(false);
+		expect(jawInterviewState.current_phase).toBe("handoff");
+		expect(jawInterviewState.handoff_to).toBe("ralplan");
+		expect(jawInterviewState.spec_path).toBe(specPath);
 
 		const ralplanState = JSON.parse(
 			await fs.readFile(path.join(root, ".gjc", "state", "ralplan-state.json"), "utf-8"),
@@ -172,18 +172,18 @@ describe("native gjc deep-interview runtime", () => {
 		expect(ralplanState.current_phase).toBe("planner");
 		expect(ralplanState.mode).toBe("deliberate");
 		expect(ralplanState.task).toBe(specPath);
-		expect(ralplanState.handoff_from).toBe("deep-interview");
+		expect(ralplanState.handoff_from).toBe("jaw-interview");
 	});
 
-	it("keeps deep-interview spec persistence distinct from ralplan plan writes", async () => {
+	it("keeps jaw-interview spec persistence distinct from ralplan plan writes", async () => {
 		const root = await tempDir();
-		const deepResult = await runNativeDeepInterviewCommand(
+		const deepResult = await runNativeJawInterviewCommand(
 			["--write", "--stage", "final", "--slug", "separate", "--spec", "# Requirements", "--json"],
 			root,
 		);
 		expect(deepResult.status).toBe(0);
 		const deepPayload = JSON.parse(deepResult.stdout ?? "{}");
-		expect(deepPayload.path).toContain(path.join(".gjc", "specs", "deep-interview-separate.md"));
+		expect(deepPayload.path).toContain(path.join(".gjc", "specs", "jaw-interview-separate.md"));
 
 		const ralplanResult = await runNativeRalplanCommand(
 			["--write", "--stage", "final", "--stage_n", "1", "--artifact", "# Plan", "--run-id", "separate", "--json"],
@@ -195,9 +195,9 @@ describe("native gjc deep-interview runtime", () => {
 		expect(await fs.readFile(deepPayload.path, "utf-8")).toBe("# Requirements\n");
 		expect(await fs.readFile(ralplanPayload.path, "utf-8")).toBe("# Plan\n");
 	});
-	it("persists Korean as the deep-interview question language when the initial idea is Korean", async () => {
+	it("persists Korean as the jaw-interview question language when the initial idea is Korean", async () => {
 		const root = await tempDir();
-		const result = await runNativeDeepInterviewCommand(["--json", "한국어 세션에서 구현 방향을 명확히 해줘"], root);
+		const result = await runNativeJawInterviewCommand(["--json", "한국어 세션에서 구현 방향을 명확히 해줘"], root);
 		expect(result.status).toBe(0);
 		const payload = JSON.parse(result.stdout ?? "{}");
 		expect(payload.language).toMatchObject({
@@ -208,15 +208,15 @@ describe("native gjc deep-interview runtime", () => {
 		expect(payload.language.instruction).toContain("Korean");
 
 		const state = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "deep-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		expect(state.language).toEqual(payload.language);
 		expect(state.state.language).toEqual(payload.language);
 	});
 
-	it("lets explicit English requests override Korean deep-interview language detection", async () => {
+	it("lets explicit English requests override Korean jaw-interview language detection", async () => {
 		const root = await tempDir();
-		const result = await runNativeDeepInterviewCommand(["--json", "한국어 배경이지만 질문은 영어로 해줘"], root);
+		const result = await runNativeJawInterviewCommand(["--json", "한국어 배경이지만 질문은 영어로 해줘"], root);
 		expect(result.status).toBe(0);
 		const payload = JSON.parse(result.stdout ?? "{}");
 		expect(payload.language).toMatchObject({
@@ -229,10 +229,10 @@ describe("native gjc deep-interview runtime", () => {
 
 	it("defaults to the SKILL.md default threshold (0.05) when no resolution flag or settings exist", async () => {
 		const root = await tempDir();
-		const result = await runNativeDeepInterviewCommand(["my vague idea"], root);
+		const result = await runNativeJawInterviewCommand(["my vague idea"], root);
 		expect(result.status).toBe(0);
 		const state = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "deep-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		expect(state.resolution).toBe("standard");
 		expect(state.threshold).toBeCloseTo(0.05);
@@ -240,14 +240,14 @@ describe("native gjc deep-interview runtime", () => {
 		expect(state.state.initial_idea).toBe("my vague idea");
 	});
 
-	it("honors gjc.deepInterview.ambiguityThreshold in project .gjc/settings.json", async () => {
+	it("honors jwc.interview.ambiguityThreshold in project .gjc/settings.json", async () => {
 		const root = await tempDir();
 		await fs.mkdir(path.join(root, ".gjc"), { recursive: true });
 		await fs.writeFile(
 			path.join(root, ".gjc", "settings.json"),
-			JSON.stringify({ gjc: { deepInterview: { ambiguityThreshold: 0.08 } } }),
+			JSON.stringify({ jwc: { interview: { ambiguityThreshold: 0.08 } } }),
 		);
-		const result = await runNativeDeepInterviewCommand(["--standard", "--json", "idea"], root);
+		const result = await runNativeJawInterviewCommand(["--standard", "--json", "idea"], root);
 		expect(result.status).toBe(0);
 		const payload = JSON.parse(result.stdout ?? "{}");
 		expect(payload.threshold).toBeCloseTo(0.08);
@@ -259,15 +259,15 @@ describe("native gjc deep-interview runtime", () => {
 		const agentDir = await tempDir();
 		setAgentDir(agentDir);
 		resetSettingsForTest();
-		await fs.writeFile(path.join(agentDir, "config.yml"), "gjc:\n  deepInterview:\n    ambiguityThreshold: 0.2\n");
+		await fs.writeFile(path.join(agentDir, "config.yml"), "jwc:\n  interview:\n    ambiguityThreshold: 0.2\n");
 		await fs.mkdir(path.join(root, ".gjc"), { recursive: true });
 		await fs.writeFile(
 			path.join(root, ".gjc", "settings.json"),
-			JSON.stringify({ gjc: { deepInterview: { ambiguityThreshold: 0.08 } } }),
+			JSON.stringify({ jwc: { interview: { ambiguityThreshold: 0.08 } } }),
 		);
 
 		resetSettingsForTest();
-		const result = await runNativeDeepInterviewCommand(["--standard", "--json", "idea"], root);
+		const result = await runNativeJawInterviewCommand(["--standard", "--json", "idea"], root);
 
 		expect(result.status).toBe(0);
 		const payload = JSON.parse(result.stdout ?? "{}");
@@ -280,9 +280,9 @@ describe("native gjc deep-interview runtime", () => {
 		await fs.mkdir(path.join(root, ".gjc"), { recursive: true });
 		await fs.writeFile(
 			path.join(root, ".gjc", "settings.json"),
-			JSON.stringify({ gjc: { deepInterview: { ambiguityThreshold: 0.08 } } }),
+			JSON.stringify({ jwc: { interview: { ambiguityThreshold: 0.08 } } }),
 		);
-		const result = await runNativeDeepInterviewCommand(
+		const result = await runNativeJawInterviewCommand(
 			["--threshold", "0.25", "--threshold-source", "flag:explicit", "--json", "idea"],
 			root,
 		);
@@ -294,20 +294,20 @@ describe("native gjc deep-interview runtime", () => {
 
 	it("--quick / --standard / --deep map to their resolution thresholds", async () => {
 		const root = await tempDir();
-		const quick = await runNativeDeepInterviewCommand(["--quick", "--json", "idea"], root);
+		const quick = await runNativeJawInterviewCommand(["--quick", "--json", "idea"], root);
 		expect(quick.status).toBe(0);
 		expect(JSON.parse(quick.stdout ?? "{}").resolution).toBe("quick");
 		expect(JSON.parse(quick.stdout ?? "{}").threshold).toBeCloseTo(0.6);
 
 		const root2 = await tempDir();
-		const deep = await runNativeDeepInterviewCommand(["--deep", "--json", "idea"], root2);
+		const deep = await runNativeJawInterviewCommand(["--deep", "--json", "idea"], root2);
 		expect(JSON.parse(deep.stdout ?? "{}").resolution).toBe("deep");
 		expect(JSON.parse(deep.stdout ?? "{}").threshold).toBeCloseTo(0.35);
 	});
 
-	it("syncs deep-interview HUD chips for the active run", async () => {
+	it("syncs jaw-interview HUD chips for the active run", async () => {
 		const root = await tempDir();
-		await runNativeDeepInterviewCommand(["--standard", "idea body"], root);
+		await runNativeJawInterviewCommand(["--standard", "idea body"], root);
 		const active = JSON.parse(
 			await fs.readFile(path.join(root, ".gjc", "state", "skill-active-state.json"), "utf-8"),
 		);
@@ -317,7 +317,7 @@ describe("native gjc deep-interview runtime", () => {
 				phase?: string;
 				hud?: { chips?: Array<{ label: string; value?: string }> };
 			}>
-		).find(e => e.skill === "deep-interview");
+		).find(e => e.skill === "jaw-interview");
 		expect(entry).toBeTruthy();
 		expect(entry?.phase).toBe("interviewing");
 		const chips = entry?.hud?.chips ?? [];
@@ -327,31 +327,31 @@ describe("native gjc deep-interview runtime", () => {
 
 	it("rejects --threshold outside (0,1] with exit 2", async () => {
 		const root = await tempDir();
-		const tooBig = await runNativeDeepInterviewCommand(["--threshold", "1.5", "idea"], root);
+		const tooBig = await runNativeJawInterviewCommand(["--threshold", "1.5", "idea"], root);
 		expect(tooBig.status).toBe(2);
 		expect(tooBig.stderr).toContain("invalid --threshold");
 
-		const negative = await runNativeDeepInterviewCommand(["--threshold", "-0.1", "idea"], root);
+		const negative = await runNativeJawInterviewCommand(["--threshold", "-0.1", "idea"], root);
 		expect(negative.status).toBe(2);
 	});
 
 	it("rejects combining multiple resolution flags with exit 2", async () => {
 		const root = await tempDir();
-		const result = await runNativeDeepInterviewCommand(["--quick", "--deep", "idea"], root);
+		const result = await runNativeJawInterviewCommand(["--quick", "--deep", "idea"], root);
 		expect(result.status).toBe(2);
 		expect(result.stderr).toContain("at most one");
 	});
 
 	it("rejects missing idea with exit 2", async () => {
 		const root = await tempDir();
-		const result = await runNativeDeepInterviewCommand(["--standard"], root);
+		const result = await runNativeJawInterviewCommand(["--standard"], root);
 		expect(result.status).toBe(2);
 		expect(result.stderr).toContain("requires an idea");
 	});
 
 	it("rejects unknown flags with exit 2", async () => {
 		const root = await tempDir();
-		const result = await runNativeDeepInterviewCommand(["--no-such-flag", "idea"], root);
+		const result = await runNativeJawInterviewCommand(["--no-such-flag", "idea"], root);
 		expect(result.status).toBe(2);
 		expect(result.stderr).toContain("unknown flag");
 	});

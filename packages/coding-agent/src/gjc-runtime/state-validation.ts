@@ -1,4 +1,5 @@
 import type { CanonicalGjcWorkflowSkill } from "../skill-state/active-state";
+import { normalizeWorkflowSkillSlug } from "./state-schema";
 
 export interface StateValidationResult {
 	valid: boolean;
@@ -20,7 +21,7 @@ export function validateWorkflowStateEnvelope(skill: CanonicalGjcWorkflowSkill, 
 		return { valid: false, error: `state for ${skill} must be a JSON object, got ${typeName(state)}` };
 	}
 
-	if ("skill" in state && state.skill !== skill) {
+	if ("skill" in state && typeof state.skill === "string" && normalizeWorkflowSkillSlug(state.skill) !== skill) {
 		return { valid: false, error: `state skill must match selected mode ${skill}` };
 	}
 	if ("active" in state && typeof state.active !== "boolean") {

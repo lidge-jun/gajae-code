@@ -1,7 +1,7 @@
 import * as path from "node:path";
 import type { AgentTool } from "@gajae-code/agent-core";
 import { expandApplyPatchToEntries } from "../edit/modes/apply-patch";
-import { ModeStateSchema } from "../gjc-runtime/state-schema";
+import { ModeStateSchema, normalizeWorkflowSkillSlug } from "../gjc-runtime/state-schema";
 import { LocalProtocolHandler, resolveLocalUrlToPath } from "../internal-urls/local-protocol";
 import { resolveToCwd } from "../tools/path-utils";
 import { ToolError } from "../tools/tool-errors";
@@ -12,8 +12,8 @@ import {
 	workflowModeStateFileName,
 } from "./workflow-state-contract";
 
-export const DEEP_INTERVIEW_MUTATION_BLOCK_MESSAGE =
-	"Deep-interview phase boundary: continue gathering context/questions/risks and emit a handoff/spec before code edits. Mutation tools and patch execution are blocked while deep-interview is active; finalize specs through `gjc deep-interview --write --stage final` or hand off to an execution phase.";
+export const JAW_INTERVIEW_MUTATION_BLOCK_MESSAGE =
+	"Jaw-interview phase boundary: continue gathering context/questions/risks and emit a handoff/spec before code edits. Mutation tools and patch execution are blocked while jaw-interview is active; finalize specs through `jwc interview --write --stage final` or hand off to an execution phase.";
 export const WORKFLOW_STATE_MUTATION_BLOCK_MESSAGE =
 	".gjc workflow state and artifacts are runtime-owned. Agent mutation tools cannot edit `.gjc/**`; use the sanctioned `gjc` CLI instead.";
 
@@ -31,7 +31,7 @@ type ToolWithEditMode = AgentTool & {
 	customWireName?: unknown;
 };
 
-export interface DeepInterviewMutationGuardInput {
+export interface JawInterviewMutationGuardInput {
 	cwd: string;
 	sessionId?: string;
 	threadId?: string;
@@ -46,7 +46,7 @@ interface ExtractedTargets {
 	unknown: boolean;
 }
 
-export interface DeepInterviewMutationDecision {
+export interface JawInterviewMutationDecision {
 	blocked: boolean;
 	message?: string;
 	targets: string[];
@@ -130,14 +130,15 @@ function modeStateMatchesContext(state: ModeState, sessionId?: string, threadId?
 	return true;
 }
 
-async function isActiveDeepInterview(cwd: string, sessionId?: string, threadId?: string): Promise<boolean> {
+async function isActiveJawInterview(cwd: string, sessionId?: string, threadId?: string): Promise<boolean> {
 	const skillState = await readVisibleSkillActiveState(cwd, sessionId);
-	const activeDeepInterview = listActiveSkills(skillState).find(
-		entry => entry.skill === "deep-interview" && entryMatchesContext(entry, sessionId, threadId),
+	const activeJawInterview = listActiveSkills(skillState).find(
+		entry =>
+			normalizeWorkflowSkillSlug(entry.skill) === "jaw-interview" && entryMatchesContext(entry, sessionId, threadId),
 	);
-	if (!activeDeepInterview) return false;
+	if (!activeJawInterview) return false;
 
-	const modeState = await readVisibleModeState(cwd, "deep-interview", sessionId);
+	const modeState = await readVisibleModeState(cwd, "jaw-interview", sessionId);
 	if (isTerminalModeState(modeState)) return false;
 	if (modeState && !modeStateMatchesContext(modeState, sessionId, threadId)) return false;
 	return true;
@@ -357,10 +358,10 @@ function blockedWorkflowStateSkill(cwd: string, rawPath: string): CanonicalGjcWo
 	if (segments[1] === "specs" || segments[1] === "plans") return null;
 	if (segments[1] !== "state") return null;
 	const fileName = segments.at(-1) ?? "";
-	for (const skillName of ["deep-interview", "ralplan", "ultragoal", "team"] as const) {
+	for (const skillName of ["jaw-interview", "ralplan", "ultragoal", "team"] as const) {
 		if (fileName === workflowModeStateFileName(skillName)) return skillName;
 	}
-	if (fileName === "skill-active-state.json") return "deep-interview";
+	if (fileName === "skill-active-state.json") return "jaw-interview";
 	return null;
 }
 
@@ -391,7 +392,7 @@ function allTargetsAllowlisted(cwd: string, targets: ExtractedTargets): boolean 
 		!targets.unknown && targets.paths.length > 0 && targets.paths.every(rawPath => isAllowlistedPath(cwd, rawPath))
 	);
 }
-export async function assertDeepInterviewMutationRawPathsAllowed(input: {
+export async function assertJawInterviewMutationRawPathsAllowed(input: {
 	cwd: string;
 	sessionId?: string;
 	threadId?: string;
@@ -399,16 +400,16 @@ export async function assertDeepInterviewMutationRawPathsAllowed(input: {
 	forceOverride?: boolean;
 }): Promise<void> {
 	if (input.forceOverride) return;
-	if (!(await isActiveDeepInterview(input.cwd, input.sessionId, input.threadId))) return;
+	if (!(await isActiveJawInterview(input.cwd, input.sessionId, input.threadId))) return;
 	const targets: ExtractedTargets = { paths: input.rawPaths, unknown: input.rawPaths.length === 0 };
 	if (targets.unknown || targets.paths.length > 0) {
-		throw new ToolError(DEEP_INTERVIEW_MUTATION_BLOCK_MESSAGE);
+		throw new ToolError(JAW_INTERVIEW_MUTATION_BLOCK_MESSAGE);
 	}
 }
 
-export async function getDeepInterviewMutationDecision(
-	input: DeepInterviewMutationGuardInput,
-): Promise<DeepInterviewMutationDecision> {
+export async function getJawInterviewMutationDecision(
+	input: JawInterviewMutationGuardInput,
+): Promise<JawInterviewMutationDecision> {
 	if (!BLOCKED_TOOL_NAMES.has(input.tool.name)) return { blocked: false, targets: [] };
 	const targets = extractTargets(input.tool, input.args);
 	if (input.enforceWorkflowState !== false && hasBlockedGjcTarget(input.cwd, targets)) {
@@ -422,14 +423,14 @@ export async function getDeepInterviewMutationDecision(
 			command,
 		};
 	}
-	if (!(await isActiveDeepInterview(input.cwd, input.sessionId, input.threadId))) {
+	if (!(await isActiveJawInterview(input.cwd, input.sessionId, input.threadId))) {
 		return { blocked: false, targets: [] };
 	}
 	if (input.forceOverride) return { blocked: false, targets: [] };
 	if (targets.unknown) {
 		return {
 			blocked: true,
-			message: DEEP_INTERVIEW_MUTATION_BLOCK_MESSAGE,
+			message: JAW_INTERVIEW_MUTATION_BLOCK_MESSAGE,
 			targets: targets.paths,
 			reason: "unknown-target",
 		};
@@ -439,13 +440,13 @@ export async function getDeepInterviewMutationDecision(
 	}
 	return {
 		blocked: true,
-		message: DEEP_INTERVIEW_MUTATION_BLOCK_MESSAGE,
+		message: JAW_INTERVIEW_MUTATION_BLOCK_MESSAGE,
 		targets: targets.paths,
 		reason: allTargetsAllowlisted(input.cwd, targets) ? "handoff-artifact-tool-target" : "phase-boundary",
 	};
 }
 
-export async function assertDeepInterviewMutationAllowed(input: DeepInterviewMutationGuardInput): Promise<void> {
-	const decision = await getDeepInterviewMutationDecision(input);
-	if (decision.blocked) throw new ToolError(decision.message ?? DEEP_INTERVIEW_MUTATION_BLOCK_MESSAGE);
+export async function assertJawInterviewMutationAllowed(input: JawInterviewMutationGuardInput): Promise<void> {
+	const decision = await getJawInterviewMutationDecision(input);
+	if (decision.blocked) throw new ToolError(decision.message ?? JAW_INTERVIEW_MUTATION_BLOCK_MESSAGE);
 }

@@ -6,7 +6,7 @@ interface WorkflowGateHudState {
 	nextAction?: string;
 }
 
-interface DeepInterviewHudState extends WorkflowGateHudState {
+interface JawInterviewHudState extends WorkflowGateHudState {
 	phase?: string;
 	ambiguity?: number;
 	threshold?: number;
@@ -84,7 +84,7 @@ function compactChips(chips: Array<WorkflowHudChip | null>): WorkflowHudChip[] {
 	return chips.filter((item): item is WorkflowHudChip => item !== null);
 }
 
-export function buildDeepInterviewHudSummary(state: DeepInterviewHudState): WorkflowHudSummary {
+export function buildJawInterviewHudSummary(state: JawInterviewHudState): WorkflowHudSummary {
 	return {
 		version: 1,
 		chips: compactChips([

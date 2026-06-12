@@ -34,7 +34,7 @@ beforeAll(async () => {
 	await Settings.init({ inMemory: true });
 });
 
-describe("deep-interview assistant render middleware", () => {
+describe("jaw-interview assistant render middleware", () => {
 	it("renders progress tables as readable sections", () => {
 		const raw = [
 			"Round 3 complete.",
@@ -53,7 +53,7 @@ describe("deep-interview assistant render middleware", () => {
 
 		const rendered = renderAssistantText(raw);
 
-		expect(rendered).toContain("Deep Interview · Round 3 complete");
+		expect(rendered).toContain("Jaw Interview · Round 3 complete");
 		expect(rendered).toContain("Ambiguity");
 		expect(rendered).toContain("38%");
 		expect(rendered).toContain("Constraints");

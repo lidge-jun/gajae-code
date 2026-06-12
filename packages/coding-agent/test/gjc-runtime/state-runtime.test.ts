@@ -66,12 +66,12 @@ describe("native gjc state runtime", () => {
 	it('supports the legacy --input \'{"mode":"..."}\' payload shape for read', async () => {
 		const root = await tempDir();
 		await runNativeStateCommand(
-			["write", "--input", JSON.stringify({ state: { interview_id: "abc" } }), "--mode", "deep-interview"],
+			["write", "--input", JSON.stringify({ state: { interview_id: "abc" } }), "--mode", "jaw-interview"],
 			root,
 		);
 
 		const result = await runNativeStateCommand(
-			["read", "--input", JSON.stringify({ mode: "deep-interview" }), "--json"],
+			["read", "--input", JSON.stringify({ mode: "jaw-interview" }), "--json"],
 			root,
 		);
 
@@ -83,20 +83,20 @@ describe("native gjc state runtime", () => {
 	it("prefers CLI --mode over --input payload mode", async () => {
 		const root = await tempDir();
 		await runNativeStateCommand(
-			["write", "--input", JSON.stringify({ active: true }), "--mode", "deep-interview"],
+			["write", "--input", JSON.stringify({ active: true }), "--mode", "jaw-interview"],
 			root,
 		);
 		await runNativeStateCommand(["write", "--input", JSON.stringify({ active: true }), "--mode", "ralplan"], root);
 
 		const result = await runNativeStateCommand(
-			["read", "--input", JSON.stringify({ mode: "deep-interview" }), "--mode", "ralplan", "--json"],
+			["read", "--input", JSON.stringify({ mode: "jaw-interview" }), "--mode", "ralplan", "--json"],
 			root,
 		);
 
 		expect(result.status).toBe(0);
 		const parsed = envelopeState(result.stdout);
 		expect(parsed.active).toBe(true);
-		// ralplan-state.json was written but deep-interview-state.json contained `active:true` too;
+		// ralplan-state.json was written but jaw-interview-state.json contained `active:true` too;
 		// verify CLI flag won by reading the underlying file path
 		const ralplanFile = path.join(root, ".gjc", "state", "ralplan-state.json");
 		expect(JSON.parse(await fs.readFile(ralplanFile, "utf-8")).active).toBe(true);
@@ -114,7 +114,7 @@ describe("native gjc state runtime", () => {
 					state: { interview_id: "abc", threshold_source: "user" },
 				}),
 				"--mode",
-				"deep-interview",
+				"jaw-interview",
 			],
 			root,
 		);
@@ -125,17 +125,17 @@ describe("native gjc state runtime", () => {
 				"--input",
 				JSON.stringify({ state: { current_ambiguity: 0.5, threshold_source: "user", interview_id: "abc" } }),
 				"--mode",
-				"deep-interview",
+				"jaw-interview",
 			],
 			root,
 		);
 
 		expect(second.status).toBe(0);
 		const receipt = parseStdout(second.stdout);
-		expect(receipt).toMatchObject({ ok: true, skill: "deep-interview", active: true, current_phase: "interviewing" });
+		expect(receipt).toMatchObject({ ok: true, skill: "jaw-interview", active: true, current_phase: "interviewing" });
 		expect(receipt.state).toBeUndefined();
 		const merged = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "deep-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		expect(merged.current_ambiguity).toBe(0.5);
 		expect(merged.threshold_source).toBe("user");
@@ -145,21 +145,21 @@ describe("native gjc state runtime", () => {
 	it("deletes a key when the payload value is null", async () => {
 		const root = await tempDir();
 		await runNativeStateCommand(
-			["write", "--input", JSON.stringify({ active: true, drop_me: "yes" }), "--mode", "deep-interview"],
+			["write", "--input", JSON.stringify({ active: true, drop_me: "yes" }), "--mode", "jaw-interview"],
 			root,
 		);
 
 		const result = await runNativeStateCommand(
-			["write", "--input", JSON.stringify({ drop_me: null }), "--mode", "deep-interview"],
+			["write", "--input", JSON.stringify({ drop_me: null }), "--mode", "jaw-interview"],
 			root,
 		);
 
 		expect(result.status).toBe(0);
 		const receipt = parseStdout(result.stdout);
-		expect(receipt).toMatchObject({ ok: true, skill: "deep-interview", active: true });
+		expect(receipt).toMatchObject({ ok: true, skill: "jaw-interview", active: true });
 		expect(receipt.state).toBeUndefined();
 		const merged = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "deep-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		expect(merged.active).toBe(true);
 		expect(Object.hasOwn(merged, "drop_me")).toBe(false);
@@ -168,21 +168,21 @@ describe("native gjc state runtime", () => {
 	it("--replace clobbers existing state instead of merging", async () => {
 		const root = await tempDir();
 		await runNativeStateCommand(
-			["write", "--input", JSON.stringify({ active: true, keep_me: 1 }), "--mode", "deep-interview"],
+			["write", "--input", JSON.stringify({ active: true, keep_me: 1 }), "--mode", "jaw-interview"],
 			root,
 		);
 
 		const result = await runNativeStateCommand(
-			["write", "--input", JSON.stringify({ active: false }), "--mode", "deep-interview", "--replace"],
+			["write", "--input", JSON.stringify({ active: false }), "--mode", "jaw-interview", "--replace"],
 			root,
 		);
 
 		expect(result.status).toBe(0);
 		const receipt = parseStdout(result.stdout);
-		expect(receipt).toMatchObject({ ok: true, skill: "deep-interview", active: false });
+		expect(receipt).toMatchObject({ ok: true, skill: "jaw-interview", active: false });
 		expect(receipt.state).toBeUndefined();
 		const replaced = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "deep-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		expect(replaced.active).toBe(false);
 		expect(Object.hasOwn(replaced, "keep_me")).toBe(false);
@@ -194,14 +194,14 @@ describe("native gjc state runtime", () => {
 		await fs.writeFile(payloadPath, JSON.stringify({ active: true, current_phase: "interviewing" }));
 
 		const result = await runNativeStateCommand(
-			["write", "--input", `@${payloadPath}`, "--mode", "deep-interview"],
+			["write", "--input", `@${payloadPath}`, "--mode", "jaw-interview"],
 			root,
 		);
 
 		expect(result.status).toBe(0);
 		expect(parseStdout(result.stdout)).toMatchObject({
 			ok: true,
-			skill: "deep-interview",
+			skill: "jaw-interview",
 			current_phase: "interviewing",
 		});
 	});
@@ -215,8 +215,8 @@ describe("native gjc state runtime", () => {
 			JSON.stringify({
 				version: 1,
 				active: true,
-				skill: "deep-interview",
-				active_skills: [{ skill: "deep-interview", phase: "interviewing", active: true }],
+				skill: "jaw-interview",
+				active_skills: [{ skill: "jaw-interview", phase: "interviewing", active: true }],
 			}),
 		);
 		await runNativeStateCommand(
@@ -225,18 +225,18 @@ describe("native gjc state runtime", () => {
 				"--input",
 				JSON.stringify({ active: true, current_phase: "interviewing" }),
 				"--mode",
-				"deep-interview",
+				"jaw-interview",
 			],
 			root,
 		);
 
-		const result = await runNativeStateCommand(["clear", "--mode", "deep-interview"], root);
+		const result = await runNativeStateCommand(["clear", "--mode", "jaw-interview"], root);
 
 		expect(result.status).toBe(0);
 		const cleared = parseStdout(result.stdout);
 		expect(cleared).toMatchObject({
 			ok: true,
-			skill: "deep-interview",
+			skill: "jaw-interview",
 			active: false,
 			current_phase: "complete",
 		});
@@ -257,7 +257,7 @@ describe("native gjc state runtime", () => {
 	it("rejects a traversal --session-id with exit 2", async () => {
 		const root = await tempDir();
 		const result = await runNativeStateCommand(
-			["read", "--mode", "deep-interview", "--session-id", "../escape"],
+			["read", "--mode", "jaw-interview", "--session-id", "../escape"],
 			root,
 		);
 		expect(result.status).toBe(2);
@@ -266,36 +266,36 @@ describe("native gjc state runtime", () => {
 
 	it("rejects write without --input", async () => {
 		const root = await tempDir();
-		const result = await runNativeStateCommand(["write", "--mode", "deep-interview"], root);
+		const result = await runNativeStateCommand(["write", "--mode", "jaw-interview"], root);
 		expect(result.status).toBe(2);
 		expect(result.stderr).toContain("--input");
 	});
 
 	it("rejects write with malformed --input JSON", async () => {
 		const root = await tempDir();
-		const result = await runNativeStateCommand(["write", "--input", "{not json", "--mode", "deep-interview"], root);
+		const result = await runNativeStateCommand(["write", "--input", "{not json", "--mode", "jaw-interview"], root);
 		expect(result.status).toBe(2);
 		expect(result.stderr).toContain("--input is not valid JSON");
 	});
 
 	it("preserves both writers' disjoint keys under interleaved write calls", async () => {
 		const root = await tempDir();
-		await runNativeStateCommand(["write", "--input", JSON.stringify({ a: 1 }), "--mode", "deep-interview"], root);
+		await runNativeStateCommand(["write", "--input", JSON.stringify({ a: 1 }), "--mode", "jaw-interview"], root);
 		const [first, second] = await Promise.all([
-			runNativeStateCommand(["write", "--input", JSON.stringify({ b: 2 }), "--mode", "deep-interview"], root),
-			runNativeStateCommand(["write", "--input", JSON.stringify({ c: 3 }), "--mode", "deep-interview"], root),
+			runNativeStateCommand(["write", "--input", JSON.stringify({ b: 2 }), "--mode", "jaw-interview"], root),
+			runNativeStateCommand(["write", "--input", JSON.stringify({ c: 3 }), "--mode", "jaw-interview"], root),
 		]);
 		expect(first.status).toBe(0);
 		expect(second.status).toBe(0);
 		const final = JSON.parse(
-			await fs.readFile(path.join(root, ".gjc", "state", "deep-interview-state.json"), "utf-8"),
+			await fs.readFile(path.join(root, ".gjc", "state", "jaw-interview-state.json"), "utf-8"),
 		);
 		// `a` always survives because both writers started from it; whichever writer landed last contributes its key
 		expect(final.a).toBe(1);
 		expect(final.b === 2 || final.c === 3).toBe(true);
 	});
 
-	it("syncs skill-active HUD chips when writing a deep-interview receipt", async () => {
+	it("syncs skill-active HUD chips when writing a jaw-interview receipt", async () => {
 		const root = await tempDir();
 		await runNativeStateCommand(
 			[
@@ -314,7 +314,7 @@ describe("native gjc state runtime", () => {
 					},
 				}),
 				"--mode",
-				"deep-interview",
+				"jaw-interview",
 			],
 			root,
 		);
@@ -327,7 +327,7 @@ describe("native gjc state runtime", () => {
 				phase?: string;
 				hud?: { chips?: Array<{ label: string; value?: string }> };
 			}>
-		).find(e => e.skill === "deep-interview");
+		).find(e => e.skill === "jaw-interview");
 		expect(entry).toBeTruthy();
 		expect(entry?.phase).toBe("interviewing");
 		const chipLabels = entry?.hud?.chips?.map(chip => chip.label) ?? [];

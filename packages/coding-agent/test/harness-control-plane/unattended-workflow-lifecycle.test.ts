@@ -1,6 +1,6 @@
 /**
  * #323 acceptance: a scripted external agent with canned memory drives
- * deep-interview -> ralplan -> ultragoal end-to-end over the workflow-gate
+ * jaw-interview -> ralplan -> ultragoal end-to-end over the workflow-gate
  * contract with ZERO human input, declaring budget + scope + action allowlist,
  * answering every gate via the broker, producing a valid spec + plan + execution
  * result with a complete audit trail bounded by the declared budget.
@@ -8,7 +8,7 @@
  * This harness wires the v1 control-plane building blocks together:
  *  - UnattendedRunController (#318 budget, #319 scope/action)
  *  - WorkflowGateBroker (#315 durable gate contract)
- *  - deep-interview / approval / execution gate mappers (#316/#317)
+ *  - jaw-interview / approval / execution gate mappers (#316/#317)
  *  - UnattendedAuditLog (#320)
  */
 
@@ -27,7 +27,7 @@ import {
 	type AskGateQuestion,
 	gateAnswerToResult,
 	questionToGate,
-} from "@gajae-code/coding-agent/modes/shared/agent-wire/deep-interview-gate";
+} from "@gajae-code/coding-agent/modes/shared/agent-wire/jaw-interview-gate";
 import { UnattendedAuditLog } from "@gajae-code/coding-agent/modes/shared/agent-wire/unattended-audit";
 import {
 	ActionDeniedError,
@@ -49,7 +49,7 @@ class ScriptedMemoryAgent {
 
 	answer(gate: RpcWorkflowGate): unknown {
 		this.gatesAnswered += 1;
-		if (gate.stage === "deep-interview") {
+		if (gate.stage === "jaw-interview") {
 			// Pick the first advertised option, or free-text when no options.
 			const first = gate.options?.[0]?.value;
 			if (first !== undefined) return { selected: [first], other: false };
@@ -80,7 +80,7 @@ const DI_QUESTIONS: AskGateQuestion[] = [
 ];
 
 describe("#323 end-to-end unattended workflow lifecycle (zero human input)", () => {
-	it("drives deep-interview -> ralplan -> ultragoal over the gate contract with a complete audit trail bounded by budget", async () => {
+	it("drives jaw-interview -> ralplan -> ultragoal over the gate contract with a complete audit trail bounded by budget", async () => {
 		const dir = mkdtempSync(path.join(tmpdir(), "unattended-e2e-"));
 		const runId = "e2e-run-001";
 		const sessionId = "e2e-sess-001";
@@ -143,7 +143,7 @@ describe("#323 end-to-end unattended workflow lifecycle (zero human input)", () 
 			return { gate, answer, resolution };
 		};
 
-		// 3. deep-interview: answer every question, build the spec.
+		// 3. jaw-interview: answer every question, build the spec.
 		const specAnswers: string[] = [];
 		for (const q of DI_QUESTIONS) {
 			const { gate, answer } = await driveGate(questionToGate(q));
@@ -155,7 +155,7 @@ describe("#323 end-to-end unattended workflow lifecycle (zero human input)", () 
 		writeFileSync(specPath, `# Spec\n\n${specAnswers.join("\n")}\n`);
 
 		// 4. ralplan: approval gate must advance only on explicit approve.
-		const approval = await driveGate(approvalGate({ summary: "PRD from deep-interview" }));
+		const approval = await driveGate(approvalGate({ summary: "PRD from jaw-interview" }));
 		expect(decodeApproval(approval.answer).approved).toBe(true);
 		const planPath = path.join(dir, "plan.md");
 		writeFileSync(planPath, `# Plan\n\nApproved via gate ${approval.gate.gate_id}\n`);

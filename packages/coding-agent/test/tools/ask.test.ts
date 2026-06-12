@@ -1097,7 +1097,7 @@ describe("AskTool multi-question navigation", () => {
 	});
 });
 
-describe("AskTool deep-interview rendering middleware", () => {
+describe("AskTool jaw-interview rendering middleware", () => {
 	it("uses a readable selector prompt while preserving raw question details", async () => {
 		const tool = new AskTool(createSession());
 		const rawQuestion = [
@@ -1109,7 +1109,7 @@ describe("AskTool deep-interview rendering middleware", () => {
 		const context = createContext({ select });
 
 		const result = await tool.execute(
-			"call-deep-interview",
+			"call-jaw-interview",
 			{
 				questions: [
 					{
@@ -1127,7 +1127,7 @@ describe("AskTool deep-interview rendering middleware", () => {
 		expect(select).toHaveBeenCalledTimes(1);
 		expect(select.mock.calls[0]?.[1]).toEqual(["1. Condition A", "2. Condition B", "3. Other (type your own)"]);
 		const prompt = select.mock.calls[0]?.[0] ?? "";
-		expect(prompt).toContain("Deep Interview · Round 3 · Ambiguity 38%");
+		expect(prompt).toContain("Jaw Interview · Round 3 · Ambiguity 38%");
 		expect(prompt).toContain("Component: Review UI");
 		expect(prompt).toContain("Target: Success Criteria");
 		expect(prompt).toContain("Why now: the approval criteria are not yet testable");
@@ -1138,7 +1138,7 @@ describe("AskTool deep-interview rendering middleware", () => {
 		expect(result.content[0]).toMatchObject({ type: "text", text: "User selected: Condition A" });
 	});
 
-	it("does not double-number pre-numbered deep-interview options", async () => {
+	it("does not double-number pre-numbered jaw-interview options", async () => {
 		const tool = new AskTool(createSession());
 		const rawQuestion = [
 			"Round 6 | Component: Review UI | Targeting: Success Criteria | Why now: answer labels might already be numbered | Ambiguity: 29%",
@@ -1149,7 +1149,7 @@ describe("AskTool deep-interview rendering middleware", () => {
 		const context = createContext({ select });
 
 		const result = await tool.execute(
-			"call-deep-interview-pre-numbered",
+			"call-jaw-interview-pre-numbered",
 			{
 				questions: [
 					{
@@ -1168,7 +1168,7 @@ describe("AskTool deep-interview rendering middleware", () => {
 		expect(result.details?.selectedOptions).toEqual(["2) Scenario"]);
 	});
 
-	it("numbers loosely formatted deep-interview questions that are not structurally rendered", async () => {
+	it("numbers loosely formatted jaw-interview questions that are not structurally rendered", async () => {
 		const tool = new AskTool(createSession());
 		const rawQuestion = [
 			"Round 7 | Component Review UI | Target Success Criteria | Why now option labels must remain scannable | Ambiguity is 34%",
@@ -1179,7 +1179,7 @@ describe("AskTool deep-interview rendering middleware", () => {
 		const context = createContext({ select });
 
 		const result = await tool.execute(
-			"call-deep-interview-loose",
+			"call-jaw-interview-loose",
 			{
 				questions: [
 					{
@@ -1203,7 +1203,7 @@ describe("AskTool deep-interview rendering middleware", () => {
 		expect(result.details?.selectedOptions).toEqual(["Numbered choices are visible"]);
 	});
 
-	it("accepts the numbered deep-interview free-text option as custom input", async () => {
+	it("accepts the numbered jaw-interview free-text option as custom input", async () => {
 		const tool = new AskTool(createSession());
 		const rawQuestion = [
 			"Round 5 | Component: Review UI | Targeting: Constraints | Why now: boundaries are still unclear | Ambiguity: 31%",
@@ -1215,7 +1215,7 @@ describe("AskTool deep-interview rendering middleware", () => {
 		const context = createContext({ select, editor });
 
 		const result = await tool.execute(
-			"call-deep-interview-other",
+			"call-jaw-interview-other",
 			{
 				questions: [
 					{
@@ -1236,7 +1236,7 @@ describe("AskTool deep-interview rendering middleware", () => {
 		expect(result.details?.customInput).toBe("Use my own boundary");
 	});
 
-	it("opts deep-interview selector prompts into local prompt scrolling", async () => {
+	it("opts jaw-interview selector prompts into local prompt scrolling", async () => {
 		const tool = new AskTool(createSession());
 		const rawQuestion = [
 			"Round 4 | Component: Selector UI | Targeting: Readability | Why now: long prompts hide answers | Ambiguity: 44%",
@@ -1250,7 +1250,7 @@ describe("AskTool deep-interview rendering middleware", () => {
 		const context = createContext({ select });
 
 		await tool.execute(
-			"call-deep-interview-scroll",
+			"call-jaw-interview-scroll",
 			{
 				questions: [
 					{
@@ -1270,7 +1270,7 @@ describe("AskTool deep-interview rendering middleware", () => {
 		expect(dialogOptions?.helpText).toContain("wheel/PgUp/PgDn scroll question");
 	});
 
-	it("leaves non-deep-interview selector prompts without scroll-title opt-in", async () => {
+	it("leaves non-jaw-interview selector prompts without scroll-title opt-in", async () => {
 		const tool = new AskTool(createSession());
 		const select = vi.fn(
 			async (_prompt: string, options: string[], _dialogOptions?: { scrollTitleRows?: number; helpText?: string }) =>
@@ -1319,7 +1319,7 @@ describe("AskTool deep-interview rendering middleware", () => {
 		const context = createContext({ select });
 
 		await tool.execute(
-			"call-deep-interview-topology",
+			"call-jaw-interview-topology",
 			{
 				questions: [
 					{
@@ -1335,7 +1335,7 @@ describe("AskTool deep-interview rendering middleware", () => {
 		);
 
 		const prompt = select.mock.calls[0]?.[0] ?? "";
-		expect(prompt).toContain("Deep Interview · Round 0 · Topology confirmation");
+		expect(prompt).toContain("Jaw Interview · Round 0 · Topology confirmation");
 		expect(prompt).toContain("Ambiguity: not scored yet");
 		expect(prompt).toContain("Reading:");
 		expect(prompt).toContain("I'm currently reading the scope as these 2 top-level components.");
@@ -1365,7 +1365,7 @@ describe("AskTool deep-interview rendering middleware", () => {
 		);
 		const renderedText = stripAnsi(rendered.render(100).join("\n"));
 
-		expect(renderedText).toContain("Deep Interview · Round 2 · Ambiguity 42%");
+		expect(renderedText).toContain("Jaw Interview · Round 2 · Ambiguity 42%");
 		expect(renderedText).toContain("Component");
 		expect(renderedText).toContain("Export");
 		expect(renderedText).toContain("Why now");

@@ -20,7 +20,7 @@ import {
 	ensureWorkflowSkillActivationState,
 	readVisibleSkillActiveState,
 } from "../src/hooks/skill-state";
-import { getDeepInterviewMutationDecision } from "../src/skill-state/deep-interview-mutation-guard";
+import { getJawInterviewMutationDecision } from "../src/skill-state/jaw-interview-mutation-guard";
 import { WORKFLOW_STATE_VERSION } from "../src/skill-state/workflow-state-contract";
 
 describe("GJC native skill-state hooks", () => {
@@ -137,8 +137,8 @@ describe("GJC native skill-state hooks", () => {
 	}
 
 	it("detects only the public GJC workflow skill surface", () => {
-		expect(detectSkillKeywords("$deep-interview then $team").map(match => match.skill)).toEqual([
-			"deep-interview",
+		expect(detectSkillKeywords("$jaw-interview then $team").map(match => match.skill)).toEqual([
+			"jaw-interview",
 			"team",
 		]);
 		expect(detectSkillKeywords("$autopilot deep interview")).toEqual([]);
@@ -150,7 +150,7 @@ describe("GJC native skill-state hooks", () => {
 		const result = await dispatchGjcNativeSkillHook(
 			{
 				hook_event_name: "UserPromptSubmit",
-				prompt: "$deep-interview clarify this feature",
+				prompt: "$jaw-interview clarify this feature",
 				cwd: root,
 				session_id: "session-1",
 				thread_id: "thread-1",
@@ -167,17 +167,17 @@ describe("GJC native skill-state hooks", () => {
 		);
 		expect(context).toContain("Sanitized effective skill config");
 		expect(context).toContain("filesystem/custom skill discovery");
-		expect(context).toContain("deep-interview, ralplan, ultragoal, team");
+		expect(context).toContain("jaw-interview, ralplan, ultragoal, team");
 		const state = await readVisibleSkillActiveState(root, "session-1");
 		expect(state).toMatchObject({
 			active: true,
-			skill: "deep-interview",
-			keyword: "$deep-interview",
+			skill: "jaw-interview",
+			keyword: "$jaw-interview",
 			session_id: "session-1",
-			initialized_mode: "deep-interview",
+			initialized_mode: "jaw-interview",
 		});
 		expect(state?.initialized_state_path).toBe(
-			path.join(root, ".gjc", "state", "sessions", "session-1", "deep-interview-state.json"),
+			path.join(root, ".gjc", "state", "sessions", "session-1", "jaw-interview-state.json"),
 		);
 		const modeState = await Bun.file(state?.initialized_state_path ?? "").json();
 		expect(modeState).toMatchObject({
@@ -345,13 +345,13 @@ describe("GJC native skill-state hooks", () => {
 		}
 	});
 
-	it("rich deep-interview prompt activation blocks product mutation and direct spec artifacts", async () => {
+	it("rich jaw-interview prompt activation blocks product mutation and direct spec artifacts", async () => {
 		const root = await cwd();
 		await dispatchGjcNativeSkillHook(
 			{
 				hookEventName: "UserPromptSubmit",
 				userPrompt:
-					"$deep-interview implement this detailed feature with runtime guards, tests, renderer changes, and visible-definition gates",
+					"$jaw-interview implement this detailed feature with runtime guards, tests, renderer changes, and visible-definition gates",
 				cwd: root,
 				sessionId: "session-rich",
 				threadId: "thread-rich",
@@ -360,9 +360,9 @@ describe("GJC native skill-state hooks", () => {
 		);
 
 		const state = await readVisibleSkillActiveState(root, "session-rich");
-		expect(state).toMatchObject({ active: true, skill: "deep-interview" });
+		expect(state).toMatchObject({ active: true, skill: "jaw-interview" });
 
-		const blockedProduct = await getDeepInterviewMutationDecision({
+		const blockedProduct = await getJawInterviewMutationDecision({
 			cwd: root,
 			sessionId: "session-rich",
 			tool: { name: "write" } as never,
@@ -372,7 +372,7 @@ describe("GJC native skill-state hooks", () => {
 		expect(blockedProduct.reason).toBe("phase-boundary");
 		expect(blockedProduct.message).toContain("handoff/spec before code edits");
 
-		const allowedReadOnlyBash = await getDeepInterviewMutationDecision({
+		const allowedReadOnlyBash = await getJawInterviewMutationDecision({
 			cwd: root,
 			sessionId: "session-rich",
 			tool: { name: "bash" } as never,
@@ -380,30 +380,30 @@ describe("GJC native skill-state hooks", () => {
 		});
 		expect(allowedReadOnlyBash.blocked).toBe(false);
 
-		const blockedSpec = await getDeepInterviewMutationDecision({
+		const blockedSpec = await getJawInterviewMutationDecision({
 			cwd: root,
 			sessionId: "session-rich",
 			tool: { name: "write" } as never,
-			args: { path: ".gjc/specs/deep-interview-sample.md", content: "spec" },
+			args: { path: ".gjc/specs/jaw-interview-sample.md", content: "spec" },
 		});
 		expect(blockedSpec.blocked).toBe(true);
 		expect(blockedSpec.reason).toBe("gjc-target");
 		expect(blockedSpec.message).toContain("runtime-owned");
 
-		const blockedGjcBash = await getDeepInterviewMutationDecision({
+		const blockedGjcBash = await getJawInterviewMutationDecision({
 			cwd: root,
 			sessionId: "session-rich",
 			tool: { name: "bash" } as never,
-			args: { command: "cat sample.md > .gjc/specs/deep-interview-sample.md" },
+			args: { command: "cat sample.md > .gjc/specs/jaw-interview-sample.md" },
 		});
 		expect(blockedGjcBash.blocked).toBe(true);
 		expect(blockedGjcBash.reason).toBe("gjc-target");
 
-		const blocked = await getDeepInterviewMutationDecision({
+		const blocked = await getJawInterviewMutationDecision({
 			cwd: root,
 			sessionId: "session-rich",
 			tool: { name: "write" } as never,
-			args: { path: ".gjc/state/sessions/session-rich/deep-interview-state.json", content: "{}" },
+			args: { path: ".gjc/state/sessions/session-rich/jaw-interview-state.json", content: "{}" },
 		});
 		expect(blocked.blocked).toBe(true);
 		expect(blocked.reason).toBe("workflow-state-target");
@@ -411,7 +411,7 @@ describe("GJC native skill-state hooks", () => {
 
 	it("blocks direct workflow state JSON writes and points to gjc state", async () => {
 		const root = await cwd();
-		const blocked = await getDeepInterviewMutationDecision({
+		const blocked = await getJawInterviewMutationDecision({
 			cwd: root,
 			tool: { name: "write" } as never,
 			args: { path: ".gjc/state/ralplan-state.json", content: "{}" },
@@ -420,14 +420,14 @@ describe("GJC native skill-state hooks", () => {
 		expect(blocked.reason).toBe("workflow-state-target");
 		expect(blocked.message).toContain("gjc state ralplan");
 
-		const allowedSpec = await getDeepInterviewMutationDecision({
+		const allowedSpec = await getJawInterviewMutationDecision({
 			cwd: root,
 			tool: { name: "write" } as never,
-			args: { path: ".gjc/specs/deep-interview-sample.md", content: "spec" },
+			args: { path: ".gjc/specs/jaw-interview-sample.md", content: "spec" },
 		});
 		expect(allowedSpec.blocked).toBe(true);
 
-		const allowedPlan = await getDeepInterviewMutationDecision({
+		const allowedPlan = await getJawInterviewMutationDecision({
 			cwd: root,
 			tool: { name: "write" } as never,
 			args: { path: ".gjc/plans/sample.md", content: "plan" },
@@ -544,7 +544,7 @@ describe("GJC native skill-state hooks", () => {
 		const result = await dispatchGjcNativeSkillHook(
 			{
 				hookEventName: "UserPromptSubmit",
-				userPrompt: "$deep-interview clarify this",
+				userPrompt: "$jaw-interview clarify this",
 				cwd: root,
 				sessionId: "session-default-config",
 			},
@@ -624,7 +624,7 @@ disabledExtensions:
 		const result = await dispatchGjcNativeSkillHook(
 			{
 				hookEventName: "UserPromptSubmit",
-				userPrompt: "$deep-interview clarify this",
+				userPrompt: "$jaw-interview clarify this",
 				cwd: root,
 				sessionId: "session-unavailable",
 			},
@@ -639,7 +639,7 @@ disabledExtensions:
 		expect(context).toContain("Sanitized effective skill config unavailable");
 		expect(context).toContain("test settings failure");
 		const state = await readVisibleSkillActiveState(root, "session-unavailable");
-		expect(state).toMatchObject({ active: true, skill: "deep-interview" });
+		expect(state).toMatchObject({ active: true, skill: "jaw-interview" });
 	});
 
 	it("Stop blocks while matching skill state is active and allows terminal mode state", async () => {
@@ -710,7 +710,7 @@ disabledExtensions:
 		await dispatchGjcNativeSkillHook(
 			{
 				hookEventName: "UserPromptSubmit",
-				userPrompt: "$deep-interview clarify this",
+				userPrompt: "$jaw-interview clarify this",
 				cwd: root,
 				sessionId: "session-handoff",
 				threadId: "thread-handoff",
@@ -718,10 +718,10 @@ disabledExtensions:
 			{ effectiveSkillConfig: testEffectiveSkillConfig },
 		);
 
-		// A handoff-phase deep-interview that is still active must keep blocking so
+		// A handoff-phase jaw-interview that is still active must keep blocking so
 		// the agent presents the next handoff step via the ask tool.
 		await Bun.write(
-			path.join(root, ".gjc", "state", "sessions", "session-handoff", "deep-interview-state.json"),
+			path.join(root, ".gjc", "state", "sessions", "session-handoff", "jaw-interview-state.json"),
 			JSON.stringify({ active: true, current_phase: "handoff", session_id: "session-handoff" }),
 		);
 		const blocked = await dispatchGjcNativeSkillHook({
@@ -735,7 +735,7 @@ disabledExtensions:
 
 		// Once demoted to active:false (the handoff/clear outcome), stop is allowed.
 		await Bun.write(
-			path.join(root, ".gjc", "state", "sessions", "session-handoff", "deep-interview-state.json"),
+			path.join(root, ".gjc", "state", "sessions", "session-handoff", "jaw-interview-state.json"),
 			JSON.stringify({ active: false, current_phase: "handoff", session_id: "session-handoff" }),
 		);
 		const allowed = await dispatchGjcNativeSkillHook({
@@ -995,7 +995,7 @@ disabledExtensions:
 
 	it("ensureWorkflowSkillActivationState seeds state and engages the mutation guard", async () => {
 		const root = await cwd();
-		const before = await getDeepInterviewMutationDecision({
+		const before = await getJawInterviewMutationDecision({
 			cwd: root,
 			tool: { name: "write" } as never,
 			args: { path: "src/app.ts", content: "x" },
@@ -1004,15 +1004,15 @@ disabledExtensions:
 
 		const seeded = await ensureWorkflowSkillActivationState({
 			cwd: root,
-			skill: "deep-interview",
+			skill: "jaw-interview",
 			sessionId: "session-seed",
 		});
-		expect(seeded).toMatchObject({ active: true, skill: "deep-interview" });
+		expect(seeded).toMatchObject({ active: true, skill: "jaw-interview" });
 
 		const state = await readVisibleSkillActiveState(root, "session-seed");
-		expect(state).toMatchObject({ active: true, skill: "deep-interview" });
+		expect(state).toMatchObject({ active: true, skill: "jaw-interview" });
 
-		const after = await getDeepInterviewMutationDecision({
+		const after = await getJawInterviewMutationDecision({
 			cwd: root,
 			sessionId: "session-seed",
 			tool: { name: "write" } as never,
@@ -1037,7 +1037,7 @@ disabledExtensions:
 						active: true,
 						phase: "planner",
 						session_id: "session-keep",
-						handoff_from: "deep-interview",
+						handoff_from: "jaw-interview",
 					},
 				],
 			}),
@@ -1055,7 +1055,7 @@ disabledExtensions:
 
 		// Already active → no reseed; lineage entry untouched.
 		const entry = result?.active_skills?.find(e => e.skill === "ralplan");
-		expect(entry?.handoff_from).toBe("deep-interview");
+		expect(entry?.handoff_from).toBe("jaw-interview");
 	});
 
 	it("ensureWorkflowSkillActivationState ignores non-workflow skills", async () => {

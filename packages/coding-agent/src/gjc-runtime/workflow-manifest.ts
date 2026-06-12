@@ -142,8 +142,8 @@ function manifest(input: {
 }
 
 export const WORKFLOW_MANIFEST: Record<CanonicalGjcWorkflowSkill, SkillManifest> = {
-	"deep-interview": manifest({
-		skill: "deep-interview",
+	"jaw-interview": manifest({
+		skill: "jaw-interview",
 		states: ["interviewing", "handoff", "complete"],
 		terminalStates: ["handoff", "complete"],
 		transitions: [
@@ -169,7 +169,7 @@ export const WORKFLOW_MANIFEST: Record<CanonicalGjcWorkflowSkill, SkillManifest>
 		],
 		retention: [STATE_RETENTION, ARTIFACT_RETENTION, PRUNE_RETENTION, FORCE_RETENTION],
 		hudFields: ["current_phase", "ambiguity_score", "threshold", "spec_slug", "spec_path", "topology"],
-		graphLabel: "Deep Interview",
+		graphLabel: "Jaw Interview",
 	}),
 	ralplan: manifest({
 		skill: "ralplan",

@@ -14,8 +14,28 @@ import * as fs from "node:fs/promises";
 import { z } from "zod";
 import { WORKFLOW_STATE_VERSION } from "../skill-state/workflow-state-version";
 
-const CANONICAL_GJC_WORKFLOW_SKILLS = ["deep-interview", "ralplan", "ultragoal", "team"] as const;
-const skillEnum = z.enum([...CANONICAL_GJC_WORKFLOW_SKILLS]);
+const CANONICAL_GJC_WORKFLOW_SKILLS = ["jaw-interview", "ralplan", "ultragoal", "team"] as const;
+
+/**
+ * Legacy slug read-compat (042 L2): persisted state/receipts written before the
+ * jaw-interview rename carry `"deep-interview"`. Reads normalize to the canonical
+ * slug before validation; the write gate stays fail-closed on canonical values only.
+ */
+export const LEGACY_WORKFLOW_SKILL_ALIASES: Readonly<Record<string, string>> = {
+	"deep-interview": "jaw-interview",
+};
+
+export function normalizeWorkflowSkillSlug(slug: string): string {
+	return LEGACY_WORKFLOW_SKILL_ALIASES[slug] ?? slug;
+}
+
+/** Write-side strict enum — canonical slugs only (fail-closed, no legacy normalize). */
+const strictSkillEnum = z.enum([...CANONICAL_GJC_WORKFLOW_SKILLS]);
+/** Read-side enum — normalizes legacy slugs (e.g. "deep-interview") before validation. */
+const skillEnum = z.preprocess(
+	value => (typeof value === "string" ? normalizeWorkflowSkillSlug(value) : value),
+	strictSkillEnum,
+);
 const ownerEnum = z.enum(["gjc-state-cli", "gjc-runtime", "gjc-hook"]);
 const receiptStatusEnum = z.enum(["fresh", "stale"]);
 
@@ -70,7 +90,7 @@ export const WorkflowStateEnvelopeSchema = z
 export const RequiredWorkflowStateReceiptSchema = z
 	.object({
 		version: z.number(),
-		skill: skillEnum,
+		skill: strictSkillEnum,
 		owner: ownerEnum,
 		command: z.string(),
 		state_path: z.string(),
@@ -89,7 +109,7 @@ export const RequiredWorkflowStateReceiptSchema = z
  */
 export const RequiredOnWriteEnvelopeSchema = z
 	.object({
-		skill: skillEnum,
+		skill: strictSkillEnum,
 		version: z.literal(WORKFLOW_STATE_VERSION),
 		updated_at: z.string(),
 		current_phase: z.string(),

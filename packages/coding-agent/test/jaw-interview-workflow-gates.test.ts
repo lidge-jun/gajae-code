@@ -1,11 +1,11 @@
 import { describe, expect, it } from "bun:test";
 import {
 	type AskGateQuestion,
-	DeepInterviewGateError,
 	gateAnswerToResult,
+	JawInterviewGateError,
 	questionsToGates,
 	questionToGate,
-} from "@gajae-code/coding-agent/modes/shared/agent-wire/deep-interview-gate";
+} from "@gajae-code/coding-agent/modes/shared/agent-wire/jaw-interview-gate";
 import {
 	MemoryGateStore,
 	WorkflowGateBroker,
@@ -26,9 +26,9 @@ const multiQ: AskGateQuestion = {
 };
 
 describe("questionToGate", () => {
-	it("emits a deep-interview question gate with option set + free-text schema", () => {
+	it("emits a jaw-interview question gate with option set + free-text schema", () => {
 		const gate = questionToGate(singleQ);
-		expect(gate.stage).toBe("deep-interview");
+		expect(gate.stage).toBe("jaw-interview");
 		expect(gate.kind).toBe("question");
 		expect(gate.options?.map(o => o.label)).toEqual(["JWT", "OAuth2", "Session cookies"]);
 		expect(gate.options?.[0]?.description).toBe("recommended");
@@ -73,7 +73,7 @@ describe("gateAnswerToResult (human-path parity)", () => {
 	});
 
 	it("rejects invalid answers", () => {
-		expect(() => gateAnswerToResult(singleQ, { selected: [] })).toThrow(DeepInterviewGateError);
+		expect(() => gateAnswerToResult(singleQ, { selected: [] })).toThrow(JawInterviewGateError);
 		expect(() => gateAnswerToResult(singleQ, { selected: ["Nope"] })).toThrow(/unknown option/);
 		expect(() => gateAnswerToResult(singleQ, { selected: ["JWT", "OAuth2"] })).toThrow(/single selection/);
 		expect(() => gateAnswerToResult(singleQ, { selected: [], other: true })).toThrow(/custom text is required/);

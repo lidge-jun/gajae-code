@@ -1,7 +1,7 @@
 /**
- * Deep-interview gate mapping (#316).
+ * Jaw-interview gate mapping (#316).
  *
- * Converts deep-interview `ask`-tool questions into machine-addressable
+ * Converts jaw-interview `ask`-tool questions into machine-addressable
  * `workflow_gate` { kind: "question" } events (option set + free-text shape
  * encoded in `schema`/`options`) and decodes a `workflow_gate_response` answer
  * back into the exact QuestionResult shape the human path produces, so ambiguity
@@ -35,19 +35,19 @@ export interface AskGateResult {
 }
 
 /**
- * The answer shape an agent returns for a deep-interview question gate.
+ * The answer shape an agent returns for a jaw-interview question gate.
  *
  * `selected` are picked option labels; free text is conveyed by `other: true`
  * plus `custom`, encoded separately from `selected` so a real option whose label
  * happens to equal the display sentinel can never collide with the free-text path.
  */
-export interface DeepInterviewGateAnswer {
+export interface JawInterviewGateAnswer {
 	selected: string[];
 	other?: boolean;
 	custom?: string;
 }
 
-export class DeepInterviewGateError extends Error {
+export class JawInterviewGateError extends Error {
 	constructor(
 		readonly code:
 			| "invalid_answer_shape"
@@ -59,11 +59,11 @@ export class DeepInterviewGateError extends Error {
 		message: string,
 	) {
 		super(message);
-		this.name = "DeepInterviewGateError";
+		this.name = "JawInterviewGateError";
 	}
 }
 
-function deepInterviewQuestionState(questionText: string): Record<string, unknown> {
+function jawInterviewQuestionState(questionText: string): Record<string, unknown> {
 	const roundMatch = /^Round\s+(\d+)\s+\|\s+([^|]+?)\s+\|\s+Ambiguity:\s*(.+?)\s*$/im.exec(questionText);
 	const state: Record<string, unknown> = {};
 	if (roundMatch) {
@@ -130,12 +130,12 @@ function questionAnswerSchema(question: AskGateQuestion, labels: string[]): RpcJ
 	};
 }
 
-/** Build the `workflow_gate` open-input for one deep-interview question. */
+/** Build the `workflow_gate` open-input for one jaw-interview question. */
 export function questionToGate(question: AskGateQuestion): OpenGateInput {
 	const labels = question.options.map(o => o.label);
 	const schema = questionAnswerSchema(question, labels);
 	return {
-		stage: "deep-interview",
+		stage: "jaw-interview",
 		kind: "question",
 		schema,
 		options: question.options.map((o, i) => ({
@@ -151,15 +151,15 @@ export function questionToGate(question: AskGateQuestion): OpenGateInput {
 				multi: question.multi ?? false,
 				options: labels,
 				other_option: GATE_OTHER_OPTION,
-				...deepInterviewQuestionState(question.question),
+				...jawInterviewQuestionState(question.question),
 			},
 		},
 	};
 }
 
-function isAnswer(value: unknown): value is DeepInterviewGateAnswer {
+function isAnswer(value: unknown): value is JawInterviewGateAnswer {
 	if (typeof value !== "object" || value === null) return false;
-	const v = value as DeepInterviewGateAnswer;
+	const v = value as JawInterviewGateAnswer;
 	return (
 		Array.isArray(v.selected) &&
 		v.selected.every(s => typeof s === "string") &&
@@ -171,12 +171,12 @@ function isAnswer(value: unknown): value is DeepInterviewGateAnswer {
 /**
  * Decode a gate answer into the QuestionResult the interactive path produces.
  * Selections are de-duplicated (the interactive UI stores them in a Set), and
- * free text is taken from `other`/`custom`. Throws DeepInterviewGateError on a
+ * free text is taken from `other`/`custom`. Throws JawInterviewGateError on a
  * semantically invalid answer.
  */
 export function gateAnswerToResult(question: AskGateQuestion, answer: unknown): AskGateResult {
 	if (!isAnswer(answer)) {
-		throw new DeepInterviewGateError(
+		throw new JawInterviewGateError(
 			"invalid_answer_shape",
 			"answer must be { selected: string[]; other?: boolean; custom?: string }",
 		);
@@ -185,26 +185,26 @@ export function gateAnswerToResult(question: AskGateQuestion, answer: unknown): 
 	const multi = question.multi ?? false;
 	const valid = new Set(labels);
 	for (const sel of answer.selected) {
-		if (!valid.has(sel)) throw new DeepInterviewGateError("unknown_option", `unknown option: ${sel}`);
+		if (!valid.has(sel)) throw new JawInterviewGateError("unknown_option", `unknown option: ${sel}`);
 	}
 	// Mirror the interactive UI, which stores selections in a Set (no duplicates).
 	const deduped = [...new Set(answer.selected)];
 	if (deduped.length !== answer.selected.length) {
-		throw new DeepInterviewGateError("duplicate_selection", "selected options must be unique");
+		throw new JawInterviewGateError("duplicate_selection", "selected options must be unique");
 	}
 	const other = answer.other === true;
 	const totalPicks = deduped.length + (other ? 1 : 0);
 	if (totalPicks === 0) {
-		throw new DeepInterviewGateError(
+		throw new JawInterviewGateError(
 			"empty_selection",
 			"at least one option (or the free-text other) must be selected",
 		);
 	}
 	if (!multi && totalPicks > 1) {
-		throw new DeepInterviewGateError("multi_not_allowed", "this question accepts a single selection");
+		throw new JawInterviewGateError("multi_not_allowed", "this question accepts a single selection");
 	}
 	if (other && (answer.custom === undefined || answer.custom.trim() === "")) {
-		throw new DeepInterviewGateError("missing_custom", "custom text is required when `other` is true");
+		throw new JawInterviewGateError("missing_custom", "custom text is required when `other` is true");
 	}
 	return {
 		id: question.id,

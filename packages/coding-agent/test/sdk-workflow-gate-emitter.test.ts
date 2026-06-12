@@ -67,7 +67,7 @@ describe("SDK ToolSession forwards getWorkflowGateEmitter (G011 real wiring)", (
 			);
 			// The real SDK toolSession forwarded the emitter -> the ask tool emitted a gate.
 			expect(received).toHaveLength(1);
-			expect(received[0].stage).toBe("deep-interview");
+			expect(received[0].stage).toBe("jaw-interview");
 			expect(JSON.stringify(result.details)).toContain("JWT");
 		} finally {
 			await session.dispose();

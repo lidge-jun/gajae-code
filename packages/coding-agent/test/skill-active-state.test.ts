@@ -23,9 +23,9 @@ async function withTempCwd(fn: (cwd: string) => Promise<void>): Promise<void> {
 
 describe("GJC skill-active state", () => {
 	it("normalizes legacy top-level active state into active skills", () => {
-		const state = normalizeSkillActiveState({ active: true, skill: "deep-interview", phase: "intent-first" });
+		const state = normalizeSkillActiveState({ active: true, skill: "jaw-interview", phase: "intent-first" });
 		expect(state?.active_skills).toEqual([
-			expect.objectContaining({ skill: "deep-interview", phase: "intent-first", active: true }),
+			expect.objectContaining({ skill: "jaw-interview", phase: "intent-first", active: true }),
 		]);
 	});
 
@@ -77,14 +77,14 @@ describe("GJC skill-active state", () => {
 			await syncSkillActiveState({ cwd, skill: "team", active: true, phase: "running", sessionId: "sess-a" });
 			await syncSkillActiveState({
 				cwd,
-				skill: "deep-interview",
+				skill: "jaw-interview",
 				active: true,
 				phase: "intent",
 				sessionId: "sess-b",
 			});
 
 			const visible = await readVisibleSkillActiveState(cwd, "sess-b");
-			expect(visible?.active_skills?.map(entry => entry.skill)).toEqual(["deep-interview"]);
+			expect(visible?.active_skills?.map(entry => entry.skill)).toEqual(["jaw-interview"]);
 		});
 	});
 
@@ -122,7 +122,7 @@ describe("GJC skill-active state", () => {
 		await withTempCwd(async cwd => {
 			await syncSkillActiveState({
 				cwd,
-				skill: "deep-interview",
+				skill: "jaw-interview",
 				active: true,
 				phase: "interviewing",
 				sessionId: "sess-hud",
@@ -150,17 +150,17 @@ describe("GJC skill-active state", () => {
 
 	it("shows only the callee when a skill is seeded session-less then handed off under a session", async () => {
 		await withTempCwd(async cwd => {
-			// `gjc deep-interview` run without --session-id seeds a global row, then
+			// `jwc interview` run without --session-id seeds a global row, then
 			// the in-TUI skill chain hands off under a concrete session id. The
 			// demotion must supersede the global row so the HUD stops showing the
 			// already-handed-off skill.
-			await syncSkillActiveState({ cwd, skill: "deep-interview", phase: "interviewing", active: true });
+			await syncSkillActiveState({ cwd, skill: "jaw-interview", phase: "interviewing", active: true });
 			await applyHandoffToActiveState({
 				cwd,
 				strict: true,
 				caller: {
 					cwd,
-					skill: "deep-interview",
+					skill: "jaw-interview",
 					active: false,
 					phase: "handoff",
 					sessionId: "sess1",
@@ -172,7 +172,7 @@ describe("GJC skill-active state", () => {
 					active: true,
 					phase: "planner",
 					sessionId: "sess1",
-					handoff_from: "deep-interview",
+					handoff_from: "jaw-interview",
 				},
 			});
 
@@ -186,7 +186,7 @@ describe("GJC skill-active state", () => {
 			await syncSkillActiveState({ cwd, skill: "ralplan", phase: "planner", active: true, sessionId: "sessB" });
 			await syncSkillActiveState({
 				cwd,
-				skill: "deep-interview",
+				skill: "jaw-interview",
 				phase: "interviewing",
 				active: true,
 				sessionId: "sessA",
@@ -196,7 +196,7 @@ describe("GJC skill-active state", () => {
 				strict: true,
 				caller: {
 					cwd,
-					skill: "deep-interview",
+					skill: "jaw-interview",
 					active: false,
 					phase: "handoff",
 					sessionId: "sessA",
@@ -208,7 +208,7 @@ describe("GJC skill-active state", () => {
 					active: true,
 					phase: "planner",
 					sessionId: "sessA",
-					handoff_from: "deep-interview",
+					handoff_from: "jaw-interview",
 				},
 			});
 
@@ -228,16 +228,16 @@ describe("GJC skill-active state", () => {
 				JSON.stringify({
 					version: 1,
 					active: true,
-					skill: "deep-interview",
+					skill: "jaw-interview",
 					active_skills: [
 						{
-							skill: "deep-interview",
+							skill: "jaw-interview",
 							phase: "interviewing",
 							active: true,
 							updated_at: "2026-01-01T00:00:00.000Z",
 						},
 						{
-							skill: "deep-interview",
+							skill: "jaw-interview",
 							phase: "handoff",
 							active: false,
 							session_id: "sess1",
@@ -272,7 +272,7 @@ describe("GJC skill-active state", () => {
 		await withTempCwd(async cwd => {
 			// `gjc ralplan` then `gjc ultragoal` each activate their own row without
 			// demoting the other. The shared read keeps both so blocking consumers
-			// (deep-interview mutation guard, handoff caller inference) still see the
+			// (jaw-interview mutation guard, handoff caller inference) still see the
 			// true active set; collapsing to the current stage is the HUD renderer's
 			// job, covered in skill-hud-bar.test.ts.
 			await syncSkillActiveState({
@@ -299,7 +299,7 @@ describe("GJC skill-active state", () => {
 
 	it("keeps an active session-scoped row visible despite a newer session-less inactive same-skill row", async () => {
 		await withTempCwd(async cwd => {
-			// A session-less (global) deep-interview row was handed off (inactive,
+			// A session-less (global) jaw-interview row was handed off (inactive,
 			// newest), but the current session still has its own active interview.
 			// Session ownership must win so the mutation guard still sees it.
 			const { rootPath } = getSkillActiveStatePaths(cwd, "sess1");
@@ -309,17 +309,17 @@ describe("GJC skill-active state", () => {
 				JSON.stringify({
 					version: 1,
 					active: true,
-					skill: "deep-interview",
+					skill: "jaw-interview",
 					active_skills: [
 						{
-							skill: "deep-interview",
+							skill: "jaw-interview",
 							phase: "interviewing",
 							active: true,
 							session_id: "sess1",
 							updated_at: "2026-01-01T00:00:00.000Z",
 						},
 						{
-							skill: "deep-interview",
+							skill: "jaw-interview",
 							phase: "handoff",
 							active: false,
 							updated_at: "2026-01-01T00:09:00.000Z",
@@ -330,7 +330,7 @@ describe("GJC skill-active state", () => {
 			);
 
 			const visible = await readVisibleSkillActiveState(cwd, "sess1");
-			expect(visible?.active_skills?.map(entry => entry.skill)).toEqual(["deep-interview"]);
+			expect(visible?.active_skills?.map(entry => entry.skill)).toEqual(["jaw-interview"]);
 		});
 	});
 
@@ -346,16 +346,16 @@ describe("GJC skill-active state", () => {
 				JSON.stringify({
 					version: 1,
 					active: true,
-					skill: "deep-interview",
+					skill: "jaw-interview",
 					active_skills: [
-						{ skill: "deep-interview", phase: "interviewing", active: true, session_id: "a" },
-						{ skill: "deep-interview", phase: "handoff", active: false, session_id: "b" },
+						{ skill: "jaw-interview", phase: "interviewing", active: true, session_id: "a" },
+						{ skill: "jaw-interview", phase: "handoff", active: false, session_id: "b" },
 					],
 				}),
 			);
 
 			const visible = await readVisibleSkillActiveState(cwd);
-			expect(visible?.active_skills?.map(entry => entry.skill)).toEqual(["deep-interview"]);
+			expect(visible?.active_skills?.map(entry => entry.skill)).toEqual(["jaw-interview"]);
 			expect(visible?.active_skills?.[0]?.phase).toBe("interviewing");
 		});
 	});
@@ -369,16 +369,16 @@ describe("GJC skill-active state", () => {
 			await fs.mkdir(path.dirname(rootPath), { recursive: true });
 			await fs.writeFile(
 				rootPath,
-				JSON.stringify({ version: 1, active: true, skill: "deep-interview", phase: "intent-first" }),
+				JSON.stringify({ version: 1, active: true, skill: "jaw-interview", phase: "intent-first" }),
 			);
 
 			const visible = await readVisibleSkillActiveState(cwd);
-			expect(visible?.active_skills?.map(entry => entry.skill)).toEqual(["deep-interview"]);
+			expect(visible?.active_skills?.map(entry => entry.skill)).toEqual(["jaw-interview"]);
 			expect(visible?.active_skills?.[0]?.phase).toBe("intent-first");
 		});
 	});
 
 	it("keeps the canonical GJC workflow skill set intentionally small", () => {
-		expect(CANONICAL_GJC_WORKFLOW_SKILLS).toEqual(["deep-interview", "ralplan", "ultragoal", "team"]);
+		expect(CANONICAL_GJC_WORKFLOW_SKILLS).toEqual(["jaw-interview", "ralplan", "ultragoal", "team"]);
 	});
 });

@@ -199,25 +199,25 @@ describe("InputController #invokeSkillCommand (E1-E3)", () => {
 	});
 
 	it("E3b: embedded default skill command does not require .gjc on disk", async () => {
-		const embedded = getEmbeddedDefaultGjcSkills().find(skill => skill.name === "deep-interview");
-		if (!embedded) throw new Error("expected embedded deep-interview skill");
+		const embedded = getEmbeddedDefaultGjcSkills().find(skill => skill.name === "jaw-interview");
+		if (!embedded) throw new Error("expected embedded jaw-interview skill");
 		const { ctx, editor, promptCustomMessage } = createStubInputControllerContext({
-			skillCommands: new Map<string, Skill>([["skill:deep-interview", embedded]]),
+			skillCommands: new Map<string, Skill>([["skill:jaw-interview", embedded]]),
 			isStreaming: false,
 		});
 
 		const controller = new InputController(ctx);
 		controller.setupEditorSubmitHandler();
-		editor.setText("/skill:deep-interview clarify this");
-		await editor.onSubmit?.("/skill:deep-interview clarify this");
+		editor.setText("/skill:jaw-interview clarify this");
+		await editor.onSubmit?.("/skill:jaw-interview clarify this");
 
 		expect(promptCustomMessage).toHaveBeenCalledTimes(1);
 		const firstCall = promptCustomMessage.mock.calls[0];
 		expect(firstCall).toBeDefined();
 		if (!firstCall) throw new Error("expected promptCustomMessage to be called");
 		const messageArg = firstCall[0];
-		expect(messageArg.content).toContain("Deep Interview");
-		expect(messageArg.details.path).toBe("embedded:gjc/skills/deep-interview/SKILL.md");
+		expect(messageArg.content).toContain("Jaw Interview");
+		expect(messageArg.details.path).toBe("embedded:gjc/skills/jaw-interview/SKILL.md");
 		expect(ctx.showError).not.toHaveBeenCalled();
 	});
 
@@ -319,15 +319,15 @@ describe("skill slash command resolution", () => {
 	});
 
 	it("exposes only namespaced skill commands", () => {
-		const deepInterview = getEmbeddedDefaultGjcSkills().find(skill => skill.name === "deep-interview");
-		if (!deepInterview) throw new Error("expected embedded deep-interview skill");
+		const jawInterview = getEmbeddedDefaultGjcSkills().find(skill => skill.name === "jaw-interview");
+		if (!jawInterview) throw new Error("expected embedded jaw-interview skill");
 
-		const withFileCollision = resolveSkillSlashCommands([deepInterview], new Set(["deep-interview"]));
-		expect(withFileCollision.map(command => command.name)).toEqual(["skill:deep-interview"]);
+		const withFileCollision = resolveSkillSlashCommands([jawInterview], new Set(["jaw-interview"]));
+		expect(withFileCollision.map(command => command.name)).toEqual(["skill:jaw-interview"]);
 
-		const afterCollisionRemoved = resolveSkillSlashCommands([deepInterview], new Set());
-		expect(afterCollisionRemoved.map(command => command.name)).toEqual(["skill:deep-interview"]);
-		expect(afterCollisionRemoved.every(command => command.skill === deepInterview)).toBe(true);
+		const afterCollisionRemoved = resolveSkillSlashCommands([jawInterview], new Set());
+		expect(afterCollisionRemoved.map(command => command.name)).toEqual(["skill:jaw-interview"]);
+		expect(afterCollisionRemoved.every(command => command.skill === jawInterview)).toBe(true);
 	});
 });
 

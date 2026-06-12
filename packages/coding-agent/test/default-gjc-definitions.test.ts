@@ -51,7 +51,7 @@ afterEach(async () => {
 });
 
 describe("default GJC definitions", () => {
-	it("bundles exactly the four default workflow skills plus deep-interview and ultragoal fragments as installable assets", () => {
+	it("bundles exactly the four default workflow skills plus jaw-interview and ultragoal fragments as installable assets", () => {
 		const definitions = getDefaultGjcDefinitions();
 		const workflowDefinitions = definitions.filter(definition => definition.kind === "skill");
 		const fragmentDefinitions = definitions.filter(definition => definition.kind === "skill-fragment");
@@ -65,19 +65,19 @@ describe("default GJC definitions", () => {
 		expect(workflowDefinitions.every(definition => definition.content.includes(definition.name))).toBe(true);
 		expect(fragmentDefinitions).toHaveLength(3);
 		expect(fragmentDefinitions.map(definition => definition.parentSkillName).sort()).toEqual([
-			"deep-interview",
-			"deep-interview",
+			"jaw-interview",
+			"jaw-interview",
 			"ultragoal",
 		]);
 		expect(fragmentDefinitions.map(definition => definition.relativePath).sort()).toEqual([
-			"skill-fragments/deep-interview/auto-answer-uncertain.md",
-			"skill-fragments/deep-interview/auto-research-greenfield.md",
+			"skill-fragments/jaw-interview/auto-answer-uncertain.md",
+			"skill-fragments/jaw-interview/auto-research-greenfield.md",
 			"skill-fragments/ultragoal/ai-slop-cleaner.md",
 		]);
 	});
 
-	it("exposes deep-interview fragments only through the parent-scoped fragment accessor", () => {
-		const fragments = getEmbeddedDefaultGjcSkillFragments("deep-interview");
+	it("exposes jaw-interview fragments only through the parent-scoped fragment accessor", () => {
+		const fragments = getEmbeddedDefaultGjcSkillFragments("jaw-interview");
 
 		expect(
 			getEmbeddedDefaultGjcSkills()
@@ -87,8 +87,8 @@ describe("default GJC definitions", () => {
 		expect(fragments).toHaveLength(2);
 		expect(fragments.map(fragment => fragment.kind)).toEqual(["skill-fragment", "skill-fragment"]);
 		expect(fragments.map(fragment => fragment.relativePath).sort()).toEqual([
-			"skill-fragments/deep-interview/auto-answer-uncertain.md",
-			"skill-fragments/deep-interview/auto-research-greenfield.md",
+			"skill-fragments/jaw-interview/auto-answer-uncertain.md",
+			"skill-fragments/jaw-interview/auto-research-greenfield.md",
 		]);
 		expect(fragments.every(fragment => fragment.content.includes("read-only architect"))).toBe(true);
 	});
@@ -316,12 +316,12 @@ Project executor override body.
 		}
 	});
 
-	it("keeps bundled deep-interview skill on GJC-native workflow vocabulary", () => {
-		const deepInterview = getDefaultGjcDefinitions().find(
-			definition => definition.kind === "skill" && definition.name === "deep-interview",
+	it("keeps bundled jaw-interview skill on GJC-native workflow vocabulary", () => {
+		const jawInterview = getDefaultGjcDefinitions().find(
+			definition => definition.kind === "skill" && definition.name === "jaw-interview",
 		);
-		expect(deepInterview).toBeDefined();
-		const content = deepInterview?.content ?? "";
+		expect(jawInterview).toBeDefined();
+		const content = jawInterview?.content ?? "";
 
 		for (const required of ["ask", ".gjc/state", "pending approval"]) {
 			expect(content).toContain(required);
@@ -348,7 +348,7 @@ Project executor override body.
 			"Skill(",
 			"gajae-code:",
 			"/gajae-code",
-			"gjc deep-interview",
+			"jwc interview",
 		]) {
 			expect(content).not.toContain(forbidden);
 		}
@@ -374,8 +374,8 @@ Project executor override body.
 	it("installs bundled workflow skill definitions without overwriting local edits unless forced", async () => {
 		const targetRoot = await makeTempRoot();
 		const initial = await installDefaultGjcDefinitions({ targetRoot });
-		const deepInterviewSkillPath = path.join(targetRoot, "skills", "deep-interview", "SKILL.md");
-		const installedDeepInterview = await Bun.file(deepInterviewSkillPath).text();
+		const jawInterviewSkillPath = path.join(targetRoot, "skills", "jaw-interview", "SKILL.md");
+		const installedJawInterview = await Bun.file(jawInterviewSkillPath).text();
 
 		expect(initial.written).toBe(7);
 		expect(initial.total).toBe(7);
@@ -383,14 +383,14 @@ Project executor override body.
 		expect(initial.files.filter(file => file.kind === "skill-fragment")).toHaveLength(3);
 
 		const installedResearchFragment = await Bun.file(
-			path.join(targetRoot, "skill-fragments", "deep-interview", "auto-research-greenfield.md"),
+			path.join(targetRoot, "skill-fragments", "jaw-interview", "auto-research-greenfield.md"),
 		).text();
 		expect(installedResearchFragment).toContain("ranked candidate answers");
-		await Bun.write(deepInterviewSkillPath, "local edit");
+		await Bun.write(jawInterviewSkillPath, "local edit");
 		const skipped = await installDefaultGjcDefinitions({ targetRoot });
 		expect(skipped.written).toBe(0);
 		expect(skipped.skipped).toBe(7);
-		expect(await Bun.file(deepInterviewSkillPath).text()).toBe("local edit");
+		expect(await Bun.file(jawInterviewSkillPath).text()).toBe("local edit");
 
 		const check = await installDefaultGjcDefinitions({ targetRoot, check: true });
 		expect(check.different).toBe(1);
@@ -398,9 +398,9 @@ Project executor override body.
 
 		const forced = await installDefaultGjcDefinitions({ targetRoot, force: true });
 		expect(forced.written).toBe(7);
-		expect(await Bun.file(deepInterviewSkillPath).text()).toBe(installedDeepInterview);
+		expect(await Bun.file(jawInterviewSkillPath).text()).toBe(installedJawInterview);
 		expect(
-			forced.files.some(file => file.kind === "skill-fragment" && file.parentSkillName === "deep-interview"),
+			forced.files.some(file => file.kind === "skill-fragment" && file.parentSkillName === "jaw-interview"),
 		).toBe(true);
 	});
 
@@ -415,14 +415,14 @@ Project executor override body.
 				enablePiProject: true,
 				enablePiUser: false,
 			});
-			const deepInterview = skills.skills.find(
-				skill => skill.name === "deep-interview" && skill.source === "native:project",
+			const jawInterview = skills.skills.find(
+				skill => skill.name === "jaw-interview" && skill.source === "native:project",
 			);
-			if (!deepInterview) throw new Error("missing installed deep-interview skill");
+			if (!jawInterview) throw new Error("missing installed jaw-interview skill");
 
-			setActiveSkills([deepInterview]);
+			setActiveSkills([jawInterview]);
 			await expect(
-				new SkillProtocolHandler().resolve(parseInternalUrl("skill://deep-interview/auto-research-greenfield.md")),
+				new SkillProtocolHandler().resolve(parseInternalUrl("skill://jaw-interview/auto-research-greenfield.md")),
 			).rejects.toThrow("File not found");
 		});
 	});

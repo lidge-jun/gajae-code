@@ -28,13 +28,13 @@ import {
 } from "@gajae-code/tui";
 import { prompt, untilAborted } from "@gajae-code/utils";
 import * as z from "zod/v4";
-import {
-	formatDeepInterviewSelectorPrompt,
-	isDeepInterviewAskQuestion,
-	renderDeepInterviewAskQuestion,
-} from "../deep-interview/render-middleware";
 import type { RenderResultOptions } from "../extensibility/custom-tools/types";
-import { gateAnswerToResult, questionToGate } from "../modes/shared/agent-wire/deep-interview-gate";
+import {
+	formatJawInterviewSelectorPrompt,
+	isJawInterviewAskQuestion,
+	renderJawInterviewAskQuestion,
+} from "../jaw-interview/render-middleware";
+import { gateAnswerToResult, questionToGate } from "../modes/shared/agent-wire/jaw-interview-gate";
 import { getMarkdownTheme, type Theme, theme } from "../modes/theme/theme";
 import askDescription from "../prompts/tools/ask.md" with { type: "text" };
 import { renderStatusLine } from "../tui";
@@ -90,7 +90,7 @@ export interface AskToolDetails {
 
 const OTHER_OPTION = "Other (type your own)";
 const RECOMMENDED_SUFFIX = " (Recommended)";
-const DEEP_INTERVIEW_SELECTOR_SCROLL_TITLE_ROWS = Number.MAX_SAFE_INTEGER;
+const JAW_INTERVIEW_SELECTOR_SCROLL_TITLE_ROWS = Number.MAX_SAFE_INTEGER;
 
 function getDoneOptionLabel(): string {
 	return `${theme.status.success} Done selecting`;
@@ -528,9 +528,9 @@ export class AskTool implements AgentTool<typeof askSchema, AskToolDetails> {
 				};
 			}
 			try {
-				const deepInterviewPrompt = formatDeepInterviewSelectorPrompt(q.question);
-				const displayQuestion = deepInterviewPrompt ?? q.question;
-				const shouldNumberOptions = isDeepInterviewAskQuestion(q.question);
+				const jawInterviewPrompt = formatJawInterviewSelectorPrompt(q.question);
+				const displayQuestion = jawInterviewPrompt ?? q.question;
+				const shouldNumberOptions = isJawInterviewAskQuestion(q.question);
 				const optionLabels = shouldNumberOptions ? numberOptionLabels(rawOptionLabels) : rawOptionLabels;
 				const initialSelection =
 					shouldNumberOptions && options?.previous
@@ -554,7 +554,7 @@ export class AskTool implements AgentTool<typeof askSchema, AskToolDetails> {
 					signal,
 					initialSelection,
 					navigation: options?.navigation,
-					scrollTitleRows: deepInterviewPrompt === null ? undefined : DEEP_INTERVIEW_SELECTOR_SCROLL_TITLE_ROWS,
+					scrollTitleRows: jawInterviewPrompt === null ? undefined : JAW_INTERVIEW_SELECTOR_SCROLL_TITLE_ROWS,
 					otherOptionLabel: shouldNumberOptions
 						? formatNumberedOptionLabel(OTHER_OPTION, optionLabels.length)
 						: undefined,
@@ -757,15 +757,15 @@ export const askToolRenderer = {
 				container.addChild(
 					new Text(` ${uiTheme.fg("dim", qBranch)} ${uiTheme.fg("dim", `[${q.id}]`)}${metaStr}`, 0, 0),
 				);
-				const deepInterviewQuestion = renderDeepInterviewAskQuestion(q.question, uiTheme);
-				container.addChild(deepInterviewQuestion ?? new Markdown(q.question, 3, 0, mdTheme, accentStyle));
+				const jawInterviewQuestion = renderJawInterviewAskQuestion(q.question, uiTheme);
+				container.addChild(jawInterviewQuestion ?? new Markdown(q.question, 3, 0, mdTheme, accentStyle));
 
 				const qOptions = q.options;
 				if (qOptions?.length) {
 					const entries = qOptions.map((opt, j) => {
 						const isLastOpt = j === qOptions.length - 1;
 						const optBranch = isLastOpt ? uiTheme.tree.last : uiTheme.tree.branch;
-						const shouldNumberOption = deepInterviewQuestion !== null || isDeepInterviewAskQuestion(q.question);
+						const shouldNumberOption = jawInterviewQuestion !== null || isJawInterviewAskQuestion(q.question);
 						const displayLabel = shouldNumberOption ? formatNumberedOptionLabel(opt.label, j) : opt.label;
 						const optLabel = renderInlineMarkdown(displayLabel, mdTheme, t => uiTheme.fg("muted", t));
 						return {
@@ -790,15 +790,15 @@ export const askToolRenderer = {
 		if (args.multi) meta.push("multi");
 		if (args.options?.length) meta.push(`options:${args.options.length}`);
 		container.addChild(new Text(`${label}${formatMeta(meta, uiTheme)}`, 0, 0));
-		const deepInterviewQuestion = renderDeepInterviewAskQuestion(question, uiTheme);
-		container.addChild(deepInterviewQuestion ?? new Markdown(question, 1, 0, mdTheme, accentStyle));
+		const jawInterviewQuestion = renderJawInterviewAskQuestion(question, uiTheme);
+		container.addChild(jawInterviewQuestion ?? new Markdown(question, 1, 0, mdTheme, accentStyle));
 
 		const options = args.options;
 		if (options?.length) {
 			const entries = options.map((opt, i) => {
 				const isLast = i === options.length - 1;
 				const branch = isLast ? uiTheme.tree.last : uiTheme.tree.branch;
-				const shouldNumberOption = deepInterviewQuestion !== null || isDeepInterviewAskQuestion(question);
+				const shouldNumberOption = jawInterviewQuestion !== null || isJawInterviewAskQuestion(question);
 				const displayLabel = shouldNumberOption ? formatNumberedOptionLabel(opt.label, i) : opt.label;
 				const optLabel = renderInlineMarkdown(displayLabel, mdTheme, t => uiTheme.fg("muted", t));
 				return {
@@ -858,7 +858,7 @@ export const askToolRenderer = {
 					new Text(` ${uiTheme.fg("dim", branch)} ${statusIcon} ${uiTheme.fg("dim", `[${r.id}]`)}`, 0, 0),
 				);
 				container.addChild(
-					renderDeepInterviewAskQuestion(r.question, uiTheme) ??
+					renderJawInterviewAskQuestion(r.question, uiTheme) ??
 						new Markdown(r.question, 3, 0, mdTheme, accentStyle),
 				);
 
@@ -904,7 +904,7 @@ export const askToolRenderer = {
 		const container = new Container();
 		container.addChild(new Text(header, 0, 0));
 		container.addChild(
-			renderDeepInterviewAskQuestion(details.question, uiTheme) ??
+			renderJawInterviewAskQuestion(details.question, uiTheme) ??
 				new Markdown(details.question, 1, 0, mdTheme, accentStyle),
 		);
 

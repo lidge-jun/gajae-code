@@ -1,4 +1,5 @@
 import * as path from "node:path";
+import { normalizeWorkflowSkillSlug } from "../gjc-runtime/state-schema";
 import {
 	type ActiveSessionScope,
 	rebuildActiveSnapshot,
@@ -9,7 +10,7 @@ import type { WorkflowStateReceipt } from "./workflow-state-contract";
 
 export const SKILL_ACTIVE_STATE_FILE = "skill-active-state.json";
 
-export const CANONICAL_GJC_WORKFLOW_SKILLS = ["deep-interview", "ralplan", "ultragoal", "team"] as const;
+export const CANONICAL_GJC_WORKFLOW_SKILLS = ["jaw-interview", "ralplan", "ultragoal", "team"] as const;
 
 export type CanonicalGjcWorkflowSkill = (typeof CANONICAL_GJC_WORKFLOW_SKILLS)[number];
 export type WorkflowHudSeverity = "info" | "warning" | "blocked" | "error" | "success";
@@ -282,7 +283,7 @@ function normalizeEntry(raw: unknown): SkillActiveEntry | null {
 }
 
 export function isCanonicalGjcWorkflowSkill(skill: string): skill is CanonicalGjcWorkflowSkill {
-	return (CANONICAL_GJC_WORKFLOW_SKILLS as readonly string[]).includes(skill);
+	return (CANONICAL_GJC_WORKFLOW_SKILLS as readonly string[]).includes(normalizeWorkflowSkillSlug(skill));
 }
 
 export function listActiveSkills(raw: unknown): SkillActiveEntry[] {
@@ -501,9 +502,9 @@ function dedupeVisibleBySkill(entries: SkillActiveEntry[], sessionId?: string): 
 }
 
 /**
- * The planning pipeline advances one stage at a time: `deep-interview →
+ * The planning pipeline advances one stage at a time: `jaw-interview →
  * ralplan → ultragoal`. Each stage is activated through its own command path
- * (`gjc deep-interview`, `gjc ralplan`, `gjc ultragoal`), and those activations
+ * (`gjc jaw-interview`, `gjc ralplan`, `gjc ultragoal`), and those activations
  * do not demote the previous stage's row — only the explicit `handoff` verb
  * does. Without this collapse, activating ultragoal while ralplan is still
  * `active:true` would render both stages and keep showing a workflow that has
@@ -514,10 +515,10 @@ function dedupeVisibleBySkill(entries: SkillActiveEntry[], sessionId?: string): 
  *
  * This is a HUD-display policy only. It is applied by the skill HUD renderer and
  * deliberately NOT folded into `readVisibleSkillActiveState`, whose callers (the
- * deep-interview mutation guard and handoff caller inference) must keep seeing
+ * jaw-interview mutation guard and handoff caller inference) must keep seeing
  * every genuinely-active skill rather than the single most-recent pipeline stage.
  */
-const PLANNING_PIPELINE_SKILLS = new Set<string>(["deep-interview", "ralplan", "ultragoal"]);
+const PLANNING_PIPELINE_SKILLS = new Set<string>(["jaw-interview", "ralplan", "ultragoal"]);
 
 export function collapsePlanningPipeline(entries: readonly SkillActiveEntry[]): SkillActiveEntry[] {
 	const pipeline = entries.filter(entry => PLANNING_PIPELINE_SKILLS.has(entry.skill));

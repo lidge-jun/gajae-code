@@ -12,20 +12,21 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 
 const repoRoot = path.join(import.meta.dir, "..");
-const EXPECTED_DEFINITIONS = ["deep-interview", "ralplan", "team", "ultragoal"] as const;
+const EXPECTED_DEFINITIONS = ["jaw-interview", "ralplan", "team", "ultragoal"] as const;
 const EXPECTED_ROLE_AGENTS = ["architect", "critic", "executor", "planner"] as const;
 const EXPECTED_PUBLIC_PACKAGE_VERSION_CATALOG_KEY = "@gajae-code/coding-agent";
-const ALLOWED_PUBLIC_PACKAGE_VERSIONS = new Map<string, string>();
+const ALLOWED_PUBLIC_PACKAGE_VERSIONS = new Map<string, string>([["jwc", "0.1.0"]]);
 const ALLOWED_PRIVATE_PACKAGE_VERSIONS = new Map<string, string>([
 	["@gajae-code/orchestration-token-benchmark", "0.0.1"],
 	["@gajae-code/typescript-edit-benchmark", "0.0.1"],
 ]);
-const ALLOWED_UNSCOPED_PACKAGE_NAMES = new Set<string>(["gajae-code"]);
+const ALLOWED_UNSCOPED_PACKAGE_NAMES = new Set<string>(["gajae-code", "jwc"]);
 const ALLOWED_PACKAGE_BINARIES = new Map<string, readonly string[]>([
 	["@gajae-code/ai", ["pi-ai"]],
 	["@gajae-code/coding-agent", ["gjc"]],
 	["gajae-code", ["gjc"]],
 	["@gajae-code/stats", ["gjc-stats"]],
+	["jwc", ["jwc"]],
 	["@gajae-code/typescript-edit-benchmark", ["typescript-edit-benchmark"]],
 ]);
 const PUBLIC_DOC_FILES = ["README.md", "packages/coding-agent/README.md"] as const;
@@ -54,7 +55,7 @@ const FORBIDDEN_EXA_MCP_DOC_PATTERNS: readonly RegExp[] = [
 	/Exa search provider and Exa MCP/u,
 ];
 const FORBIDDEN_SKILL_PATTERNS: readonly RegExp[] = [
-	new RegExp(String.raw`\b` + "om" + "x" + String.raw`\s+(team|state|question|ultragoal|ralplan|deep-interview)`, "u"),
+	new RegExp(String.raw`\b` + "om" + "x" + String.raw`\s+(team|state|question|ultragoal|ralplan|jaw-interview)`, "u"),
 	/\$ralph/u,
 	/\$autopilot/u,
 	/\$autoresearch/u,

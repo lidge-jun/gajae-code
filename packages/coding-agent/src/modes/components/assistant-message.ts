@@ -2,7 +2,7 @@ import type { AssistantMessage, ImageContent, Usage } from "@gajae-code/ai";
 import { Container, Image, ImageProtocol, Markdown, Spacer, TERMINAL, Text } from "@gajae-code/tui";
 import { formatNumber } from "@gajae-code/utils";
 import { settings } from "../../config/settings";
-import { renderDeepInterviewAssistantText } from "../../deep-interview/render-middleware";
+import { renderJawInterviewAssistantText } from "../../jaw-interview/render-middleware";
 import { getMarkdownTheme, theme } from "../../modes/theme/theme";
 import { isSilentAbort } from "../../session/messages";
 import { resolveImageOptions } from "../../tools/render-utils";
@@ -156,7 +156,7 @@ export class AssistantMessageComponent extends Container {
 				// Set paddingY=0 to avoid extra spacing before tool executions
 				const text = content.text.trim();
 				this.#contentContainer.addChild(
-					renderDeepInterviewAssistantText(text, theme) ?? new Markdown(text, 1, 0, getMarkdownTheme()),
+					renderJawInterviewAssistantText(text, theme) ?? new Markdown(text, 1, 0, getMarkdownTheme()),
 				);
 			} else if (content.type === "thinking" && content.thinking.trim()) {
 				// Add spacing only when another visible assistant content block follows.

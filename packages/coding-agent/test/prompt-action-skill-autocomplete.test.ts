@@ -7,7 +7,7 @@ function createProvider() {
 		commands: [
 			{ name: "fast", description: "Built-in fast mode" },
 			{ name: "model", description: "Select model" },
-			{ name: "skill:deep-interview", description: "Deep interview" },
+			{ name: "skill:jaw-interview", description: "Deep interview" },
 			{ name: "skill:fast", description: "Colliding skill" },
 			{ name: "skill:mode", description: "Mode skill" },
 			{ name: "skill:team", description: "Multi-worker team orchestration" },
@@ -31,19 +31,19 @@ describe("prompt action skill autocomplete", () => {
 		const provider = createProvider();
 		const suggestions = await provider.getSuggestions(["/deep"], 0, 5);
 		expect(suggestions?.prefix).toBe("/deep");
-		expect(suggestions?.items[0]?.value).toBe("skill:deep-interview");
+		expect(suggestions?.items[0]?.value).toBe("skill:jaw-interview");
 		const applied = provider.applyCompletion(["/deep"], 0, 5, suggestions!.items[0]!, suggestions!.prefix);
-		expect(applied.lines[0]).toBe("/skill:deep-interview ");
+		expect(applied.lines[0]).toBe("/skill:jaw-interview ");
 	});
 
 	it("normalizes slash-skill-name typing at intermediate positions", async () => {
 		const provider = createProvider();
-		const line = "/skill:deep-interview first /skill-deep";
+		const line = "/skill:jaw-interview first /skill-jaw";
 		const suggestions = await provider.getSuggestions([line], 0, line.length);
-		expect(suggestions?.prefix).toBe("/skill-deep");
-		expect(suggestions?.items[0]?.value).toBe("skill:deep-interview");
+		expect(suggestions?.prefix).toBe("/skill-jaw");
+		expect(suggestions?.items[0]?.value).toBe("skill:jaw-interview");
 		const applied = provider.applyCompletion([line], 0, line.length, suggestions!.items[0]!, suggestions!.prefix);
-		expect(applied.lines[0]).toBe("/skill:deep-interview first /skill:deep-interview ");
+		expect(applied.lines[0]).toBe("/skill:jaw-interview first /skill:jaw-interview ");
 	});
 
 	it("does not let direct-name normalization shadow an exact non-skill command", async () => {

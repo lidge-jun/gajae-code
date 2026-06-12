@@ -15,7 +15,7 @@ function userMessage(text: string) {
 }
 
 /**
- * Steer-on-interrupt contract (deep-interview spec, AC-1/AC-4):
+ * Steer-on-interrupt contract (jaw-interview spec, AC-1/AC-4):
  *  - a user interrupt (Esc) with queued steering resumes by draining the
  *    steering queue instead of going idle;
  *  - any non-user (lifecycle/teardown) abort suppresses the resume.

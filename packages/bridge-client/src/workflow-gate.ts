@@ -8,7 +8,8 @@
  */
 import type { BridgeFrame } from "./reference-consumer";
 
-export type WorkflowGateStage = "deep-interview" | "ralplan" | "ultragoal";
+/** "deep-interview" is the legacy wire value for "jaw-interview" (042 L3 dual-union read-compat). */
+export type WorkflowGateStage = "jaw-interview" | "deep-interview" | "ralplan" | "ultragoal";
 export type WorkflowGateKind = "question" | "approval" | "execution";
 
 export interface WorkflowGateOption {
@@ -54,7 +55,7 @@ export function isWorkflowGateFrame(frame: BridgeFrame): frame is BridgeFrame<Wo
 	if (frame.type !== "workflow_gate") return false;
 	const p = frame.payload as Partial<WorkflowGate> | undefined;
 	if (!p || typeof p !== "object") return false;
-	const stages: WorkflowGateStage[] = ["deep-interview", "ralplan", "ultragoal"];
+	const stages: WorkflowGateStage[] = ["jaw-interview", "deep-interview", "ralplan", "ultragoal"];
 	const kinds: WorkflowGateKind[] = ["question", "approval", "execution"];
 	return (
 		p.type === "workflow_gate" &&

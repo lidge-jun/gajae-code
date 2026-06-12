@@ -90,22 +90,22 @@ describe("G5 gjc state receipts", () => {
 			expectAuditEntry(findAuditEntry(await readAuditEntries(cwd), "clear"), "clear");
 
 			await runNativeStateCommand(
-				["write", "--mode", "deep-interview", "--input", JSON.stringify({ current_phase: "interviewing" })],
+				["write", "--mode", "jaw-interview", "--input", JSON.stringify({ current_phase: "interviewing" })],
 				cwd,
 			);
 			const handoff = await runNativeStateCommand(
-				["handoff", "--mode", "deep-interview", "--to", "ralplan", "--json"],
+				["handoff", "--mode", "jaw-interview", "--to", "ralplan", "--json"],
 				cwd,
 			);
 			expect(handoff.status).toBe(0);
 			const handoffPayload = JSON.parse(handoff.stdout ?? "{}") as Record<string, unknown>;
-			expect(handoffPayload).toMatchObject({ ok: true, from: "deep-interview", to: "ralplan" });
+			expect(handoffPayload).toMatchObject({ ok: true, from: "jaw-interview", to: "ralplan" });
 			expect(handoffPayload.state).toBeUndefined();
 			const handoffReceipts = handoffPayload.receipts as Record<string, Record<string, unknown>>;
 			expectCliChecksum(handoffReceipts.from);
 			expectCliChecksum(handoffReceipts.to);
 			expect(handoffReceipts.from.version).toBeUndefined();
-			expectValidReceipt(await readJson(path.join(cwd, ".gjc/state/deep-interview-state.json")), "deep-interview");
+			expectValidReceipt(await readJson(path.join(cwd, ".gjc/state/jaw-interview-state.json")), "jaw-interview");
 			expectValidReceipt(await readJson(statePath), "ralplan");
 
 			const entries = await readAuditEntries(cwd);

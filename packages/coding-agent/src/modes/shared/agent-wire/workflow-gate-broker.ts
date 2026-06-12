@@ -25,7 +25,7 @@ import type {
 import { RESERVED_WORKFLOW_STAGES } from "../../rpc/rpc-types";
 import { answerHashOf, canonicalJson, compileGateSchema, schemaHash, validateGateAnswer } from "./workflow-gate-schema";
 
-const V1_STAGES: readonly RpcWorkflowStage[] = ["deep-interview", "ralplan", "ultragoal"];
+const V1_STAGES: readonly RpcWorkflowStage[] = ["jaw-interview", "deep-interview", "ralplan", "ultragoal"];
 
 export interface PersistedGate {
 	gate: RpcWorkflowGate;

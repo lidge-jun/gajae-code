@@ -4,7 +4,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { Settings } from "@gajae-code/coding-agent/config/settings";
 import type { Skill } from "@gajae-code/coding-agent/extensibility/skills";
-import { runNativeDeepInterviewCommand } from "@gajae-code/coding-agent/gjc-runtime/deep-interview-runtime";
+import { runNativeJawInterviewCommand } from "@gajae-code/coding-agent/gjc-runtime/jaw-interview-runtime";
 import { runNativeRalplanCommand } from "@gajae-code/coding-agent/gjc-runtime/ralplan-runtime";
 import { runNativeStateCommand } from "@gajae-code/coding-agent/gjc-runtime/state-runtime";
 import { createUltragoalPlan, runNativeUltragoalCommand } from "@gajae-code/coding-agent/gjc-runtime/ultragoal-runtime";
@@ -122,20 +122,20 @@ describe("CONSUMER/KEY-FIELD MATRIX for compact handoff payloads", () => {
 			"
 			`);
 
-		const deepSeed = await runNativeDeepInterviewCommand(
+		const deepSeed = await runNativeJawInterviewCommand(
 			["--standard", "--threshold", "0.05", "--threshold-source", "flag:explicit", "--json", "clarify this idea"],
 			root,
 		);
 		expect(deepSeed.status).toBe(0);
 		const deepSeedPayload = JSON.parse(deepSeed.stdout ?? "{}") as Record<string, unknown>;
 		assertKeys(deepSeedPayload, ["state_path", "handoff"]);
-		expect(deepSeedPayload.handoff).toBe("/skill:deep-interview");
+		expect(deepSeedPayload.handoff).toBe("/skill:jaw-interview");
 		expect(scrub(deepSeed.stdout ?? "")).toMatchInlineSnapshot(`
-			"{"skill":"deep-interview","resolution":"standard","threshold":0.05,"threshold_source":"flag:explicit","idea":"clarify this idea","state_path":"/tmp/SCRUBBED","handoff":"/skill:deep-interview"}
+			"{"skill":"jaw-interview","resolution":"standard","threshold":0.05,"threshold_source":"flag:explicit","idea":"clarify this idea","state_path":"/tmp/SCRUBBED","handoff":"/skill:jaw-interview"}
 			"
 			`);
 
-		const deepWrite = await runNativeDeepInterviewCommand(
+		const deepWrite = await runNativeJawInterviewCommand(
 			["--write", "--stage", "final", "--slug", "matrix", "--spec", "# Spec", "--deliberate", "--json"],
 			root,
 		);
@@ -149,18 +149,18 @@ describe("CONSUMER/KEY-FIELD MATRIX for compact handoff payloads", () => {
 		const handoff = deepWritePayload.handoff as Record<string, unknown>;
 		assertKeys(handoff, ["to", "run_id", "state_path"]);
 		expect(scrub(deepWrite.stdout ?? "")).toMatchInlineSnapshot(`
-			"{"skill":"deep-interview","stage":"final","slug":"matrix","path":"/tmp/SCRUBBED","sha256":"<sha256>","spec_path":"/tmp/SCRUBBED","sha":"<sha256>","created_at":"<iso>","state_path":"/tmp/SCRUBBED","handoff":{"to":"ralplan","mode":"deliberate","state_path":"/tmp/SCRUBBED","run_id":"run-b"}}
+			"{"skill":"jaw-interview","stage":"final","slug":"matrix","path":"/tmp/SCRUBBED","sha256":"<sha256>","spec_path":"/tmp/SCRUBBED","sha":"<sha256>","created_at":"<iso>","state_path":"/tmp/SCRUBBED","handoff":{"to":"ralplan","mode":"deliberate","state_path":"/tmp/SCRUBBED","run_id":"run-b"}}
 			"
 			`);
 
-		await writeJson(path.join(root, ".gjc/state/deep-interview-state.json"), {
-			skill: "deep-interview",
+		await writeJson(path.join(root, ".gjc/state/jaw-interview-state.json"), {
+			skill: "jaw-interview",
 			version: 1,
 			active: true,
 			current_phase: "interviewing",
 		});
 		const stateHandoff = await runNativeStateCommand(
-			["handoff", "--mode", "deep-interview", "--to", "ralplan", "--json"],
+			["handoff", "--mode", "jaw-interview", "--to", "ralplan", "--json"],
 			root,
 		);
 		expect(stateHandoff.status).toBe(0);
@@ -168,7 +168,7 @@ describe("CONSUMER/KEY-FIELD MATRIX for compact handoff payloads", () => {
 		assertKeys(statePayload, ["ok", "from", "to", "handoff_at", "phases", "receipts", "paths"]);
 		expect(statePayload.state).toBeUndefined();
 		expect(scrub(stateHandoff.stdout ?? "")).toMatchInlineSnapshot(`
-			"{"ok":true,"from":"deep-interview","to":"ralplan","handoff_at":"<iso>","phases":{"from":"handoff","to":"planner"},"receipts":{"from":{"mutation_id":"deep-interview:handoff:ralplan:<iso>","status":"fresh","content_sha256":{"algorithm":"sha256","value":"<sha256>","covered_path":"/tmp/SCRUBBED","computed_at":"<iso>"}},"to":{"mutation_id":"deep-interview:handoff:ralplan:<iso>","status":"fresh","content_sha256":{"algorithm":"sha256","value":"<sha256>","covered_path":"/tmp/SCRUBBED","computed_at":"<iso>"}}},"paths":{"from":"/tmp/SCRUBBED","to":"/tmp/SCRUBBED","active_state":"/tmp/SCRUBBED"}}
+			"{"ok":true,"from":"jaw-interview","to":"ralplan","handoff_at":"<iso>","phases":{"from":"handoff","to":"planner"},"receipts":{"from":{"mutation_id":"jaw-interview:handoff:ralplan:<iso>","status":"fresh","content_sha256":{"algorithm":"sha256","value":"<sha256>","covered_path":"/tmp/SCRUBBED","computed_at":"<iso>"}},"to":{"mutation_id":"jaw-interview:handoff:ralplan:<iso>","status":"fresh","content_sha256":{"algorithm":"sha256","value":"<sha256>","covered_path":"/tmp/SCRUBBED","computed_at":"<iso>"}}},"paths":{"from":"/tmp/SCRUBBED","to":"/tmp/SCRUBBED","active_state":"/tmp/SCRUBBED"}}
 			"
 			`);
 

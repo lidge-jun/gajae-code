@@ -83,10 +83,10 @@ describe("gjc state integrity", () => {
 	it("handoff writes and removes its per-mutation journal on success", async () => {
 		await withTempCwd(async cwd => {
 			await runNativeStateCommand(
-				["write", "--mode", "deep-interview", "--input", JSON.stringify({ current_phase: "interviewing" })],
+				["write", "--mode", "jaw-interview", "--input", JSON.stringify({ current_phase: "interviewing" })],
 				cwd,
 			);
-			const result = await runNativeStateCommand(["handoff", "--mode", "deep-interview", "--to", "ralplan"], cwd);
+			const result = await runNativeStateCommand(["handoff", "--mode", "jaw-interview", "--to", "ralplan"], cwd);
 			expect(result.status).toBe(0);
 			const entries = await fs.readdir(path.join(cwd, ".gjc/state/transactions")).catch(() => [] as string[]);
 			expect(entries).toEqual([]);
@@ -96,15 +96,15 @@ describe("gjc state integrity", () => {
 	it("an injected mid-handoff failure leaves a same-mutation journal while unrelated writes still proceed", async () => {
 		await withTempCwd(async cwd => {
 			await runNativeStateCommand(
-				["write", "--mode", "deep-interview", "--input", JSON.stringify({ current_phase: "interviewing" })],
+				["write", "--mode", "jaw-interview", "--input", JSON.stringify({ current_phase: "interviewing" })],
 				cwd,
 			);
 			process.env.GJC_STATE_HANDOFF_FAIL_AFTER_CALLER = "__never__";
 			const originalNow = Date.prototype.toISOString;
 			Date.prototype.toISOString = () => "2026-06-03T00:00:00.000Z";
-			process.env.GJC_STATE_HANDOFF_FAIL_AFTER_CALLER = "deep-interview:handoff:ralplan:2026-06-03T00:00:00.000Z";
+			process.env.GJC_STATE_HANDOFF_FAIL_AFTER_CALLER = "jaw-interview:handoff:ralplan:2026-06-03T00:00:00.000Z";
 			try {
-				const failed = await runNativeStateCommand(["handoff", "--mode", "deep-interview", "--to", "ralplan"], cwd);
+				const failed = await runNativeStateCommand(["handoff", "--mode", "jaw-interview", "--to", "ralplan"], cwd);
 				expect(failed.status).toBe(1);
 			} finally {
 				Date.prototype.toISOString = originalNow;
@@ -116,13 +116,13 @@ describe("gjc state integrity", () => {
 			const journal = await readJson(path.join(cwd, ".gjc/state/transactions", journals[0]));
 			expect(journal).toMatchObject({
 				status: "pending",
-				mutation_id: "deep-interview:handoff:ralplan:2026-06-03T00:00:00.000Z",
+				mutation_id: "jaw-interview:handoff:ralplan:2026-06-03T00:00:00.000Z",
 			});
 
 			Date.prototype.toISOString = () => "2026-06-03T00:00:00.000Z";
 			try {
 				const recovered = await runNativeStateCommand(
-					["handoff", "--mode", "deep-interview", "--to", "ralplan"],
+					["handoff", "--mode", "jaw-interview", "--to", "ralplan"],
 					cwd,
 				);
 				expect(recovered.status).toBe(0);

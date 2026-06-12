@@ -2,7 +2,7 @@ import { afterAll, describe, expect, it } from "bun:test";
 import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
-import { runNativeDeepInterviewCommand } from "@gajae-code/coding-agent/gjc-runtime/deep-interview-runtime";
+import { runNativeJawInterviewCommand } from "@gajae-code/coding-agent/gjc-runtime/jaw-interview-runtime";
 import { runNativeRalplanCommand } from "@gajae-code/coding-agent/gjc-runtime/ralplan-runtime";
 import { migrateAndPersistLegacyState } from "@gajae-code/coding-agent/gjc-runtime/state-migrations";
 import { runNativeStateCommand } from "@gajae-code/coding-agent/gjc-runtime/state-runtime";
@@ -42,14 +42,14 @@ describe("workflow state writer drift guard", () => {
 	it("persists required-on-write envelopes for state write, clear, and handoff", async () => {
 		const root = await tempDir();
 		const sessionId = "drift-session";
-		const deepPath = path.join(root, ".gjc", "state", "sessions", sessionId, "deep-interview-state.json");
+		const deepPath = path.join(root, ".gjc", "state", "sessions", sessionId, "jaw-interview-state.json");
 		const ralplanPath = path.join(root, ".gjc", "state", "sessions", sessionId, "ralplan-state.json");
 
 		const write = await runNativeStateCommand(
 			[
 				"write",
 				"--mode",
-				"deep-interview",
+				"jaw-interview",
 				"--session-id",
 				sessionId,
 				"--input",
@@ -61,7 +61,7 @@ describe("workflow state writer drift guard", () => {
 		expect(write.status).toBe(0);
 		await expectPersistedEnvelope(deepPath);
 
-		const clear = await runNativeStateCommand(["clear", "--mode", "deep-interview", "--session-id", sessionId], root);
+		const clear = await runNativeStateCommand(["clear", "--mode", "jaw-interview", "--session-id", sessionId], root);
 		expect(clear.status).toBe(0);
 		await expectPersistedEnvelope(deepPath);
 
@@ -69,7 +69,7 @@ describe("workflow state writer drift guard", () => {
 			[
 				"write",
 				"--mode",
-				"deep-interview",
+				"jaw-interview",
 				"--session-id",
 				sessionId,
 				"--input",
@@ -80,7 +80,7 @@ describe("workflow state writer drift guard", () => {
 		);
 		expect(seed.status).toBe(0);
 		const handoff = await runNativeStateCommand(
-			["handoff", "--mode", "deep-interview", "--session-id", sessionId, "--to", "ralplan"],
+			["handoff", "--mode", "jaw-interview", "--session-id", sessionId, "--to", "ralplan"],
 			root,
 		);
 		expect(handoff.status).toBe(0);
@@ -99,13 +99,13 @@ describe("workflow state writer drift guard", () => {
 		const root = await tempDir();
 		const state = await recordSkillActivation({
 			cwd: root,
-			text: "$deep-interview clarify this",
+			text: "$jaw-interview clarify this",
 			sessionId: "hook-session",
 			threadId: "hook-thread",
 			nowIso: "2026-01-01T00:00:00.000Z",
 		});
 		expect(state?.initialized_state_path).toBe(
-			path.join(root, ".gjc", "state", "sessions", "hook-session", "deep-interview-state.json"),
+			path.join(root, ".gjc", "state", "sessions", "hook-session", "jaw-interview-state.json"),
 		);
 		await expectPersistedEnvelope(state?.initialized_state_path ?? "");
 	});
@@ -178,14 +178,14 @@ describe("workflow state writer drift guard", () => {
 		await expectPersistedEnvelope(statePath);
 	});
 
-	it("persists required-on-write envelope for deep-interview seed and spec handoff state", async () => {
+	it("persists required-on-write envelope for jaw-interview seed and spec handoff state", async () => {
 		const root = await tempDir();
-		const seed = await runNativeDeepInterviewCommand(["--json", "clarify this"], root);
+		const seed = await runNativeJawInterviewCommand(["--json", "clarify this"], root);
 		expect(seed.status).toBe(0);
-		const statePath = path.join(root, ".gjc", "state", "deep-interview-state.json");
+		const statePath = path.join(root, ".gjc", "state", "jaw-interview-state.json");
 		await expectPersistedEnvelope(statePath);
 
-		const write = await runNativeDeepInterviewCommand(
+		const write = await runNativeJawInterviewCommand(
 			["--write", "--stage", "final", "--slug", "drift", "--spec", "# Spec", "--json"],
 			root,
 		);

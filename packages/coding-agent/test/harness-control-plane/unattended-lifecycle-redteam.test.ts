@@ -15,7 +15,7 @@ import {
 	type AskGateQuestion,
 	gateAnswerToResult,
 	questionToGate,
-} from "@gajae-code/coding-agent/modes/shared/agent-wire/deep-interview-gate";
+} from "@gajae-code/coding-agent/modes/shared/agent-wire/jaw-interview-gate";
 import { UnattendedAuditLog } from "@gajae-code/coding-agent/modes/shared/agent-wire/unattended-audit";
 import {
 	ActionDeniedError,
@@ -49,7 +49,7 @@ const DI_QUESTIONS: AskGateQuestion[] = [
 
 class ScriptedMemoryAgent {
 	answer(gate: RpcWorkflowGate): unknown {
-		if (gate.stage === "deep-interview") {
+		if (gate.stage === "jaw-interview") {
 			const first = gate.options?.[0]?.value;
 			return first !== undefined
 				? { selected: [first], other: false }

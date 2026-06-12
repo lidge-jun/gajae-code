@@ -24,7 +24,7 @@ function lastAssistant(session: AgentSession): AssistantMessage {
 }
 
 /**
- * Resilient-retry contract (deep-interview spec):
+ * Resilient-retry contract (jaw-interview spec):
  *  - transient + unknown/no-code errors retry forever (past retry.maxRetries),
  *    capped at retry.maxDelayMs (ceiling, not give-up);
  *  - clearly-terminal coded errors (auth/400/not-found) surface immediately;

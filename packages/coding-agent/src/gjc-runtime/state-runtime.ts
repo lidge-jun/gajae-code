@@ -11,7 +11,7 @@ import {
 } from "../skill-state/active-state";
 import { initialPhaseForSkill } from "../skill-state/initial-phase";
 import {
-	buildDeepInterviewHudSummary,
+	buildJawInterviewHudSummary,
 	buildRalplanHudSummary,
 	buildTeamHudSummary,
 	buildUltragoalHudSummary,
@@ -39,6 +39,7 @@ import {
 	STATE_FIELD_ALLOWLIST,
 	type StateProjectionField,
 } from "./state-renderer";
+import { normalizeWorkflowSkillSlug } from "./state-schema";
 import { validateWorkflowStateEnvelope } from "./state-validation";
 import {
 	appendAuditEntry,
@@ -151,9 +152,10 @@ function flagName(arg: string): string | undefined {
 
 function manifestFlagNames(action: ParsedInvocation["action"], positionalSkill: string | undefined): Set<string> {
 	const names = new Set<string>();
+	const normalizedPositional = positionalSkill ? normalizeWorkflowSkillSlug(positionalSkill) : undefined;
 	const skills =
-		positionalSkill && KNOWN_MODES.includes(positionalSkill)
-			? [positionalSkill as CanonicalGjcWorkflowSkill]
+		normalizedPositional && KNOWN_MODES.includes(normalizedPositional)
+			? [normalizedPositional as CanonicalGjcWorkflowSkill]
 			: CANONICAL_GJC_WORKFLOW_SKILLS;
 	for (const skill of skills) {
 		for (const arg of typedArgsFor(skill, action)) names.add(`--${arg.name}`);
@@ -289,7 +291,7 @@ async function resolveSelectors(
 	let mode: string | undefined;
 	for (const candidate of candidates) {
 		if (candidate) {
-			mode = candidate;
+			mode = normalizeWorkflowSkillSlug(candidate);
 			break;
 		}
 	}
@@ -641,7 +643,9 @@ async function handleDoctor(
 	cwd: string,
 	positionalSkill: string | undefined,
 ): Promise<StateCommandResult> {
-	const rawSkill = flagValue(args, "--skill")?.trim() || flagValue(args, "--mode")?.trim() || positionalSkill?.trim();
+	const rawSkillInput =
+		flagValue(args, "--skill")?.trim() || flagValue(args, "--mode")?.trim() || positionalSkill?.trim();
+	const rawSkill = rawSkillInput ? normalizeWorkflowSkillSlug(rawSkillInput) : rawSkillInput;
 	if (rawSkill) assertKnownMode(rawSkill);
 	const sessionId = flagValue(args, "--session-id")?.trim() || undefined;
 	if (sessionId) assertSafePathComponent(sessionId, "session-id");
@@ -835,7 +839,7 @@ function buildHudForMode(
 	const phase = typeof payload.current_phase === "string" ? payload.current_phase : undefined;
 	const stateField = isPlainObject(payload.state) ? (payload.state as Record<string, unknown>) : {};
 	switch (mode) {
-		case "deep-interview": {
+		case "jaw-interview": {
 			const pick = <T>(key: string, guard: (value: unknown) => value is T): T | undefined => {
 				const v = (stateField as Record<string, unknown>)[key] ?? (payload as Record<string, unknown>)[key];
 				return guard(v) ? v : undefined;
@@ -848,7 +852,7 @@ function buildHudForMode(
 			const rounds = pick("rounds", isArray);
 			const targetComponent = pick("last_targeted_component_id", isString);
 			const weakestDimension = pick("weakest_dimension", isString);
-			return buildDeepInterviewHudSummary({
+			return buildJawInterviewHudSummary({
 				phase,
 				ambiguity,
 				threshold,
@@ -1369,8 +1373,9 @@ async function handleHandoff(
 	if (!calleeRaw) {
 		throw new StateCommandError(2, "gjc state handoff requires --to <callee>");
 	}
-	assertKnownMode(calleeRaw);
-	const callee = calleeRaw as CanonicalGjcWorkflowSkill;
+	const calleeNormalized = normalizeWorkflowSkillSlug(calleeRaw);
+	assertKnownMode(calleeNormalized);
+	const callee = calleeNormalized;
 	if (callee === caller) {
 		throw new StateCommandError(2, `gjc state handoff: --to must differ from caller (both are "${caller}")`);
 	}
@@ -1733,8 +1738,9 @@ async function buildGcSummary(
 	positionalSkill: string | undefined,
 	dryRun: boolean,
 ): Promise<GcSummary> {
-	const rawSkill =
+	const rawSkillInput =
 		flagValue(args, "--skill")?.trim() || flagValue(args, "--mode")?.trim() || positionalSkill?.trim() || "all";
+	const rawSkill = rawSkillInput === "all" ? rawSkillInput : normalizeWorkflowSkillSlug(rawSkillInput);
 	if (rawSkill !== "all") assertKnownMode(rawSkill);
 	const skills = rawSkill === "all" ? CANONICAL_GJC_WORKFLOW_SKILLS : [rawSkill as CanonicalGjcWorkflowSkill];
 	const eligible = selectRetentionEligible(await collectRetentionCandidates(cwd, skills));
@@ -1779,7 +1785,8 @@ async function handleGraph(
 			stdout: hasFlag(args, "--json") ? `${JSON.stringify(history, null, 2)}\n` : renderHistoryMarkdown(history),
 		};
 	}
-	const rawSkill = flagValue(args, "--skill")?.trim() || positionalSkill?.trim() || "all";
+	const rawSkillInput2 = flagValue(args, "--skill")?.trim() || positionalSkill?.trim() || "all";
+	const rawSkill = rawSkillInput2 === "all" ? rawSkillInput2 : normalizeWorkflowSkillSlug(rawSkillInput2);
 	if (rawSkill !== "all") assertKnownMode(rawSkill);
 	const format = flagValue(args, "--format")?.trim() || "ascii";
 	if (!GRAPH_FORMATS.has(format)) {

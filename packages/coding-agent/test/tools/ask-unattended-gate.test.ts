@@ -9,7 +9,7 @@ import { AskTool } from "@gajae-code/coding-agent/tools/ask";
 /**
  * G011: when an unattended workflow-gate emitter is attached to the session, the
  * ask tool emits a workflow_gate (answered over RPC) instead of using the
- * interactive UI. This proves the deep-interview question path routes through the
+ * interactive UI. This proves the jaw-interview question path routes through the
  * gate contract end-to-end.
  */
 
@@ -61,7 +61,7 @@ function createSession(emitter: WorkflowGateEmitter | undefined): ToolSession {
 }
 
 describe("ask tool unattended gate emission (G011)", () => {
-	it("emits a deep-interview question gate and decodes the answer instead of using the UI", async () => {
+	it("emits a jaw-interview question gate and decodes the answer instead of using the UI", async () => {
 		const emitter = new StubEmitter(() => ({ selected: ["OAuth2"], other: false }));
 		const tool = new AskTool(createSession(emitter));
 		const ctx = createContext() as AgentToolContext & { _selectCalls: () => number };
@@ -74,9 +74,9 @@ describe("ask tool unattended gate emission (G011)", () => {
 			ctx,
 		);
 
-		// The gate was emitted (deep-interview stage), not the interactive UI.
+		// The gate was emitted (jaw-interview stage), not the interactive UI.
 		expect(emitter.received).toHaveLength(1);
-		expect(emitter.received[0].stage).toBe("deep-interview");
+		expect(emitter.received[0].stage).toBe("jaw-interview");
 		expect(emitter.received[0].kind).toBe("question");
 		expect(ctx._selectCalls()).toBe(0);
 		// The decoded answer is surfaced as the tool result.

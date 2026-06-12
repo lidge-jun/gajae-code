@@ -107,7 +107,7 @@ Before launching `gjc team`, require a grounded context snapshot:
    - constraints
    - unknowns/open questions
    - likely codebase touchpoints
-4. If ambiguity remains high, run `explore` first for brownfield facts, then run `$deep-interview --quick <task>` before team launch.
+4. If ambiguity remains high, run `explore` first for brownfield facts, then run `$jaw-interview --quick <task>` before team launch.
 5. If current correctness depends on official docs, version-aware framework guidance, best practices, or external dependency behavior, auto-delegate `researcher` as an evidence lane before or alongside worker launch instead of relying on repo-local recall alone.
 
 Do not start the worker pane until this gate is satisfied; if forced to proceed quickly, state explicit scope/risk limitations in the launch report.
@@ -438,4 +438,4 @@ When the team task-set completes OR the user requests return to planning/persist
 gjc state team write --input '{"current_phase":"handoff"}' --json
 ```
 
-The skill tool then dispatches `/skill:ralplan`, `/skill:deep-interview`, or `/skill:ultragoal` same-turn and runs `gjc state team handoff --to <ralplan|deep-interview|ultragoal> --json` in-process to atomically demote team, promote the callee, and sync both `skill-active-state.json` files. You do not need to run the handoff verb yourself.
+The skill tool then dispatches `/skill:ralplan`, `/skill:jaw-interview`, or `/skill:ultragoal` same-turn and runs `gjc state team handoff --to <ralplan|jaw-interview|ultragoal> --json` in-process to atomically demote team, promote the callee, and sync both `skill-active-state.json` files. You do not need to run the handoff verb yourself.

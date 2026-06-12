@@ -23,12 +23,14 @@ describe("GJC public CLI command surface", () => {
 			"skills",
 			"session",
 			"harness",
+			"coordinator",
 			"team",
 			"ultragoal",
 			"ralplan",
 			"config",
+			"mcp-serve",
 			"contribute-pr",
-			"deep-interview",
+			"interview",
 			"update",
 			"launch",
 		]);
@@ -51,7 +53,7 @@ describe("GJC public CLI command surface", () => {
 	}, 30_000);
 
 	it("documents the native CLI surface in command help", async () => {
-		for (const command of ["ralplan", "deep-interview", "state"]) {
+		for (const command of ["ralplan", "jaw-interview", "state"]) {
 			const result = Bun.spawnSync(["bun", cliEntry, command, "--help"], {
 				cwd: repoRoot,
 				stderr: "pipe",

@@ -176,58 +176,58 @@ describe("SkillTool", () => {
 
 	it("omits the User: line when args are absent or whitespace", async () => {
 		const cwd = await makeTempCwd();
-		const di = await makeSkill("deep-interview", "---\nname: deep-interview\n---\nBody");
+		const di = await makeSkill("jaw-interview", "---\nname: jaw-interview\n---\nBody");
 		const captured: CapturedSend[] = [];
 		const session = createSession(cwd, [di], captured);
 		const tool = SkillTool.createIf(session)!;
-		await tool.execute("call-1", { name: "deep-interview", args: "   " });
+		await tool.execute("call-1", { name: "jaw-interview", args: "   " });
 		const content = captured[0]!.message.content as string;
 		expect(content).not.toContain("User:");
 	});
 
 	it("rejects chaining into the currently active skill (recursive-self guard)", async () => {
 		const cwd = await makeTempCwd();
-		const deepInterview = await makeSkill("deep-interview", "---\nname: deep-interview\n---\nBody");
+		const jawInterview = await makeSkill("jaw-interview", "---\nname: jaw-interview\n---\nBody");
 		const ralplan = await makeSkill("ralplan", "---\nname: ralplan\n---\nBody");
 		const captured: CapturedSend[] = [];
-		const session = createSession(cwd, [deepInterview, ralplan], captured, {
-			getActiveSkillState: () => ({ skill: "deep-interview", session_id: "session-1" }),
+		const session = createSession(cwd, [jawInterview, ralplan], captured, {
+			getActiveSkillState: () => ({ skill: "jaw-interview", session_id: "session-1" }),
 		});
 		const tool = SkillTool.createIf(session)!;
 
-		await expect(tool.execute("call-1", { name: " deep-interview " })).rejects.toBeInstanceOf(ToolError);
-		await expect(tool.execute("call-1", { name: "deep-interview" })).rejects.toThrow(
-			/refusing to chain into currently active skill "deep-interview"/,
+		await expect(tool.execute("call-1", { name: " jaw-interview " })).rejects.toBeInstanceOf(ToolError);
+		await expect(tool.execute("call-1", { name: "jaw-interview" })).rejects.toThrow(
+			/refusing to chain into currently active skill "jaw-interview"/,
 		);
 		expect(captured).toHaveLength(0);
 	});
 
 	it("rejects chaining when caller phase is not terminal (phase guard)", async () => {
 		const cwd = await makeTempCwd();
-		const deepInterview = await makeSkill("deep-interview", "---\nname: deep-interview\n---\nBody");
+		const jawInterview = await makeSkill("jaw-interview", "---\nname: jaw-interview\n---\nBody");
 		const ralplan = await makeSkill("ralplan", "---\nname: ralplan\n---\nBody");
 		const captured: CapturedSend[] = [];
-		const session = createSession(cwd, [deepInterview, ralplan], captured, {
-			getActiveSkillState: () => ({ skill: "deep-interview", session_id: "s1" }),
+		const session = createSession(cwd, [jawInterview, ralplan], captured, {
+			getActiveSkillState: () => ({ skill: "jaw-interview", session_id: "s1" }),
 			getActiveSkillPhase: () => "interviewing",
 		});
 		const tool = SkillTool.createIf(session)!;
 
 		await expect(tool.execute("call-1", { name: "ralplan" })).rejects.toBeInstanceOf(ToolError);
 		await expect(tool.execute("call-1", { name: "ralplan" })).rejects.toThrow(
-			/refusing to chain from "deep-interview" \(phase=interviewing\) into "ralplan"/,
+			/refusing to chain from "jaw-interview" \(phase=interviewing\) into "ralplan"/,
 		);
 		expect(captured).toHaveLength(0);
 	});
 
 	it("chains successfully when caller phase is 'handoff' and atomically updates state", async () => {
 		const cwd = await makeTempCwd();
-		await writeCallerModeState(cwd, "deep-interview", "handoff", "s1");
-		const deepInterview = await makeSkill("deep-interview", "---\nname: deep-interview\n---\nBody");
+		await writeCallerModeState(cwd, "jaw-interview", "handoff", "s1");
+		const jawInterview = await makeSkill("jaw-interview", "---\nname: jaw-interview\n---\nBody");
 		const ralplan = await makeSkill("ralplan", "---\nname: ralplan\n---\nPlan");
 		const captured: CapturedSend[] = [];
-		const session = createSession(cwd, [deepInterview, ralplan], captured, {
-			getActiveSkillState: () => ({ skill: "deep-interview", session_id: "s1" }),
+		const session = createSession(cwd, [jawInterview, ralplan], captured, {
+			getActiveSkillState: () => ({ skill: "jaw-interview", session_id: "s1" }),
 			getActiveSkillPhase: () => "handoff",
 		});
 		const tool = SkillTool.createIf(session)!;
@@ -237,13 +237,13 @@ describe("SkillTool", () => {
 		expect(captured).toHaveLength(1);
 
 		// Caller mode-state demoted; callee mode-state activated.
-		const di = await readModeState(cwd, "deep-interview", "s1");
+		const di = await readModeState(cwd, "jaw-interview", "s1");
 		expect(di?.active).toBe(false);
 		expect(di?.current_phase).toBe("handoff");
 		expect(di?.handoff_to).toBe("ralplan");
 		const rp = await readModeState(cwd, "ralplan", "s1");
 		expect(rp?.active).toBe(true);
-		expect(rp?.handoff_from).toBe("deep-interview");
+		expect(rp?.handoff_from).toBe("jaw-interview");
 	});
 
 	it("supports R->U handoff (ralplan in handoff phase chains to ultragoal)", async () => {
@@ -269,8 +269,8 @@ describe("SkillTool", () => {
 
 	it("keeps explicit default model selection stable across workflow handoffs", async () => {
 		const cwd = await makeTempCwd();
-		await writeCallerModeState(cwd, "deep-interview", "handoff", "s1");
-		const deepInterview = await makeSkill("deep-interview", "---\nname: deep-interview\n---\nInterview");
+		await writeCallerModeState(cwd, "jaw-interview", "handoff", "s1");
+		const jawInterview = await makeSkill("jaw-interview", "---\nname: jaw-interview\n---\nInterview");
 		const ralplan = await makeSkill("ralplan", "---\nname: ralplan\n---\nPlan");
 		const ultragoal = await makeSkill("ultragoal", "---\nname: ultragoal\n---\nGo");
 		const explicitModel = createTestModel("gpt-5.5");
@@ -279,9 +279,9 @@ describe("SkillTool", () => {
 		settings.setModelRole("default", `${explicitModel.provider}/${explicitModel.id}`);
 		settings.setModelRole("plan", `${staleDefaultModel.provider}/${staleDefaultModel.id}`);
 
-		let activeSkill = "deep-interview";
+		let activeSkill = "jaw-interview";
 		const captured: CapturedSend[] = [];
-		const session = createSession(cwd, [deepInterview, ralplan, ultragoal], captured, {
+		const session = createSession(cwd, [jawInterview, ralplan, ultragoal], captured, {
 			settings,
 			model: explicitModel,
 			getActiveModelString: () => `${explicitModel.provider}/${explicitModel.id}`,
@@ -329,19 +329,19 @@ describe("SkillTool", () => {
 
 	// Terminal-phase allow-list coverage (architect blocker, code lane).
 	// TERMINAL_PHASES = {complete, completed, handoff, failed, cancelled, canceled, inactive}.
-	// For each terminal phase, the caller (deep-interview) must be allowed to
+	// For each terminal phase, the caller (jaw-interview) must be allowed to
 	// chain into ralplan; handoff in particular is the documented happy path
 	// and the others must also pass the guard.
 	const TERMINAL_PHASES_TO_TEST = ["complete", "completed", "failed", "cancelled", "canceled", "inactive"] as const;
 	for (const phase of TERMINAL_PHASES_TO_TEST) {
 		it(`allows chaining when caller phase is terminal '${phase}'`, async () => {
 			const cwd = await makeTempCwd();
-			await writeCallerModeState(cwd, "deep-interview", phase, "s1");
-			const deepInterview = await makeSkill("deep-interview", "---\nname: deep-interview\n---\nBody");
+			await writeCallerModeState(cwd, "jaw-interview", phase, "s1");
+			const jawInterview = await makeSkill("jaw-interview", "---\nname: jaw-interview\n---\nBody");
 			const ralplan = await makeSkill("ralplan", "---\nname: ralplan\n---\nPlan");
 			const captured: CapturedSend[] = [];
-			const session = createSession(cwd, [deepInterview, ralplan], captured, {
-				getActiveSkillState: () => ({ skill: "deep-interview", session_id: "s1" }),
+			const session = createSession(cwd, [jawInterview, ralplan], captured, {
+				getActiveSkillState: () => ({ skill: "jaw-interview", session_id: "s1" }),
 				getActiveSkillPhase: () => phase,
 			});
 			const tool = SkillTool.createIf(session)!;
@@ -351,26 +351,26 @@ describe("SkillTool", () => {
 			expect(captured).toHaveLength(1);
 			const rp = await readModeState(cwd, "ralplan", "s1");
 			expect(rp?.active).toBe(true);
-			expect(rp?.handoff_from).toBe("deep-interview");
+			expect(rp?.handoff_from).toBe("jaw-interview");
 		});
 	}
 
 	it("calls handoff CLI before dispatching the chained skill (ordering)", async () => {
 		const cwd = await makeTempCwd();
-		await writeCallerModeState(cwd, "deep-interview", "handoff", "s1");
-		const deepInterview = await makeSkill("deep-interview", "---\nname: deep-interview\n---\nBody");
+		await writeCallerModeState(cwd, "jaw-interview", "handoff", "s1");
+		const jawInterview = await makeSkill("jaw-interview", "---\nname: jaw-interview\n---\nBody");
 		const ralplan = await makeSkill("ralplan", "---\nname: ralplan\n---\nPlan");
 
 		// Use sendCustomMessage to inspect mode-state at dispatch time.
-		// If handoff ran first, deep-interview-state.json already has active=false when
+		// If handoff ran first, jaw-interview-state.json already has active=false when
 		// the message is captured.
 		let modeStateAtDispatch: Record<string, unknown> | null = null;
 		const captured: CapturedSend[] = [];
-		const session = createSession(cwd, [deepInterview, ralplan], captured, {
-			getActiveSkillState: () => ({ skill: "deep-interview", session_id: "s1" }),
+		const session = createSession(cwd, [jawInterview, ralplan], captured, {
+			getActiveSkillState: () => ({ skill: "jaw-interview", session_id: "s1" }),
 			getActiveSkillPhase: () => "handoff",
 			sendCustomMessage: async (message, options) => {
-				modeStateAtDispatch = await readModeState(cwd, "deep-interview", "s1");
+				modeStateAtDispatch = await readModeState(cwd, "jaw-interview", "s1");
 				captured.push({ message, options });
 			},
 		});
@@ -384,11 +384,11 @@ describe("SkillTool", () => {
 	it("surfaces handoff CLI failure as a ToolError when caller mode-state is missing", async () => {
 		const cwd = await makeTempCwd();
 		// Do NOT pre-write caller mode-state; handoff will fail with "caller is not active".
-		const deepInterview = await makeSkill("deep-interview", "---\nname: deep-interview\n---\nBody");
+		const jawInterview = await makeSkill("jaw-interview", "---\nname: jaw-interview\n---\nBody");
 		const ralplan = await makeSkill("ralplan", "---\nname: ralplan\n---\nPlan");
 		const captured: CapturedSend[] = [];
-		const session = createSession(cwd, [deepInterview, ralplan], captured, {
-			getActiveSkillState: () => ({ skill: "deep-interview", session_id: "s1" }),
+		const session = createSession(cwd, [jawInterview, ralplan], captured, {
+			getActiveSkillState: () => ({ skill: "jaw-interview", session_id: "s1" }),
 			getActiveSkillPhase: () => "handoff",
 		});
 		const tool = SkillTool.createIf(session)!;

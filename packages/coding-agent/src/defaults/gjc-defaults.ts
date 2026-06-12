@@ -1,16 +1,16 @@
 import * as path from "node:path";
 import { getAgentDir, isEnoent, parseFrontmatter } from "@gajae-code/utils";
-import autoAnswerUncertainFragment from "./gjc/skills/deep-interview/auto-answer-uncertain.md" with { type: "text" };
-import autoResearchGreenfieldFragment from "./gjc/skills/deep-interview/auto-research-greenfield.md" with {
+import autoAnswerUncertainFragment from "./gjc/skills/jaw-interview/auto-answer-uncertain.md" with { type: "text" };
+import autoResearchGreenfieldFragment from "./gjc/skills/jaw-interview/auto-research-greenfield.md" with {
 	type: "text",
 };
-import deepInterviewSkill from "./gjc/skills/deep-interview/SKILL.md" with { type: "text" };
+import jawInterviewSkill from "./gjc/skills/jaw-interview/SKILL.md" with { type: "text" };
 import ralplanSkill from "./gjc/skills/ralplan/SKILL.md" with { type: "text" };
 import teamSkill from "./gjc/skills/team/SKILL.md" with { type: "text" };
 import aiSlopCleanerFragment from "./gjc/skills/ultragoal/ai-slop-cleaner.md" with { type: "text" };
 import ultragoalSkill from "./gjc/skills/ultragoal/SKILL.md" with { type: "text" };
 
-export const DEFAULT_GJC_DEFINITION_NAMES = ["deep-interview", "ralplan", "team", "ultragoal"] as const;
+export const DEFAULT_GJC_DEFINITION_NAMES = ["jaw-interview", "ralplan", "team", "ultragoal"] as const;
 export type DefaultGjcDefinitionName = (typeof DEFAULT_GJC_DEFINITION_NAMES)[number];
 export type DefaultGjcDefinitionKind = "skill" | "skill-fragment";
 export type EmbeddedDefaultGjcSkill = {
@@ -74,23 +74,23 @@ export interface DefaultGjcDefinitionInstallResult {
 const DEFAULT_GJC_DEFINITIONS: readonly DefaultGjcDefinition[] = [
 	{
 		kind: "skill",
-		name: "deep-interview",
-		relativePath: "skills/deep-interview/SKILL.md",
-		content: deepInterviewSkill,
+		name: "jaw-interview",
+		relativePath: "skills/jaw-interview/SKILL.md",
+		content: jawInterviewSkill,
 	},
 	{ kind: "skill", name: "ralplan", relativePath: "skills/ralplan/SKILL.md", content: ralplanSkill },
 	{ kind: "skill", name: "team", relativePath: "skills/team/SKILL.md", content: teamSkill },
 	{ kind: "skill", name: "ultragoal", relativePath: "skills/ultragoal/SKILL.md", content: ultragoalSkill },
 	{
 		kind: "skill-fragment",
-		parentSkillName: "deep-interview",
-		relativePath: "skill-fragments/deep-interview/auto-research-greenfield.md",
+		parentSkillName: "jaw-interview",
+		relativePath: "skill-fragments/jaw-interview/auto-research-greenfield.md",
 		content: autoResearchGreenfieldFragment,
 	},
 	{
 		kind: "skill-fragment",
-		parentSkillName: "deep-interview",
-		relativePath: "skill-fragments/deep-interview/auto-answer-uncertain.md",
+		parentSkillName: "jaw-interview",
+		relativePath: "skill-fragments/jaw-interview/auto-answer-uncertain.md",
 		content: autoAnswerUncertainFragment,
 	},
 	{

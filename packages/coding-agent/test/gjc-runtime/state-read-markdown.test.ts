@@ -32,26 +32,26 @@ describe("gjc state read markdown", () => {
 			[
 				"write",
 				"--mode",
-				"deep-interview",
+				"jaw-interview",
 				"--input",
 				JSON.stringify({ active: true, current_phase: "interviewing", artifact_path: ".gjc/specs/draft.md" }),
 			],
 			root,
 		);
 
-		const markdown = await runNativeStateCommand(["read", "--mode", "deep-interview"], root);
+		const markdown = await runNativeStateCommand(["read", "--mode", "jaw-interview"], root);
 		expect(markdown.status).toBe(0);
-		expect(markdown.stdout).toStartWith("# deep-interview state\n");
+		expect(markdown.stdout).toStartWith("# jaw-interview state\n");
 		expect(markdown.stdout).toContain("- Current phase: interviewing");
 		expect(markdown.stdout).toContain("- Valid next transitions:");
 		expect(markdown.stdout).toContain("- Receipt: fresh");
 		expect(markdown.stdout).toContain(".gjc/specs/draft.md");
 		expect(() => JSON.parse(markdown.stdout ?? "")).toThrow();
 
-		const json = await runNativeStateCommand(["read", "--mode", "deep-interview", "--json"], root);
+		const json = await runNativeStateCommand(["read", "--mode", "jaw-interview", "--json"], root);
 		expect(json.status).toBe(0);
 		const parsed = JSON.parse(json.stdout ?? "{}");
-		expect(parsed.skill).toBe("deep-interview");
+		expect(parsed.skill).toBe("jaw-interview");
 		expect(parsed.state.current_phase).toBe("interviewing");
 	});
 
@@ -76,7 +76,7 @@ describe("gjc state read markdown", () => {
 
 	it("rejects unknown gjc state flags", async () => {
 		const root = await tempDir();
-		const result = await runNativeStateCommand(["read", "--mode", "deep-interview", "--bogus"], root);
+		const result = await runNativeStateCommand(["read", "--mode", "jaw-interview", "--bogus"], root);
 		expect(result.status).toBe(2);
 		expect(result.stderr).toContain("unknown gjc state flag: --bogus");
 	});

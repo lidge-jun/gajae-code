@@ -12,9 +12,9 @@ describe("skill HUD bar renderer", () => {
 	});
 
 	it("renders active skill and phase compactly", () => {
-		const rendered = Bun.stripANSI(renderSkillHudBar([{ skill: "deep-interview", phase: "intent-first" }], 80) ?? "");
+		const rendered = Bun.stripANSI(renderSkillHudBar([{ skill: "jaw-interview", phase: "intent-first" }], 80) ?? "");
 		expect(rendered).toContain("hud");
-		expect(rendered).toContain("deep-interview:intent-first");
+		expect(rendered).toContain("jaw-interview:intent-first");
 	});
 
 	it("sanitizes dynamic text and truncates to width", () => {
@@ -86,7 +86,7 @@ describe("skill HUD bar renderer", () => {
 			renderSkillHudBar(
 				[
 					{
-						skill: "deep-interview",
+						skill: "jaw-interview",
 						phase: "interviewing",
 						hud: {
 							version: 1,
@@ -98,11 +98,11 @@ describe("skill HUD bar renderer", () => {
 						},
 						receipt: {
 							version: 1,
-							skill: "deep-interview",
+							skill: "jaw-interview",
 							owner: "gjc-state-cli",
-							command: "gjc state deep-interview write",
+							command: "gjc state jaw-interview write",
 							state_path: ".gjc/state/skill-active-state.json",
-							storage_path: ".gjc/state/deep-interview-state.json",
+							storage_path: ".gjc/state/jaw-interview-state.json",
 							mutated_at: new Date().toISOString(),
 							fresh_until: new Date(Date.now() + 60_000).toISOString(),
 							status: "fresh",
@@ -113,7 +113,7 @@ describe("skill HUD bar renderer", () => {
 				160,
 			) ?? "",
 		);
-		expect(rendered).toContain("deep-interview:interviewing");
+		expect(rendered).toContain("jaw-interview:interviewing");
 		expect(rendered).toContain("warn:gate=approval-required");
 		expect(rendered).toContain("block:blocked=execution approval missing");
 		expect(rendered).toContain("next=ask user for approval");
@@ -121,13 +121,13 @@ describe("skill HUD bar renderer", () => {
 	});
 
 	it("shows only the callee after a D->R handoff (caller demoted to inactive entry, HUD filters it out)", () => {
-		// After `gjc state deep-interview handoff --to ralplan`, the caller
+		// After `gjc state jaw-interview handoff --to ralplan`, the caller
 		// entry is preserved in active_skills with active:false and handoff_to
 		// lineage for audit; the HUD filters on active!==false so only ralplan
 		// appears in the rendered bar.
 		const rendered = Bun.stripANSI(renderSkillHudBar([{ skill: "ralplan", phase: "planning" }], 80) ?? "");
 		expect(rendered).toContain("ralplan:planning");
-		expect(rendered).not.toContain("deep-interview");
+		expect(rendered).not.toContain("jaw-interview");
 	});
 
 	it("shows only the callee after an R->U handoff", () => {

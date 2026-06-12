@@ -1,14 +1,14 @@
 import { describe, expect, it } from "bun:test";
 import {
-	buildDeepInterviewHudSummary,
+	buildJawInterviewHudSummary,
 	buildRalplanHudSummary,
 	buildTeamHudSummary,
 	buildUltragoalHudSummary,
 } from "../src/skill-state/workflow-hud";
 
 describe("workflow HUD summary builders", () => {
-	it("builds deep-interview progress chips", () => {
-		const hud = buildDeepInterviewHudSummary({
+	it("builds jaw-interview progress chips", () => {
+		const hud = buildJawInterviewHudSummary({
 			phase: "interviewing",
 			ambiguity: 0.15,
 			threshold: 0.2,

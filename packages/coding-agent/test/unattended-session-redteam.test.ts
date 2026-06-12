@@ -199,7 +199,7 @@ describe("AskTool unattended gate red-team G011", () => {
 		);
 
 		expect(emitter.received).toHaveLength(1);
-		expect(emitter.received[0]).toMatchObject({ stage: "deep-interview", kind: "question" });
+		expect(emitter.received[0]).toMatchObject({ stage: "jaw-interview", kind: "question" });
 		expect(result.details).toMatchObject({ selectedOptions: ["JWT", "OAuth2"] });
 	});
 });

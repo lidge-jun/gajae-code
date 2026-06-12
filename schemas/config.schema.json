@@ -151,6 +151,24 @@
 				"default"
 			]
 		},
+		"jwc": {
+			"type": "object",
+			"properties": {
+				"interview": {
+					"type": "object",
+					"properties": {
+						"ambiguityThreshold": {
+							"type": "number",
+							"default": 0.05,
+							"exclusiveMinimum": 0,
+							"maximum": 1
+						}
+					},
+					"additionalProperties": false
+				}
+			},
+			"additionalProperties": false
+		},
 		"gjc": {
 			"type": "object",
 			"properties": {

@@ -1,3 +1,4 @@
+import { normalizeWorkflowSkillSlug } from "../gjc-runtime/state-schema";
 import type { CanonicalGjcWorkflowSkill } from "./active-state";
 
 /**
@@ -11,7 +12,8 @@ import type { CanonicalGjcWorkflowSkill } from "./active-state";
  * session-manager and ultragoal verification code).
  */
 export function initialPhaseForSkill(skill: CanonicalGjcWorkflowSkill | string): string {
-	if (skill === "deep-interview") return "interviewing";
+	const normalized = normalizeWorkflowSkillSlug(skill);
+	if (normalized === "jaw-interview") return "interviewing";
 	if (skill === "ultragoal") return "goal-planning";
 	if (skill === "ralplan") return "planner";
 	if (skill === "team") return "starting";

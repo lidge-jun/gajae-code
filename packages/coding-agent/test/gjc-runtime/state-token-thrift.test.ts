@@ -32,12 +32,12 @@ describe("GJC state token thrift", () => {
 			research_findings: [{ source: "paper" }],
 		};
 		await runNativeStateCommand(
-			["write", "--mode", "deep-interview", "--session-id", "", "--input", JSON.stringify(payload)],
+			["write", "--mode", "jaw-interview", "--session-id", "", "--input", JSON.stringify(payload)],
 			root,
 		);
 
 		const compactMarkdown = await runNativeStateCommand(
-			["read", "--mode", "deep-interview", "--session-id", "", "--compact"],
+			["read", "--mode", "jaw-interview", "--session-id", "", "--compact"],
 			root,
 		);
 		expect(compactMarkdown.status).toBe(0);
@@ -46,7 +46,7 @@ describe("GJC state token thrift", () => {
 		expect(compactMarkdown.stdout).not.toContain("transcript");
 
 		const compactJson = await runNativeStateCommand(
-			["read", "--mode", "deep-interview", "--session-id", "", "--compact", "--json"],
+			["read", "--mode", "jaw-interview", "--session-id", "", "--compact", "--json"],
 			root,
 		);
 		expect(compactJson.status).toBe(0);
@@ -54,13 +54,10 @@ describe("GJC state token thrift", () => {
 		expect(parsedCompact.rounds).toBeUndefined();
 		expect(parsedCompact.elided.rounds).toEqual({ type: "array", count: 2, pointer: "/rounds" });
 
-		const json = await runNativeStateCommand(
-			["read", "--mode", "deep-interview", "--session-id", "", "--json"],
-			root,
-		);
+		const json = await runNativeStateCommand(["read", "--mode", "jaw-interview", "--session-id", "", "--json"], root);
 		expect(json.status).toBe(0);
 		const parsed = JSON.parse(json.stdout ?? "{}");
-		const raw = await readWorkflowStateJson(root, "deep-interview");
+		const raw = await readWorkflowStateJson(root, "jaw-interview");
 		expect(parsed.state).toEqual(raw);
 		expect(parsed.state.rounds).toEqual(payload.rounds);
 	});
@@ -93,14 +90,14 @@ describe("GJC state token thrift", () => {
 	it("prints state status as one line", async () => {
 		const root = await tempDir();
 		await runNativeStateCommand(
-			["write", "--mode", "deep-interview", "--input", JSON.stringify({ current_phase: "interviewing" })],
+			["write", "--mode", "jaw-interview", "--input", JSON.stringify({ current_phase: "interviewing" })],
 			root,
 		);
 
-		const result = await runNativeStateCommand(["status", "deep-interview"], root);
+		const result = await runNativeStateCommand(["status", "jaw-interview"], root);
 		expect(result.status).toBe(0);
 		expect(result.stdout?.trim().split("\n")).toHaveLength(1);
-		expect(result.stdout).toContain("deep-interview: phase=interviewing");
+		expect(result.stdout).toContain("jaw-interview: phase=interviewing");
 		expect(result.stdout).toContain("next=");
 	});
 

@@ -4,10 +4,10 @@ import * as os from "node:os";
 import * as path from "node:path";
 import type { AgentTool } from "@gajae-code/agent-core";
 import {
-	assertDeepInterviewMutationRawPathsAllowed,
-	DEEP_INTERVIEW_MUTATION_BLOCK_MESSAGE,
-	getDeepInterviewMutationDecision,
-} from "@gajae-code/coding-agent/skill-state/deep-interview-mutation-guard";
+	assertJawInterviewMutationRawPathsAllowed,
+	getJawInterviewMutationDecision,
+	JAW_INTERVIEW_MUTATION_BLOCK_MESSAGE,
+} from "@gajae-code/coding-agent/skill-state/jaw-interview-mutation-guard";
 import { ToolError } from "@gajae-code/coding-agent/tools/tool-errors";
 
 const tempRoots: string[] = [];
@@ -17,24 +17,24 @@ function encodePathSegment(value: string): string {
 }
 
 async function makeTempRoot(): Promise<string> {
-	const root = await fs.mkdtemp(path.join(os.tmpdir(), "gjc-deep-interview-guard-"));
+	const root = await fs.mkdtemp(path.join(os.tmpdir(), "gjc-jaw-interview-guard-"));
 	tempRoots.push(root);
 	return root;
 }
 
-async function writeActiveDeepInterview(cwd: string, sessionId = "session-a", phase = "interviewing"): Promise<void> {
+async function writeActiveJawInterview(cwd: string, sessionId = "session-a", phase = "interviewing"): Promise<void> {
 	const now = new Date().toISOString();
 	const sessionDir = path.join(cwd, ".gjc", "state", "sessions", encodePathSegment(sessionId));
 	await fs.mkdir(sessionDir, { recursive: true });
 	const activeState = {
 		version: 1,
 		active: true,
-		skill: "deep-interview",
+		skill: "jaw-interview",
 		phase,
 		updated_at: now,
 		active_skills: [
 			{
-				skill: "deep-interview",
+				skill: "jaw-interview",
 				phase,
 				active: true,
 				updated_at: now,
@@ -44,7 +44,7 @@ async function writeActiveDeepInterview(cwd: string, sessionId = "session-a", ph
 	};
 	await Bun.write(path.join(sessionDir, "skill-active-state.json"), `${JSON.stringify(activeState, null, 2)}\n`);
 	await Bun.write(
-		path.join(sessionDir, "deep-interview-state.json"),
+		path.join(sessionDir, "jaw-interview-state.json"),
 		`${JSON.stringify({ active: true, current_phase: phase, session_id: sessionId }, null, 2)}\n`,
 	);
 }
@@ -64,10 +64,10 @@ afterEach(async () => {
 	await Promise.all(tempRoots.splice(0).map(root => fs.rm(root, { recursive: true, force: true })));
 });
 
-describe("deep-interview mutation guard", () => {
-	it("blocks product write/edit/ast_edit targets while deep-interview is active", async () => {
+describe("jaw-interview mutation guard", () => {
+	it("blocks product write/edit/ast_edit targets while jaw-interview is active", async () => {
 		const cwd = await makeTempRoot();
-		await writeActiveDeepInterview(cwd);
+		await writeActiveJawInterview(cwd);
 
 		for (const [name, args, extra = {}] of [
 			["write", { path: "packages/coding-agent/src/foo.ts", content: "x" }],
@@ -79,7 +79,7 @@ describe("deep-interview mutation guard", () => {
 			],
 			["ast_edit", { paths: ["packages/**"], ops: [{ pat: "foo", out: "bar" }] }],
 		] as const) {
-			const decision = await getDeepInterviewMutationDecision({
+			const decision = await getJawInterviewMutationDecision({
 				cwd,
 				sessionId: "session-a",
 				tool: tool(name, extra),
@@ -87,17 +87,17 @@ describe("deep-interview mutation guard", () => {
 			});
 			expect(decision.blocked).toBe(true);
 			expect(decision.reason).toBe("phase-boundary");
-			expect(decision.message).toBe(DEEP_INTERVIEW_MUTATION_BLOCK_MESSAGE);
+			expect(decision.message).toBe(JAW_INTERVIEW_MUTATION_BLOCK_MESSAGE);
 			expect(decision.message).toContain("handoff/spec before code edits");
 		}
 	});
 
 	it("blocks direct planning artifact tools and canonical workflow state targets", async () => {
 		const cwd = await makeTempRoot();
-		await writeActiveDeepInterview(cwd);
+		await writeActiveJawInterview(cwd);
 
-		for (const rawPath of [".gjc/specs/deep-interview-x.md", ".gjc/plans/plan.md"]) {
-			const decision = await getDeepInterviewMutationDecision({
+		for (const rawPath of [".gjc/specs/jaw-interview-x.md", ".gjc/plans/plan.md"]) {
+			const decision = await getJawInterviewMutationDecision({
 				cwd,
 				sessionId: "session-a",
 				tool: tool("write"),
@@ -115,7 +115,7 @@ describe("deep-interview mutation guard", () => {
 				tool("write"),
 				{ path: ".gjc/state/sessions/session-a/skill-active-state.json", content: "{}" },
 			],
-			...(["deep-interview", "ralplan", "ultragoal", "team"] as const).map(
+			...(["jaw-interview", "ralplan", "ultragoal", "team"] as const).map(
 				skill =>
 					[
 						`write ${skill}`,
@@ -143,7 +143,7 @@ describe("deep-interview mutation guard", () => {
 		];
 
 		for (const [, targetTool, args] of blockedCases) {
-			const decision = await getDeepInterviewMutationDecision({
+			const decision = await getJawInterviewMutationDecision({
 				cwd,
 				sessionId: "session-a",
 				tool: targetTool,
@@ -153,14 +153,14 @@ describe("deep-interview mutation guard", () => {
 			if (decision.reason === "workflow-state-target" || decision.reason === "gjc-target") {
 				expect(decision.message).toContain("runtime-owned");
 			} else {
-				expect(decision.message).toBe(DEEP_INTERVIEW_MUTATION_BLOCK_MESSAGE);
+				expect(decision.message).toBe(JAW_INTERVIEW_MUTATION_BLOCK_MESSAGE);
 			}
 		}
 	});
 
-	it("blocks all write targets during active deep-interview, including non-.gjc paths", async () => {
+	it("blocks all write targets during active jaw-interview, including non-.gjc paths", async () => {
 		const cwd = await makeTempRoot();
-		await writeActiveDeepInterview(cwd);
+		await writeActiveJawInterview(cwd);
 
 		for (const rawPath of [
 			"../outside.md",
@@ -169,18 +169,18 @@ describe("deep-interview mutation guard", () => {
 			"product/archive.zip:product.ts",
 			"data.sqlite:rows:1",
 		]) {
-			const decision = await getDeepInterviewMutationDecision({
+			const decision = await getJawInterviewMutationDecision({
 				cwd,
 				sessionId: "session-a",
 				tool: tool("write"),
 				args: { path: rawPath, content: "x" },
 			});
 			expect(decision.blocked).toBe(true);
-			expect(decision.message).toBe(DEEP_INTERVIEW_MUTATION_BLOCK_MESSAGE);
+			expect(decision.message).toBe(JAW_INTERVIEW_MUTATION_BLOCK_MESSAGE);
 		}
 
 		for (const rawPath of [".gjc/specs-evil/plan.md", ".gjc/stateful/data.json"]) {
-			const decision = await getDeepInterviewMutationDecision({
+			const decision = await getJawInterviewMutationDecision({
 				cwd,
 				sessionId: "session-a",
 				tool: tool("write"),
@@ -190,27 +190,27 @@ describe("deep-interview mutation guard", () => {
 			expect(decision.message).toContain("runtime-owned");
 		}
 
-		const mixed = await getDeepInterviewMutationDecision({
+		const mixed = await getJawInterviewMutationDecision({
 			cwd,
 			sessionId: "session-a",
 			tool: tool("ast_edit"),
-			args: { paths: [".gjc/state/deep-interview-state.json", "packages/**"], ops: [{ pat: "foo", out: "bar" }] },
+			args: { paths: [".gjc/state/jaw-interview-state.json", "packages/**"], ops: [{ pat: "foo", out: "bar" }] },
 		});
 		expect(mixed.blocked).toBe(true);
 	});
 
-	it("allows read-only bash during active deep-interview when no mutation target is extracted", async () => {
+	it("allows read-only bash during active jaw-interview when no mutation target is extracted", async () => {
 		const cwd = await makeTempRoot();
-		await writeActiveDeepInterview(cwd);
+		await writeActiveJawInterview(cwd);
 
 		for (const command of [
 			"git status --short",
-			"rg deep-interview packages/coding-agent/src",
+			"rg jaw-interview packages/coding-agent/src",
 			"cat packages/coding-agent/package.json",
-			"sed -n '1,80p' packages/coding-agent/src/skill-state/deep-interview-mutation-guard.ts",
-			"bun test packages/coding-agent/test/deep-interview-mutation-guard.test.ts",
+			"sed -n '1,80p' packages/coding-agent/src/skill-state/jaw-interview-mutation-guard.ts",
+			"bun test packages/coding-agent/test/jaw-interview-mutation-guard.test.ts",
 		]) {
-			const decision = await getDeepInterviewMutationDecision({
+			const decision = await getJawInterviewMutationDecision({
 				cwd,
 				sessionId: "session-a",
 				tool: tool("bash"),
@@ -221,18 +221,18 @@ describe("deep-interview mutation guard", () => {
 		}
 	});
 
-	it("blocks mutating bash that targets .gjc during active deep-interview", async () => {
+	it("blocks mutating bash that targets .gjc during active jaw-interview", async () => {
 		const cwd = await makeTempRoot();
-		await writeActiveDeepInterview(cwd);
+		await writeActiveJawInterview(cwd);
 
 		for (const command of [
-			"rm .gjc/state/deep-interview-state.json",
+			"rm .gjc/state/jaw-interview-state.json",
 			"mkdir -p .gjc/specs",
-			"cp source.md .gjc/specs/deep-interview-x.md",
+			"cp source.md .gjc/specs/jaw-interview-x.md",
 			"sed -i 's/a/b/' .gjc/plans/plan.md",
-			"cat source.md > .gjc/specs/deep-interview-x.md",
+			"cat source.md > .gjc/specs/jaw-interview-x.md",
 		]) {
-			const decision = await getDeepInterviewMutationDecision({
+			const decision = await getJawInterviewMutationDecision({
 				cwd,
 				sessionId: "session-a",
 				tool: tool("bash"),
@@ -246,15 +246,15 @@ describe("deep-interview mutation guard", () => {
 
 	it("blocks vim file-switches into .gjc", async () => {
 		const cwd = await makeTempRoot();
-		await writeActiveDeepInterview(cwd);
+		await writeActiveJawInterview(cwd);
 
-		const decision = await getDeepInterviewMutationDecision({
+		const decision = await getJawInterviewMutationDecision({
 			cwd,
 			sessionId: "session-a",
 			tool: tool("edit", { mode: "vim" }),
 			args: {
 				file: "packages/coding-agent/src/product.ts",
-				steps: [{ kbd: [":edit .gjc/specs/deep-interview-x.md<CR>", "iunsafe"] }],
+				steps: [{ kbd: [":edit .gjc/specs/jaw-interview-x.md<CR>", "iunsafe"] }],
 			},
 		});
 
@@ -262,11 +262,11 @@ describe("deep-interview mutation guard", () => {
 		expect(decision.message).toContain("runtime-owned");
 	});
 
-	it("does not block after deep-interview reaches a terminal phase", async () => {
+	it("does not block after jaw-interview reaches a terminal phase", async () => {
 		const cwd = await makeTempRoot();
-		await writeActiveDeepInterview(cwd, "session-a", "complete");
+		await writeActiveJawInterview(cwd, "session-a", "complete");
 
-		const decision = await getDeepInterviewMutationDecision({
+		const decision = await getJawInterviewMutationDecision({
 			cwd,
 			sessionId: "session-a",
 			tool: tool("write"),
@@ -275,16 +275,16 @@ describe("deep-interview mutation guard", () => {
 		expect(decision.blocked).toBe(false);
 	});
 
-	it("allows writes and logs when deep-interview mode state is invalid", async () => {
+	it("allows writes and logs when jaw-interview mode state is invalid", async () => {
 		const cwd = await makeTempRoot();
-		await writeActiveDeepInterview(cwd);
+		await writeActiveJawInterview(cwd);
 		await Bun.write(
-			path.join(cwd, ".gjc", "state", "sessions", "session-a", "deep-interview-state.json"),
+			path.join(cwd, ".gjc", "state", "sessions", "session-a", "jaw-interview-state.json"),
 			JSON.stringify({ active: "yes", current_phase: "interviewing", session_id: "session-a" }),
 		);
 		const warn = spyOn(console, "warn").mockImplementation(() => {});
 		try {
-			const decision = await getDeepInterviewMutationDecision({
+			const decision = await getJawInterviewMutationDecision({
 				cwd,
 				sessionId: "session-a",
 				tool: tool("write"),
@@ -298,13 +298,13 @@ describe("deep-interview mutation guard", () => {
 		}
 	});
 
-	it("allows writes and logs when deep-interview mode state is corrupt JSON", async () => {
+	it("allows writes and logs when jaw-interview mode state is corrupt JSON", async () => {
 		const cwd = await makeTempRoot();
-		await writeActiveDeepInterview(cwd);
-		await Bun.write(path.join(cwd, ".gjc", "state", "sessions", "session-a", "deep-interview-state.json"), "{");
+		await writeActiveJawInterview(cwd);
+		await Bun.write(path.join(cwd, ".gjc", "state", "sessions", "session-a", "jaw-interview-state.json"), "{");
 		const warn = spyOn(console, "warn").mockImplementation(() => {});
 		try {
-			const decision = await getDeepInterviewMutationDecision({
+			const decision = await getJawInterviewMutationDecision({
 				cwd,
 				sessionId: "session-a",
 				tool: tool("write"),
@@ -320,11 +320,11 @@ describe("deep-interview mutation guard", () => {
 
 	it("guards deferred ast_edit apply targets unless force override is explicit", async () => {
 		const cwd = await makeTempRoot();
-		await writeActiveDeepInterview(cwd);
+		await writeActiveJawInterview(cwd);
 
-		for (const rawPaths of [["src/product.ts"], [".gjc/specs/deep-interview-x.md"], []]) {
+		for (const rawPaths of [["src/product.ts"], [".gjc/specs/jaw-interview-x.md"], []]) {
 			await expect(
-				assertDeepInterviewMutationRawPathsAllowed({
+				assertJawInterviewMutationRawPathsAllowed({
 					cwd,
 					sessionId: "session-a",
 					rawPaths,
@@ -332,7 +332,7 @@ describe("deep-interview mutation guard", () => {
 			).rejects.toBeInstanceOf(ToolError);
 		}
 		await expect(
-			assertDeepInterviewMutationRawPathsAllowed({
+			assertJawInterviewMutationRawPathsAllowed({
 				cwd,
 				sessionId: "session-a",
 				rawPaths: ["src/product.ts"],

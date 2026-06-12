@@ -76,21 +76,21 @@ describe("config CLI schema coverage", () => {
 		expect(parsed.value).toEqual(["claude-opus-4-6", "gpt-5.3-codex"]);
 	});
 
-	it("sets and gets deep-interview ambiguity threshold", async () => {
+	it("sets and gets interview ambiguity threshold", async () => {
 		const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
 		await runConfigCommand({
 			action: "set",
-			key: "gjc.deepInterview.ambiguityThreshold",
+			key: "jwc.interview.ambiguityThreshold",
 			value: "0.2",
 			flags: { json: true },
 		});
-		await runConfigCommand({ action: "get", key: "gjc.deepInterview.ambiguityThreshold", flags: { json: true } });
+		await runConfigCommand({ action: "get", key: "jwc.interview.ambiguityThreshold", flags: { json: true } });
 
 		const payload = logSpy.mock.calls.at(-1)?.[0];
 		expect(typeof payload).toBe("string");
 		expect(JSON.parse(String(payload))).toMatchObject({
-			key: "gjc.deepInterview.ambiguityThreshold",
+			key: "jwc.interview.ambiguityThreshold",
 			type: "number",
 			value: 0.2,
 		});

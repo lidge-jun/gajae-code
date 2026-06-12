@@ -3,23 +3,23 @@ import * as fs from "node:fs/promises";
 import * as os from "node:os";
 import * as path from "node:path";
 import { syncSkillActiveState } from "../skill-state/active-state";
-import { buildDeepInterviewHudSummary } from "../skill-state/workflow-hud";
+import { buildJawInterviewHudSummary } from "../skill-state/workflow-hud";
 import { WORKFLOW_STATE_VERSION } from "../skill-state/workflow-state-contract";
 import { runNativeRalplanCommand } from "./ralplan-runtime";
 import { runNativeStateCommand } from "./state-runtime";
 import { appendJsonl, readExistingStateForMutation, writeArtifact, writeWorkflowEnvelopeAtomic } from "./state-writer";
 
 /**
- * Native implementation of `gjc deep-interview`.
+ * Native implementation of `jwc interview`.
  *
- * The CLI itself does not run the Socratic interview; that lives inside the `/skill:deep-interview`
+ * The CLI itself does not run the Socratic interview; that lives inside the `/skill:jaw-interview`
  * skill executed by the agent. This handler validates the documented argument-hint surface
- * (`[--quick|--standard|--deep] <idea>`), seeds `.gjc/state/deep-interview-state.json`, and
+ * (`[--quick|--standard|--deep] <idea>`), seeds `.gjc/state/jaw-interview-state.json`, and
  * updates the shared HUD rail via `syncSkillActiveState` so the active interview is visible to
  * the TUI.
  */
 
-export interface DeepInterviewCommandResult {
+export interface JawInterviewCommandResult {
 	status: number;
 	stdout?: string;
 	stderr?: string;
@@ -35,15 +35,15 @@ const RESOLUTION_THRESHOLDS = {
 	deep: 0.35,
 } as const;
 
-type DeepInterviewResolution = keyof typeof RESOLUTION_THRESHOLDS;
+type JawInterviewResolution = keyof typeof RESOLUTION_THRESHOLDS;
 
-class DeepInterviewCommandError extends Error {
+class JawInterviewCommandError extends Error {
 	constructor(
 		public readonly exitStatus: number,
 		message: string,
 	) {
 		super(message);
-		this.name = "DeepInterviewCommandError";
+		this.name = "JawInterviewCommandError";
 	}
 }
 
@@ -69,7 +69,7 @@ function hasFlag(args: readonly string[], flag: string): boolean {
 
 function assertSafePathComponent(value: string, label: string): void {
 	if (!PATH_COMPONENT_RE.test(value) || value.includes("..")) {
-		throw new DeepInterviewCommandError(2, `invalid path component for --${label}: ${value}`);
+		throw new JawInterviewCommandError(2, `invalid path component for --${label}: ${value}`);
 	}
 }
 
@@ -92,8 +92,8 @@ function stateDirFor(cwd: string, sessionId: string | undefined): string {
 		: path.join(cwd, ".gjc", "state");
 }
 
-function deepInterviewStatePath(cwd: string, sessionId: string | undefined): string {
-	return path.join(stateDirFor(cwd, sessionId), "deep-interview-state.json");
+function jawInterviewStatePath(cwd: string, sessionId: string | undefined): string {
+	return path.join(stateDirFor(cwd, sessionId), "jaw-interview-state.json");
 }
 
 async function resolveSpecContent(rawSpec: string, cwd: string): Promise<string> {
@@ -104,30 +104,30 @@ async function resolveSpecContent(rawSpec: string, cwd: string): Promise<string>
 	} catch (error) {
 		const err = error as NodeJS.ErrnoException;
 		if (err.code !== "ENOENT" && err.code !== "ENOTDIR") {
-			throw new DeepInterviewCommandError(2, `failed to read --spec ${candidate}: ${err.message}`);
+			throw new JawInterviewCommandError(2, `failed to read --spec ${candidate}: ${err.message}`);
 		}
 	}
 	return rawSpec;
 }
 
-interface ResolvedDeepInterviewArgs {
-	resolution: DeepInterviewResolution;
+interface ResolvedJawInterviewArgs {
+	resolution: JawInterviewResolution;
 	threshold: number;
 	thresholdSource: string;
 	sessionId?: string;
 	idea: string;
-	language?: DeepInterviewLanguagePreference;
+	language?: JawInterviewLanguagePreference;
 	json: boolean;
 }
 
-interface DeepInterviewLanguagePreference {
+interface JawInterviewLanguagePreference {
 	code: "en" | "ko";
 	label: "English" | "Korean";
 	source: "explicit-user-request" | "initial-idea";
 	instruction: string;
 }
 
-export interface ResolvedDeepInterviewSpecWriteArgs {
+export interface ResolvedJawInterviewSpecWriteArgs {
 	stage: "final";
 	slug: string;
 	spec: string;
@@ -138,7 +138,7 @@ export interface ResolvedDeepInterviewSpecWriteArgs {
 	force: boolean;
 }
 
-export interface PersistedDeepInterviewSpec {
+export interface PersistedJawInterviewSpec {
 	slug: string;
 	path: string;
 	stage: "final";
@@ -147,8 +147,8 @@ export interface PersistedDeepInterviewSpec {
 	statePath: string;
 }
 
-interface DeepInterviewSpecWriteSummary {
-	skill: "deep-interview";
+interface JawInterviewSpecWriteSummary {
+	skill: "jaw-interview";
 	stage: "final";
 	slug: string;
 	path: string;
@@ -182,12 +182,20 @@ async function readSettingsAmbiguityThreshold(
 	} catch {
 		return undefined;
 	}
-	const candidate = (parsed as { gjc?: { deepInterview?: { ambiguityThreshold?: unknown } } })?.gjc?.deepInterview
-		?.ambiguityThreshold;
+	const candidate = readAmbiguityThresholdCandidate(parsed);
 	if (typeof candidate !== "number" || !Number.isFinite(candidate) || candidate <= 0 || candidate > 1) {
 		return undefined;
 	}
 	return { threshold: candidate, source: settingsPath };
+}
+
+/** New `jwc.interview.*` key first, legacy `gjc.deepInterview.*` read-fallback (042 D041-D). */
+function readAmbiguityThresholdCandidate(parsed: unknown): unknown {
+	const root = parsed as {
+		jwc?: { interview?: { ambiguityThreshold?: unknown } };
+		gjc?: { deepInterview?: { ambiguityThreshold?: unknown } };
+	};
+	return root?.jwc?.interview?.ambiguityThreshold ?? root?.gjc?.deepInterview?.ambiguityThreshold;
 }
 
 function modernSettingsPath(): string {
@@ -206,8 +214,7 @@ async function readModernSettingsAmbiguityThreshold(): Promise<{ threshold: numb
 	} catch {
 		return undefined;
 	}
-	const candidate = (parsed as { gjc?: { deepInterview?: { ambiguityThreshold?: unknown } } })?.gjc?.deepInterview
-		?.ambiguityThreshold;
+	const candidate = readAmbiguityThresholdCandidate(parsed);
 	if (typeof candidate !== "number" || !Number.isFinite(candidate) || candidate <= 0 || candidate > 1)
 		return undefined;
 	return { threshold: candidate, source: modernConfigPath };
@@ -226,17 +233,17 @@ async function resolveConfiguredAmbiguityThreshold(
 	return await readSettingsAmbiguityThreshold(userSettings);
 }
 
-function englishLanguagePreference(): DeepInterviewLanguagePreference {
+function englishLanguagePreference(): JawInterviewLanguagePreference {
 	return {
 		code: "en",
 		label: "English",
 		source: "explicit-user-request",
 		instruction:
-			"Ask every user-facing deep-interview question in English because the user explicitly requested English.",
+			"Ask every user-facing jaw-interview question in English because the user explicitly requested English.",
 	};
 }
 
-function resolveDeepInterviewLanguagePreference(idea: string): DeepInterviewLanguagePreference | undefined {
+function resolveJawInterviewLanguagePreference(idea: string): JawInterviewLanguagePreference | undefined {
 	if (/\b(?:answer|ask|respond|reply|write|use|speak)\s+(?:only\s+)?in\s+English\b/i.test(idea)) {
 		return englishLanguagePreference();
 	}
@@ -249,20 +256,20 @@ function resolveDeepInterviewLanguagePreference(idea: string): DeepInterviewLang
 			label: "Korean",
 			source: "initial-idea",
 			instruction:
-				"Ask every user-facing deep-interview question in Korean unless the user explicitly requests another language.",
+				"Ask every user-facing jaw-interview question in Korean unless the user explicitly requests another language.",
 		};
 	}
 	return undefined;
 }
 
-function isDeepInterviewSpecWriteInvocation(args: readonly string[]): boolean {
+function isJawInterviewSpecWriteInvocation(args: readonly string[]): boolean {
 	return hasFlag(args, "--write");
 }
 
-async function resolveSpecWriteArgs(args: readonly string[], cwd: string): Promise<ResolvedDeepInterviewSpecWriteArgs> {
+async function resolveSpecWriteArgs(args: readonly string[], cwd: string): Promise<ResolvedJawInterviewSpecWriteArgs> {
 	const stage = flagValue(args, "--stage")?.trim() || "final";
 	if (stage !== "final") {
-		throw new DeepInterviewCommandError(2, 'unknown --stage for deep-interview --write: expected "final"');
+		throw new JawInterviewCommandError(2, 'unknown --stage for jaw-interview --write: expected "final"');
 	}
 
 	const slug = flagValue(args, "--slug")?.trim() || defaultSpecSlug();
@@ -270,7 +277,7 @@ async function resolveSpecWriteArgs(args: readonly string[], cwd: string): Promi
 
 	const rawSpec = flagValue(args, "--spec");
 	if (rawSpec === undefined || rawSpec === "") {
-		throw new DeepInterviewCommandError(2, "--spec is required for deep-interview --write");
+		throw new JawInterviewCommandError(2, "--spec is required for jaw-interview --write");
 	}
 
 	const sessionId = flagValue(args, "--session-id")?.trim() || undefined;
@@ -278,7 +285,7 @@ async function resolveSpecWriteArgs(args: readonly string[], cwd: string): Promi
 
 	const rawHandoff = flagValue(args, "--handoff")?.trim() || undefined;
 	if (rawHandoff && rawHandoff !== "ralplan") {
-		throw new DeepInterviewCommandError(2, 'unknown --handoff target: expected "ralplan"');
+		throw new JawInterviewCommandError(2, 'unknown --handoff target: expected "ralplan"');
 	}
 
 	const allowedFlags = new Set([
@@ -303,7 +310,7 @@ async function resolveSpecWriteArgs(args: readonly string[], cwd: string): Promi
 			continue;
 		}
 		if (arg.startsWith("-") && !allowedFlags.has(arg)) {
-			throw new DeepInterviewCommandError(2, `unknown flag for gjc deep-interview --write: ${arg}`);
+			throw new JawInterviewCommandError(2, `unknown flag for jwc interview --write: ${arg}`);
 		}
 	}
 
@@ -319,15 +326,15 @@ async function resolveSpecWriteArgs(args: readonly string[], cwd: string): Promi
 	};
 }
 
-async function resolveDeepInterviewArgs(args: readonly string[], cwd: string): Promise<ResolvedDeepInterviewArgs> {
+async function resolveJawInterviewArgs(args: readonly string[], cwd: string): Promise<ResolvedJawInterviewArgs> {
 	const sessionId = flagValue(args, "--session-id")?.trim() || undefined;
 	if (sessionId) assertSafePathComponent(sessionId, "session-id");
 
 	const explicitResolutions = (["quick", "standard", "deep"] as const).filter(name => hasFlag(args, `--${name}`));
 	if (explicitResolutions.length > 1) {
-		throw new DeepInterviewCommandError(2, "pass at most one of --quick, --standard, --deep");
+		throw new JawInterviewCommandError(2, "pass at most one of --quick, --standard, --deep");
 	}
-	const resolution: DeepInterviewResolution | undefined = explicitResolutions[0];
+	const resolution: JawInterviewResolution | undefined = explicitResolutions[0];
 
 	// Precedence: --threshold > settings.json (project then user) > resolution flag default > 0.05.
 	let threshold: number = DEFAULT_AMBIGUITY_THRESHOLD;
@@ -336,7 +343,7 @@ async function resolveDeepInterviewArgs(args: readonly string[], cwd: string): P
 	if (thresholdOverride !== undefined) {
 		const parsed = Number(thresholdOverride);
 		if (!Number.isFinite(parsed) || parsed <= 0 || parsed > 1) {
-			throw new DeepInterviewCommandError(
+			throw new JawInterviewCommandError(
 				2,
 				`invalid --threshold: ${thresholdOverride}. Expected 0 < threshold <= 1.`,
 			);
@@ -367,57 +374,57 @@ async function resolveDeepInterviewArgs(args: readonly string[], cwd: string): P
 		}
 		if (arg === "--quick" || arg === "--standard" || arg === "--deep" || arg === "--json") continue;
 		if (arg.startsWith("-")) {
-			throw new DeepInterviewCommandError(2, `unknown flag for gjc deep-interview: ${arg}`);
+			throw new JawInterviewCommandError(2, `unknown flag for jwc interview: ${arg}`);
 		}
 		ideaParts.push(arg);
 	}
 	const idea = ideaParts.join(" ").trim();
-	const effectiveResolution: DeepInterviewResolution = resolution ?? "standard";
+	const effectiveResolution: JawInterviewResolution = resolution ?? "standard";
 	return {
 		resolution: effectiveResolution,
 		threshold,
 		thresholdSource,
 		sessionId,
 		idea,
-		language: resolveDeepInterviewLanguagePreference(idea),
+		language: resolveJawInterviewLanguagePreference(idea),
 		json: hasFlag(args, "--json"),
 	};
 }
 
-export async function persistDeepInterviewSpec(
+export async function persistJawInterviewSpec(
 	cwd: string,
-	resolved: ResolvedDeepInterviewSpecWriteArgs,
-): Promise<PersistedDeepInterviewSpec> {
-	const statePath = deepInterviewStatePath(cwd, resolved.sessionId);
+	resolved: ResolvedJawInterviewSpecWriteArgs,
+): Promise<PersistedJawInterviewSpec> {
+	const statePath = jawInterviewStatePath(cwd, resolved.sessionId);
 	const existingRead = await readExistingStateForMutation(statePath);
 	if (existingRead.kind === "corrupt" && !resolved.force) {
-		throw new DeepInterviewCommandError(
+		throw new JawInterviewCommandError(
 			2,
-			`existing deep-interview state is corrupt or tampered (${existingRead.error}); use --force to overwrite ${statePath}`,
+			`existing jaw-interview state is corrupt or tampered (${existingRead.error}); use --force to overwrite ${statePath}`,
 		);
 	}
 	const existing = existingRead.kind === "valid" ? existingRead.value : {};
 
-	const specPath = path.join(cwd, ".gjc", "specs", `deep-interview-${resolved.slug}.md`);
+	const specPath = path.join(cwd, ".gjc", "specs", `jaw-interview-${resolved.slug}.md`);
 	const content = resolved.spec.endsWith("\n") ? resolved.spec : `${resolved.spec}\n`;
 	await writeArtifact(specPath, content, {
 		cwd,
-		audit: { category: "artifact", verb: "write", owner: "gjc-runtime", skill: "deep-interview" },
+		audit: { category: "artifact", verb: "write", owner: "gjc-runtime", skill: "jaw-interview" },
 	});
 
 	const sha256 = createHash("sha256").update(content).digest("hex");
 	const createdAt = new Date().toISOString();
 	await appendJsonl(
-		path.join(cwd, ".gjc", "specs", "deep-interview-index.jsonl"),
+		path.join(cwd, ".gjc", "specs", "jaw-interview-index.jsonl"),
 		{ slug: resolved.slug, stage: resolved.stage, path: specPath, created_at: createdAt, sha256 },
-		{ cwd, audit: { category: "ledger", verb: "append", owner: "gjc-runtime", skill: "deep-interview" } },
+		{ cwd, audit: { category: "ledger", verb: "append", owner: "gjc-runtime", skill: "jaw-interview" } },
 	);
 
 	const payload: Record<string, unknown> = {
 		...existing,
 		active: true,
 		current_phase: "handoff",
-		skill: "deep-interview",
+		skill: "jaw-interview",
 		version: WORKFLOW_STATE_VERSION,
 		spec_slug: resolved.slug,
 		spec_path: specPath,
@@ -431,9 +438,9 @@ export async function persistDeepInterviewSpec(
 		cwd,
 		receipt: {
 			cwd,
-			skill: "deep-interview",
+			skill: "jaw-interview",
 			owner: "gjc-runtime",
-			command: "gjc deep-interview persist-spec-state",
+			command: "jwc interview persist-spec-state",
 			sessionId: resolved.sessionId,
 			nowIso: createdAt,
 		},
@@ -441,11 +448,11 @@ export async function persistDeepInterviewSpec(
 			category: "state",
 			verb: "write",
 			owner: "gjc-runtime",
-			skill: "deep-interview",
+			skill: "jaw-interview",
 			forced: resolved.force,
 		},
 	});
-	await syncDeepInterviewHud({
+	await syncJawInterviewHud({
 		cwd,
 		sessionId: resolved.sessionId,
 		phase: "handoff",
@@ -462,13 +469,13 @@ export async function persistDeepInterviewSpec(
 	};
 }
 
-async function seedDeepInterviewState(cwd: string, resolved: ResolvedDeepInterviewArgs): Promise<string> {
-	const statePath = deepInterviewStatePath(cwd, resolved.sessionId);
+async function seedJawInterviewState(cwd: string, resolved: ResolvedJawInterviewArgs): Promise<string> {
+	const statePath = jawInterviewStatePath(cwd, resolved.sessionId);
 	const now = new Date().toISOString();
 	const payload: Record<string, unknown> = {
 		active: true,
 		current_phase: "interviewing",
-		skill: "deep-interview",
+		skill: "jaw-interview",
 		version: WORKFLOW_STATE_VERSION,
 		resolution: resolved.resolution,
 		threshold: resolved.threshold,
@@ -491,18 +498,18 @@ async function seedDeepInterviewState(cwd: string, resolved: ResolvedDeepIntervi
 		cwd,
 		receipt: {
 			cwd,
-			skill: "deep-interview",
+			skill: "jaw-interview",
 			owner: "gjc-runtime",
-			command: "gjc deep-interview seed",
+			command: "jwc interview seed",
 			sessionId: resolved.sessionId,
 			nowIso: now,
 		},
-		audit: { category: "state", verb: "write", owner: "gjc-runtime", skill: "deep-interview" },
+		audit: { category: "state", verb: "write", owner: "gjc-runtime", skill: "jaw-interview" },
 	});
 	return statePath;
 }
 
-async function syncDeepInterviewHud(options: {
+async function syncJawInterviewHud(options: {
 	cwd: string;
 	sessionId?: string;
 	phase: string;
@@ -514,12 +521,12 @@ async function syncDeepInterviewHud(options: {
 	try {
 		await syncSkillActiveState({
 			cwd: options.cwd,
-			skill: "deep-interview",
+			skill: "jaw-interview",
 			active: options.phase !== "complete",
 			phase: options.phase,
 			sessionId: options.sessionId,
-			source: "gjc-deep-interview-native",
-			hud: buildDeepInterviewHudSummary({
+			source: "jwc-interview-native",
+			hud: buildJawInterviewHudSummary({
 				phase: options.phase,
 				ambiguity: options.ambiguity,
 				threshold: options.threshold,
@@ -533,12 +540,12 @@ async function syncDeepInterviewHud(options: {
 	}
 }
 
-async function handleSpecWrite(args: readonly string[], cwd: string): Promise<DeepInterviewCommandResult> {
+async function handleSpecWrite(args: readonly string[], cwd: string): Promise<JawInterviewCommandResult> {
 	const resolved = await resolveSpecWriteArgs(args, cwd);
-	const persisted = await persistDeepInterviewSpec(cwd, resolved);
+	const persisted = await persistJawInterviewSpec(cwd, resolved);
 	const shouldHandoff = resolved.deliberate || resolved.handoff === "ralplan";
-	const summary: DeepInterviewSpecWriteSummary = {
-		skill: "deep-interview",
+	const summary: JawInterviewSpecWriteSummary = {
+		skill: "jaw-interview",
 		stage: persisted.stage,
 		slug: persisted.slug,
 		path: persisted.path,
@@ -555,20 +562,20 @@ async function handleSpecWrite(args: readonly string[], cwd: string): Promise<De
 		ralplanArgs.push(persisted.path);
 		const ralplanResult = await runNativeRalplanCommand(ralplanArgs, cwd);
 		if (ralplanResult.status !== 0) {
-			throw new DeepInterviewCommandError(
+			throw new JawInterviewCommandError(
 				ralplanResult.status,
 				ralplanResult.stderr?.trim() || "failed to seed ralplan",
 			);
 		}
 
-		const handoffArgs = ["handoff", "--mode", "deep-interview", "--to", "ralplan", "--json"];
+		const handoffArgs = ["handoff", "--mode", "jaw-interview", "--to", "ralplan", "--json"];
 		if (resolved.sessionId) handoffArgs.push("--session-id", resolved.sessionId);
 		else handoffArgs.push("--session-id", "");
 		const handoffResult = await runNativeStateCommand(handoffArgs, cwd);
 		if (handoffResult.status !== 0) {
-			throw new DeepInterviewCommandError(
+			throw new JawInterviewCommandError(
 				handoffResult.status,
-				handoffResult.stderr?.trim() || "failed to hand off deep-interview to ralplan",
+				handoffResult.stderr?.trim() || "failed to hand off jaw-interview to ralplan",
 			);
 		}
 
@@ -584,7 +591,7 @@ async function handleSpecWrite(args: readonly string[], cwd: string): Promise<De
 	const stdout = resolved.json
 		? `${JSON.stringify(summary)}\n`
 		: [
-				`deep-interview spec_path=${persisted.path}`,
+				`jaw-interview spec_path=${persisted.path}`,
 				`sha=${persisted.sha256}`,
 				`state_path=${persisted.statePath}`,
 				shouldHandoff
@@ -597,21 +604,18 @@ async function handleSpecWrite(args: readonly string[], cwd: string): Promise<De
 	return { status: 0, stdout };
 }
 
-export async function runNativeDeepInterviewCommand(
+export async function runNativeJawInterviewCommand(
 	args: string[],
 	cwd = process.cwd(),
-): Promise<DeepInterviewCommandResult> {
+): Promise<JawInterviewCommandResult> {
 	try {
-		if (isDeepInterviewSpecWriteInvocation(args)) return await handleSpecWrite(args, cwd);
-		const resolved = await resolveDeepInterviewArgs(args, cwd);
+		if (isJawInterviewSpecWriteInvocation(args)) return await handleSpecWrite(args, cwd);
+		const resolved = await resolveJawInterviewArgs(args, cwd);
 		if (!resolved.idea) {
-			throw new DeepInterviewCommandError(
-				2,
-				'gjc deep-interview requires an idea, e.g. `gjc deep-interview "<idea>"`.',
-			);
+			throw new JawInterviewCommandError(2, 'jwc interview requires an idea, e.g. `jwc interview "<idea>"`.');
 		}
-		const statePath = await seedDeepInterviewState(cwd, resolved);
-		await syncDeepInterviewHud({
+		const statePath = await seedJawInterviewState(cwd, resolved);
+		await syncJawInterviewHud({
 			cwd,
 			sessionId: resolved.sessionId,
 			phase: "interviewing",
@@ -621,26 +625,26 @@ export async function runNativeDeepInterviewCommand(
 		});
 
 		const summary = {
-			skill: "deep-interview",
+			skill: "jaw-interview",
 			resolution: resolved.resolution,
 			threshold: resolved.threshold,
 			threshold_source: resolved.thresholdSource,
 			idea: resolved.idea,
 			language: resolved.language,
 			state_path: statePath,
-			handoff: "/skill:deep-interview",
+			handoff: "/skill:jaw-interview",
 		};
 		const stdout = resolved.json
 			? `${JSON.stringify(summary)}\n`
 			: [
-					`deep-interview seed state_path=${statePath}`,
+					`jaw-interview seed state_path=${statePath}`,
 					`resolution=${resolved.resolution} threshold=${resolved.threshold} threshold_source=${resolved.thresholdSource}`,
-					"handoff=/skill:deep-interview",
+					"handoff=/skill:jaw-interview",
 					"",
 				].join("\n");
 		return { status: 0, stdout };
 	} catch (error) {
-		if (error instanceof DeepInterviewCommandError) return { status: error.exitStatus, stderr: `${error.message}\n` };
+		if (error instanceof JawInterviewCommandError) return { status: error.exitStatus, stderr: `${error.message}\n` };
 		return { status: 1, stderr: `${error instanceof Error ? error.message : String(error)}\n` };
 	}
 }

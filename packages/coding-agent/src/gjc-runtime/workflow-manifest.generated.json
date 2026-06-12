@@ -1,6 +1,6 @@
 {
-  "deep-interview": {
-    "graphLabel": "Deep Interview",
+  "jaw-interview": {
+    "graphLabel": "Jaw Interview",
     "hudFields": [
       "current_phase",
       "ambiguity_score",
@@ -27,7 +27,7 @@
         "maxAgeDays": 90
       }
     ],
-    "skill": "deep-interview",
+    "skill": "jaw-interview",
     "states": [
       {
         "id": "interviewing",
@@ -82,7 +82,7 @@
           "doctor"
         ],
         "enumValues": [
-          "deep-interview",
+          "jaw-interview",
           "ralplan",
           "ultragoal",
           "team"
@@ -128,7 +128,7 @@
           "handoff"
         ],
         "enumValues": [
-          "deep-interview",
+          "jaw-interview",
           "ralplan",
           "ultragoal",
           "team"
@@ -158,7 +158,7 @@
           "doctor"
         ],
         "enumValues": [
-          "deep-interview",
+          "jaw-interview",
           "ralplan",
           "ultragoal",
           "team"
@@ -456,7 +456,7 @@
           "doctor"
         ],
         "enumValues": [
-          "deep-interview",
+          "jaw-interview",
           "ralplan",
           "ultragoal",
           "team"
@@ -502,7 +502,7 @@
           "handoff"
         ],
         "enumValues": [
-          "deep-interview",
+          "jaw-interview",
           "ralplan",
           "ultragoal",
           "team"
@@ -532,7 +532,7 @@
           "doctor"
         ],
         "enumValues": [
-          "deep-interview",
+          "jaw-interview",
           "ralplan",
           "ultragoal",
           "team"
@@ -839,7 +839,7 @@
           "doctor"
         ],
         "enumValues": [
-          "deep-interview",
+          "jaw-interview",
           "ralplan",
           "ultragoal",
           "team"
@@ -885,7 +885,7 @@
           "handoff"
         ],
         "enumValues": [
-          "deep-interview",
+          "jaw-interview",
           "ralplan",
           "ultragoal",
           "team"
@@ -915,7 +915,7 @@
           "doctor"
         ],
         "enumValues": [
-          "deep-interview",
+          "jaw-interview",
           "ralplan",
           "ultragoal",
           "team"
@@ -1283,7 +1283,7 @@
           "doctor"
         ],
         "enumValues": [
-          "deep-interview",
+          "jaw-interview",
           "ralplan",
           "ultragoal",
           "team"
@@ -1329,7 +1329,7 @@
           "handoff"
         ],
         "enumValues": [
-          "deep-interview",
+          "jaw-interview",
           "ralplan",
           "ultragoal",
           "team"
@@ -1359,7 +1359,7 @@
           "doctor"
         ],
         "enumValues": [
-          "deep-interview",
+          "jaw-interview",
           "ralplan",
           "ultragoal",
           "team"

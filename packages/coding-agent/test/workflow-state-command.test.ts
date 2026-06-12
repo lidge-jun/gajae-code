@@ -5,9 +5,9 @@ import * as path from "node:path";
 
 const repoRoot = path.resolve(import.meta.dir, "..", "..", "..");
 const cliEntry = path.join(repoRoot, "packages", "coding-agent", "src", "cli.ts");
-const workflowSkills = ["deep-interview", "ralplan", "ultragoal", "team"] as const;
+const workflowSkills = ["jaw-interview", "ralplan", "ultragoal", "team"] as const;
 const initialPhases: Record<(typeof workflowSkills)[number], string> = {
-	"deep-interview": "interviewing",
+	"jaw-interview": "interviewing",
 	ralplan: "planner",
 	ultragoal: "goal-planning",
 	team: "starting",
@@ -84,7 +84,7 @@ describe("gjc state workflow command", () => {
 	it("rejects stale workflow phases without force", async () => {
 		await withTempCwd(async cwd => {
 			for (const { skill, phase } of [
-				{ skill: "deep-interview", phase: "initializing" },
+				{ skill: "jaw-interview", phase: "initializing" },
 				{ skill: "ralplan", phase: "approval" },
 			] as const) {
 				const result = runState(cwd, [
@@ -111,7 +111,7 @@ describe("gjc state workflow command", () => {
 				"session-1",
 				"--input",
 				JSON.stringify({
-					skill: "deep-interview",
+					skill: "jaw-interview",
 					current_phase: "interviewing",
 					state: { current_phase: "ignored" },
 				}),
@@ -124,25 +124,25 @@ describe("gjc state workflow command", () => {
 				"--session-id",
 				"session-1",
 				"--input",
-				JSON.stringify({ skill: "deep-interview", phase: "handoff", state: { current_phase: "stale" } }),
+				JSON.stringify({ skill: "jaw-interview", phase: "handoff", state: { current_phase: "stale" } }),
 				"--json",
 			]);
 			expect(transition.exitCode, transition.stderr.toString()).toBe(0);
 
 			const modeState = await Bun.file(
-				path.join(cwd, ".gjc", "state", "sessions", "session-1", "deep-interview-state.json"),
+				path.join(cwd, ".gjc", "state", "sessions", "session-1", "jaw-interview-state.json"),
 			).json();
 			expect(modeState.current_phase).toBe("handoff");
 
 			const activeState = await Bun.file(
 				path.join(cwd, ".gjc", "state", "sessions", "session-1", "skill-active-state.json"),
 			).json();
-			expect(activeState.active_skills[0]).toMatchObject({ skill: "deep-interview", phase: "handoff" });
+			expect(activeState.active_skills[0]).toMatchObject({ skill: "jaw-interview", phase: "handoff" });
 
 			const read = runState(cwd, ["read", "--session-id", "session-1", "--json"]);
 			expect(read.exitCode, read.stderr.toString()).toBe(0);
 			const readPayload = JSON.parse(read.stdout.toString()) as { skill: string; state: { current_phase: string } };
-			expect(readPayload.skill).toBe("deep-interview");
+			expect(readPayload.skill).toBe("jaw-interview");
 			expect(readPayload.state.current_phase).toBe("handoff");
 		});
 	}, 20_000);
