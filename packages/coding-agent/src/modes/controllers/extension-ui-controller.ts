@@ -615,9 +615,11 @@ export class ExtensionUiController {
 			this.ctx.ui.terminal.rows - scrollOptionRows - listChromeRows - inlineInputRows - HOOK_SELECTOR_CHROME_ROWS;
 		const scrollTitleRows =
 			requestedTitleRows === undefined ? undefined : Math.max(1, Math.min(requestedTitleRows, availableTitleRows));
-		if (scrollTitleRows !== undefined) {
-			this.#enableHookSelectorMouseReporting();
-		}
+		// NOTE(99.20.05): mouse reporting (1000h/1006h) is deliberately NOT
+		// enabled here anymore — capturing the wheel for question scrolling
+		// hijacks the terminal's native scrollback while the ask selector is
+		// up ("ask 모드에서 위로 스크롤이 막힘", 260613). PgUp/PgDn cover long
+		// questions; the wheel stays with the terminal.
 
 		this.ctx.hookSelector = new HookSelectorComponent(
 			title,

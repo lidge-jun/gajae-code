@@ -302,7 +302,10 @@ export class SettingsSelectorComponent extends Container {
 					id: def.path,
 					label: def.label,
 					description: def.description,
-					currentValue: currentValue ? "true" : "false",
+					// Settings with `default: undefined` resolve at runtime (e.g.
+					// brand defaults) — surface that as "default" instead of a
+					// misleading false.
+					currentValue: currentValue === undefined ? "default" : currentValue ? "true" : "false",
 					values: ["true", "false"],
 				};
 
@@ -311,7 +314,9 @@ export class SettingsSelectorComponent extends Container {
 					id: def.path,
 					label: def.label,
 					description: def.description,
-					currentValue: currentValue as string,
+					// `undefined` must never reach the list renderer (truncateToWidth
+					// throws on non-strings) — runtime-default settings show "default".
+					currentValue: (currentValue as string | undefined) ?? "default",
 					values: [...def.values],
 				};
 

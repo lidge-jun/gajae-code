@@ -242,8 +242,10 @@ async function askSingleQuestion(
 		const baseHelpText = navigation
 			? "up/down navigate  enter select  ←/→ question  esc cancel"
 			: "up/down navigate  enter select  esc cancel";
+		// 99.20.05: the wheel stays with the terminal (native scrollback) — only
+		// keyboard paging scrolls the question.
 		const helpText =
-			scrollTitleRows === undefined ? baseHelpText : `${baseHelpText}  wheel/PgUp/PgDn scroll question`;
+			scrollTitleRows === undefined ? baseHelpText : `${baseHelpText}  PgUp/PgDn scroll question`;
 		const useDockedCustomInput = options.useDockedCustomInput === true;
 		const dialogOptions = {
 			initialIndex,

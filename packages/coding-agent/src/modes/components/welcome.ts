@@ -501,10 +501,13 @@ function gradientLogo(lines: readonly string[], phase = 0, shine?: ShineConfig):
 
 /**
  * Rows kept free for the composer area when deciding whether the full banner
- * fits the viewport: surrounding spacers (2) + editor box (3) + status rail (1)
- * + one margin row. Below that, the branded banner renders its compact variant.
+ * fits the viewport: editor box (3) + status rail (1). Below that, the branded
+ * banner renders its compact variant. Was 7 (spacers + margin) when a banner
+ * straddling the scrollback boundary on first paint could tear; with the
+ * composer pin (083.7 §11/§12) the frame scrolls cleanly, so only the composer
+ * cluster's hard minimum is reserved — the full banner survives down to ~19 rows.
  */
-const COMPACT_BANNER_RESERVED_ROWS = 7;
+const COMPACT_BANNER_RESERVED_ROWS = 4;
 
 /** Total length of the intro animation. */
 const INTRO_MS = 3000;

@@ -1240,7 +1240,10 @@ describe("AskTool jaw-interview structured questions (meta contract)", () => {
 
 		const dialogOptions = select.mock.calls[0]?.[2];
 		expect(dialogOptions?.scrollTitleRows).toBe(48);
-		expect(dialogOptions?.helpText).toContain("wheel/PgUp/PgDn scroll question");
+		// 99.20.05: keyboard-only question scroll — the wheel stays with the
+		// terminal so native scrollback keeps working during ask.
+		expect(dialogOptions?.helpText).toContain("PgUp/PgDn scroll question");
+		expect(dialogOptions?.helpText).not.toContain("wheel");
 	});
 
 	it("keeps plain questions headerless but numbered with the v2 input slot (99.20.01)", async () => {

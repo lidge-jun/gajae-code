@@ -6065,6 +6065,12 @@ export class AgentSession {
 			return;
 		}
 		this.setServiceTier(enabled ? "priority" : undefined);
+		// /fast is a sticky user preference: persist it so fresh sessions pick
+		// it up via the `serviceTier` setting (read at session create/switch).
+		// Deliberately NOT in setServiceTier — the anthropic fast-mode
+		// auto-fallback calls setServiceTier(undefined) and must not clobber
+		// the saved preference.
+		this.settings.set("serviceTier", enabled ? "priority" : "none");
 	}
 
 	toggleFastMode(): boolean {
