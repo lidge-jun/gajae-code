@@ -2,7 +2,7 @@
 
 > 2026-06-12 10:17 초안 (Boss-author). 선행: [051](./051_design_command_port.md) §1–3, [053](./053_decisions_p_boss_author.md) D050-10~21.
 > 본 문서는 **D050-19~21 개정 topology 기준** — P = Boss+Critic 1-pass, A = Planner∥Architect 병렬 감사.
-> 상태: **v6 — 최종(인터뷰 완전 종결, D050-25~26 반영). A 3라운드 PASS, B 착수 가능** (1R 병렬 FAIL → v2 → 결정 3건 → v3 → 2R solo FAIL → v4 → **3R solo PASS** → v5 → 클로징 라운드 v6).
+> 상태: **v7 — goal A단계 v6델타 감사(F1~F3) 반영, B 착수** (1R 병렬 FAIL → v2 → 결정 3건 → v3 → 2R solo FAIL → v4 → 3R solo PASS → v5 → 클로징 v6 → **goal A 델타: D050-26 PASS·D050-25 F1~F3 반영 v7**).
 
 ## 결정 입력 (요약)
 
@@ -46,6 +46,7 @@
 | `packages/coding-agent/src/cli.ts:50` 부근 | `{ name: "orchestrate", aliases: ["pabcd"], load: ... }` — **[확정 D050-24] jaw 전용 등록 게이트 신설**: 조건부 등록 빌더(`isJawBrand()` — `discovery/helpers.ts:32-35` 재사용)로 gjc 브랜드에서 미노출. 명령 등록 게이트의 첫 선례가 됨(interview 소급은 후속 검토) |
 | `packages/coding-agent/src/slash-commands/builtin-registry.ts` | `/orchestrate` (+alias `/pabcd`) — subcommands `i..d`, `/goal`(275-295) 패턴, handle/handleTui. **D050-24 동일 적용: `isJawBrand()` 조건부 등록** — gjc TUI에 `/orchestrate` 미노출 (2R 지적 보강) |
 | interview 게이트 소급 | **[확정 D050-25]** 같은 조건부 등록 빌더에 `interview`(+`deep-interview` alias) 편입 — gjc 브랜드에서 미노출, 표면 비대칭 제거 |
+| `packages/coding-agent/test/cli-command-surface.test.ts:17-36` | **[A-v6델타 F1·高]** `extractRegisteredCommands()`가 정적 `commands` 배열 파싱 + `"interview"` 고정 기대(:33) — 게이트 적용 즉시 FAIL. **브랜드 인지 테스트로 전환**: jaw 전용 배열 분리 후 gjc 케이스에서 interview·orchestrate **부재** assert, jwc 케이스에서 존재 assert. `:55-67`의 `"jaw-interview"` spawn 표기도 `interview`로 정정 |
 | `packages/coding-agent/src/hooks/skill-keywords.ts` | **[확정 D050-26] `$orchestrate` keyword 미채택** — 변경 없음 |
 
 ### B3 — 단계 프롬프트
@@ -81,7 +82,7 @@
 - 단위: `test/workflow-state-command.test.ts:35-70` 패턴 — pabcd state write/receipt + `canTransition` 이식분(전이 표 전수)
 - e2e: `orchestrate i→p→a→…→d` 풀사이클 1회 / spec 보유 시 `p` 단독 진입 / 승인 전 mutation 0
 - 기계: `bun run check:ts`(root — biome+tsgo+schemas+`check:gjc-ui`=rebrand-inventory `--strict`), `scripts/verify-g002-gates.ts`
-- gjc 브랜드 diff-0: **gjc에서 `orchestrate`/`pabcd`/`interview` CLI 미등록 + `/orchestrate` slash 미노출 확인** (D050-24·25 기준)
+- gjc 브랜드 diff-0: **gjc에서 `orchestrate`/`pabcd`/`interview` CLI 미등록 + `/orchestrate` slash 미노출 확인** (D050-24·25 기준) — 구체화: `cli-command-surface.test.ts`를 브랜드 분기(F1)로 갱신하고 gjc 부재/jwc 존재를 양방향 assert
 
 ### B7 — 문서 패치 diff (053 속집 2 체크리스트 구체화)
 
@@ -90,6 +91,8 @@
 | `050_moc_plan_pabcd.md` §스코프 | "P=Boss+3-reviewer"·`ctx.p_review_mode` → "P=Boss+Critic 1-pass / A=Planner∥Architect / trivial=A solo(Architect) / `ctx.a_audit_mode`" |
 | `051_design_command_port.md` §1·§3·§3.1·§4 | P/A행 D050-19~21 갱신, §1 등록 게이팅 표기를 D050-24 결정 결과로 교체, §4 결정 상태 표 갱신 |
 | `052_decisions_ipabcd.md` | D050-11/12/15 참조처에 개정 포인터 |
+| `structure/workflows.md:21` | **[A-v6델타 F2]** `jwc interview` CLI를 무조건 기술 중 → jaw 전용(`isJawBrand`) 표기 + gjc는 `/skill:jaw-interview` 경로만 명시 (D050-25 정합) |
+| (선택) `docs/codebase-overview.md:30`, `docs/environment-variables.md:220,224` | [F3·低] stale `deep-interview` CLI 언급 — upstream 문서라 수정 보류 가능, 건드릴 경우만 분기 기술 |
 
 ## A 소규모 1라운드 결과 (260612 10:30 — Planner∥Architect 병렬, D050-20 도그푸딩)
 
