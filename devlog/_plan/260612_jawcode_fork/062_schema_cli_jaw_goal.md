@@ -1,7 +1,7 @@
 # 062 — 스키마: cli-jaw goal 시스템 전수 (061 어댑터의 원본 계약)
 
 > 상위: [060_moc_goal_merge.md](./060_moc_goal_merge.md). 조사: CLI 서브에이전트 (260612 13:05, cli-jaw 소스 `/Users/jun/Developer/new/700_projects/cli-jaw` 기준 경로).
-> 061이 gjc ultragoal **엔진** 실사였다면 062는 cli-jaw **goal 워크플로우** 전수 — D10(표면 동형)의 "동형"이 정확히 무엇인지 필드 단위로 고정.
+> 061이 gjc ultragoal **엔진** 실사였다면 062는 cli-jaw **goal 워크플로우** 전수 — D10(표면 동형)의 "동형"이 정확히 무엇인지 필드 단위로 고정. 인터뷰 확정: 260612 01:36.
 
 ## 1. GoalState 전체 스키마 (`src/goal/types.ts:24-43`)
 
@@ -32,8 +32,8 @@ interface GoalCheckpoint { summary; nextAction; evidencePaths: string[]; timesta
 | 필드 | 061 현황 | 보강 |
 |------|----------|------|
 | `nextAction` | checkpoint에 없음 | ultragoal checkpoint payload에 대응 없음 — jwc `goal update --next "<...>"` 플래그로 수용 후 ledger payload 확장 [기본값 제안] |
-| `goalMode: plan` + `refine` | 061 매핑에 refine은 있으나 plan 모드 생략 | `jwc goal plan [hint]` 추가 여부 — [열린 질문 7 신규] (061 열린 질문 2의 budget과 별개) |
-| `budget{maxTurns,maxMinutes,maxDispatches}` | 미채록 | goal-run 모드(아래 §5)와 세트 — jwc는 dispatch 없음이므로 maxDispatches 제외 2종만 의미 |
+| `goalMode: plan` + `refine` | 061 매핑에 refine은 있으나 plan 모드 생략 | [확정] `jwc goal plan [hint]` 수용 — ultragoal brief pending 상수 + plan-mode 블록 포팅 (인터뷰 260612 01:36) |
+| `budget{maxTurns,maxMinutes,maxDispatches}` | 미채록 | [확정] goal-run M1 제외, `budget` 필드만 forward-compat — `maxDispatches` 제외 2종 (인터뷰 260612 01:36) |
 | `blocked` status | 미채록 | ultragoal status에 `blocked`/`review_blocked` 기존재 — 매핑 가능 |
 | history 50 cap | 미채록 | ledger는 무한 append — jwc `goal history` 기본 limit만 맞추면 됨 (조회 10, 최대 50) |
 
@@ -44,7 +44,7 @@ interface GoalCheckpoint { summary; nextAction; evidencePaths: string[]; timesta
 - **evidence 번들 3종** (continuation 프롬프트 규정, `src/goal/heartbeat.ts:76`): Documentation(devlog/structure 경로) + Implementation(변경 소스/테스트 경로 또는 no-code 사유) + Verification(신선한 명령/테스트 출력) — **개발 goal의 모든 phase 게이트·최종 완료에 의무**
 - 검증 티어 (`heartbeat.ts:79-82`): LIGHT(<5파일·<100줄: sub-agent 검증) / STANDARD(기본: 직원 검증+빌드) / THOROUGH(>20파일 또는 보안·아키텍처: 전체 리뷰+전체 테스트)
 
-**ultragoal 대비**: gjc `goal_checkpointed.evidence`는 단일 문자열 — jwc 어댑터는 cli-jaw 배열을 join하거나 ledger payload를 `evidence: string[]`로 확장 [열린 질문 8 신규]. 번들 3종·검증 티어는 ultragoal에 없음 → goal-continuation 프롬프트 포팅(§4)으로만 이식.
+**ultragoal 대비**: gjc `goal_checkpointed.evidence`는 단일 문자열 — [확정] jwc 어댑터는 cli-jaw evidence 배열을 `'; '` join하여 ledger에 기록, gjc 스키마 무변경 (인터뷰 260612 01:36). 번들 3종·검증 티어는 ultragoal에 없음 → goal-continuation 프롬프트 포팅(§4)으로만 이식.
 
 ## 3. 2-tap pause 게이트 정밀 (061 §3.2의 원본)
 
@@ -77,23 +77,23 @@ interface GoalCheckpoint { summary; nextAction; evidencePaths: string[]; timesta
 
 **gjc 대응물**: `prompts/goals/goal-continuation.md`+`goal-mode-active.md`(061 §1) — 구조 비교 후 누락 섹션(번들·티어·2-tap 체크리스트·Stop Audit)을 jaw 브랜드 분기로 추가하는 것이 061 §3의 구현 본체. gjc 브랜드 diff-0 원칙(085.5 L1과 동일 메커니즘).
 
-## 5. goal-run 모드 (061 열린 질문 2의 실체)
+## 5. goal-run 모드 (061 §6-2 확정)
 
 `src/goal-run/types.ts:1-37`, `controller.ts:39-46`: `GoalRunMode = 'dry-run'|'assist'|'bounded'|'supervised'`, 기본 budget `{maxTurns:10, maxMinutes:60, maxDispatches:5}`, `GoalRunState{status: preflight|running|paused|stopped|completed|failed, gates: GoalRunSafetyGate[]}`. 연속 시도 상한 `GOAL_CONT_MAX_ATTEMPTS=20` (`lifecycle-handler.ts`).
 
-**jwc 판정 [기본값 제안]**: M1 제외 (dispatches 개념 부재 + jwc는 대화형 단일 세션 — bounded run의 가치가 낮음). budget 필드만 GoalState에 보존해 forward-compat.
+**jwc 판정 [확정]**: M1 제외 (dispatches 개념 부재 + jwc는 대화형 단일 세션). `budget{maxTurns,maxMinutes}` 필드만 GoalState에 forward-compat 보존 (인터뷰 260612 01:36).
 
 ## 6. 어휘 매핑 보강분 (061 §2 표에 병합할 행)
 
 | jwc 표면 | cli-jaw 원본 | 엔진 매핑 |
 |----------|-------------|-----------|
-| `goal plan [hint]` | `set`+goalMode=plan | [열린 질문 7] — 수용 시 ultragoal brief를 pending 상수로 |
-| `goal update --next "<a>"` | checkpoint.nextAction | ledger payload 확장 [열린 질문 8] |
-| `goal status` 표시 | active 1 + budget + lastCheckpoint.nextAction | 061 [기본값] 유지 + nextAction 표시 추가 |
+| `goal plan [hint]` | `set`+goalMode=plan | [확정] ultragoal brief pending 상수 + plan-mode 블록 (인터뷰 260612 01:36) |
+| `goal update --next "<a>"` | checkpoint.nextAction | ledger payload 확장 [기본값 제안] — M1 선택 구현 |
+| `goal status` (`show` 별칭) | active 1 + budget + lastCheckpoint.nextAction | active 1개 기본 뷰 + nextAction 표시 |
 | `goal history [limit]` | history.json 최근순, 기본 10 최대 50 | ledger 조회 limit 정합 |
-| (없음 — jwc 미수용) | `goal clear`/`reset` | reset은 파괴적 — human 전용으로도 미노출 [기본값] |
+| (없음 — jwc 미수용) | `goal clear`/`reset` | [확정] 미노출 — reset은 파괴적 (인터뷰 260612 01:36) |
 
-## 7. [열린 질문] (061 §6에 7·8 추가)
+## 7. [확정] 인터뷰 결정 (260612 01:36)
 
-7. `goal plan` 모드(AI 자가 목표 정련) jwc 수용 여부 — 수용 시 plan-mode 블록 포팅 포함
-8. evidence 단수(gjc ledger)↔복수(cli-jaw) — join vs payload 배열 확장
+7. **`goal plan` 모드 수용** — ultragoal brief를 pending 상수로, plan-mode 블록 포팅 포함. 근거: cli-jaw plan 워크플로와 동형 UX.
+8. **evidence 단수↔복수** — cli-jaw 배열을 `'; '` join한 단일 문자열로 ledger 기록, gjc 스키마 무변경. 근거: ultragoal-runtime checkpoint 계약 유지, 최소 diff.

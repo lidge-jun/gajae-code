@@ -3,16 +3,17 @@
 > 📐 상세 설계: [051_design_command_port.md](./051_design_command_port.md) §2 — jwc memory 동사 → memories/hindsight-retain 매핑.
 > R16 확정: gjc 메모리는 user-level 전역(+per-project-tagged 스코핑, settings-schema.ts:1415) — "세션 단위" 우려 해소.
 
-> 상태: 🟡 설계 문서화 완료 — [071_design_memory_merge.md](./071_design_memory_merge.md) (memories 엔진 실사 + 동사→API 매핑, 260612 11:40)
-> + [072_schema_cli_jaw_memory.md](./072_schema_cli_jaw_memory.md) (cli-jaw memory 워크플로우 전수 — kind 분류/FTS5 랭킹/동사 정밀 계약/role별 주입 예산/flush·reflect↔stage1·phase2 대응, 260612 13:10). 잔여: 착수 인터뷰([열린 질문] 7+3건) → 구현.
-> 입력: 사용자 "jwc memory 폴더를 만들어서 확장 가능하게" (R2, 시맨틱 미확정 — 본 MOC의 [기본값]이 1안).
+> 상태: 🟢 설계 확정(인터뷰 260612 01:36) — 구현 착수 가능
+> + [071_design_memory_merge.md](./071_design_memory_merge.md) (memories 엔진 실사 + B 착수 구현 모듈, 260612 13:45 갱신)
+> + [072_schema_cli_jaw_memory.md](./072_schema_cli_jaw_memory.md) (cli-jaw memory 워크플로우 전수 + 확정 결정 반영, 260612 13:45 갱신).
+> 입력: 사용자 "jwc memory 폴더를 만들어서 확장 가능하게" (R2). 인터뷰 260612 01:36에서 경로/표면/검색/save/주입/federation 방침 확정.
 
 ## repo 기본값 (코드 확인 260612 03:09 — 중요 발견)
 
 - **gjc 메모리는 완성된 서브시스템**: `packages/coding-agent/src/memories/index.ts` —
   SQLite 기반(agent db), 2단계 파이프라인(stage1 추출 잡 → global phase2 consolidation),
   watermark/heartbeat 잡 큐, `memory-backend/local-backend.ts` + `hindsight/client.ts`
-- 저장 위치: `getMemoriesDir()` = **`<agentDir>/memories/state`** (utils/dirs.ts:431),
+- 저장 위치: `getMemoriesDir()` = **`<agentDir>/memories/state`** (`packages/utils/src/dirs.ts:434-435`),
   agentDir 기본 = `~/.gjc/agent` → 기본 경로는 `~/.gjc/agent/memories/state`
 - 프롬프트: `prompts/memories/` consolidation/read-path/stage_one_input·system/unavailable
 - cli-jaw 메모리(비교): `~/.cli-jaw/memory/structured/` markdown 파일 + FTS5 — **포맷이 다름** (md vs SQLite)
@@ -20,24 +21,29 @@
 ## 스코프
 
 1. gjc 메모리 엔진 실사 마무리: consolidation 트리거 조건/read-path 주입 시점 정밀 조사 — 본 밴드 첫 문서
-2. [기본값] **gjc 엔진·경로 그대로 사용** (`~/.gjc/agent/memories/state`, SQLite) — 사용자 요구
-   "jwc memory 폴더 + 확장 가능"의 1차 충족은 repo 기본 경로의 규약 문서화로
-3. 표면 커맨드 [확정 D10 — cli-jaw 통일, R14]: `jwc memory search/read/save` — cli-jaw memory 명령과
-   동일 어휘·시맨틱 (엔진은 gjc memories 재사용, 저장소는 jwc 자체 — D6 비공유 유지)
+2. [확정] **gjc 엔진·경로 그대로 사용** (`~/.gjc/agent/memories/state`, SQLite) — 인터뷰 260612 01:36: `~/.jwc/` 홈 분리 없음, D4 재확정.
+3. 표면 커맨드 [확정 D10 — cli-jaw 통일, R14]: `jwc memory search/read/save/context` + `jwc chat search`.
+   엔진은 gjc memories 재사용, 저장소도 gjc 기본 경로 유지. `memory list/init/status/reindex`는 1차 스코프 외.
 
-## 제안 (인터뷰 결정 필요)
+## [확정] 결정 (인터뷰 260612 01:36)
 
-- cli-jaw `structured/` markdown 포맷 호환 레이어 (미래 federation 대비) — repo 기본값은 SQLite라
-  포맷 변환 비용 있음. 안 하면 federation(140)은 검색 API 경유로만
-- `~/.jwc/` 홈 분리 — repo 기본값은 `~/.gjc/agent`. D4(경로 유지)와 일관성 있게 가려면 분리 안 하는 게 맞음
+1. [확정] md 호환 레이어 없음 — 결정 근거: federation(140)은 검색 API 경유, 공통어는 파일 변환이 아니라 `kind` 메타데이터.
+2. [확정] `~/.jwc/` 홈 분리 없음 — 결정 근거: D4 경로 유지와 gjc memories 엔진 diff 최소화.
+3. [확정] manual save는 스키마 무변경으로 `stage1_outputs` 재사용 — 결정 근거: `thread_id = manual:<file>` row + frontmatter `kind` 기록으로 phase2 자연 합류.
+4. [확정] 검색 1차는 SQL LIKE + kind 우선치 + recency 2요소 — 결정 근거: FTS5/RRF/CJK trigram은 후속, LIKE는 CJK에도 1차 자연 동작.
+5. [확정] save 직후 `refreshBaseSystemPrompt()` 호출 — 결정 근거: cli-jaw의 save 후 즉시 재색인 동형을 gjc prompt rebuild로 맞춤.
+6. [확정] 기존 `/memory view|clear|enqueue|rebuild|mm` slash와 신규 동사 통합은 후속 — 결정 근거: CLI `jwc memory ...` 표면을 먼저 고정.
+7. [확정] 쓰기 파이프라인은 이식하지 않음 — 결정 근거: cli-jaw flush/reflect와 gjc stage1/phase2가 각자 자체 보유, 자동 consolidation과 명시 save 중복 허용.
 
 ## 완료 기준
 
 - 세션 간 기억: 세션 A 사실을 세션 B가 회수하는 e2e (repo 파이프라인 검증)
 - 메모리 규약 문서(위치/포맷/확장 방법) 존재
 - consolidation 트리거/주입 시점이 문서화됨
+- Task Snapshot 주입 스냅샷 테스트: 현재 프롬프트로 `searchLocalMemories` 상위 4건이 developer instructions에 병행 주입됨
+- `jwc chat search` 세션 횡단 rollout jsonl grep 테스트
+- `bun run check:ts` 및 기존 rebrand/G002/메모리 가드 green
 
 ## 열린 질문
 
-- gjc 자동 consolidation과 명시 save의 우선순위/중복 처리
-- cli-jaw 메모리와의 포맷 호환 여부 (위 [제안])
+- 없음 — 인터뷰 260612 01:36에서 전부 확정.

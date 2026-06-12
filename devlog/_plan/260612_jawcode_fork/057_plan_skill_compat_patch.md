@@ -71,8 +71,32 @@ if (isJawBrand()) {
 1. 085.5 M3 `brandPromptText` 골격 (공통 엔진 — 085.5와 한 커밋 가능)
 2. 본 플랜 M1 dev 어휘 맵 + M2 분기 + 테스트
 3. 060/070 구현 시 056 §5-1에 따라 stub 문구를 실명령으로 갱신 (테이블 1곳)
+4. §6 P10 (M4 stage-skill-map + M5 주입 2곳) — 085.6 M1(agent-identity) 이후 (주입 텍스트 계약 의존)
 
-## 5. [열린 질문]
+## 5. [확정] (인터뷰 260612 01:36 — 열린 질문 0)
 
-1. cli-jaw 스킬 29종 중 dev 군 밖(search, telegram-send, k-thread-gen 등)도 로드되는데 — 이들의 cli-jaw 서버 의존(예: `cli-jaw browser`)은 056 범위 밖. 전수 확장 vs dev 군 우선 ([기본값 제안: dev 군 우선 — 다른 스킬은 발견 시 테이블 추가])
-2. degraded 안내의 언어 — 스킬 본문이 영어면 영어로 (치환 포맷 이중화) ([기본값 제안: 영어 고정 — 스킬 본문 주류 언어])
+1. 치환 범위: **dev 군 우선** — 다른 스킬(search, telegram-send 등)은 발견 시 테이블 추가 [확정]
+2. degraded 안내 언어: **영어 고정** — 스킬 본문 주류 언어 [확정]
+
+## 6. P10 — 워크플로 단계·role 스킬 주입 (인터뷰 확정 편입, 058 §3 후보의 정식화)
+
+cli-jaw에서 dev 스킬이 "자연스럽게 읽히는" 메커니즘(role/tag→스킬 주입, Phase Guide)의 jwc 동형. 발동 조건: `jawBrand && cliJawSkillsDirExists` — gjc 브랜드 byte-동일 무회귀.
+
+### M4. `gjc-runtime/stage-skill-map.ts` (신규, 순수 데이터 ≤30줄)
+
+| jwc stage | 주입 스킬 (로드된 것만 — 부재 시 해당 항목 생략) |
+|-----------|--------------------------------------------------|
+| p (plan) | dev, dev-architecture |
+| a (audit) | dev-code-reviewer |
+| b (build) | dev (+ 변경 표면별 role 스킬: frontend→dev-frontend, backend→dev-backend, data→dev-data, docs→dev-scaffolding — cli-jaw `ROLE_SKILL_NAME_MAP` 동형) |
+| c (check) | dev-testing |
+
+### M5. 주입 지점 2곳
+
+1. **stage 프롬프트**: `gjc-runtime/orchestrate-runtime.ts:345` `STAGE_PROMPTS[target]` 방출 직전 — 로드된 스킬 셋에서 name 매칭 → 존재하는 것만 "⛔ Before starting this stage, read `/skill:<name>`" 블록 append. 정적 `prompts/jaw/orchestrate-*.md`에 박지 않음 (스킬 존재가 머신별로 다름 + D4 업스트림 충돌 회피).
+2. **audit 서브에이전트**: auditArchitect → dev-architecture, auditPlanner → dev 포인터 1줄 — spawn 프롬프트 조립부에서 동일 resolve.
+
+### 계약 (085.6 §4와 상호)
+
+- 주입 블록 텍스트는 반드시 `agent-identity.ts` 헬퍼(085.6 M1) + `brandPromptText()`(085.5 L2) 경유 — 주입 텍스트가 새 GJC/cli-jaw 어휘 누수원이 되지 않게 단일 레이어 차단.
+- 테스트 추가분: ① stage p 진입 시 dev/dev-architecture 포인터 포함(스킬 존재 시) ② 스킬 부재 머신에서 블록 생략·에러 0 ③ gjc 브랜드 byte-동일.

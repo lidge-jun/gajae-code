@@ -1,16 +1,16 @@
 # 071 — 설계: jwc memory 어댑터 (070 구체화, memories 엔진 실사 기반)
 
-> 상위: [070_moc_memory.md](./070_moc_memory.md). 실사: Docs 직원 (260612 11:40, read-only).
-> 방향 [확정]: 엔진 = gjc memories 그대로, 표면 = `jwc memory search/read/save/context` (cli-jaw 어휘, D10).
+> 상위: [070_moc_memory.md](./070_moc_memory.md). 실사: Docs 직원 (260612 11:40, read-only). 확정 갱신: 인터뷰 260612 01:36.
+> 방향 [확정]: 엔진 = gjc memories 그대로, 경로 = `~/.gjc/agent/memories/state`, 표면 = `jwc memory search/read/save/context` + `jwc chat search` (cli-jaw 어휘, D10).
 > ⚠️ 경로 정정: 070 MOC의 `utils/dirs.ts:431` → 정확히는 **`packages/utils/src/dirs.ts:434`** (`getMemoriesDir`).
 
 ## 1. 엔진 사실 — 핵심 발견
 
 **local memories는 "검색 가능한 메모리 DB"가 아니라 "자동 요약 파이프라인"이다.**
 
-- 활성 조건: `memory.backend === "local"` 또는 legacy `memories.enabled` (`memories/index.ts:120-129`); subagent/세션파일 없음/DB 실패 시 스킵(`:130-140`)
-- **stage1**: 과거 세션 rollout jsonl → 모델 추출 `{raw_memory, rollout_summary, slug}` → `stage1_outputs` upsert (`index.ts:214-260, 576-656`; claim 조건 `storage.ts:136-245` — `source_kind cli|app`만, idle 12h+, 30일 이내, 최대 64건)
-- **phase2**: cwd별 워터마크 잡(`storage.ts:389-472`) → consolidation 모델 → **`MEMORY.md` + `memory_summary.md` + `skills/` 재생성**(`index.ts:720-848`)
+- 활성 조건: `memory.backend === "local"` 또는 legacy `memories.enabled` (`memories/index.ts:1089-1095`); `localBackend.buildDeveloperInstructions()`가 `buildMemoryToolDeveloperInstructions()`로 위임(`memory-backend/local-backend.ts:16-23`)
+- **stage1**: 과거 세션 rollout jsonl → 모델 추출 `{raw_memory, rollout_summary, rollout_slug}` → `stage1_outputs` upsert (`index.ts:232-260`, `storage.ts:327-339`; claim 조건 `storage.ts:136-245` — `source_kind cli|app`만, idle 12h+, 30일 이내, 최대 64건)
+- **phase2**: cwd별 워터마크 잡(`storage.ts:247-260`) → `listStage1OutputsForGlobal()` (`storage.ts:492-520`) → consolidation 모델 → **`MEMORY.md` + `memory_summary.md` + `skills/` 재생성**(`index.ts:720-815`)
 - **read-path**: `memory_summary.md`를 5000토큰 한도로 잘라 developer instructions로 매 프롬프트 리빌드에 주입 (`index.ts:150-175`, `sdk.ts:1570`, `memory-backend/types.ts:38-46`)
 - **SQLite 스키마 3테이블뿐**: `threads` / `stage1_outputs` / `jobs` (`storage.ts:47-88`) — **FTS 없음, 임베딩 없음, 검색 인덱스 없음**
 - backend 공통 인터페이스(`memory-backend/types.ts:26-78`): `start/buildDeveloperInstructions/clear/enqueue(+optional beforeAgentStartPrompt/preCompactionContext)` — **search/read/save 동사가 인터페이스에 없음**
@@ -20,10 +20,11 @@
 
 | jwc 동사 | local 매핑 | hindsight 매핑 | 판정 |
 |----------|-----------|----------------|------|
-| `memory context` | `buildDeveloperInstructions()` 결과 표시 | 동일 인터페이스 | **표면만 신규** — 가장 쉬움 |
-| `memory search <kw>` | **신규** `searchLocalMemories()` — `stage1_outputs.raw_memory/rollout_summary` LIKE + 생성 artifact(MEMORY.md 등) 텍스트 스캔 | `recall(q)`/`listMemories(q)` | local 신규 필요 |
+| `memory context` | **신규** `contextLocalMemory()` — 현재 injection payload 표시 + `manual:<file>`/stage1 ref가 있으면 rollout jsonl 주변 근거 반환 | 동일 인터페이스 payload 표시 | [확정] cli-jaw memory→chat 점프 의미를 gjc rollout 근거로 축소 동형 |
+| `memory search <kw>` | **신규** `searchLocalMemories()` — `stage1_outputs.raw_memory/rollout_summary` LIKE + 생성 artifact(MEMORY.md 등) 텍스트 스캔 + kind 우선치/recency 가산 | `recall(q)`/`listMemories(q)` | [확정] FTS5/RRF 후속, CJK 별도 무대응 |
 | `memory read <ref>` | **신규** `readLocalMemoryArtifact()` — ref 어휘 `summary|memory|raw|stage1:<thread_id>|rollout:<slug>` (+cli-jaw 호환: 파일명이 오면 artifact basename으로 resolve) | `getDocument(id)` | **시맨틱 재설계** — gjc는 파일이 아니라 레코드/생성물 단위 |
-| `memory save <file> <content>` | **신규** `saveLocalMemoryManual()` — `threads`에 `source_kind:"manual"` + `stage1_outputs`에 `thread_id: manual:<file>` upsert → `enqueueGlobalWatermark()` → phase2가 자연 통합. ⚠️ 현 스키마에 manual 계약 없음 — `claimStage1Jobs`는 manual을 건드리지 않고(`cli|app` 필터), `listStage1OutputsForGlobal`은 cwd만 보므로 **phase2 합류는 가능** | `retain(content, {documentId: file})` | local 신규 필요 |
+| `memory save <file> <content>` | **신규** `saveLocalMemoryManual()` — `threads`에 `source_kind:"manual"` + `stage1_outputs`에 `thread_id: manual:<file>` upsert → `enqueueGlobalWatermark()` → `refreshBaseSystemPrompt()` → phase2 자연 통합. `claimStage1Jobs`는 manual을 건드리지 않고(`cli|app` 필터), `listStage1OutputsForGlobal`은 cwd만 보므로 **phase2 합류 가능** | `retain(content, {documentId: file})` | [확정] 스키마 무변경 재사용 |
+| `chat search <kw>` | **신규** rollout jsonl grep — 세션 횡단 `--days/--recent/--context` 유사 옵션 | 해당 없음 | [확정] memory와 별개 명령 |
 
 ## 3. 구현 골격 (050/061 패턴 동형)
 
@@ -33,28 +34,68 @@ packages/coding-agent/src/gjc-runtime/memory-runtime.ts   # 동사 라우팅 —
 packages/coding-agent/test/gjc-runtime/memory-runtime.test.ts
 ```
 
-- `cli.ts` `jawOnlyCommands`에 `{ name: "memory" }` 추가 (D050-24 게이트 재사용)
-- 신규 local 함수 3종은 `memories/` 모듈에 (스키마 소유자 곁): `searchLocalMemories / readLocalMemoryArtifact / saveLocalMemoryManual`
-- save 직후 가시성: local backend는 `beforeAgentStartPrompt` 미구현이라 다음 prompt rebuild까지 반영 지연 — save 성공 메시지에 명시 또는 `refreshBaseSystemPrompt()` 강제 호출(엔진이 startup 완료 시 쓰는 함수, `index.ts:202-211`)
+- `cli.ts` `jawOnlyCommands`에 `{ name: "memory" }`, `{ name: "chat" }` 추가 (D050-24 게이트 재사용)
+- 신규 local 함수는 `memories/` 모듈에 (스키마 소유자 곁): `searchLocalMemories / readLocalMemoryArtifact / saveLocalMemoryManual / contextLocalMemory / buildLocalTaskSnapshot`
+- save 직후 가시성 [확정]: `refreshBaseSystemPrompt()` 강제 호출(엔진이 startup 완료 시 쓰는 함수, `index.ts:202-211`; 세션 메서드 `session/agent-session.ts:3803-3809`)
+- Task Snapshot [확정]: gjc read-path의 `memory_summary.md` 5000토큰 주입(`index.ts:150-175`)과 병행해, 현재 프롬프트로 `searchLocalMemories` 상위 4건을 developer instructions에 추가.
 
-## 4. 완료 기준 (070 MOC 이월 + 구체화)
+## 4. 구현 모듈(M) — B 착수 플랜
 
-- 세션 간 기억 e2e: 세션 A에서 `memory save` → phase2 통합 → 세션 B `memory search`/`context`로 회수
+| # | 대상 파일(repo-relative) | 신규/수정 | 역할 | diff 방향 | 의존 |
+|---|--------------------------|-----------|------|-----------|------|
+| **M1** | `packages/coding-agent/src/gjc-runtime/memory-runtime.ts` | 신규 | `jwc memory` 동사 라우터. backend id(`off/local/hindsight`)별 `search/read/save/context` 분기, 결과 포맷/에러 표준화 | `searchMemory/readMemory/saveMemory/contextMemory/searchChat` export. local은 M2, hindsight는 client 메서드(`hindsight/client.ts:228-389`) 호출. `MemoryBackend` 인터페이스 승격 없음 | 없음 |
+| **M2** | `packages/coding-agent/src/memories/local-query.ts` | 신규 | local SQLite/artifact query 헬퍼 | `searchLocalMemories`, `readLocalMemoryArtifact`, `saveLocalMemoryManual`, `buildLocalTaskSnapshot`. `stage1_outputs` LIKE + `MEMORY.md`/`memory_summary.md` scan. kind=`profile/shared/episode` 가중치와 recency만 적용 | M1 |
+| **M3** | `packages/coding-agent/src/commands/memory.ts` | 신규 | jaw 전용 CLI thin wrapper | `jwc memory search/read/save/context` 파싱. `list/init/status/reindex`는 1차 scope 밖으로 usage에 명시 | M1 |
+| **M4** | `packages/coding-agent/src/commands/chat.ts` | 신규 | `jwc chat search` | rollout jsonl grep 기반 세션 횡단 검색. 옵션 `--days`, `--recent`, `--context` 1차 지원. 저장소는 gjc rollout 경로 helper를 사용하고 memory DB와 분리 | M1 |
+| **M5** | `packages/coding-agent/src/cli.ts` | 수정 | jawOnlyCommands 등록 | 현재 `interview/orchestrate`만 있음(`cli.ts:61-64`). jaw 브랜드에서만 `memory`, `chat` command 추가. gjc 브랜드 diff-0 | M3, M4 |
+| **M6** | `packages/coding-agent/src/memories/index.ts` | 수정 | Task Snapshot 주입 접점 | `buildMemoryToolDeveloperInstructions()`가 기존 `read-path.md` 렌더 뒤에 M2 `buildLocalTaskSnapshot(currentPrompt, 4)`를 병행 append. prompt 텍스트 인자가 필요하면 local backend/M1 경유로 최소 변경 | M2 |
+| **M7** | `packages/coding-agent/src/prompts/memories/read-path.md` 또는 신규 `task-snapshot.md` | 수정/신규 | 주입 블록 문구 | 기존 Memory Guidance는 유지. `## Task Snapshot` 블록은 memory heuristic이며 repo/user 우선 규칙을 반복 | M6 |
+| **M8** | `packages/coding-agent/test/gjc-runtime/memory-runtime.test.ts` | 신규 | 단위/스냅샷 테스트 | local LIKE search/read/save/context, kind 가중치, save 후 refresh 호출 mock, Task Snapshot 상위 4 스냅샷 | M1-M7 |
+| **M9** | `packages/coding-agent/test/commands/memory-command.test.ts` / `chat-command.test.ts` | 신규 | CLI 표면 테스트 | jaw 브랜드 등록, gjc 브랜드 미등록, usage/scope 밖 subcommand 거부, `chat search` 옵션 파싱 | M3-M5 |
+| **M10** | `docs/memory-jwc.md` 또는 `devlog/_plan/260612_jawcode_fork/073_memory_runtime_contract.md` | 신규 | 메모리 규약 문서 | 위치/포맷/ref 어휘/kind 확장법/manual save/Task Snapshot/federation API 경유를 문서화 | M1-M7 |
+
+## 5. 구현 순서·의존
+
+1. M2 local query helper를 먼저 만든다. 스키마 무변경 조건과 `stage1_outputs` upsert를 여기서 고정한다.
+2. M1 runtime router를 붙인다. hindsight는 기존 client API만 얇게 연결하고, local은 M2를 호출한다.
+3. M3/M4/M5 CLI 표면을 붙인다. 기존 `/memory` slash는 건드리지 않는다.
+4. M6/M7 Task Snapshot 병행 주입을 붙인다. `memory_summary.md` 5000토큰 주입은 유지한다.
+5. M8/M9 테스트 후 M10 규약 문서를 작성한다.
+
+## 6. 테스트 표
+
+| 테스트 | 대상 | 기대 |
+|--------|------|------|
+| local search LIKE | M2 | `stage1_outputs.raw_memory/rollout_summary`와 `MEMORY.md`/`memory_summary.md` hit 반환, 상위 8 제한 |
+| kind/recency ranking | M2 | `profile > shared > episode` 성격 가중치와 최신 episode boost가 반영됨 |
+| manual save | M2 | `thread_id=manual:<file>` stage1 row 생성, frontmatter에 `kind` 기록, `enqueueGlobalWatermark()` 호출 |
+| save prompt refresh | M1/M3 | save 성공 후 `refreshBaseSystemPrompt()` 1회 호출 |
+| read refs | M2 | `summary`, `memory`, `stage1:<thread_id>`, `rollout:<slug>`, basename read 모두 동작 |
+| memory context | M2/M1 | manual/stage1 record의 thread/cwd/source timestamp에서 주변 rollout/chat 근거를 반환 |
+| Task Snapshot | M6/M8 | 현재 프롬프트 query로 상위 4건이 developer instructions에 병행 주입되는 스냅샷 |
+| chat search | M4/M9 | rollout jsonl grep으로 `--days/--recent/--context` 결과를 반환 |
+| brand gate | M5/M9 | jaw 브랜드에서 `memory/chat` 등록, gjc 브랜드에서 미등록 |
+| 전체 게이트 | repo | `bun run check:ts` + 기존 rebrand/G002/메모리 가드 green |
+
+## 7. 완료 기준 (070 MOC 이월 + 구체화)
+
+- 세션 간 기억 e2e: 세션 A에서 `memory save` → 세션 B `memory search`/`context`로 회수
 - `search/read/save/context` 4동사 단위 테스트 + manual row가 phase2에 합류하는 통합 테스트
 - gjc 브랜드: `memory` 명령 미등록(diff-0), 기존 `/memory` slash 무회귀
 - 메모리 규약 문서(위치 `~/.gjc/agent/memories/state`·포맷·ref 어휘·확장법)
+- Task Snapshot 주입 스냅샷 테스트
+- `jwc chat search` rollout jsonl grep 테스트
+- `bun run check:ts` 및 기존 가드 green
 
-## 5. [열린 질문]
+## 8. [확정] (인터뷰 260612 01:36 — 열린 질문 0)
 
-**기존(070 MOC) 유지**: ① cli-jaw `structured/` md 호환 레이어 ② `~/.jwc/` 홈 분리 (D4상 비분리 권장)
-
-**실사로 신규 발견**:
-3. `search/read/save`를 `MemoryBackend` 공통 인터페이스로 승격 vs `memory-runtime` 전용 헬퍼 — [기본값 제안: 헬퍼 먼저, 인터페이스 승격은 hindsight 대칭 구현 시]
-4. manual 저장: `stage1_outputs` 재사용(`manual:<file>` row) vs 별도 `manual_memories` 테이블 — [기본값 제안: 재사용, 스키마 무변경]
-5. local search: SQL LIKE+artifact grep vs FTS5 추가 — [기본값 제안: LIKE 먼저, FTS5는 후속]
-6. 기존 `/memory view|clear|enqueue|rebuild|mm` slash와 신규 동사 통합 vs CLI 전용 선행 — [기본값 제안: CLI 선행, slash 통합은 별도]
-7. save 후 즉시 반영(prompt refresh 강제) 여부 — [기본값 제안: refreshBaseSystemPrompt 호출]
-
-## 6. 착수 순서 제안
-
-1. `memory context`(기존 API 노출만) → 2. `search`(LIKE) → 3. `read`(ref 어휘) → 4. `save`(manual row+enqueue) → 5. e2e. 각 단계가 독립 커밋 가능.
+1. [확정] `~/.jwc/` 홈 분리 없음 — gjc memories 엔진·경로 그대로 사용.
+2. [확정] cli-jaw `structured/` md 변환 레이어 없음 — federation(140)은 검색 API 경유.
+3. [확정] `search/read/save`는 `memory-runtime` 전용 헬퍼 먼저 — `MemoryBackend` 인터페이스 승격은 hindsight 대칭 구현 시.
+4. [확정] manual 저장은 `stage1_outputs` 재사용(`manual:<file>` row) — 별도 테이블 없음.
+5. [확정] local search는 SQL LIKE + artifact scan + kind/recency 2요소 — FTS5/RRF 후속.
+6. [확정] 기존 `/memory view|clear|enqueue|rebuild|mm` slash와 신규 동사 통합은 후속 — CLI 선행.
+7. [확정] save 후 즉시 반영은 `refreshBaseSystemPrompt()` 호출.
+8. [확정] Task Snapshot 동형 주입 추가 — `memory_summary.md` 단일 요약과 병행.
+9. [확정] `jwc chat search` 수용 — rollout jsonl grep 기반.
+10. [확정] kind 메타데이터 기록 — gjc `MEMORY.md`→profile상당, `memory_summary.md`→shared상당, stage1 raw/manual→episode상당.

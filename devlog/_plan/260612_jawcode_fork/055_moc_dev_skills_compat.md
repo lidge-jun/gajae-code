@@ -1,6 +1,7 @@
 # 055 MOC — cli-jaw dev 스킬군 jwc 호환 (055–059 밴드)
 
-> 상태: 🟡 분석·설계 문서화 완료(055–057), 구현 미착수. 입력: 사용자 "dev 스킬들도 jwc와 호환 — 55부터 60 전까지" (260612 11:57).
+> 상태: 🟢 설계 확정 (인터뷰 260612 01:36 — 열린 질문 0, 구현 착수 가능). 치환은 dev 군 우선·degraded 영어 고정 [확정], P10(워크플로 단계·role 스킬 주입)이 057 §6으로 정식 편입.
+> 입력: 사용자 "dev 스킬들도 jwc와 호환 — 55부터 60 전까지" (260612 11:57).
 > 전수 분석: Backend 직원 (260612 12:05, /Users/jun/.cli-jaw/skills/ 12종 + jwc 로딩 코드).
 > 연계: [085.5](./085.5_plan_prompt_rebrand.md) 런타임 치환 레이어(brandPromptText/buildSkillPromptMessage)를 cli-jaw provider 스킬로 확장.
 

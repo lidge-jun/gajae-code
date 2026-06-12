@@ -1,6 +1,6 @@
 # 072 — 스키마: cli-jaw memory 시스템 전수 (071 어댑터의 원본 계약)
 
-> 상위: [070_moc_memory.md](./070_moc_memory.md). 조사: CLI 서브에이전트 (260612 13:05, cli-jaw 소스 `/Users/jun/Developer/new/700_projects/cli-jaw` 기준 경로).
+> 상위: [070_moc_memory.md](./070_moc_memory.md). 조사: Docs 직원 (260612 13:05, cli-jaw 소스 `/Users/jun/Developer/new/700_projects/cli-jaw` 기준 경로). 확정 갱신: 인터뷰 260612 01:36.
 > 071이 gjc memories **엔진** 실사였다면 072는 cli-jaw memory **워크플로우** 전수 — D10 표면 동형의 필드·랭킹·주입 계약을 고정. 원본 스펙 문서: `docs/memory-architecture.md`, `structure/memory_architecture.md`, `skills_ref/memory/SKILL.md`.
 
 ## 1. 저장 레이아웃 — kind 분류 체계 (071 ref 어휘의 원본)
@@ -19,7 +19,7 @@
 
 부속: `meta.json`(AdvancedMeta: schemaVersion/phase/homeId/bootstrapStatus/importedCounts), `index.sqlite`, `.reflect-meta.json`. 백업 `JAW_HOME/backup-memory-v1/`.
 
-**gjc 대비**: gjc memories는 kind 개념 없음(stage1 레코드 + 생성물 3종). 071 ref 어휘(`summary|memory|raw|stage1:|rollout:`)는 **생성물 단위** — cli-jaw는 **경로+kind 단위**. federation(140) 교환 시 kind 태깅이 공통어가 됨 → 071 [열린 질문 1]의 호환 레이어는 "md 변환"이 아니라 **kind 메타데이터 매핑**이 본질 [기본값 제안: gjc 측 `MEMORY.md`→profile상당, `memory_summary.md`→shared상당, stage1 raw→episode상당].
+**gjc 대비 [확정]**: gjc memories는 kind 개념 없음(stage1 레코드 + 생성물 3종). 071 ref 어휘(`summary|memory|raw|stage1:|rollout:`)는 **생성물 단위** — cli-jaw는 **경로+kind 단위**. federation(140) 교환 시 kind 태깅이 공통어가 됨. 인터뷰 260612 01:36 결정: md 변환 레이어 없이 **kind 메타데이터 매핑**만 채택 — gjc `MEMORY.md`→profile상당, `memory_summary.md`→shared상당, stage1 raw/manual→episode상당.
 
 ## 2. 검색 엔진 — FTS5 3-테이블 + 랭킹 공식
 
@@ -30,18 +30,18 @@
 - 최종 점수 = BM25 + kind 우선치(§1 표) + 반감기 recency boost + exact(-2.0)/header phrase(-1.0) — 낮을수록 좋음, 상위 8 반환 (`indexing.ts:310-354`, `runtime.ts:116`)
 - 출력 포맷: `<relpath>:<start>-<end>\n<snippet ≤700자>` (`indexing.ts:356-365`)
 
-**071 보강**: gjc local 검색 신규 구현(071 §2 `searchLocalMemories` LIKE) 시 cli-jaw 랭킹 중 **kind 우선치+recency 2요소만** 단순 이식 가능(LIKE 점수 위에 가산) — FTS5/RRF는 [열린 질문 5]대로 후속 유지. CJK trigram 경로는 한국어 사용자 필수 — gjc LIKE는 CJK에 자연 동작하므로 1차에선 무대응 [기본값].
+**071 보강 [확정]**: gjc local 검색 신규 구현(071 §2 `searchLocalMemories`)은 1차에서 **SQL LIKE + artifact scan + kind 우선치 + recency 2요소**만 이식한다. FTS5/RRF는 후속. CJK trigram 경로는 1차 무대응 — LIKE가 한국어에도 자연 동작하므로 별도 tokenizer를 도입하지 않는다. 결정 근거: 인터뷰 260612 01:36.
 
 ## 3. CLI 동사 정밀 계약 (071 §2 매핑 표의 좌변 고정)
 
 | 동사 | 시그니처 | 구현 | 071 매핑에 추가할 정밀 |
 |------|----------|------|------------------------|
-| `memory search <q>` | `--chat`(메시지 DB 병행) | `searchAdvancedMemory` (`src/routes/jaw-memory.ts:70-84`) | 반환 상위 8, snippet 700자 — jwc search도 동일 상한 [기본값] |
-| `memory read <relpath>` | `--lines <a>-<b>` | `readAdvancedMemorySnippet` (`runtime.ts:224-238`) | **줄범위 인자** — 071 ref 어휘에 `:lines` 추가 [기본값] |
-| `memory save <relpath> <content>` | soul은 별도 경로 | save 후 **단일 파일 즉시 재색인** (`runtime.ts:88-91`) | 071 [열린 질문 7](save 후 refresh)의 cli-jaw 선례 = 즉시 색인 → jwc도 `refreshBaseSystemPrompt()` 호출이 동형 |
-| `memory context <relpath>` | `--window <h>`(기본 4h) `--limit <n>` | frontmatter created_at 중심 ±window의 메시지 DB 검색 (`jaw-memory.ts:110-178`) | **memory→chat 점프** — gjc 대응물: stage1 row의 thread_id→rollout jsonl 역참조로 동형 구현 가능 [기본값 제안: 071 동사에 `context` 4번째로 이미 있음 — 구현 명세를 이걸로] |
-| `memory list/init/status/reindex` | — | `runtime.ts:93-108,240-326` | jwc 1차 스코프 외 [기본값] |
-| `chat search <q>` | `--days N --recent N --context N` | 메시지 DB LIKE | gjc 대응: 세션 rollout jsonl grep — [열린 질문 9 신규] jwc 수용 여부 |
+| `memory search <q>` | `--chat`(메시지 DB 병행) | `searchAdvancedMemory` (`src/routes/jaw-memory.ts:70-84`) | [확정] 반환 상위 8, snippet 700자 상한. jwc 1차는 `--chat` 미통합, `jwc chat search`로 분리 |
+| `memory read <relpath>` | `--lines <a>-<b>` | `readAdvancedMemorySnippet` (`runtime.ts:224-238`) | [확정] jwc ref 어휘에 줄범위 옵션 추가: `summary|memory|raw|stage1:<thread_id>|rollout:<slug>` + `--lines` |
+| `memory save <relpath> <content>` | soul은 별도 경로 | save 후 **단일 파일 즉시 재색인** (`runtime.ts:88-91`) | [확정] jwc는 `stage1_outputs` manual row + `refreshBaseSystemPrompt()` 호출로 즉시 반영 |
+| `memory context <relpath>` | `--window <h>`(기본 4h) `--limit <n>` | frontmatter created_at 중심 ±window의 메시지 DB 검색 (`jaw-memory.ts:110-178`) | [확정] gjc 대응물은 `manual:<file>`/stage1 row의 thread_id·timestamp→rollout jsonl 역참조 |
+| `memory list/init/status/reindex` | — | `runtime.ts:93-108,240-326` | [확정] jwc 1차 스코프 외 |
+| `chat search <q>` | `--days N --recent N --context N` | 메시지 DB LIKE | [확정] jwc 수용. gjc 대응은 세션 rollout jsonl grep 기반 세션 횡단 대화 검색 |
 
 ## 4. 주입 계약 — role 스코핑 + 예산 (jwc 주입 설계의 원본)
 
@@ -51,7 +51,7 @@
 - Task Snapshot: 현재 프롬프트로 인덱스 검색 → **다양화**(episode 최대 2, 타 kind 1, 파일당 1) → 상위 4 히트 (`runtime.ts:173-218`)
 - 블록 포맷: `## Memory Runtime`(role 명시) + `## Profile Context` + `## Soul & Identity` + `## Task Snapshot`
 
-**071 보강**: gjc read-path는 `memory_summary.md` 단일 5000토큰 주입(071 §1) — cli-jaw는 **질의 연동 선별 주입**. jwc 어댑터 M2 후보로 "Task Snapshot 동형: 현재 프롬프트로 `searchLocalMemories` 상위 4를 developer instructions에 추가" [열린 질문 10 신규 — 토큰 예산 trade-off]. role 차등은 gjc subagent 구조와 정합(서브에이전트엔 요약 미주입이 이미 기본).
+**071 보강 [확정]**: gjc read-path는 `memory_summary.md` 단일 5000토큰 주입(071 §1) — cli-jaw는 **질의 연동 선별 주입**. jwc 어댑터는 Task Snapshot 동형을 추가한다: 현재 프롬프트로 `searchLocalMemories` 상위 4건을 developer instructions에 append한다. 기존 `memory_summary.md` 주입과 병행하며, role 차등은 후속 최적화로 둔다. 결정 근거: 인터뷰 260612 01:36.
 
 ## 5. 쓰기 파이프라인 — flush·reflect (gjc stage1·phase2의 대응물)
 
@@ -61,16 +61,29 @@
 | **reflect** (`src/memory/reflect.ts:37-300`) | 최근 7일 episode를 휴리스틱 분류(키워드→profile/preferences/decisions/projects/runbooks/soul)로 승격, 타깃당 6·총 24 캡 | **phase2 consolidation** (모델 기반 MEMORY.md 재생성) — cli-jaw는 휴리스틱, gjc는 모델 |
 | 승격 타깃 upsert | profile은 섹션 upsert, shared는 `## <date>` append, soul은 `applySoulUpdate` 경유 | gjc는 전체 재생성 |
 
-**판정**: 쓰기 파이프라인은 **양쪽 모두 자체 보유 — 이식 불필요** [확정]. 071 save(manual row)→phase2 합류 설계가 cli-jaw의 "save→즉시 색인→reflect가 자연 승격"과 의미 동형임을 확인. 070 [열린 질문 "자동 consolidation vs 명시 save 중복"]의 cli-jaw 답: 중복 허용 + reflect가 80자 prefix dedup (`reflect.ts`) — gjc도 동일 원칙(중복 허용, phase2가 정리) 채택 [기본값].
+**판정 [확정]**: 쓰기 파이프라인은 **양쪽 모두 자체 보유 — 이식 불필요**. 071 save(manual row)→phase2 합류 설계가 cli-jaw의 "save→즉시 색인→reflect가 자연 승격"과 의미 동형임을 확인. 070 질문 "자동 consolidation vs 명시 save 중복"은 **중복 허용 + phase2가 정리**로 확정. 결정 근거: 인터뷰 260612 01:36.
 
 ## 6. Dashboard L2 federation (140 밴드 선행 참조)
 
 `src/manager/routes/dashboard-memory.ts`: `instances`/`search(mode=fts5|embedding|hybrid)`/`read`/`chat/search` — 전부 **readonly** (readonly DB open + 경로 탈출 검증), 쓰기는 L1 전용. 임베딩은 옵션(OFF 기본, RRF hybrid, `vec_chunks` 테이블, provider 5종).
 
-**140 함의**: jwc가 federation에 참여하려면 cli-jaw 인스턴스 규약(`index.sqlite` 존재 + structured/ 레이아웃) 또는 **검색 API 노출** 중 하나 — 071 [열린 질문 1]에서 "md 변환 없으면 검색 API 경유"라 한 것의 구체 계약이 이 4 endpoint. jwc 측은 SQLite 스키마가 다르므로 API 경유가 [기본값] 재확인.
+**140 함의 [확정]**: jwc가 federation에 참여하려면 cli-jaw 인스턴스 규약(`index.sqlite` 존재 + structured/ 레이아웃) 또는 **검색 API 노출** 중 하나가 필요하다. jwc 측은 SQLite 스키마가 다르므로 API 경유로 확정한다. md 변환 레이어는 만들지 않는다. 결정 근거: 인터뷰 260612 01:36.
 
-## 7. [열린 질문] (071 §5에 추가)
+## 7. [확정] 결정 포인트 (인터뷰 260612 01:36)
 
-9. `jwc chat search`(세션 횡단 대화 검색) 수용 — rollout jsonl grep 기반, memory와 별개 동사
-10. Task Snapshot 동형 주입(질의 연동 상위 4 선별) — gjc 단일 요약 주입과 병행 시 토큰 예산
-11. kind 태깅 메타데이터(§1) — manual save 시 frontmatter에 kind 기록해 federation 공통어 확보
+9. [확정] `jwc chat search` 수용 — rollout jsonl grep 기반, memory와 별개 동사.
+10. [확정] Task Snapshot 동형 주입 — 질의 연동 상위 4 선별, gjc 단일 요약 주입과 병행.
+11. [확정] kind 태깅 메타데이터 — manual save 시 frontmatter에 kind 기록해 federation 공통어 확보.
+12. [확정] memory list/init/status/reindex는 1차 scope 외.
+13. [확정] FTS5/RRF/CJK trigram은 후속.
+14. [확정] slash `/memory` 통합은 후속, CLI `jwc memory ...` 선행.
+
+## 8. B 착수 acceptance
+
+| AC | 검증 |
+|----|------|
+| 세션 A 사실을 세션 B가 회수 | `jwc memory save ...` 후 새 세션에서 `jwc memory search/read/context`로 회수 |
+| Task Snapshot 주입 | 현재 프롬프트 기반 상위 4건이 developer instructions에 포함되는 스냅샷 테스트 |
+| chat search | rollout jsonl grep으로 `--days/--recent/--context` 결과 확인 |
+| 규약 문서 | 위치/포맷/ref 어휘/kind 확장법/manual save/federation API 경유 문서 존재 |
+| 타입/가드 | `bun run check:ts` + 기존 rebrand/G002/메모리 가드 green |
