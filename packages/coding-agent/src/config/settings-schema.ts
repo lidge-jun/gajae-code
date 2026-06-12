@@ -73,6 +73,7 @@ export type StatusLineSegmentId =
 	| "pi" // legacy custom alias; public presets use gajae
 	| "model"
 	| "mode"
+	| "pabcd"
 	| "path"
 	| "git"
 	| "pr"
@@ -677,6 +678,18 @@ export const SETTINGS_SCHEMA = {
 			label: "Pin Composer to Bottom",
 			description:
 				"Keep the input composer pinned to the terminal bottom, filling the gap above with blank space (default: on for jwc)",
+		},
+	},
+	// Unset = brand default (jwc: commit, engine brand: verbose). Devlog 99.20.04.
+	"tool.renderMode": {
+		type: "enum",
+		values: ["commit", "verbose"] as const,
+		default: undefined,
+		ui: {
+			tab: "appearance",
+			label: "Tool Render Mode",
+			description:
+				"commit: active tools preview in a live zone above the input and enter history collapsed; verbose: tool previews stream inline in the transcript (legacy)",
 		},
 	},
 	// Display rendering

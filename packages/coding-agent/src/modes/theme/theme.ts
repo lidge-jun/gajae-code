@@ -35,6 +35,9 @@ export type SymbolKey =
 	| "status.warning"
 	| "status.info"
 	| "status.pending"
+	| "pabcd.current"
+	| "gauge.full"
+	| "gauge.empty"
 	| "status.disabled"
 	| "status.enabled"
 	| "status.running"
@@ -194,6 +197,9 @@ export type SymbolKey =
 type SymbolMap = Record<SymbolKey, string>;
 
 const UNICODE_SYMBOLS: SymbolMap = {
+	"pabcd.current": "▶",
+	"gauge.full": "▰",
+	"gauge.empty": "▱",
 	// Status
 	"status.success": "✔",
 	"status.error": "✘",
@@ -358,6 +364,9 @@ const UNICODE_SYMBOLS: SymbolMap = {
 };
 
 const NERD_SYMBOLS: SymbolMap = {
+	"pabcd.current": "\uf04b",
+	"gauge.full": "▰",
+	"gauge.empty": "▱",
 	// Status Indicators
 	// pick:  | alt:   
 	"status.success": "\uf00c",
@@ -618,6 +627,9 @@ const NERD_SYMBOLS: SymbolMap = {
 };
 
 const ASCII_SYMBOLS: SymbolMap = {
+	"pabcd.current": ">",
+	"gauge.full": "=",
+	"gauge.empty": "-",
 	// Status Indicators
 	"status.success": "[ok]",
 	"status.error": "[!!]",

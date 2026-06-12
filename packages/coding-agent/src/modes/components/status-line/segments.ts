@@ -151,6 +151,41 @@ function renderGoalMode(ctx: SegmentContext, mode: { enabled: boolean; paused: b
 	return { content: theme.fg(color, parts.join(" ")), visible: true };
 }
 
+const PABCD_ORDER = ["i", "p", "a", "b", "c", "d"] as const;
+
+function pabcdGateChip(state: NonNullable<SegmentContext["pabcd"]>): string | null {
+	if (state.stage === "a") {
+		if (state.auditStatus === "fail") return theme.fg("error", `\u2717a${state.aRound ?? 1}`);
+		if (state.auditStatus !== "pass") return theme.fg("warning", `${theme.symbol("status.pending")}audit`);
+	}
+	if (state.stage === "b" && state.verificationStatus !== "done") {
+		return state.verificationStatus === "needs_fix"
+			? theme.fg("error", "\u2717b")
+			: theme.fg("warning", `${theme.symbol("status.pending")}verify`);
+	}
+	return null;
+}
+
+/** 99.04.02 — IPABCD stage strip: past=dim, current=accent+marker, rest=muted. */
+const pabcdSegment: StatusLineSegment = {
+	id: "pabcd",
+	render(ctx) {
+		const state = ctx.pabcd;
+		if (!state?.active || !PABCD_ORDER.includes(state.stage as (typeof PABCD_ORDER)[number])) {
+			return { content: "", visible: false };
+		}
+		const idx = PABCD_ORDER.indexOf(state.stage as (typeof PABCD_ORDER)[number]);
+		const band = PABCD_ORDER.map((stage, i) => {
+			const ch = stage.toUpperCase();
+			if (i < idx) return theme.fg("dim", ch);
+			if (i === idx) return theme.fg("accent", `${theme.symbol("pabcd.current")}${ch}`);
+			return theme.fg("muted", ch);
+		}).join(theme.fg("dim", "\u00b7"));
+		const chip = pabcdGateChip(state);
+		return { content: chip ? `${band} ${chip}` : band, visible: true };
+	},
+};
+
 const modeSegment: StatusLineSegment = {
 	id: "mode",
 	render(ctx) {
@@ -547,6 +582,7 @@ export const SEGMENTS: Record<StatusLineSegmentId, StatusLineSegment> = {
 	pi: legacyPiSegment,
 	model: modelSegment,
 	mode: modeSegment,
+	pabcd: pabcdSegment,
 	path: pathSegment,
 	git: gitSegment,
 	pr: prSegment,
