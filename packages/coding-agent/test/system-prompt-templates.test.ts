@@ -270,7 +270,7 @@ describe("system Handlebars prompt templates", () => {
 			});
 
 			expect(systemPrompt).toHaveLength(2);
-			expect(systemPrompt[0]).toContain("<gajae-code-system-prompt>");
+			expect(systemPrompt[0]).toContain("<jawcode-system-prompt>");
 			expect(systemPrompt[0]).toContain("<soul>");
 			expect(systemPrompt[0]).toContain("The Boss’s Orders = Absolute Obedience");
 			expect(systemPrompt[0]).toContain("<system-prompt-customization>");

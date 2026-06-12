@@ -17,7 +17,7 @@ This session's bash tool is restricted. It only accepts commands beginning with:
 {{#each restrictedAllowedPrefixes}}
 - `{{this}}`
 {{/each}}
-Use it only for sanctioned GJC workflow CLI persistence or state read/write/contract operations; per-command env overrides and all other shell command shapes are blocked before execution.
+Use it only for sanctioned jwc workflow CLI persistence or state read/write/contract operations; per-command env overrides and all other shell command shapes are blocked before execution.
 </restricted-role-agent-mode>
 {{/if}}
 
