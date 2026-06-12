@@ -47,6 +47,7 @@ import {
 } from "./sdk";
 import type { AgentSession } from "./session/agent-session";
 import type { AuthStorage } from "./session/auth-storage";
+import { isJawBrand } from "./discovery/helpers";
 import { resolveResumableSession, type SessionInfo, SessionManager } from "./session/session-manager";
 import { formatModelOnboardingGuidance } from "./setup/model-onboarding-guidance";
 import { executeBuiltinSlashCommand } from "./slash-commands/builtin-registry";
@@ -55,7 +56,15 @@ import type { LspStartupServerInfo } from "./tools";
 import { getDisplayChangelogEntries, getNewEntries } from "./utils/changelog";
 import type { EventBus } from "./utils/event-bus";
 
-async function checkForNewVersion(currentVersion: string): Promise<string | undefined> {
+export async function checkForNewVersion(currentVersion: string): Promise<string | undefined> {
+	// 99.05-W1: the jaw bundle has no legitimate npm update target — the npm
+	// name "jwc" is squatted by an unrelated package (jwc@1.0.4 "javascript web
+	// component"), so comparing against it would show false banners pointing at
+	// foreign code. Skip the remote check entirely until a real package name is
+	// secured (re-enable condition documented in devlog 99.05.00).
+	if (isJawBrand()) {
+		return;
+	}
 	if (!settings.get("startup.checkUpdate")) {
 		return;
 	}
