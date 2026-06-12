@@ -258,7 +258,7 @@ async function askSingleQuestion(
 				? {
 						customInputListSlot: true,
 						listSlotCustomInput: {
-							label: `${optionLabels.length + 1}. 출력창`,
+							label: `${optionLabels.length + 1}. Type your own`,
 							onSubmit: (text: string) => {
 								inlineInput = text;
 							},

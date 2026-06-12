@@ -1,6 +1,6 @@
 ---
 name: team
-description: Multi-worker jwc tmux team orchestration
+description: IPABCD B-stage coordinated execution — multi-worker jwc tmux team orchestration
 
 source: "forked from upstream team skill and rebranded for jwc"
 ---

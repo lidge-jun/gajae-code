@@ -1115,6 +1115,25 @@ export class TUI extends Container {
 		return lines;
 	}
 
+	/** Frame-length floor while the pinned frame overflows the viewport (083.7 §9). */
+	#viewportFillFloor = 0;
+	/** Blank rows currently held by the floor between content and composer (083.7 §10). */
+	#viewportFillGap = 0;
+
+	/**
+	 * Collapse the post-overflow gap the viewport-fill floor accumulated
+	 * (083.7 §10): resets the floor and forces a full repaint, so the
+	 * transcript tail hugs the composer again. The full repaint re-emits the
+	 * entire frame, so terminal scrollback is rebuilt consistently. Call at
+	 * quiet points (turn end) — no-op when there is no gap.
+	 */
+	compactViewportFill(): void {
+		if (this.#viewportFillGap === 0) return;
+		this.#viewportFillFloor = 0;
+		this.#viewportFillGap = 0;
+		this.requestRender(true, "viewportFill compact");
+	}
+
 	/**
 	 * Replace the first ViewportFill sentinel with enough blank lines to pad
 	 * the frame to the viewport height, pinning everything after it to the
@@ -1123,7 +1142,10 @@ export class TUI extends Container {
 	 */
 	#expandViewportFill(lines: string[], height: number): string[] {
 		const first = lines.indexOf(VIEWPORT_FILL_SENTINEL);
-		if (first === -1) return lines;
+		if (first === -1) {
+			this.#viewportFillFloor = 0;
+			return lines;
+		}
 		const expandStart = renderMetrics.now();
 		const result: string[] = [];
 		let sentinels = 0;
@@ -1131,12 +1153,24 @@ export class TUI extends Container {
 			if (line === VIEWPORT_FILL_SENTINEL) sentinels++;
 			else result.push(line);
 		}
+		// While content still overflows the viewport, keep the frame length
+		// monotonic (083.7 §9): scrolled-out rows cannot be reclaimed from the
+		// terminal buffer, so letting the frame shrink in place (autocomplete
+		// close, tool collapse) would strand the composer above permanently
+		// blank buffer rows. The fill absorbs the delta instead — the gap sits
+		// ABOVE the composer, which stays on the terminal floor. Once content
+		// fits the viewport again, the existing full-redraw paths reset the
+		// buffer, so the floor drops back to the plain viewport height.
+		const target = result.length > height ? Math.max(height, this.#viewportFillFloor) : height;
+		const overflowed = result.length > height;
 		// Fill counts against content lines only (all sentinels excluded).
-		const fill = Math.max(0, height - result.length);
+		const fill = Math.max(0, target - result.length);
 		if (fill > 0) {
 			const blanks = new Array<string>(fill).fill("");
 			result.splice(first, 0, ...blanks);
 		}
+		this.#viewportFillFloor = result.length > height ? result.length : 0;
+		this.#viewportFillGap = overflowed ? fill : 0;
 		if (renderMetrics.enabled) renderMetrics.recordHelper("viewportFill", renderMetrics.now() - expandStart);
 		return result;
 	}

@@ -246,3 +246,85 @@ describe("ViewportFill boundary crossing (083.6 worst case)", () => {
 		tui.stop();
 	});
 });
+
+describe("ViewportFill post-overflow shrink floor (083.7 §9)", () => {
+	it("keeps the composer on the floor when the frame shrinks in place while still overflowing (autocomplete close)", async () => {
+		const term = new VirtualTerminal(60, 12);
+		const content = new MutableContent(Array.from({ length: 30 }, (_v, i) => `chat-${i}`));
+		const tui = pinnedTui(term, content);
+		tui.start();
+		await flushRender(term);
+		expect(term.getViewport()[11]).toBe("[footer]");
+
+		// Tail-only shrink: like the slash-autocomplete dropdown closing — the
+		// first 25 lines stay byte-identical, the frame just loses 5 rows.
+		content.setLines(Array.from({ length: 25 }, (_v, i) => `chat-${i}`));
+		tui.requestRender();
+		await flushRender(term);
+
+		const viewport = term.getViewport();
+		// Composer must remain on the terminal floor — the regression was a
+		// floating composer with permanently blank buffer rows below it.
+		expect(viewport[9]).toBe("[status]");
+		expect(viewport[10]).toBe("> input");
+		expect(viewport[11]).toBe("[footer]");
+		tui.stop();
+	});
+
+	it("keeps the composer on the floor when a tool collapses while the transcript still overflows", async () => {
+		const term = new VirtualTerminal(60, 12);
+		const base = Array.from({ length: 20 }, (_v, i) => `chat-${i}`);
+		const content = new MutableContent([...base, ...Array.from({ length: 10 }, (_v, i) => `tool-${i}`)]);
+		const tui = pinnedTui(term, content);
+		tui.start();
+		await flushRender(term);
+		expect(term.getViewport()[11]).toBe("[footer]");
+
+		// 083.1 auto-collapse: the 10-line preview becomes one line mid-turn.
+		content.setLines([...base, "tool-collapsed"]);
+		tui.requestRender();
+		await flushRender(term);
+
+		const viewport = term.getViewport();
+		expect(viewport[9]).toBe("[status]");
+		expect(viewport[10]).toBe("> input");
+		expect(viewport[11]).toBe("[footer]");
+		tui.stop();
+	});
+});
+
+describe("ViewportFill gap compaction (083.7 §10)", () => {
+	it("compactViewportFill collapses the post-overflow gap so content hugs the composer", async () => {
+		const term = new VirtualTerminal(60, 12);
+		const content = new MutableContent(Array.from({ length: 30 }, (_v, i) => `chat-${i}`));
+		const tui = pinnedTui(term, content);
+		tui.start();
+		await flushRender(term);
+
+		// Shrink while overflowing — the floor keeps the composer pinned with a
+		// 5-row gap above it (§9 behavior).
+		content.setLines(Array.from({ length: 25 }, (_v, i) => `chat-${i}`));
+		tui.requestRender();
+		await flushRender(term);
+		expect(term.getViewport()[11]).toBe("[footer]");
+		expect(term.getViewport()[8].trim()).toBe(""); // gap row above composer
+
+		// Turn end: compact the gap — content tail hugs the composer again.
+		tui.compactViewportFill();
+		await flushRender(term);
+
+		const viewport = term.getViewport();
+		expect(viewport[8]).toBe("chat-24"); // last content row directly above composer
+		expect(viewport[9]).toBe("[status]");
+		expect(viewport[11]).toBe("[footer]");
+		// Scrollback rebuilt consistently — earlier transcript still reachable.
+		expect(term.getScrollBuffer().some(line => line === "chat-0")).toBeTrue();
+
+		// No gap → second call is a no-op (no extra full redraw).
+		const redraws = tui.fullRedraws;
+		tui.compactViewportFill();
+		await flushRender(term);
+		expect(tui.fullRedraws).toBe(redraws);
+		tui.stop();
+	});
+});

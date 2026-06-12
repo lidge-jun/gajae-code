@@ -76,7 +76,7 @@ function parseInputFlag(argv: string[]): Record<string, unknown> {
 
 export default class Team extends Command {
 	static description =
-		`Run native ${APP_NAME.toUpperCase()} tmux team orchestration from inside an existing tmux/${APP_NAME.toUpperCase()} --tmux session; --dry-run writes ephemeral .jwc/state/team state only`;
+		`Run native ${APP_NAME.toUpperCase()} B-stage coordinated execution (tmux multi-worker team) from inside an existing tmux/${APP_NAME.toUpperCase()} --tmux session; --dry-run writes ephemeral .jwc/state/team state only`;
 	static strict = false;
 
 	static args = {

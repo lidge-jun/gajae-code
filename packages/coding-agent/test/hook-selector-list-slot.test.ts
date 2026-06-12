@@ -15,7 +15,7 @@ function renderText(component: HookSelectorComponent, width = 80): string {
 }
 
 describe("HookSelectorComponent output panel (082.3 v2)", () => {
-	it("lists only numbered options; output panel shows N. 출력창", () => {
+	it("lists only numbered options; output panel shows N. Type your own", () => {
 		const component = new HookSelectorComponent(
 			TITLE,
 			OPTIONS,
@@ -30,8 +30,28 @@ describe("HookSelectorComponent output panel (082.3 v2)", () => {
 		const rendered = renderText(component);
 		expect(rendered).toContain("1. Alpha");
 		expect(rendered).toContain("4. Delta");
-		expect(rendered).toContain("5. 출력창");
+		expect(rendered).toContain("5. Type your own");
 		expect(rendered).not.toMatch(/❯\s*5\./);
+	});
+
+	it("clears the option cursor while the output panel is focused", () => {
+		const component = new HookSelectorComponent(
+			TITLE,
+			OPTIONS,
+			() => {},
+			() => {},
+			{
+				wrapFocused: true,
+				customInputListSlot: true,
+				listSlotCustomInput: { onSubmit: () => {} },
+			},
+		);
+		for (let i = 0; i < 4; i++) component.handleInput("\x1b[B");
+		component.handleInput("h");
+		const rendered = renderText(component);
+		// Exactly one cursor: the slot heading. No option row may keep it.
+		expect(rendered).toMatch(/❯\s*5\. Type your own/);
+		expect(rendered).not.toMatch(/❯\s*[1-4]\./);
 	});
 
 	it("submits trimmed text from output panel on Enter", () => {

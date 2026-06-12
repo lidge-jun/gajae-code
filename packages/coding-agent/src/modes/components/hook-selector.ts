@@ -206,16 +206,23 @@ class FocusAwareList extends Container {
 
 	#footerLines: string[] = [];
 
+	#slotFocused = false;
+
 	setState(
 		options: string[],
 		selectedIndex: number,
 		maxVisibleRows: number,
 		footerLines: string[] = [],
+		slotFocused = false,
 	): void {
 		this.#options = options;
 		this.#listSlot = false;
 		this.#listSlotLabel = "";
 		this.#footerLines = footerLines;
+		// While the list-slot input owns focus, `selectedIndex` is only a scroll
+		// anchor — no option row may render as selected (the slot heading carries
+		// the cursor instead).
+		this.#slotFocused = slotFocused;
 		const maxIndex = Math.max(0, options.length - 1);
 		this.#selectedIndex = Math.max(0, Math.min(selectedIndex, maxIndex));
 		this.#maxVisibleRows = Math.max(1, maxVisibleRows);
@@ -229,7 +236,8 @@ class FocusAwareList extends Container {
 		const innerWidth = this.#outline ? Math.max(1, width - 2) : Math.max(1, width);
 
 		// Selected/non-selected prefixes mirror the legacy `#updateList` shape.
-		const styledSelectedPrefix = theme.fg("accent", `${theme.nav.cursor} `);
+		// With slot focus the anchor row renders like any sibling.
+		const styledSelectedPrefix = this.#slotFocused ? "  " : theme.fg("accent", `${theme.nav.cursor} `);
 		const nonSelectedPrefix = "  ";
 		const prefixWidth = visibleWidth(styledSelectedPrefix);
 		const continuationPrefix = " ".repeat(prefixWidth);
@@ -238,7 +246,8 @@ class FocusAwareList extends Container {
 		// Render the focused label up front so we can measure how many rows it
 		// will consume at the current width and budget siblings accordingly.
 		const focusedRaw = this.#options[this.#selectedIndex] ?? "";
-		const focusedLabel = renderInlineMarkdown(focusedRaw, mdTheme, t => theme.fg("accent", t));
+		const focusedColor = this.#slotFocused ? ("text" as const) : ("accent" as const);
+		const focusedLabel = renderInlineMarkdown(focusedRaw, mdTheme, t => theme.fg(focusedColor, t));
 		const focusedWrappedSegments = wrapTextWithAnsi(focusedLabel, availableLabelWidth);
 
 		// Reserve one row for the option position marker only when the focused
@@ -471,10 +480,9 @@ export class HookSelectorComponent extends Container {
 
 	#updateList(): void {
 		if (this.#wrapFocused && this.#focusAwareList) {
-			const listIndex = this.#onOutputPanelFocus()
-				? Math.max(0, this.#options.length - 1)
-				: this.#selectedIndex;
-			this.#focusAwareList.setState(this.#options, listIndex, this.#maxVisible, this.#outputFooterLines);
+			const onPanel = this.#onOutputPanelFocus();
+			const listIndex = onPanel ? Math.max(0, this.#options.length - 1) : this.#selectedIndex;
+			this.#focusAwareList.setState(this.#options, listIndex, this.#maxVisible, this.#outputFooterLines, onPanel);
 			return;
 		}
 
@@ -536,7 +544,7 @@ export class HookSelectorComponent extends Container {
 	#listSlotLabel(): string {
 		const n = this.#options.length + 1;
 		const custom = this.#listSlotCustomInput?.label?.trim();
-		return custom && custom.length > 0 ? custom : `${n}. 출력창`;
+		return custom && custom.length > 0 ? custom : `${n}. Type your own`;
 	}
 
 	#selectionMaxIndex(): number {

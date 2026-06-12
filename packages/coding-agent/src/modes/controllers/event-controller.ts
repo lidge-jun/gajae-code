@@ -674,6 +674,9 @@ export class EventController {
 		this.ctx.lastToolComponent?.setMinimized?.(true);
 		this.ctx.lastToolComponent = undefined;
 		this.ctx.ui.requestRender();
+		// 083.7 §10: collapse the post-overflow gap above the composer so the
+		// last response hugs the input again (no-op when there is no gap).
+		this.ctx.ui.compactViewportFill();
 		this.#scheduleIdleCompaction();
 		this.sendCompletionNotification();
 	}

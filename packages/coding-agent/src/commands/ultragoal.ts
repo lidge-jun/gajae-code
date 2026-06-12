@@ -11,7 +11,7 @@ import {
 import { runNativeUltragoalCommand } from "../gjc-runtime/ultragoal-runtime";
 
 export default class Ultragoal extends Command {
-	static description = `Run native ${APP_NAME.toUpperCase()} Ultragoal workflow commands`;
+	static description = `Run native ${APP_NAME.toUpperCase()} goal-ledger (ultragoal) workflow commands`;
 	static strict = false;
 	static examples = [`$ ${APP_NAME} ultragoal status --json`];
 	static delegateHelp = true;

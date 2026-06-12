@@ -3,7 +3,7 @@ import { Command } from "@gajae-code/utils/cli";
 import { runNativeRalplanCommand } from "../gjc-runtime/ralplan-runtime";
 
 export default class Ralplan extends Command {
-	static description = `Run native ${APP_NAME.toUpperCase()} RALPLAN consensus planning workflow`;
+	static description = `Run native ${APP_NAME.toUpperCase()} P-stage consensus planning workflow (ralplan engine)`;
 	static strict = false;
 	static examples = [
 		`$ ${APP_NAME} ralplan "<task description>"`,

@@ -33,6 +33,8 @@ function createContext(args: {
 			onRight?: () => void;
 			helpText?: string;
 			customInput?: { optionLabel: string; onSubmit: (text: string) => void };
+			customInputListSlot?: boolean;
+			listSlotCustomInput?: { label?: string; onSubmit: (text: string) => void };
 		},
 	) => Promise<string | undefined>;
 	editor?: (

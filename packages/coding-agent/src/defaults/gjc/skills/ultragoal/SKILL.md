@@ -1,6 +1,6 @@
 ---
 name: ultragoal
-description: Create and execute durable repo-native multi-goal plans over jwc goal mode artifacts.
+description: Durable goal ledger — create and execute repo-native multi-goal plans over jwc goal mode artifacts.
 
 source: "forked from upstream ultragoal skill and rebranded for jwc"
 ---

@@ -30,7 +30,7 @@ const HOOK_SELECTOR_MOUSE_REPORTING_DISABLE = "\x1b[?1000l\x1b[?1006l";
 const HOOK_SELECTOR_CHROME_ROWS = 7;
 const HOOK_SELECTOR_OUTLINE_ROWS = 2;
 const HOOK_SELECTOR_INLINE_INPUT_ROWS = 2;
-/** 082.3 v2: footer rows (출력창 heading + editor) inside the option list box. */
+/** 082.3 v2: footer rows (type-your-own heading + editor) inside the option list box. */
 const HOOK_SELECTOR_OUTPUT_PANEL_ROWS = 4;
 
 export class ExtensionUiController {

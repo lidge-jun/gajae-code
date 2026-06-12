@@ -1,6 +1,6 @@
 ---
 name: ralplan
-description: Consensus planning entrypoint that auto-gates vague team/ultragoal requests before execution
+description: IPABCD P-stage consensus engine (ralplan) — auto-gates vague requests before execution
 argument-hint: "[--interactive] [--deliberate] [--architect openai-code] [--critic openai-code] <task description>"
 level: 4
 

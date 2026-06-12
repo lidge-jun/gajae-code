@@ -1,6 +1,6 @@
 ---
 name: jaw-interview
-description: Socratic jaw interview with dual-audit ambiguity gating before explicit execution approval
+description: IPABCD I-stage engine — Socratic jaw interview with dual-audit ambiguity gating before execution approval
 argument-hint: "[--quick|--standard|--deep] <idea or vague description>"
 pipeline: [jaw-interview, plan]
 handoff-policy: approval-required

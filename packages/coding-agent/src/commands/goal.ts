@@ -3,7 +3,7 @@ import { Command, Flags } from "@gajae-code/utils/cli";
 import { runNativeGoalCommand } from "../gjc-runtime/goal-runtime";
 
 export default class Goal extends Command {
-	static description = `Manage the durable ${APP_NAME} goal (cli-jaw-shaped surface over the ultragoal engine)`;
+	static description = `Manage the durable ${APP_NAME} goal ledger (cli-jaw verb surface — goal-ledger engine)`;
 	static strict = false;
 	static flags = {
 		evidence: Flags.string({ description: "Checkpoint evidence (repeatable; joined with '; ')", multiple: true }),
