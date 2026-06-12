@@ -1,6 +1,7 @@
 # 057 — 스킬 호환 패치 구현 플랜 (로딩 파이프라인)
 
-> 상위: [055_moc_dev_skills_compat.md](./055_moc_dev_skills_compat.md). 치환 계약: [056](./056_map_cli_jaw_to_jwc.md). 공통 엔진: [085.5](./085.5_plan_prompt_rebrand.md) M3 `brandPromptText()`.
+> 상위: [055_moc_dev_skills_compat.md](./055_moc_dev_skills_compat.md). 치환 계약: [056](./056_map_cli_jaw_to_jwc.md).
+> ⚠️ **개정 (인터뷰 260612 02:04)**: 085.5가 소스 하드 수정으로 전환되어 `brandPromptText()` 공통 엔진은 폐기. 런타임 치환은 **jwc 비소유 파일(`~/.cli-jaw/skills`) 전용**인 본 플랜의 dev 어휘 맵만 잔존 — 번들 4종·코드 프롬프트는 085.5 M2–M4 하드 수정 소관.
 
 ## 1. 패치 지점 (전수 — Backend 분석 P1–P9)
 
@@ -17,11 +18,10 @@
 
 ## 2. 구현 diff 스케치
 
-### M1. `gjc-runtime/brand-prompt.ts` (신규, ≤150줄)
+### M1. `gjc-runtime/cli-jaw-vocab.ts` (신규, ≤120줄) — [개정 02:04] dev 어휘 맵 단독 모듈
 
 ```typescript
-/** 085.5 L2 공통 + 055 cli-jaw dev 어휘 맵. 순수 함수 — gjc 브랜드면 no-op. */
-export function brandPromptText(text: string): string { /* 085.5 경계 보존 치환 */ }
+/** 055 cli-jaw dev 어휘 맵 — jwc 비소유 파일(~/.cli-jaw/skills) 전용 런타임 치환. 순수 함수. */
 
 const CLI_JAW_COMMAND_MAP: ReadonlyArray<[RegExp, string]> = [
 	[/\bcli-jaw orchestrate ([IPABCD])\b/g, (…) => `jwc orchestrate ${stage.toLowerCase()}`],
@@ -43,7 +43,7 @@ export function applyCliJawDevVocabularyMap(body: string): string { … }
 let body = content.replace(FRONTMATTER_RE, "").trim();
 if (isJawBrand()) {
 	if (skillSourceProvider(skill) === "cli-jaw") body = applyCliJawDevVocabularyMap(body);
-	body = brandPromptText(body); // 085.5 공통 (번들 4종 포함)
+	// 번들 4종은 085.5 M4 하드 수정으로 소스가 이미 jwc 어휘 — 추가 치환 불요 [개정 02:04]
 }
 ```
 
@@ -68,8 +68,8 @@ if (isJawBrand()) {
 
 ## 4. 구현 순서·의존
 
-1. 085.5 M3 `brandPromptText` 골격 (공통 엔진 — 085.5와 한 커밋 가능)
-2. 본 플랜 M1 dev 어휘 맵 + M2 분기 + 테스트
+1. ~~085.5 brandPromptText 골격~~ 불요 [개정 02:04 — 085.5 하드 수정으로 공통 엔진 폐기]
+2. 본 플랜 M1 dev 어휘 맵(cli-jaw-vocab.ts) + M2 분기 + 테스트
 3. 060/070 구현 시 056 §5-1에 따라 stub 문구를 실명령으로 갱신 (테이블 1곳)
 4. §6 P10 (M4 stage-skill-map + M5 주입 2곳) — 085.6 M1(agent-identity) 이후 (주입 텍스트 계약 의존)
 
@@ -98,5 +98,5 @@ cli-jaw에서 dev 스킬이 "자연스럽게 읽히는" 메커니즘(role/tag→
 
 ### 계약 (085.6 §4와 상호)
 
-- 주입 블록 텍스트는 반드시 `agent-identity.ts` 헬퍼(085.6 M1) + `brandPromptText()`(085.5 L2) 경유 — 주입 텍스트가 새 GJC/cli-jaw 어휘 누수원이 되지 않게 단일 레이어 차단.
+- 주입 블록 텍스트는 jwc 네이티브 어휘로 직접 생성 [개정 02:04 — 하드 수정 후 누수원 없음, brandPromptText 불요] — 이름 표기만 `agent-identity.ts` 헬퍼(085.6 M1) 공용.
 - 테스트 추가분: ① stage p 진입 시 dev/dev-architecture 포인터 포함(스킬 존재 시) ② 스킬 부재 머신에서 블록 생략·에러 0 ③ gjc 브랜드 byte-동일.
