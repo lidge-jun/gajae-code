@@ -1,6 +1,6 @@
+import { beforeAll, describe, expect, it } from "bun:test";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { beforeAll, describe, expect, it } from "bun:test";
 
 /**
  * 040 band policy markers — the merged jaw-interview SKILL.md must carry the
@@ -8,10 +8,7 @@ import { beforeAll, describe, expect, it } from "bun:test";
  * These are content gates: if a rebase or edit drops a policy line, this fails.
  */
 
-const skillPath = path.resolve(
-	import.meta.dir,
-	"../src/defaults/gjc/skills/jaw-interview/SKILL.md",
-);
+const skillPath = path.resolve(import.meta.dir, "../src/defaults/gjc/skills/jaw-interview/SKILL.md");
 
 let skill = "";
 
