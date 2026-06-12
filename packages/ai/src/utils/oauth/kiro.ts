@@ -42,9 +42,7 @@ function readKiroCliCredentials(): KiroCliToken | null {
 	const db = new Database(dbPath, { readonly: true });
 	try {
 		for (const key of TOKEN_KEYS) {
-			const row = db.query("SELECT value FROM auth_kv WHERE key = ?").get(key) as
-				| { value: string }
-				| null;
+			const row = db.query("SELECT value FROM auth_kv WHERE key = ?").get(key) as { value: string } | null;
 			if (row) {
 				return JSON.parse(row.value) as KiroCliToken;
 			}
@@ -120,8 +118,7 @@ export async function loginKiro(options: OAuthController): Promise<OAuthCredenti
 
 	options.onAuth?.({
 		url: "https://kiro.dev",
-		instructions:
-			"Login via Kiro CLI first (`kiro login`), or paste your access token manually",
+		instructions: "Login via Kiro CLI first (`kiro login`), or paste your access token manually",
 	});
 
 	const token = await options.onPrompt({

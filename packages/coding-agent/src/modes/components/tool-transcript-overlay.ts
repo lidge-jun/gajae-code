@@ -1,6 +1,6 @@
 import { Container, matchesKey } from "@gajae-code/tui";
 import { theme } from "../theme/theme";
-import { ToolExecutionComponent } from "./tool-execution";
+import type { ToolExecutionComponent } from "./tool-execution";
 
 /**
  * 083.1 pattern A — full tool transcript overlay (Codex pager analogue).
@@ -69,7 +69,10 @@ export class ToolTranscriptOverlayComponent extends Container {
 		const maxScroll = Math.max(0, lines.length - rows);
 		this.#scroll = Math.min(this.#scroll, maxScroll);
 		const out: string[] = [];
-		const position = lines.length === 0 ? "empty" : `${this.#scroll + 1}–${Math.min(this.#scroll + rows, lines.length)}/${lines.length}`;
+		const position =
+			lines.length === 0
+				? "empty"
+				: `${this.#scroll + 1}–${Math.min(this.#scroll + rows, lines.length)}/${lines.length}`;
 		out.push(theme.fg("accent", ` Tool transcript (${this.#tools.length} tools, ${position})`));
 		out.push(...lines.slice(this.#scroll, this.#scroll + rows));
 		out.push(theme.fg("dim", " ↑↓ scroll · pgup/pgdn page · g/G top/bottom · esc close"));

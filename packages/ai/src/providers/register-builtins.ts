@@ -29,11 +29,11 @@ import type { CursorOptions } from "./cursor";
 import type { GoogleOptions } from "./google";
 import type { GoogleGeminiCliOptions } from "./google-gemini-cli";
 import type { GoogleVertexOptions } from "./google-vertex";
+import type { KiroOptions } from "./kiro";
 import type { OllamaChatOptions } from "./ollama";
 import type { OpenAICodexResponsesOptions } from "./openai-codex-responses";
 import type { OpenAICompletionsOptions } from "./openai-completions";
 import type { OpenAIResponsesOptions } from "./openai-responses";
-import type { KiroOptions } from "./kiro";
 
 // ---------------------------------------------------------------------------
 // Lazy provider module shape
@@ -132,11 +132,7 @@ interface BedrockProviderModule {
 }
 
 interface KiroProviderModule {
-	streamKiro: (
-		model: Model<"kiro-streaming">,
-		context: Context,
-		options: KiroOptions,
-	) => AssistantMessageEventStream;
+	streamKiro: (model: Model<"kiro-streaming">, context: Context, options: KiroOptions) => AssistantMessageEventStream;
 }
 
 // ---------------------------------------------------------------------------

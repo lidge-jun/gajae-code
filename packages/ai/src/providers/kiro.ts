@@ -12,11 +12,9 @@ import { createHash, randomUUID } from "node:crypto";
 import { hostname, userInfo } from "node:os";
 import { $env, fetchWithRetry } from "@gajae-code/utils";
 import type {
-	Api,
 	AssistantMessage,
 	Context,
 	Model,
-	StopReason,
 	StreamFunction,
 	StreamOptions,
 	TextContent,
@@ -54,7 +52,11 @@ const SDK_VERSION = "1.0.27";
 const NODE_VERSION = "22.21.1";
 const KIRO_IDE_VERSION = "1.2.0";
 const DARWIN_VERSION = () => {
-	try { return require("node:os").release(); } catch { return "24.0.0"; }
+	try {
+		return require("node:os").release();
+	} catch {
+		return "24.0.0";
+	}
 };
 const OS_TAG = () => {
 	const p = process.platform;
@@ -84,9 +86,9 @@ function buildHeaders(token: string, version: string, profileArn?: string): Reco
 	const fp = getMachineFingerprint().slice(0, 64);
 	const os = OS_TAG();
 	const headers: Record<string, string> = {
-		"authorization": `Bearer ${token}`,
+		authorization: `Bearer ${token}`,
 		"content-type": "application/x-amz-json-1.0",
-		"accept": "application/vnd.amazon.eventstream",
+		accept: "application/vnd.amazon.eventstream",
 		"x-amz-target": AMZ_TARGET,
 		"user-agent": `aws-sdk-js/${SDK_VERSION} ua/2.1 os/${os} lang/js md/nodejs#${NODE_VERSION} api/codewhispererstreaming#${SDK_VERSION} m/E KiroIDE-${version}-${fp}`,
 		"x-amz-user-agent": `aws-sdk-js/${SDK_VERSION} KiroIDE-${version}-${fp}`,
@@ -152,7 +154,7 @@ function buildPayload(
 
 	let systemPrefix = "";
 	if (context.systemPrompt) {
-		systemPrefix = context.systemPrompt + "\n\n";
+		systemPrefix = `${context.systemPrompt}\n\n`;
 	}
 
 	let lastRole = "";
@@ -184,7 +186,7 @@ function buildPayload(
 			lastRole = "assistant";
 		} else if (msg.role === "toolResult") {
 			const trMsg = msg as ToolResultMessage;
-			const parts = trMsg.content.map(c => c.type === "text" ? c.text : "").filter(Boolean);
+			const parts = trMsg.content.map(c => (c.type === "text" ? c.text : "")).filter(Boolean);
 			toolResults.push({
 				content: [{ text: parts.join("\n") || "(empty)" }],
 				status: trMsg.isError ? "error" : "success",
@@ -272,9 +274,12 @@ function parseKiroPayload(raw: Uint8Array): ParsedKiroEvent | null {
 		return { type: "content", data: parsed.content };
 	}
 	if ("name" in parsed && typeof parsed.name === "string") {
-		const input = typeof parsed.input === "object" && parsed.input !== null
-			? JSON.stringify(parsed.input)
-			: typeof parsed.input === "string" ? parsed.input as string : "";
+		const input =
+			typeof parsed.input === "object" && parsed.input !== null
+				? JSON.stringify(parsed.input)
+				: typeof parsed.input === "string"
+					? (parsed.input as string)
+					: "";
 		return {
 			type: "tool_start",
 			name: parsed.name as string,
@@ -283,9 +288,12 @@ function parseKiroPayload(raw: Uint8Array): ParsedKiroEvent | null {
 		};
 	}
 	if ("input" in parsed && !("name" in parsed)) {
-		const input = typeof parsed.input === "object" && parsed.input !== null
-			? JSON.stringify(parsed.input)
-			: typeof parsed.input === "string" ? parsed.input as string : "";
+		const input =
+			typeof parsed.input === "object" && parsed.input !== null
+				? JSON.stringify(parsed.input)
+				: typeof parsed.input === "string"
+					? (parsed.input as string)
+					: "";
 		return { type: "tool_input", input };
 	}
 	if ("stop" in parsed && parsed.stop === true) {
@@ -305,10 +313,7 @@ const KIRO_REFRESH_URL = "https://prod.{region}.auth.desktop.kiro.dev/refreshTok
 const TOKEN_KEYS = ["kirocli:social:token", "kirocli:odic:token", "codewhisperer:odic:token"];
 const DB_PATHS = () => {
 	const home = process.env.HOME || "";
-	return [
-		`${home}/Library/Application Support/kiro-cli/data.sqlite3`,
-		`${home}/.kiro/sso/cache.db`,
-	];
+	return [`${home}/Library/Application Support/kiro-cli/data.sqlite3`, `${home}/.kiro/sso/cache.db`];
 };
 
 interface CachedAuth {
@@ -320,12 +325,18 @@ interface CachedAuth {
 }
 let authCache: CachedAuth | null = null;
 
-function readKiroCliSqlite(): { token: string; refreshToken: string; profileArn: string; expiresAt: number; region: string } | null {
+function readKiroCliSqlite(): {
+	token: string;
+	refreshToken: string;
+	profileArn: string;
+	expiresAt: number;
+	region: string;
+} | null {
 	const { existsSync } = require("node:fs") as typeof import("node:fs");
 	const { Database } = require("bun:sqlite") as typeof import("bun:sqlite");
 	for (const dbPath of DB_PATHS()) {
 		if (!existsSync(dbPath)) continue;
-		let db;
+		let db: InstanceType<typeof Database> | undefined;
 		try {
 			db = new Database(dbPath, { readonly: true });
 			for (const key of TOKEN_KEYS) {
@@ -357,7 +368,10 @@ function readKiroCliSqlite(): { token: string; refreshToken: string; profileArn:
 	return null;
 }
 
-async function refreshKiroDesktopToken(refreshToken: string, region: string): Promise<{ accessToken: string; refreshToken: string; expiresIn: number }> {
+async function refreshKiroDesktopToken(
+	refreshToken: string,
+	region: string,
+): Promise<{ accessToken: string; refreshToken: string; expiresIn: number }> {
 	const url = KIRO_REFRESH_URL.replace("{region}", region);
 	const res = await fetch(url, {
 		method: "POST",
@@ -382,12 +396,12 @@ async function resolveKiroAuth(options: KiroOptions): Promise<{ token: string; p
 	}
 
 	// 2. jwc OAuth storage — validate token prefix
-	if (options.apiKey && options.apiKey.startsWith("aoa")) {
+	if (options.apiKey?.startsWith("aoa")) {
 		return { token: options.apiKey, profileArn: resolveProfileArn(options) };
 	}
 
 	// 3. Env var
-	const envToken = $env["KIRO_ACCESS_TOKEN"];
+	const envToken = $env.KIRO_ACCESS_TOKEN;
 	if (envToken) {
 		return { token: envToken, profileArn: resolveProfileArn(options) };
 	}
@@ -398,7 +412,7 @@ async function resolveKiroAuth(options: KiroOptions): Promise<{ token: string; p
 	}
 
 	// 5. If cache expired but has refreshToken, refresh first
-	if (authCache && authCache.refreshToken) {
+	if (authCache?.refreshToken) {
 		try {
 			const refreshed = await refreshKiroDesktopToken(authCache.refreshToken, authCache.region);
 			authCache = {
@@ -441,7 +455,9 @@ async function resolveKiroAuth(options: KiroOptions): Promise<{ token: string; p
 			}
 			return { token: authCache.token, profileArn: authCache.profileArn };
 		}
-	} catch { /* */ }
+	} catch {
+		/* */
+	}
 
 	// 7. kiro-cli SQLite (most common path for fresh installs)
 	const sqlite = readKiroCliSqlite();
@@ -472,14 +488,16 @@ async function resolveKiroAuth(options: KiroOptions): Promise<{ token: string; p
 
 function resolveProfileArn(options: KiroOptions): string {
 	if (options.profileArn) return options.profileArn;
-	const envArn = $env["KIRO_PROFILE_ARN"];
+	const envArn = $env.KIRO_PROFILE_ARN;
 	if (envArn) return envArn;
 	// prokiro auth.json
 	try {
 		const { readFileSync } = require("node:fs") as typeof import("node:fs");
 		const raw = JSON.parse(readFileSync(`${process.env.HOME}/.prokiro/auth.json`, "utf8")) as { profileArn?: string };
 		if (raw.profileArn) return raw.profileArn;
-	} catch { /* */ }
+	} catch {
+		/* */
+	}
 	// kiro-cli SQLite
 	const sqlite = readKiroCliSqlite();
 	if (sqlite?.profileArn) return sqlite.profileArn;
@@ -501,7 +519,14 @@ export const streamKiro: StreamFunction<"kiro-streaming"> = (
 	void (async () => {
 		const startTime = Date.now();
 		let firstTokenTime: number | undefined;
-		const usage: Usage = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, totalTokens: 0, cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 } };
+		const usage: Usage = {
+			input: 0,
+			output: 0,
+			cacheRead: 0,
+			cacheWrite: 0,
+			totalTokens: 0,
+			cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+		};
 		const output: AssistantMessage = {
 			role: "assistant",
 			content: [],
@@ -515,8 +540,8 @@ export const streamKiro: StreamFunction<"kiro-streaming"> = (
 
 		try {
 			const { token, profileArn } = await resolveKiroAuth(opts);
-			const region = opts.region || $env["KIRO_REGION"] || DEFAULT_REGION;
-			const spoofVersion = opts.spoofVersion || $env["KIRO_SPOOF_VERSION"] || KIRO_IDE_VERSION;
+			const region = opts.region || $env.KIRO_REGION || DEFAULT_REGION;
+			const spoofVersion = opts.spoofVersion || $env.KIRO_SPOOF_VERSION || KIRO_IDE_VERSION;
 			const host = KIRO_HOST_TEMPLATE.replace("{region}", region);
 			const url = `${host}/`;
 			const conversationId = stableConversationId(context);
@@ -555,10 +580,7 @@ export const streamKiro: StreamFunction<"kiro-streaming"> = (
 			}
 			if (!response.ok) {
 				const errBody = await response.text().catch(() => "");
-				throw withHttpStatus(
-					new Error(`Kiro HTTP ${response.status}: ${errBody.slice(0, 1000)}`),
-					response.status,
-				);
+				throw withHttpStatus(new Error(`Kiro HTTP ${response.status}: ${errBody.slice(0, 1000)}`), response.status);
 			}
 			if (!response.body) throw new Error("Kiro response has no body");
 
@@ -600,7 +622,12 @@ export const streamKiro: StreamFunction<"kiro-streaming"> = (
 						// End any open text block
 						const prevBlock = output.content[output.content.length - 1];
 						if (prevBlock && prevBlock.type === "text") {
-							stream.push({ type: "text_end", contentIndex: contentIndex - 1, content: prevBlock.text, partial: output });
+							stream.push({
+								type: "text_end",
+								contentIndex: contentIndex - 1,
+								content: prevBlock.text,
+								partial: output,
+							});
 						}
 						currentToolCall = {
 							id: event.toolUseId || `toolu_${randomUUID().slice(0, 8)}`,
@@ -618,7 +645,11 @@ export const streamKiro: StreamFunction<"kiro-streaming"> = (
 					case "tool_stop": {
 						if (currentToolCall) {
 							let parsedArgs: Record<string, unknown> = {};
-							try { parsedArgs = JSON.parse(currentToolCall.args || "{}"); } catch { parsedArgs = { _raw: currentToolCall.args }; }
+							try {
+								parsedArgs = JSON.parse(currentToolCall.args || "{}");
+							} catch {
+								parsedArgs = { _raw: currentToolCall.args };
+							}
 							const tc: ToolCall = {
 								type: "toolCall",
 								id: currentToolCall.id,
@@ -643,13 +674,22 @@ export const streamKiro: StreamFunction<"kiro-streaming"> = (
 			// Finalize open text block
 			const finalBlock = output.content[output.content.length - 1];
 			if (finalBlock && finalBlock.type === "text") {
-				stream.push({ type: "text_end", contentIndex: contentIndex - 1, content: finalBlock.text, partial: output });
+				stream.push({
+					type: "text_end",
+					contentIndex: contentIndex - 1,
+					content: finalBlock.text,
+					partial: output,
+				});
 			}
 
 			// Finalize incomplete tool call
 			if (currentToolCall) {
 				let parsedArgs: Record<string, unknown> = {};
-				try { parsedArgs = JSON.parse(currentToolCall.args || "{}"); } catch { parsedArgs = { _raw: currentToolCall.args }; }
+				try {
+					parsedArgs = JSON.parse(currentToolCall.args || "{}");
+				} catch {
+					parsedArgs = { _raw: currentToolCall.args };
+				}
 				const tc: ToolCall = {
 					type: "toolCall",
 					id: currentToolCall.id,
@@ -665,7 +705,7 @@ export const streamKiro: StreamFunction<"kiro-streaming"> = (
 
 			output.duration = Date.now() - startTime;
 			if (firstTokenTime) output.ttft = firstTokenTime - startTime;
-			const doneReason = output.stopReason === "toolUse" ? "toolUse" as const : "stop" as const;
+			const doneReason = output.stopReason === "toolUse" ? ("toolUse" as const) : ("stop" as const);
 			stream.push({ type: "done", reason: doneReason, message: output });
 			stream.end();
 		} catch (error) {
@@ -694,7 +734,7 @@ const MODEL_MAP: Record<string, string> = {
 	"kiro-minimax-m2.5": "minimax-m2.5",
 	"kiro-glm-5": "glm-5",
 	"kiro-qwen3-coder": "qwen3-coder-next",
-	"auto": "auto",
+	auto: "auto",
 	"claude-sonnet-4.5": "claude-sonnet-4.5",
 	"claude-sonnet-4": "claude-sonnet-4",
 	"claude-haiku-4.5": "claude-haiku-4.5",
@@ -710,12 +750,16 @@ function mapModelId(id: string): string {
 
 function stableConversationId(context: Context): string {
 	if (!context.messages || context.messages.length === 0) return randomUUID().slice(0, 16);
-	const keyMsgs = context.messages.length <= 3
-		? context.messages
-		: [...context.messages.slice(0, 3), context.messages[context.messages.length - 1]];
-	const simplified = keyMsgs.map(m => {
-		const content = typeof m.content === "string" ? m.content.slice(0, 100) : JSON.stringify(m.content).slice(0, 100);
-		return `${m.role}:${content}`;
-	}).join("|");
+	const keyMsgs =
+		context.messages.length <= 3
+			? context.messages
+			: [...context.messages.slice(0, 3), context.messages[context.messages.length - 1]];
+	const simplified = keyMsgs
+		.map(m => {
+			const content =
+				typeof m.content === "string" ? m.content.slice(0, 100) : JSON.stringify(m.content).slice(0, 100);
+			return `${m.role}:${content}`;
+		})
+		.join("|");
 	return createHash("sha256").update(simplified).digest("hex").slice(0, 16);
 }

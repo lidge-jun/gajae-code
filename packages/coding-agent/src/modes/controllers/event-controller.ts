@@ -342,9 +342,7 @@ export class EventController {
 			if (lastToolIndex >= this.#segmentStartIndex) {
 				const hasPostToolContent = content
 					.slice(lastToolIndex + 1)
-					.some(
-						c => (c.type === "text" && c.text.trim()) || (c.type === "thinking" && c.thinking.trim()),
-					);
+					.some(c => (c.type === "text" && c.text.trim()) || (c.type === "thinking" && c.thinking.trim()));
 				if (hasPostToolContent) {
 					this.#segmentStartIndex = lastToolIndex + 1;
 					// The tools above this segment are done — collapse the last one (083.1).

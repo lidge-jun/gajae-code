@@ -10,8 +10,6 @@ import { expandEmoticons } from "../../modes/emoji-autocomplete";
 import { createPromptActionAutocompleteProvider } from "../../modes/prompt-action-autocomplete";
 import { theme } from "../../modes/theme/theme";
 import type { InteractiveModeContext } from "../../modes/types";
-import { ToolExecutionComponent } from "../components/tool-execution";
-import { ToolTranscriptOverlayComponent } from "../components/tool-transcript-overlay";
 import type { AgentSessionEvent } from "../../session/agent-session";
 import { SKILL_PROMPT_MESSAGE_TYPE, type SkillPromptDetails } from "../../session/messages";
 import { executeBuiltinSlashCommand } from "../../slash-commands/builtin-registry";
@@ -20,12 +18,17 @@ import { getEditorCommand, openInEditor } from "../../utils/external-editor";
 import { ensureSupportedImageInput, ImageInputTooLargeError, loadImageInput } from "../../utils/image-loading";
 import { resizeImage } from "../../utils/image-resize";
 import { generateSessionTitle, setSessionTerminalTitle } from "../../utils/title-generator";
+import { ToolExecutionComponent } from "../components/tool-execution";
+import { ToolTranscriptOverlayComponent } from "../components/tool-transcript-overlay";
 
 interface Expandable {
 	setExpanded(expanded: boolean): void;
 }
 
 const INTERACTIVE_ABORT_CLEANUP_TIMEOUT_MS = 5_000;
+// Hangul IME chord hint (devlog 082.1): hook-status key + how long the hint stays up.
+const HANGUL_IME_HINT_KEY = "ime-hangul-chord";
+const HANGUL_IME_HINT_DURATION_MS = 4_000;
 const CLIPBOARD_TEMP_IMAGE_FILE_PATTERN = /^clipboard-\d{4}-\d{2}-\d{2}-\d{6}-[A-Za-z0-9]+\.(?:png|jpe?g|gif|webp)$/i;
 const MACOS_CLIPBOARD_TEMP_DIR_PATTERN = /^\/var\/folders\/[^/]+\/[^/]+\/T$/;
 
@@ -40,6 +43,9 @@ export class InputController {
 	 *  queued steer is either cancelled by a second Esc or drained by continuation,
 	 *  so abort cleanup going idle cannot turn the second Esc into an idle action. */
 	#steerConsumePending = false;
+
+	/** Auto-clear timer for the transient Hangul IME chord hint. */
+	#hangulImeHintTimer: NodeJS.Timeout | undefined;
 
 	#abortInteractive(options?: { silent?: boolean }): Promise<void> {
 		return this.ctx.session.abort({
@@ -183,6 +189,7 @@ export class InputController {
 		this.ctx.editor.onExpandTools = () => this.toggleToolOutputExpansion();
 		this.ctx.editor.setActionKeys("app.message.dequeue", this.ctx.keybindings.getKeys("app.message.dequeue"));
 		this.ctx.editor.onDequeue = () => this.handleDequeue();
+		this.ctx.editor.onHangulCtrlChordHint = (_jamo, chord) => this.showHangulImeHint(chord);
 
 		this.ctx.editor.clearCustomKeyHandlers();
 		// Wire up extension shortcuts
@@ -425,6 +432,28 @@ export class InputController {
 			}
 			this.ctx.editor.addToHistory(text);
 		};
+	}
+
+	/**
+	 * Hangul IME chord hint (devlog 082.1): a Ctrl chord pressed under a Hangul
+	 * IME arrives as a bare jamo on legacy terminals, so the shortcut silently
+	 * does nothing. Surface a transient hint under the input instead of firing
+	 * anything; it auto-clears shortly after.
+	 */
+	showHangulImeHint(chord: string): void {
+		// Plain text: hook-status lines pass through sanitizeStatusText, which strips ANSI.
+		this.ctx.statusLine.setHookStatus(
+			HANGUL_IME_HINT_KEY,
+			`${chord} needs the English layout — switch to English (한/A) or press esc esc to exit`,
+		);
+		this.ctx.ui.requestRender();
+		if (this.#hangulImeHintTimer) clearTimeout(this.#hangulImeHintTimer);
+		this.#hangulImeHintTimer = setTimeout(() => {
+			this.#hangulImeHintTimer = undefined;
+			this.ctx.statusLine.setHookStatus(HANGUL_IME_HINT_KEY, undefined);
+			this.ctx.ui.requestRender();
+		}, HANGUL_IME_HINT_DURATION_MS);
+		this.#hangulImeHintTimer.unref?.();
 	}
 
 	handleCtrlC(): void {
