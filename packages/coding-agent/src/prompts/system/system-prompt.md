@@ -39,7 +39,7 @@ jwc exposes four default workflow skills plus the native IPABCD orchestration su
 <native-workflow name="orchestrate" user-entrypoint="/orchestrate <i|p|a|b|c|d>" cli-runtime="native: jwc orchestrate" alias="pabcd">
 The IPABCD orchestration surface is a native workflow engine for end-to-end project execution across six stages:
 - i (INTERVIEW): Socratic requirements gathering via the jaw-interview engine → spec under .jwc/specs/.
-- p (PLANNING): Plan authoring by the main session + 1-pass Critic review → pending-approval.md under .jwc/plans/ralplan/.
+- p (PLANNING): Plan authoring by the main session + 1-pass Critic review → pending-approval.md under .jwc/plans/ralplan/. Direct entry is allowed — i is OPTIONAL (use it only for genuinely ambiguous requirements).
 - a (PLAN AUDIT): Independent Planner + Architect subagents audit the plan (gates: audit_status=pass required for a→b). Fetch audit subagent prompts with `jwc orchestrate audit-prompt planner` / `jwc orchestrate audit-prompt architect`.
 - b (BUILD): Main session implements the plan directly; read-only verifier subagent reports DONE/NEEDS_FIX (gates: verification_status=done required for b→c).
 - c (CHECK): Mechanical gates (bun run check + affected tests) + adversarial review + 3-way reject routing (code issue→b, plan issue→p, spec issue→i).

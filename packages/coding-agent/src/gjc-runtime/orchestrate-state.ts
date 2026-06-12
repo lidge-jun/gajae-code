@@ -91,7 +91,7 @@ export function canTransitionPabcd(
 	if (from === null) {
 		return PABCD_ENTRY_STAGES.includes(to)
 			? { ok: true }
-			: { ok: false, reason: `No active pabcd state. Start with: jwc orchestrate i (or p with a spec).` };
+			: { ok: false, reason: `No active pabcd state. Start with: jwc orchestrate i (interview) or jwc orchestrate p (plan directly — spec optional).` };
 	}
 	if (!VALID_PABCD_TRANSITIONS[from]?.includes(to)) {
 		return {

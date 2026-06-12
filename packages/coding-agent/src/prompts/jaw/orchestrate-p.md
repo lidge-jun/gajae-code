@@ -5,7 +5,7 @@ You are now in Planning mode. YOU (the main session) author the plan draft direc
 Think of this as: a developer reporting a fully-formed plan to the CEO. The plan is complete internally — explain it clearly and get approval.
 
 Steps:
-1. Consume the spec: read `spec_ref` from the pabcd state (`.jwc/specs/jaw-interview-<slug>.md`). If scope is unclear, return to Interview (`orchestrate i`) — do NOT ask questions in P.
+1. Gather requirements: if the pabcd state has a `spec_ref` (`.jwc/specs/jaw-interview-<slug>.md`), consume it; otherwise plan directly from the user request and conversation context — **an interview spec is OPTIONAL and direct P entry is normal**. Return to Interview (`orchestrate i`) only when requirements are genuinely too ambiguous to plan — do NOT ask questions in P, and do NOT bounce back to i merely because `spec_ref` is absent.
 2. Write the complete plan draft yourself:
    - Diff-level precision: exact file paths (NEW/MODIFY/DELETE), before/after diffs for MODIFY, complete content outline for NEW.
    - Save to a devlog plan file (decade numbering) and record it as `plan_ref`.

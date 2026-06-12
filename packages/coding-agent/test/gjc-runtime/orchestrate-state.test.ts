@@ -292,3 +292,16 @@ describe("orchestrate runtime full cycle", () => {
 		expect((await run(["audit-prompt", "critic"])).status).toBe(2);
 	});
 });
+
+describe("direct P entry without a spec (260613 — i는 P의 필수 선행이 아님)", () => {
+	it("idle → p succeeds with no spec_ref", () => {
+		const result = canTransitionPabcd(null, "p");
+		expect(result.ok).toBe(true);
+	});
+
+	it("idle entry failure message offers direct p without demanding a spec", () => {
+		const result = canTransitionPabcd(null, "b");
+		expect(result.ok).toBe(false);
+		expect(result.reason).toContain("plan directly — spec optional");
+	});
+});
