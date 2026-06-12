@@ -1,6 +1,6 @@
 # 100_node — 01 overview (jwc_patched)
 
-> worktree @ `81bcea96` · gjc @ `67427c6`  
+> worktree @ `dc4f22672581` · gjc @ `75d103f45145`
 > MOC: [`100_moc_node_porting.md`](../../../devlog/_plan/260612_jawcode_fork/100_moc_node_porting.md)
 
 ## Node 포팅 (M2)

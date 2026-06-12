@@ -5,7 +5,7 @@
 
 ## 1. 정체
 
-Jawcode는 gajae-code(`gjc`) 모노레포의 포크다. gjc는 Bun 런타임 기반의
+Jawcode는 gajae-code 모노레포의 포크이며 공개 실행 표면은 `jwc`다. 엔진은 Bun 런타임 기반의
 Claude Code급 풀 코딩 에이전트로, 프로바이더 계층부터 TUI까지 전부 자체 구현돼 있다.
 
 - 런타임: **Bun 1.3.14** (workspaces + catalog)
@@ -18,7 +18,7 @@ Claude Code급 풀 코딩 에이전트로, 프로바이더 계층부터 TUI까�
 packages/
   ai/              @gajae-code/ai          — 44+ 프로바이더 스트리밍 계층 (stream.ts 디스패처)
   agent/           @gajae-code/agent-core  — 에이전트 루프, 상태, 컴팩션, transport 추상화
-  coding-agent/    @gajae-code/coding-agent — gjc CLI 본체 (도구, 세션, 스킬, 슬래시커맨드, 모드)
+  coding-agent/    @gajae-code/coding-agent — JWC CLI/runtime 본체 (도구, 세션, 스킬, 슬래시커맨드, 모드)
   tui/             @gajae-code/tui         — 차등 렌더링 TUI 라이브러리
   utils/           @gajae-code/utils       — 공용 유틸
   stats/           @gajae-code/stats       — 사용량/통계
@@ -55,7 +55,7 @@ packages/
 
 ### 3.2 `packages/coding-agent/src/modes/` — 실행 모드
 
-- `interactive-mode.ts` — TUI 대화 모드 (기본)
+- `interactive-mode.ts` — TUI 대화 모드 (기본); 마운트 순서(260613 갱신): chatContainer → ViewportFill(센티널) → liveToolContainer(라이브 존, B2-lite §11) → composerContainer. 도구는 실행 중 liveToolContainer에서 preview하고 완료 시 접힌 1줄로 chatContainer에 커밋(tool.renderMode=commit 브랜드 기본).
 - `print-mode.ts` — 단발 실행
 - `rpc/` — JSONL RPC 모드 (cli-jaw pi-runtime과 동일 패턴의 사이드카 통로)
 - `acp/` — Agent Client Protocol
@@ -72,7 +72,8 @@ packages/
 - `src/extensibility/slash-commands.ts` + `src/slash-commands/` — 슬래시커맨드 레지스트리
 - `src/extensibility/custom-tools/` — 커스텀 도구 주입
 - `src/tools/` — read/bash/edit/write/grep/browser/ast-edit 등 내장 도구
-- 기본 워크플로 스킬 4종: jaw-interview / ralplan / ultragoal / team (fork runtime; upstream `AGENTS.md`는 `deep-interview` 표기 유지)
+- 기본 워크플로 스킬 4종: jaw-interview / ralplan / ultragoal / team (jwc runtime 표준)
+- `src/gjc-runtime/memory-runtime.ts` + `src/commands/memory.ts`·`chat.ts` — `jwc memory`/`jwc chat` CLI verbs 네이티브 구현 (99.01 완료, 260613); local-query/memory-fts 배관 포함. 세부: [memory_pipeline.md](./memory_pipeline.md).
 
 세부 표는 [extensibility.md](./extensibility.md)와 [workflows.md](./workflows.md)가 정본이다.
 
@@ -97,15 +98,15 @@ packages/
 
 1. **호스팅 방식**: Node 포팅(`Bun.*` 치환) vs cli-jaw를 Bun으로 vs Bun 사이드카(rpc 모드).
    `Bun.*` 사용처: ai 계층 ~20지점, agent 4파일, tui 7파일 (tui는 TUI 바이너리에만 필요).
-2. **스킬 단일화**: cli-jaw 전역 스킬 vs legacy gajae-code `.jwc` 디스커버리 — 어느 쪽으로 수렴할지.
+2. **스킬 단일화**: cli-jaw 전역 스킬 vs jwc `.jwc` 디스커버리 — 어느 쪽으로 수렴할지.
 3. **세션 소유권**: jaw.db vs jwc agent db.
 
 ## 6. M1/M2 로드맵 연결
 
 | 마일스톤 | 코드상 접점 | 근거 |
 |---|---|---|
-| M1 010–019 jwc 셸 + 표면 리네이밍 | `packages/jwc/bin/jwc.js`, `packages/jwc/package.json` | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/000_roadmap.md:13`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/bin/jwc.js:1` |
-| M1 020–029 프롬프팅 개편 | `packages/coding-agent/src/system-prompt.ts`, `prompts/system/system-prompt.md` | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/000_roadmap.md:14`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/system-prompt.ts:372` |
-| M1 030–039 스킬 디스커버리 3계층 | `extensibility/skills.ts`, `discovery/builtin.ts` | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/000_roadmap.md:15`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:105` |
-| M2 110–119 JawRuntime 상주 서비스 | `createAgentSession()` + event bus + session manager | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/000_roadmap.md:25`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:796` |
-| M2 120–129 jaw.db 영속화 | `SessionManager` override와 cli-jaw adapter | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/000_roadmap.md:26`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:311` |
+| M1 010–019 jwc 셸 + 공개 표면 | `packages/jwc/bin/jwc.js`, `packages/jwc/package.json` | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:13`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/bin/jwc.js:1` |
+| M1 020–029 프롬프팅 개편 | `packages/coding-agent/src/system-prompt.ts`, `prompts/system/system-prompt.md` | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:14`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/system-prompt.ts:372` |
+| M1 030–039 스킬 디스커버리 3계층 | `extensibility/skills.ts`, `discovery/builtin.ts` | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:15`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:105` |
+| M2 110–119 JawRuntime 상주 서비스 | `createAgentSession()` + event bus + session manager | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:25`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:796` |
+| M2 120–129 jaw.db 영속화 | `SessionManager` override와 cli-jaw adapter | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:26`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:311` |

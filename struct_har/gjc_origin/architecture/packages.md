@@ -1,19 +1,19 @@
 # architecture / packages.md (gjc_origin)
 
-> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/packages_overview.md`](../../../structure/packages_overview.md).  
-> fork `81bcea96` · gjc clone `67427c6`.
+> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/packages_overview.md`](../../../structure/packages_overview.md).
+> fork `dc4f22672581` · gjc clone `75d103f45145`.
 
 ## structure/ 발췌 (첫 12줄)
 
 ```markdown
 # Packages / Crates Overview
 
-> jawcode는 Bun monorepo + Rust crates 구조다. jwc는 표면 wrapper이고, 현재 런타임 본체는 `@gajae-code/coding-agent`에 있다.
+> jawcode는 Bun monorepo + Rust crates 구조다. 공개 CLI는 `jwc`이고, 현재 런타임 본체는 `@gajae-code/coding-agent`에 있다.
 
 ## 의존 방향
 
 ```text
-jwc wrapper
+jwc CLI/package
   -> @gajae-code/coding-agent
        -> @gajae-code/agent-core
        -> @gajae-code/ai

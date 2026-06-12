@@ -1,8 +1,8 @@
 # Scroll — TUI 스크롤/뷰포트 모델 (정본)
 
 > jwc TUI의 스크롤 모델 전체: 차등 렌더러의 물리 제약, 컴포저 핀(ViewportFill), floor/압축,
-> 커밋 시점 접기, 레퍼런스(Codex/CC) 대조. 083.6/083.7/99.20.03/99.20.04의 구현 결과를 단일
-> 문서로 통합한 SoT. 사용자 e2e 확인: 260613 00:25.
+> 커밋 시점 접기, 뷰포트 리페인트 정책, 커밋 레인 이중-레인 아키텍처. 083.6/083.7/083.8/083.9/
+> 99.20.03/99.20.04의 구현 결과를 단일 문서로 통합한 SoT. 사용자 e2e 확인: 260613 00:25.
 
 ## 1. 모델 — 스크롤백-네이티브
 
@@ -43,9 +43,16 @@ jwc는 CC(구세대)·gjc 계열의 **스크롤백-네이티브** 모델이다: 
 | gap 추적 | `#viewportFillGap` | floor가 적립한 빈 행 수 |
 | **압축** (§10) | `compactViewportFill()` | floor/gap 리셋 + `requestRender(true)` — 전체 트랜스크립트 재인쇄로 스크롤백을 빈 행 없이 재구축. 갭 0이면 no-op |
 
-압축 트리거 맵 (정본: devlog `99.20.03_issue_transient_shrink_triggers.md`):
-agent_end(`event-controller.ts #handleAgentEnd`) · 슬래시 디스패치 완료(`input-controller.ts`
-`slashResult === true`) · ctrl+o/ctrl+t 토글 말미. 잔여 에지: ESC 드롭다운(제출 없음).
+압축 트리거 맵 (정본: devlog `99.20.03_issue_transient_shrink_triggers.md`, 083.8 S2 갱신):
+**프롬프트 제출**(`input-controller.ts:452` "083.8 S2" 주석) · 슬래시 디스패치 완료
+(`input-controller.ts:328` `slashResult === true`) · ctrl+o/ctrl+t 토글 말미.
+잔여 에지: ESC 드롭다운(제출 없음).
+
+**agent_end에서 프롬프트 제출로 이동(083.8 S2)**: 기존에는 `event-controller.ts #handleAgentEnd`
+에서 압축을 발화했으나, 에이전트 응답 마지막에 화면이 점프하는 증상(`devlog 083.8 ⑤`)이 발생했다.
+현재는 **다음 프롬프트 제출 시점**에 압축한다 — 어차피 화면이 바뀌므로 full rebuild가 보이지 않음.
+`event-controller.ts:718` 주석: `"083.8 S2: the post-overflow gap is NOT compacted here"`.
+`input-controller.ts:452` 주석: `"083.8 S2: collapse any post-overflow gap left by the previous turn"`.
 
 ## 4. 커밋 시점 접기 (99.20.04 — 수축의 근원 제거)
 
@@ -58,14 +65,166 @@ agent_end(`event-controller.ts #handleAgentEnd`) · 슬래시 디스패치 완�
 - 구현: `event-controller.ts` `#commitFoldingEnabled`/`#commitLiveTool`. ctrl+o 스윕은
   라이브 존 자식도 순회(`input-controller.ts setToolsExpanded`).
 
-## 5. fullRender와 스크롤백 재구축
+## 5. 뷰포트 리페인트 정책 (083.8 S3)
 
-`fullRender(true)` = `2J H` (+비멀티플렉서 `3J`) 후 **프레임 전체(=전체 트랜스크립트) 재인쇄** —
-스크롤백이 내용 동일하게 재구성되므로 히스토리가 보존된다(압축이 안전한 이유). 멀티플렉서
-(tmux/zellij)는 3J 생략 + `multiplexerViewportRepaint` 경로. 발화 분기: width/height 변화,
-`firstChanged < viewportTop`, `extraLines > height`, clearOnShrink(기본 off), requestRender(true).
+뷰포트 밖 변경이 발생했을 때 어떤 경로를 밟느냐가 UX의 핵심이다.
 
-## 6. 레퍼런스 대조 (소스 실측 — `~/Developer/codex/01_tui-design/` 보강 섹션)
+**`viewportRepaint`** (`tui.ts:1353`) — 2J/3J 없이 현재 보이는 N행만 제자리에 재인쇄. 스크롤백
+픽셀을 건드리지 않고 커서를 화면 상단으로 올려 각 행을 2K로 지우고 다시 씀. 083.8 S3 이후
+**모든 터미널(멀티플렉서 포함)의 뷰포트-위 변경**에 기본 경로다. 과거에는 멀티플렉서 전용
+`multiplexerViewportRepaint`가 별도로 존재했으나 현재는 통합·삭제됐다.
+
+- `firstChanged < viewportTop` 조건: 프레임이 **동시에 성장**(append)하면 위에서 소개한 예외로
+  `fullRender(true)`를 유지한다 (멀티플렉서 제외) — 성장분은 스크롤백에 써야 하기 때문.
+- `extraLines > height` 조건: 레거시 멀티플렉서 플래그(`PI_TUI_LEGACY_MULTIPLEXER_FULL_RENDER`)
+  없는 경우 `viewportRepaint` 분기.
+- height 변화(멀티플렉서 한정): `viewportRepaint` 경로.
+
+**`fullRender(true)`** — `2J H` 후 프레임 전체 재인쇄. 스크롤백을 내용 동일하게 재구성하므로
+히스토리가 보존된다(압축이 안전한 이유). width 변화, clearOnShrink, `requestRender(true)` 등
+강제 리빌드 시 발화.
+
+**3J(스크롤백 전체 삭제) 금지 조건** (`tui.ts:1325`):
+
+```
+buffer += isMultiplexerSession() || this.#hasCommittedHistory
+    ? "\x1b[2J\x1b[H"       // 3J 생략 — 멀티플렉서 또는 커밋 레인이 히스토리 기록 중
+    : "\x1b[2J\x1b[H\x1b[3J";
+```
+
+- 멀티플렉서(tmux/zellij): 사용자가 직접 스크롤하므로 3J 금지.
+- **커밋 레인이 한 줄이라도 스크롤백에 기록한 후** (`#hasCommittedHistory = true`): 스크롤백이
+  정본 트랜스크립트이므로 3J로 지우면 안 된다 — 영구 금지.
+
+`tui.ts:251` 주석: `"True once any line was committed — the scrollback is then canonical and 3J is forbidden."`
+
+## 6. 커밋 레인 이중-레인 아키텍처 (083.9)
+
+jwc는 렌더링 경로를 **두 레인**으로 분리한다.
+
+| 레인 | 설명 | 상태 |
+|------|------|------|
+| **가상 레인 (virtual lane)** | 확정된 셀을 `chatContainer`에 추가 → 차등 렌더러가 매 프레임 재인쇄 | 항상 활성 (폴백) |
+| **커밋 레인 (commit lane)** | 확정된 셀을 스크롤백에 단 한 번 기록 → 이후 렌더러가 건드리지 않음 | **기본 ON** (260613 플립) — `JWC_COMMIT_LANE=0`으로 옵트아웃 |
+
+### 6-1. commitLines() — 스크롤백 커밋 기본 연산
+
+`tui.ts:1168 commitLines(lines: string[]): boolean`:
+
+```
+커밋 레인 진입 조건:
+  #historyLane === "standard"           (Zellij·dumb 터미널 제외)
+  && !stopped && terminalAvailable
+  && overlayStack.length === 0          (오버레이 열려 있으면 불가)
+  && liveZoneTop > 0                    (fill 영역이 있어야 히스토리 영역 존재)
+  && lines.length > 0
+```
+
+성공 시 `#committedScreenRows`를 증가시키고 `#hasCommittedHistory = true`로 3J를 영구 금지한다.
+실패 시 `false` 반환 → 호출자가 가상 레인으로 폴백.
+
+### 6-2. #committedScreenRows 불변식
+
+`#committedScreenRows`는 **라이브 존 바로 위의 스크린 행 수** — 아직 스크롤백으로 올라가지 않고
+화면 상단에 버티고 있는 커밋된 픽셀 블록이다. 두 가지 시나리오에서 훼손될 수 있으며 tui.ts가
+각각 방어한다:
+
+1. **라이브 존 성장으로 fill 축소** (`tui.ts:1295`): `lastFillRows < prevFillRows`이면 히스토리
+   블록이 덮일 위험이 있다 → `#scrollOutCommittedRows(delta, prevFillRows)`로 먼저 스크롤 아웃.
+2. **fullRender(clear=true)** (`tui.ts:1309`): 클리어 렌더 전 블록 전체를 `#scrollOutCommittedRows`
+   로 스크롤백에 밀어넣고 `#committedScreenRows = 0`으로 초기화.
+
+### 6-3. fill-region = history-region 재해석
+
+`#expandViewportFill` 실행 후 `#lastFillRows = first === 0 ? fill : 0` (`tui.ts:1247`):
+
+fill 스페이서가 프레임 **맨 위**(index 0)에 있을 때만 히스토리 영역으로 인정한다. fill이 0이거나
+프레임 중간에 위치하면 커밋 레인은 자동으로 비활성(`commitLines` → `false`)된다. 즉 **fill
+영역 = 히스토리 영역**이라는 1:1 재해석이 devlog 083.9 §3b의 핵심이며, ViewportFill이 없는
+터미널(B2-lite 이전 레이아웃)에서는 커밋 레인 자체가 불가하다.
+
+### 6-4. detectHistoryLaneMode() — 터미널 종류별 레인 결정
+
+`insert-history.ts:30 detectHistoryLaneMode()`:
+
+```
+TERM === "dumb"              → "unsupported"
+ZELLIJ / ZELLIJ_* 환경변수   → "zellij-raw"   (스크롤 리전이 soft-wrap을 끊음)
+그 외                        → "standard"      (tmux 포함: tmux 자체 pane 히스토리에 기록)
+```
+
+Zellij는 scroll-region 내 soft-wrap 행을 올바르게 처리하지 못하므로 raw-append 모드를 쓴다.
+tmux는 standard 경로: 커밋된 행이 tmux pane history로 들어가는 것이 의도된 동작이다.
+
+### 6-5. buildInsertHistorySequence() — 2-페이즈 스크롤백 커밋
+
+`insert-history.ts:56`:
+
+**Phase 1** (라이브 존이 화면 바닥과 맞닿지 않은 경우만 실행):
+`liveZoneTop..screenRows` 리전에서 `\x1bM`(Reverse Index)을 `scrollAmount`번 반복 → 라이브 존이
+화면 아래로 밀리고, 위에 빈 히스토리 행이 생긴다.
+
+**Phase 2** (항상 실행):
+`1..liveZoneTop` 리전을 설정하고 `liveZoneTop` 행에 커서를 둔다. 각 `line`마다 `\r\n`(리전
+위쪽으로 스크롤 아웃) → `\x1b[2K`(freed row 청소) → `line` 기록. 리전 top이 row 1이므로
+밀려난 행이 실 스크롤백에 진입한다.
+
+> 주의: top > 1인 scroll-region에서 `\r\n`으로 밀려난 행은 스크롤백 진입이 **아니라 폐기**다.
+> 커밋이 제대로 이뤄지려면 반드시 `\x1b[1;N r` (1-based top=1)이어야 한다.
+
+### 6-6. commitOrAppend() / commitLaneEnabled() — 코딩-에이전트 진입점
+
+`packages/coding-agent/src/modes/utils/ui-helpers.ts:47–63`:
+
+```ts
+export function commitLaneEnabled(): boolean {
+    const env = process.env.JWC_COMMIT_LANE;          // 기본 ON (083.10 §1)
+    if (env !== undefined) return env !== "0" && env !== "false";
+    return true;
+}
+export function commitOrAppend(ctx, component): void {
+    if (commitLaneEnabled()) {
+        if (ctx.ui.commitLines(component.render(width))) return;
+    }
+    ctx.chatContainer.addChild(component);  // 폴백: 가상 레인
+}
+```
+
+현재 와이어된 호출처:
+- **접힌 도구 (`#commitLiveTool`)**: `event-controller.ts:127` — 도구 완료 시 `setMinimized(true)` 후
+  `commitOrAppend` 호출.
+- **사용자 메시지**: `interactive-mode.ts:821` `startPendingSubmission` → `addMessageToChat` →
+  `chatContainer.addChild` (가상 레인만; 커밋 레인 직접 연결은 미완).
+
+기본 ON — 커밋은 **턴 경계(다음 프롬프트 제출 직전)**에 `commitFinalizedBacklog()` 일괄 스윕으로 수행되고, 컴포넌트는 제거되지 않고 `committed` 플래그로 프레임에서만 스킵된다(alt+t·토글은 비커밋 컴포넌트 대상). `JWC_COMMIT_LANE=0`이면 스윕 자체가 no-op. 게이트와 무관하게 미지원 터미널/zellij/오버레이/오버플로/부분 UI 픽스처는 호출 단위로 자동 폴백한다.
+
+## 6b. TUI 수정 시 레인 체크리스트 [정본 — 260613]
+
+**대부분의 TUI 작업은 레인을 신경 쓸 필요가 없다.** 컴포넌트 `render()`가 단일 진실원이다 —
+가상 레인은 프레임 diff로, 커밋 레인은 턴 경계 스윕(`commitFinalizedBacklog`)이 같은 `render()`
+출력을 스크롤백에 쓰는 것뿐이다. 따라서:
+
+| 작업 | 레인 작업 |
+|------|-----------|
+| 비주얼 변경 (배너·도구 셀·폴딩 포맷·테마) | **없음** — 한 곳 수정, 양쪽 자동 |
+| 새 컴포넌트 추가 | **없음** — 기본 비커밋으로 동작, 턴 경계 스윕이 자동 커밋 |
+| 입력·키바인딩·셀렉터·오버레이·컴포저 | **없음** — 레인 무관 |
+
+**같이 생각해야 하는 좁은 영역 3가지:**
+
+1. **`tui.ts` 렌더러 내부** (fill·diff·클리어 경로) — fill 영역 = 히스토리 리전 겸용이므로
+   `#committedScreenRows` 불변식(커밋 픽셀 위를 덮어쓰기 전에 선행 스크롤아웃, tui.ts §3b-3)과
+   **커밋 후 3J 금지**(`#hasCommittedHistory`)를 보존할 것. 위반은 `commit-lane.test.ts` 6케이스가 잡는다.
+2. **과거 콘텐츠 사후 변경 기능** — 커밋된 픽셀은 불변. 이전 턴을 다시 그리는 기능은 비커밋
+   컴포넌트 대상이거나 오버레이(alt+t 패턴)로 설계할 것.
+3. **턴 종료 후에도 변하는 컴포넌트** (지연 결과·백그라운드 도구) — 백로그 스윕에서 제외 필요.
+   현행 가드: `streamingComponent`·`pendingTools`(ui-helpers `commitFinalizedBacklog`). 유사 수명의
+   컴포넌트가 생기면 이 가드에 추가.
+
+**디버깅**: `JWC_COMMIT_LANE=0`으로 끄고 재현 비교 → 레인 원인 여부 즉시 판별.
+회귀 어서션: 커밋 픽셀 생존(`commit-lane.test.ts`), 2J/3J 0건(`above-viewport-repaint.test.ts`).
+
+## 7. 레퍼런스 대조 (소스 실측 — `~/Developer/codex/01_tui-design/` 보강 섹션)
 
 | | jwc | Codex | CC (현세대) |
 |---|---|---|---|
@@ -73,19 +232,24 @@ agent_end(`event-controller.ts #handleAgentEnd`) · 슬래시 디스패치 완�
 | 접기 | commit 모드: 커밋 시점 접기 (head/tail 아님, minimized 1줄) | compact-from-birth: head 5+tail 5+`…+N lines`로 커밋 | 완료 항목 컴팩트 출생 |
 | 과거 보기 | 터미널 스크롤백(진짜) + alt+t 오버레이 | Ctrl+T transcript 오버레이 | ctrl+o/오버레이 |
 | 수축 문제 | floor+압축으로 방어 (커밋 모드에선 거의 발생 안 함) | 구조적 부재 | 구조적 부재 |
+| 커밋 레인 | `commitLines()` + `buildInsertHistorySequence()` (083.9 · Codex parity) | `insert_history.rs` | 없음 |
 
 jwc가 스크롤백-네이티브를 유지하는 이유: 사용자가 터미널 스크롤로 과거를 실제로 읽음(확인됨) +
 tmux 친화. alt-screen 전환은 99.20 장기 메모로만 존재.
 
-## 7. 설정·이스케이프·가드
+## 8. 설정·이스케이프·가드
 
 - `tui.composerPin` (boolean, 미지정=브랜드 기본) · `tool.renderMode` (enum, 동일) —
   settings UI에서 미지정은 **"default"로 표기** (`settings-selector.ts`).
 - `PI_NO_COMPOSER_PIN=1` — 핀 강제 off (리그레션 대조용).
+- `JWC_COMMIT_LANE=0` — 커밋 레인 **옵트아웃** (기본 ON, 083.10 §1 플립 260613). 미지원 터미널/zellij/오버레이/오버플로는 게이트와 무관하게 호출 단위 자동 폴백 
+  (chatContainer)으로 폴백.
+- `PI_TUI_LEGACY_MULTIPLEXER_FULL_RENDER=1` — 멀티플렉서에서 height 변화 시 viewportRepaint 대신
+  fullRender를 강제 (레거시 비교용).
 - 크래시 가드: `settings-list.ts`가 비-string currentValue에 내성 (`String(v ?? "")`) —
   260613 00:08 `/settings` 전체 다운(undefined→`truncateToWidth` native throw)의 재발 방지.
 
-## 8. 테스트 자산
+## 9. 테스트 자산
 
 - `packages/tui/test/viewport-fill.test.ts` — **13케이스**: 핀 불변식(grow/collapse×3) ·
   clearOnShrink 미발화 · 센티널 규칙 · 경계 상/하향 통과 · off 경로 바이트 동일 · 커서 정합 ·
@@ -97,6 +261,7 @@ tmux 친화. alt-screen 전환은 99.20 장기 메모로만 존재.
 
 ## 관련 문서
 
-- devlog: `083.6`(출렁임 기전) · `083.7`(핀 §1~§11) · `99.20.03`(압축 트리거 맵) ·
-  `99.20.04`(커밋 폴딩 설계·구현·핫픽스)
+- devlog: `083.6`(출렁임 기전) · `083.7`(핀 §1~§11) · `083.8`(viewportRepaint 정책·S2 compact
+  이동·S3 기본화) · `083.9`(커밋 레인 P1/P2 — insert-history·commitLines·history-region) ·
+  `99.20.03`(압축 트리거 맵) · `99.20.04`(커밋 폴딩 설계·구현·핫픽스)
 - 주입/프롬프트와의 경계: [prompt_flow.md](./prompt_flow.md) — 스크롤은 표시층, 주입은 컨텍스트층.

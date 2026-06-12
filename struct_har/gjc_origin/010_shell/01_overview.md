@@ -1,7 +1,7 @@
 # 010_shell — 01 overview (gjc_origin)
 
-> upstream `devlog/_upstream_gjc/` @ `67427c6`  
-> MOC: [`010_moc_shell_rename.md`](../../../devlog/_plan/260612_jawcode_fork/010_moc_shell_rename.md)
+> upstream `devlog/_upstream_gjc/` @ `75d103f45145`
+> MOC: [`010_moc_shell_rename.md`](../../../devlog/_plan/260612_jawcode_fork/phase1/010_moc_shell_rename.md)
 
 ## jwc 셸 + 표면 리네이밍
 

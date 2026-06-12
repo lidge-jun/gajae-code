@@ -5,7 +5,7 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-const ROOT = path.resolve(import.meta.dir, "..");
+const ROOT = path.resolve(import.meta.dir, "../..");
 const STRUCT = path.join(ROOT, "struct_har");
 const STRUCTURE = path.join(ROOT, "structure");
 
@@ -19,8 +19,8 @@ const MAP: Record<string, string> = {
 	"workflows.md": "workflows.md",
 };
 
-const FORK_HEAD = "81bcea96";
-const GJC_HEAD = "67427c6";
+const FORK_HEAD = "dc4f22672581";
+const GJC_HEAD = "75d103f45145";
 
 for (const side of ["gjc_origin", "jwc_patched"] as const) {
 	const archDir = path.join(STRUCT, side, "architecture");
@@ -32,7 +32,7 @@ for (const side of ["gjc_origin", "jwc_patched"] as const) {
 			: "(structure file missing)";
 		const content = `# architecture / ${harName} (${side})
 
-> **스냅샷 (2026-06-13)**: patched SoT는 [\`structure/${structName}\`](../../../structure/${structName}).  
+> **스냅샷 (2026-06-13)**: patched SoT는 [\`structure/${structName}\`](../../../structure/${structName}).
 > fork \`${FORK_HEAD}\` · gjc clone \`${GJC_HEAD}\`.
 
 ## structure/ 발췌 (첫 12줄)

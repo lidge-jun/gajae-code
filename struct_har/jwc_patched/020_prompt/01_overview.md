@@ -1,7 +1,7 @@
 # 020_prompt — 01 overview (jwc_patched)
 
-> worktree @ `81bcea96` · gjc @ `67427c6`  
-> MOC: [`020_moc_prompting.md`](../../../devlog/_plan/260612_jawcode_fork/020_moc_prompting.md)
+> worktree @ `dc4f22672581` · gjc @ `75d103f45145`
+> MOC: [`020_moc_prompting.md`](../../../devlog/_plan/260612_jawcode_fork/phase1/020_moc_prompting.md)
 
 ## 프롬프팅 / 시스템 프롬프트
 

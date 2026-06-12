@@ -1,23 +1,23 @@
 # architecture / workflows.md (jwc_patched)
 
-> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/workflows.md`](../../../structure/workflows.md).  
-> fork `81bcea96` · gjc clone `67427c6`.
+> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/workflows.md`](../../../structure/workflows.md).
+> fork `dc4f22672581` · gjc clone `75d103f45145`.
 
 ## structure/ 발췌 (첫 12줄)
 
 ```markdown
 # Default Workflow Skills
 
-> jwc의 공개 workflow surface는 기본 4종이다. 이 문서는 skill별 pipeline, artifact 경로, gate 정책만 기록한다.
+> jwc의 공개 workflow surface는 기본 4종 + **native IPABCD orchestration**(`jwc orchestrate`)이다.
 > fork 런타임 기준 canonical slug는 `jaw-interview`이며, upstream `AGENTS.md`는 아직 `deep-interview` 표기를 유지한다 `[기본값]`.
 
-## 공개 surface
+## Native orchestration (050 — 런타임 ✅ / discovery ⬜ 99.03)
 
-| Workflow skill | 목적 | bundled source | 근거 |
-|---|---|---|---|
-| `jaw-interview` | Socratic requirements interview. `.jwc/specs/jaw-interview-{slug}.md` 아래 approved spec 산출. | `packages/coding-agent/src/defaults/gjc/skills/jaw-interview/SKILL.md` | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/defaults/gjc-defaults.ts:13`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/defaults/gjc/skills/jaw-interview/SKILL.md:1` |
-| `ralplan` | consensus planning + approval gate. `.jwc/plans/` 아래 plan 산출. | `packages/coding-agent/src/defaults/gjc/skills/ralplan/SKILL.md` | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/defaults/gjc-defaults.ts:13`, `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:12` |
-| `ultragoal` | durable multi-goal execution ledger. `.jwc/ultragoal/` 사용. | `packages/coding-agent/src/defaults/gjc/skills/ultragoal/SKILL.md` | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/defaults/gjc-defaults.ts:13`, `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:13` |
+| 표면 | 동작 | 상태 |
+|---|---|---|
+| CLI | `jwc orchestrate <i\|p\|a\|b\|c\|d>`, `audit-prompt`, `status`, **`reset`** (99.07-U1: 어느 상태→idle, goal 불가침, --shared/--dry-run) | ✅ 구현 (`orchestrate-runtime.ts`) |
+| interview CLI | `jwc interview cancel` | ✅ **99.07-U2** — 세션 스코프 상태 파일 삭제 + HUD inactive 동기화 (`jaw-interview-runtime.ts`) |
+| Slash | `/orchestrate` (jaw brand only) | ✅ |
 ```
 
 ## 대조 메모

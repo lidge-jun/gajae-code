@@ -1,14 +1,14 @@
-# Gajae-Code Agent Contract
+# Jawcode Agent Contract
 
-Gajae-Code (`gjc`) is this repository's coding-agent implementation. Treat this file as the repo-local operating contract for contributors and automated agents working in this tree.
+Jawcode (`jwc`) is this repository's coding-agent implementation. Treat this file as the repo-local operating contract for contributors and automated agents working in this tree.
 
 ## Public workflow surface
 
-GJC intentionally exposes exactly four default workflow skills. Do not add, document, install, or route to additional default workflow definitions without an explicit product decision and gate update. GJC also bundles exactly four source-defined task role agents for delegation; these are not workflow skills and are not committed repo-visible `.jwc` defaults.
+JWC intentionally exposes exactly four default workflow skills. Do not add, document, install, or route to additional default workflow definitions without an explicit product decision and gate update. JWC also bundles exactly four source-defined task role agents for delegation; these are not workflow skills and are not committed repo-visible `.jwc` defaults.
 
 | Workflow skill | Purpose | Bundled source file |
 | --- | --- | --- |
-| `deep-interview` | Socratic requirements interview; writes approved specs under `.jwc/specs/`. | `packages/coding-agent/src/defaults/gjc/skills/deep-interview/SKILL.md` |
+| `jaw-interview` | Socratic requirements interview; writes approved specs under `.jwc/specs/`. | `packages/coding-agent/src/defaults/gjc/skills/jaw-interview/SKILL.md` |
 | `ralplan` | Consensus planning and approval gate; writes plans under `.jwc/plans/`. | `packages/coding-agent/src/defaults/gjc/skills/ralplan/SKILL.md` |
 | `ultragoal` | Durable multi-goal execution ledger under `.jwc/ultragoal/`. | `packages/coding-agent/src/defaults/gjc/skills/ultragoal/SKILL.md` |
 | `team` | Tmux-backed parallel execution using `.jwc/state/team/`. | `packages/coding-agent/src/defaults/gjc/skills/team/SKILL.md` |
@@ -23,10 +23,10 @@ GJC intentionally exposes exactly four default workflow skills. Do not add, docu
 Rules:
 - Bundled default workflow skills load from `packages/coding-agent/src/defaults/gjc/skills`.
 - Bundled role agents load from `packages/coding-agent/src/prompts/agents`.
-- `architect`, `planner`, and `critic` remain read-only for product files, but may use their restricted `bash` tool only for sanctioned workflow CLI persistence (`gjc ralplan --write ...`) and GJC workflow state read/write/contract commands (`gjc state ...`); the bash tool blocks env overrides, direct handoffs, state clears, artifact file-path ingestion, and all other command shapes for those role agents.
+- `architect`, `planner`, and `critic` remain read-only for product files, but may use their restricted `bash` tool only for sanctioned workflow CLI persistence (`jwc ralplan --write ...`) and JWC workflow state read/write/contract commands (`jwc state ...`); the bash tool blocks env overrides, direct handoffs, state clears, artifact file-path ingestion, and all other command shapes for those role agents.
 - Do not commit repo-visible `.jwc` default definitions; runtime user/project `.jwc` discovery remains supported for local overrides and installed configs.
 - Runtime state, plans, specs, and workflow ledgers belong under `.jwc/`.
-- Preserve upstream attribution in source comments/docs where appropriate, but public commands, paths, and examples must use `gjc` and `.jwc`.
+- Preserve upstream attribution in source comments/docs where appropriate, but public commands, paths, and examples must use `jwc` and `.jwc`.
 - Keep source-bundled workflow skills and role agents in sync with tests/gates; do not rely on committed `.jwc` copies.
 
 ## Workflow routing
@@ -34,12 +34,12 @@ Rules:
 Use the smallest workflow that satisfies the request:
 
 1. Direct implementation for clear, low-risk edits.
-2. `deep-interview` when intent, scope, or acceptance criteria are ambiguous.
+2. `jaw-interview` when intent, scope, or acceptance criteria are ambiguous.
 3. `ralplan` when requirements are clear enough to plan but architecture, sequencing, or verification needs consensus.
 4. `ultragoal` when work should be split into durable goals with an auditable ledger.
 5. `team` when approved work benefits from parallel workers.
 
-Do not execute implementation from `deep-interview` or `ralplan` unless the user explicitly approves execution. Planning artifacts must remain `pending approval` until that approval exists.
+Do not execute implementation from `jaw-interview` or `ralplan` unless the user explicitly approves execution. Planning artifacts must remain `pending approval` until that approval exists.
 
 Subagent await timeouts are observation windows, not failure signals. Do not cancel a subagent merely because `subagent await` timed out; inspect/list, continue independent work, and cancel only when the subagent has actually failed, gone off-track, or become unrecoverably wrong.
 
@@ -49,14 +49,40 @@ This repo contains multiple packages, but `packages/coding-agent/` is the primar
 
 When the user says "agent" or asks why the agent behaves a certain way, they mean the coding-agent CLI implementation, not the assistant currently editing the repo.
 
+## Documentation canon and development log
+
+Use this `AGENTS.md` as the first-stop document canon guide for the Jawcode tree. When documentation sources disagree, resolve them in this order:
+
+1. Current user instruction and active workflow stage.
+2. Nearest directory-local `AGENTS.md`.
+3. This project-root `AGENTS.md`.
+4. `README.jwc.md` for Jawcode-facing orientation, then `README.md` for upstream/package-facing orientation.
+5. `structure/` for maintained maps and status pages.
+6. `devlog/_plan/` for historical plan context.
+
+Keep durable development-log notes in this file when they affect how future agents should navigate the repository, especially canonical-doc decisions, source-of-truth changes, or workflow-surface changes. Use `devlog/_plan/` for long-form implementation plans and `structure/` for maintained reference docs; do not duplicate the same rule in all three places unless the README needs a pointer.
+
+### Jawdev documentation model
+
+`jawdev` is the Jawcode development-documentation discipline that keeps three document layers separate:
+
+- `structure/`: maintained current-state source of truth for architecture, contracts, conventions, readiness, navigation, and stable rules.
+- `struct_har/`: comparison + harness layer for regenerated `gjc_origin` ↔ `jwc_patched` snapshots, OMP reference facts, chase gap indexes, and `struct_har/_scripts/` regeneration tooling.
+- `devlog/`: Jawdev logic record for plan folders under `devlog/_plan/`, MOC/phase numbering, concrete file-level plans, decisions, evidence, and historical implementation context. It is not the canonical current-state map; promote stable rules back into `structure/` or this `AGENTS.md`.
+
+### Development log
+
+- 2026-06-12: Project README pointers now direct agents to this `AGENTS.md` for the documentation canon guide and durable agent-facing development-log notes.
+- 2026-06-12: Public docs (`README*.md`, `AGENTS.md`, `CONTRIBUTING.jwc.md`, `structure/`) are jwc-first. Keep `gjc` only for preserved internal identifiers, upstream baseline paths, compatibility notes, and code-fact citations.
+
 | Package | Description |
 | --- | --- |
 | `packages/ai` | Multi-provider LLM client with streaming support |
 | `packages/agent` | Agent runtime with tool calling and state management |
-| `packages/coding-agent` | Main GJC CLI application |
+| `packages/coding-agent` | Main JWC CLI application |
 | `packages/tui` | Terminal UI library with differential rendering |
 | `packages/natives` | Native text/image/grep bindings |
-| `packages/stats` | Local observability dashboard (`gjc stats`) |
+| `packages/stats` | Local observability dashboard (`jwc stats`) |
 | `packages/utils` | Shared utilities |
 | `crates/pi-natives` | Rust native helpers |
 
@@ -106,7 +132,17 @@ const worker = isCompiledBinary()
 	: new Worker(new URL("./<worker>.ts", import.meta.url).href, { type: "module" });
 ```
 
-Every worker entry must also be listed as an extra compile entrypoint in `packages/coding-agent/scripts/build-binary.ts`. Validate new worker paths with the relevant smoke test; `gjc --smoke-test` covers the stats sync worker.
+Every worker entry must also be listed as an extra compile entrypoint in `packages/coding-agent/scripts/build-binary.ts`. Validate new worker paths with the relevant smoke test; `jwc --smoke-test` covers the stats sync worker.
+
+## TUI visual design is user-curated — DO NOT revert or simplify
+
+The TUI's visual identity (gradient welcome banner, intro sweep animation, shine effects, composer styling, scroll behavior) was hand-tuned by the user. It is a product feature, not incidental decoration. Multiple parallel agent sessions have repeatedly reverted it to a plain look; this is a hard violation.
+
+- **NEVER** simplify, flatten, remove, or "clean up" the welcome banner or its animation in `packages/coding-agent/src/modes/components/welcome.ts` (gradient logo, INTRO_SWEEPS, shine band, multi-stop palettes). If your change accidentally touches it, restore it from git before committing.
+- **NEVER** rewrite the viewport scroll model in `packages/tui/src/tui.ts` (B2-lite fill + sticky gap, `compactViewportFill()`). The canonical spec is `structure/scroll.md` — read it before touching any scroll/fill/gap code.
+- **NEVER** change commit-time tool folding defaults (`tool.renderMode`, live-zone vs chat append) without an explicit user instruction in your own session.
+- Visual changes to any file above require the user explicitly asking for that visual change **in the current session**. "It looks simpler/cleaner" is not a reason. A failing test is not a license to delete the feature — fix the test's expectation against the canonical behavior.
+- If you find these files in a state that conflicts with this rule (e.g. banner already plain), do not "fix" further — report it and leave it to the user's session.
 
 ## Logging and TUI safety
 

@@ -1,7 +1,7 @@
 # chase/bands — 밴드 카드
 
-> **상태**: 카드 파일(`010_shell.md` …)은 아직 없음. 횡단 표는 [02_gap_inventory.md](../02_gap_inventory.md)가 정본.
-> 밴드별로 쪼갤 때 여기에 `NNN_<name>.md` 추가하고 본 README에 링크한다.
+> **상태**: 밴드별 상세 카드는 아직 `bands/`에 분리하지 않았다. 횡단 표는 [002_gap_inventory.md](../002_gap_inventory.md), 구체 gap 카드는 `chase/10.NNN_*`·`20.NNN_*`가 정본이다.
+> `002_gap_inventory`의 참조 카드 링크는 추후 `bands/NNN_<name>.md` 생성 시 해소한다.
 
 | 밴드 | chase G3 요약 | struct_har |
 |------|----------------|------------|

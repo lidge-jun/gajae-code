@@ -1,7 +1,7 @@
 # 083_output — 01 overview (omp_origin)
 
-> omp @ `e13ad3805` · 클론 [`devlog/_upstream_omp/`](../../../devlog/_upstream_omp/)  
-> MOC (jaw 밴드 정렬): [`083_moc_tui_output.md`](../../../devlog/_plan/260612_jawcode_fork/083_moc_tui_output.md)
+> omp @ `db421bb2ef68` · 클론 [`devlog/_upstream_omp/`](../../../devlog/_upstream_omp/)
+> MOC (jaw 밴드 정렬): [`083_moc_tui_output.md`](../../../devlog/_plan/260612_jawcode_fork/phase1/083_moc_tui_output.md)
 
 ## TUI 출력 · 도구 블록
 

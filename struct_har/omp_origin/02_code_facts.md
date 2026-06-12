@@ -1,6 +1,6 @@
 # omp_origin — 02 code facts
 
-> **repo 기준**: `devlog/_upstream_omp/` 클론 (gitignored).  
+> **repo 기준**: `devlog/_upstream_omp/` 클론 (gitignored).
 > 절대 cite: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_upstream_omp/<path>:<line>`
 
 ## 1. 루트·진입

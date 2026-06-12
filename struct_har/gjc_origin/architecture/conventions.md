@@ -1,7 +1,7 @@
 # architecture / conventions.md (gjc_origin)
 
-> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/conventions.md`](../../../structure/conventions.md).  
-> fork `81bcea96` · gjc clone `67427c6`.
+> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/conventions.md`](../../../structure/conventions.md).
+> fork `dc4f22672581` · gjc clone `75d103f45145`.
 
 ## structure/ 발췌 (첫 12줄)
 
@@ -10,14 +10,14 @@
 
 ## 1. 포크 규칙 (리베이스 친화)
 
-업스트림과의 충돌 면적을 최소화한다. **업스트림 파일 수정은 최후 수단.**
+업스트림과의 충돌 면적을 최소화하되, 공개 문서·프롬프트·사용자 표면은 **jwc 기준**으로 유지한다.
 
 - ✅ 신규 파일/폴더 추가: `structure/`, `devlog/`, 그리고 jawcode 전용 코드는
   가능한 한 새 패키지(`packages/jaw-*`) 또는 새 모듈 파일로
 - ⚠️ 업스트림 파일 수정: 해당 devlog 플랜에 경로·사유를 기록한 뒤에만
-- ❌ `AGENTS.md` 수정 금지 — 업스트림 운영 계약(워크플로 스킬 4종, 롤 에이전트 4종,
-  `.gjc/` 경로 계약)이며 리베이스 충돌 1순위. jawcode 컨텍스트는 `structure/`에 둔다
+- ✅ `AGENTS.md`, `README*.md`, `structure/` 문서는 jwc 기준 정본으로 유지한다. upstream gajae-code 기준 문구는 `devlog/_upstream_gjc/`·`struct_har/gjc_origin/` 같은 비교/근거 문맥에만 남긴다
 
+### 커밋 트레일러 규약 (fork-delta 동기 — 067.1 §3.1)
 ```
 
 ## 대조 메모

@@ -1,23 +1,23 @@
 # architecture / session_storage.md (gjc_origin)
 
-> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/session_storage.md`](../../../structure/session_storage.md).  
-> fork `81bcea96` · gjc clone `67427c6`.
+> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/session_storage.md`](../../../structure/session_storage.md).
+> fork `dc4f22672581` · gjc clone `75d103f45145`.
 
 ## structure/ 발췌 (첫 12줄)
 
 ```markdown
 # Session / Storage
 
-> 현재 jwc/GJC storage는 `~/.gjc/agent` 중심이다. D6에 따라 TUI와 cli-jaw Web 세션은 공유하지 않고, 공유 대상은 스킬과 OAuth다.
+> 현재 jwc storage는 `~/.jwc/agent` 중심이다. D6에 따라 TUI와 cli-jaw Web 세션은 공유하지 않고, 공유 대상은 스킬과 OAuth다.
 
 ## 경로 소스
 
 | 함수/상수 | 경로 | 의미 | 근거 |
 |---|---|---|---|
-| `CONFIG_DIR_NAME` | `.gjc` | config root 기본 이름. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:22` |
-| `getConfigDirName()` | `GJC_CONFIG_DIR` 또는 `PI_CONFIG_DIR` 또는 `.gjc` | env override 가능. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:92` |
-| `getAgentDir()` | `~/.gjc/agent` | agent config dir. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:216` |
-| `getProjectAgentDir(cwd)` | `<cwd>/.gjc` | project-local runtime/config root. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:221` |
+| `CONFIG_DIR_NAME` | `.jwc` | config root 기본 이름. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:22` |
+| `getConfigDirName()` | `JWC_CONFIG_DIR` 또는 `GJC_CONFIG_DIR` 또는 `PI_CONFIG_DIR` 또는 `.jwc` | env override 가능. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:92` |
+| `getAgentDir()` | `~/.jwc/agent` | agent config dir. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:216` |
+| `getProjectAgentDir(cwd)` | `<cwd>/.jwc` | project-local runtime/config root. | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:221` |
 ```
 
 ## 대조 메모

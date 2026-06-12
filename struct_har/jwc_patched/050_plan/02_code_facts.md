@@ -1,36 +1,31 @@
 # 050_plan — code facts (jwc_patched)
-
-> **worktree**: jawcode @ `81bcea96`  
-> **gjc 대조**: `devlog/_upstream_gjc/` @ `67427c6`  
-> MOC: `devlog/_plan/260612_jawcode_fork/050_moc_plan_pabcd.md`  
-> **99.03**: 런타임 ✅ / discovery ⬜ — [02_logic_changes.md](./02_logic_changes.md)
-
+> **worktree**: jawcode @ `dc4f22672581`
+> **gjc 대조**: `devlog/_upstream_gjc/` @ `75d103f45145`
+> MOC: `devlog/_plan/260612_jawcode_fork/phase1/050_moc_plan_pabcd.md`
 ## 1. patched 앵커 경로
 
-| # | path | role |
+| # | path | status |
 |---:|---|---|
-| 1 | `packages/coding-agent/src/gjc-runtime/orchestrate-state.ts` | PABCD registry, `readPabcdState`, transitions |
-| 2 | `packages/coding-agent/src/gjc-runtime/orchestrate-runtime.ts` | stage I/P/A/B/C/D, audit prompts |
-| 3 | `packages/coding-agent/src/commands/orchestrate.ts` | CLI + jaw brand gate |
-| 4 | `packages/coding-agent/src/prompts/jaw/orchestrate-{i,p,a,b,c,d}.md` | stage stdout prompts |
-| 5 | `packages/coding-agent/src/defaults/gjc/skills/ralplan/SKILL.md` | P-stage skill (slug 유지, 99.02 re-facing) |
-| 6 | `.jwc/state/sessions/<sessionId>/pabcd-state.json` | persisted envelope |
+| 1 | `packages/coding-agent/src/defaults/gjc/skills/ralplan/SKILL.md` | present |
+| 2 | `packages/coding-agent/src/gjc-runtime/orchestrate-runtime.ts` | present |
+| 3 | `packages/coding-agent/src/prompts/jaw/orchestrate-d.md` | present |
+| 4 | `structure/051_design_command_port.md` | missing (verify path) |
 
-## 2. fork-delta
+## 2. fork-delta (structure/fork-delta.md)
 
-- `orchestrate-state.ts`, `orchestrate-runtime.ts` — NEW
-- `prompts/jaw/orchestrate-*` — NEW
-- `system-prompt.md` — HARD-EDIT; **99.03 M1** 시 `085.5-M2 + 99.03-M1` co-update
+- orchestrate-runtime NEW
+- prompts/jaw/orchestrate-* NEW
 
-## 3. structure/devlog
-
-- [workflows.md](../../../structure/workflows.md) §Native orchestration
-- [m1_closeout.md](../../../structure/m1_closeout.md)
-- [99.03.01](../../../devlog/_plan/260612_jawcode_fork/99.03.01_impl_workflow_surface.md)
-
-## 4. 검증
+## 3. 검증
 
 ```bash
-jwc orchestrate status
-git diff -u devlog/_upstream_gjc/packages/coding-agent/src/gjc-runtime/orchestrate-runtime.ts packages/coding-agent/src/gjc-runtime/orchestrate-runtime.ts | head
+git -C devlog/_upstream_gjc rev-parse --short HEAD   # 75d103f45145
+git rev-parse --short HEAD               # dc4f22672581
+diff -u devlog/_upstream_gjc/packages/coding-agent/src/defaults/gjc/skills/ralplan/SKILL.md packages/coding-agent/src/defaults/gjc/skills/ralplan/SKILL.md | head
 ```
+
+## 부록
+
+- **struct_har** 전수 갱신: `bun struct_har/_scripts/struct-har-regenerate.ts` (2026-06-13)
+- **로드맵**: `devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md`
+

@@ -1,14 +1,14 @@
 # architecture / prompt_flow.md (gjc_origin)
 
-> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/prompt_flow.md`](../../../structure/prompt_flow.md).  
-> fork `81bcea96` · gjc clone `67427c6`.
+> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/prompt_flow.md`](../../../structure/prompt_flow.md).
+> fork `dc4f22672581` · gjc clone `75d103f45145`.
 
 ## structure/ 발췌 (첫 12줄)
 
 ```markdown
 # Prompt Flow
 
-> 현재 GJC/JWC 프롬프트는 `system-prompt.md` 템플릿 + `SYSTEM.md` customization + project context + tools + skills + memory append instructions로 조립된다.
+> 현재 jwc 프롬프트는 `system-prompt.md` 템플릿 + `SYSTEM.md` customization + project context + tools + skills + memory append instructions로 조립된다.
 
 ## 전체 흐름
 

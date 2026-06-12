@@ -1,7 +1,7 @@
 # 030_skills — 01 overview (omp_origin)
 
-> omp @ `e13ad3805` · 클론 [`devlog/_upstream_omp/`](../../../devlog/_upstream_omp/)  
-> MOC (jaw 밴드 정렬): [`030_moc_skills_discovery.md`](../../../devlog/_plan/260612_jawcode_fork/030_moc_skills_discovery.md)
+> omp @ `db421bb2ef68` · 클론 [`devlog/_upstream_omp/`](../../../devlog/_upstream_omp/)
+> MOC (jaw 밴드 정렬): [`030_moc_skills_discovery.md`](../../../devlog/_plan/260612_jawcode_fork/phase1/030_moc_skills_discovery.md)
 
 ## 스킬 · 명령 디스커버리
 

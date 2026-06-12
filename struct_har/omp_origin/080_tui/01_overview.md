@@ -1,7 +1,7 @@
 # 080_tui — 01 overview (omp_origin)
 
-> omp @ `e13ad3805` · 클론 [`devlog/_upstream_omp/`](../../../devlog/_upstream_omp/)  
-> MOC (jaw 밴드 정렬): [`080_moc_tui.md`](../../../devlog/_plan/260612_jawcode_fork/080_moc_tui.md)
+> omp @ `db421bb2ef68` · 클론 [`devlog/_upstream_omp/`](../../../devlog/_upstream_omp/)
+> MOC (jaw 밴드 정렬): [`080_moc_tui.md`](../../../devlog/_plan/260612_jawcode_fork/phase1/080_moc_tui.md)
 
 ## TUI · 테마
 

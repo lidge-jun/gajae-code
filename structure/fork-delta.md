@@ -1,6 +1,6 @@
 # fork-delta — @bitkyc08/jawcode 포크 델타 인덱스 (체리픽 정본)
 
-> upstream: `Yeachan-Heo/gajae-code` · fork: `bitkyc08/jawcode`. 본 문서는 포크가 업스트림에서 이탈한 파일의 **단일 카노니컬 인덱스**다 — 리베이스/체리픽 전 충돌 예상 분석의 첫 진입점. 설계 정본: `devlog/_plan/260612_jawcode_fork/067.1_plan_structure_fork_delta.md`.
+> upstream: `Yeachan-Heo/gajae-code` · fork: `bitkyc08/jawcode`. 본 문서는 포크가 업스트림에서 이탈한 파일의 **단일 카노니컬 인덱스**다 — 리베이스/체리픽 전 충돌 예상 분석의 첫 진입점. 설계 정본: `devlog/_plan/260612_jawcode_fork/phase1/067.1_plan_structure_fork_delta.md`.
 > 갱신 규칙: HARD-EDIT·INVERTED-GUARD·REMOVED·NEW 파일이 포함된 커밋은 본 문서를 **동행 갱신**한다 (SOFT-EDIT는 밴드 일괄 허용). 커밋 트레일러 `Fork-Delta: <종류> <경로>` 규약은 `structure/conventions.md` 참조.
 
 ## 종류 정의
@@ -13,12 +13,16 @@
 | `INVERTED-GUARD` | 가드/허용리스트 논리 반전(gjc→jwc), 테스트 동반 | 충돌 시 포크 논리 우선 |
 | `SOFT-EDIT` | `${APP_NAME}` 동적화·픽스처 갱신 등 | 저위험 |
 
-## 보존 경계 (BOUNDARY: gjc-internal-identifiers — 065.1 확정)
+## 보존 경계 — ⚠️ 260613 플립으로 대부분 해제 ([260613_gjc_flip](../devlog/_plan/260613_gjc_flip/00_moc_flip.md))
 
-- `packages/coding-agent/src/gjc-runtime/`, `src/extensibility/gjc-plugins/` → **경로 rename 금지** (업스트림 체리픽 경계)
-- `CANONICAL_GJC_WORKFLOW_SKILLS`·`GJC_SKILL_KEYWORD_DEFINITIONS`·`GjcTeam*` 등 심볼 → 변경 금지
-- receipt.owner `"gjc-runtime"`/`"gjc-state-cli"`/`"gjc-hook"` → **절대 변경 금지** (퍼시스트 계약)
-- `ENGINE_NAME = "gjc"`(`packages/utils/src/dirs.ts:20`) → 보존 (065.1-H; XDG 경로는 061.1 Q2)
+> 065.1의 "내부 식별자 보존" 결정은 260613 이별/플립 결정으로 **의도적으로 반전**됐다.
+> 업스트림 체리픽은 이제 경로/심볼 매핑(gjc-runtime→jwc-runtime, Gjc*→Jwc*, CANONICAL_GJC→JWC 등)을
+> 적용해 이식한다 — chase 003 원칙 5(의미론적 팔로우)와 동일 정신.
+
+- ~~`gjc-runtime/`·`gjc-plugins/` 경로 rename 금지~~ → **플립 완료**: `jwc-runtime/`·`jwc-plugins/`·`defaults/jwc/`
+- ~~`CANONICAL_GJC_WORKFLOW_SKILLS` 등 심볼 변경 금지~~ → **플립 완료**: `CANONICAL_JWC_WORKFLOW_SKILLS`·`Jwc*`·`Jawcode*`
+- ~~receipt.owner 변경 금지~~ → **쓰기 `jwc-*` / 읽기 gjc-* 별칭 수용** (read-both 정규화 4사이트 — 퍼시스트 호환 유지)
+- `ENGINE_NAME = "gjc"`(`packages/utils/src/dirs.ts:20`) → **여전히 보존** (이중 브랜드 분모 — 플립 연기 명단, 05 §연기)
 - `@gajae-code/*` 내부 import 스코프 → 보존 (063.1 전략 B)
 - `.gjc/` 상태 경로 → **`.jwc` 전환 완료 (260612 Phase β 본 적용, 0b603b05+d34097b8)** — legacy는 migrate-config-dir 원타임 rename + sentinel. 예외: migrate-config-dir.*·beta-jwc-sweep.ts는 ".gjc" 리터럴 의도 보존
 
@@ -38,7 +42,7 @@
 
 | 경로 | 종류 | 밴드 | merge 지침 | 보존 경계 |
 |---|---|---|---|---|
-| `…/defaults/gjc/skills/{jaw-interview,ralplan,team,ultragoal}/SKILL.md` | HARD-EDIT(+INVERTED-GUARD) | 085.5-M4, C13 | CONFLICT-EXPECTED | `GJC_TEAM_*` env·`.jwc/` 경로. jaw-interview는 설정 키 `jwc.interview.*` (c7c748ec) |
+| `…/defaults/gjc/skills/{jaw-interview,ralplan,team,ultragoal}/SKILL.md` | HARD-EDIT(+INVERTED-GUARD) | 085.5-M4, C13, 99.30.02 | CONFLICT-EXPECTED | `GJC_TEAM_*` env·`.jwc/` 경로. jaw-interview는 설정 키 `jwc.interview.*` (c7c748ec). **99.30.02 이별**: ralplan→orchestrate 재배선 보존 — upstream ralplan 트랙은 체리픽 금지(의미론적 팔로우, chase 003 원칙 5) |
 | 부속 md (auto-answer-uncertain 등) | HARD-EDIT | 042/085.5 | MANUAL-REVIEW | — |
 
 ### 신규 런타임 (gjc-runtime/ 내 포크 전용) — NEW
@@ -88,9 +92,12 @@
 
 | 경로 | 종류 | 밴드 |
 |---|---|---|
-| `…/modes/components/welcome.ts`·`assistant-message.ts`·`session/agent-session.ts` | HARD-EDIT | 086/085.6 |
+| `…/modes/components/welcome.ts`·`assistant-message.ts`·`session/agent-session.ts` | HARD-EDIT | 086/085.6 + welcome.ts 99.20.05 배너 임계 7→4 (`e0fba53c`) |
 | `…/modes/theme/defaults/abyss-bite{,-light}.json` | NEW | 086 |
 | `…/discovery/cli-jaw.ts` | NEW | 031 |
+| `…/session/agent-session.ts` | HARD-EDIT | 99.20.05 — `/fast` → serviceTier 설정 영속 (`e0fba53c`) |
+| `…/modes/controllers/extension-ui-controller.ts` | HARD-EDIT | 99.20.05 — ask 휠 반환(마우스 리포팅 제거) (`e0fba53c`) |
+| `…/tools/ask.ts` | HARD-EDIT | 99.20.05 — ask 휠 반환 배선 (`e0fba53c`) |
 
 ### 포크 전용 디렉터리 (전체 NEW — 엔트리 불요)
 

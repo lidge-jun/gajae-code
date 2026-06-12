@@ -5,7 +5,7 @@
 > 전제: 99.12 M1 릴리스 게이트 done 선언(`2d1afb52`, G1~G9 증거 — 090 정본),
 > 99.00.05 완료 표기(`a3befc7a`). cli-jaw 측 260613 배치(스트림 가시성·메모리·디스패치
 > 하드닝, 커밋 23건, 풀스위트 4,029/0실패) 완료 — 트랙 C의 이식 원천.
-> 관련: [99.00.00 MOC](../260612_jawcode_fork/99.00.00_moc_99band.md) · [99.00.04 §4 이월](../260612_jawcode_fork/99.00.04_plan_batch_closeout.md) ·
+> 관련: [99.00.00 MOC](../260612_jawcode_fork/phase1/99.00.00_moc_99band.md) · [99.00.04 §4 이월](../260612_jawcode_fork/phase1/99.00.04_plan_batch_closeout.md) ·
 > [112 MOC GUI](../260612_jawcode_fork/112_moc_gui.md) · [113 web native surfaces](../260612_jawcode_fork/113_plan_web_native_surfaces.md) ·
 > cli-jaw `devlog/_plan/260613_jwc_code_mode/` (D112-3: 설계 정본은 본 repo, cli-jaw 폴더는 사후 구현 기록 전용)
 
@@ -13,7 +13,7 @@
 
 | 트랙 | 내용 | 선행조건 | 문서 위치 |
 |---|---|---|---|
-| **A. 99밴드 잔여 마감** | 이월 4건 + 99.11① PR 추적 | 없음 — 즉시 가능 | `260612_jawcode_fork/99.*` 기존 번호 체계 이어서 |
+| **A. 99밴드 잔여 마감** | 이월 4건 + 99.11① PR 추적 | 없음 — 즉시 가능 | `260612_jawcode_fork/phase1/99.*` 기존 번호 체계 이어서 |
 | **B. Code Mode (112.x)** | B1 1줄 수리 → B2 cwd 감사 → cli-jaw C1/C2 | B1이 전체 게이트 | 정본 = `112.x`, cli-jaw 쪽은 구현 기록만 |
 | **C. Web Native Surfaces (113.x)** | cli-jaw 260613 검증 패턴 5종 계약 반영 | 113.1 계약 문서 개정 먼저 | `113.x` 신규 하위 문서 |
 

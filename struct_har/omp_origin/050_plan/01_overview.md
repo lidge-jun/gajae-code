@@ -1,7 +1,7 @@
 # 050_plan — 01 overview (omp_origin)
 
-> omp @ `e13ad3805` · 클론 [`devlog/_upstream_omp/`](../../../devlog/_upstream_omp/)  
-> MOC (jaw 밴드 정렬): [`050_moc_plan_pabcd.md`](../../../devlog/_plan/260612_jawcode_fork/050_moc_plan_pabcd.md)
+> omp @ `db421bb2ef68` · 클론 [`devlog/_upstream_omp/`](../../../devlog/_upstream_omp/)
+> MOC (jaw 밴드 정렬): [`050_moc_plan_pabcd.md`](../../../devlog/_plan/260612_jawcode_fork/phase1/050_moc_plan_pabcd.md)
 
 ## 계획 · 오케스트레이션
 

@@ -1,7 +1,7 @@
 # 070_memory — 01 overview (gjc_origin)
 
-> upstream `devlog/_upstream_gjc/` @ `67427c6`  
-> MOC: [`99.01.00_moc_memory.md`](../../../devlog/_plan/260612_jawcode_fork/99.01.00_moc_memory.md)
+> upstream `devlog/_upstream_gjc/` @ `75d103f45145`
+> MOC: [`99.01.00_moc_memory.md`](../../../devlog/_plan/260612_jawcode_fork/phase1/99.01.00_moc_memory.md)
 
 ## 메모리 (99.01 이관)
 

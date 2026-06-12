@@ -1,7 +1,7 @@
 # 010_shell — 01 overview (omp_origin)
 
-> omp @ `e13ad3805` · 클론 [`devlog/_upstream_omp/`](../../../devlog/_upstream_omp/)  
-> MOC (jaw 밴드 정렬): [`010_moc_shell_rename.md`](../../../devlog/_plan/260612_jawcode_fork/010_moc_shell_rename.md)
+> omp @ `db421bb2ef68` · 클론 [`devlog/_upstream_omp/`](../../../devlog/_upstream_omp/)
+> MOC (jaw 밴드 정렬): [`010_moc_shell_rename.md`](../../../devlog/_plan/260612_jawcode_fork/phase1/010_moc_shell_rename.md)
 
 ## CLI · 브랜드 · 패키지
 

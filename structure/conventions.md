@@ -2,13 +2,12 @@
 
 ## 1. 포크 규칙 (리베이스 친화)
 
-업스트림과의 충돌 면적을 최소화한다. **업스트림 파일 수정은 최후 수단.**
+업스트림과의 충돌 면적을 최소화하되, 공개 문서·프롬프트·사용자 표면은 **jwc 기준**으로 유지한다.
 
 - ✅ 신규 파일/폴더 추가: `structure/`, `devlog/`, 그리고 jawcode 전용 코드는
   가능한 한 새 패키지(`packages/jaw-*`) 또는 새 모듈 파일로
 - ⚠️ 업스트림 파일 수정: 해당 devlog 플랜에 경로·사유를 기록한 뒤에만
-- ❌ `AGENTS.md` 수정 금지 — 업스트림 운영 계약(워크플로 스킬 4종, 롤 에이전트 4종,
-  `.jwc/` 경로 계약 (upstream AGENTS.md는 legacy `.gjc/` 표기))이며 리베이스 충돌 1순위. jawcode 컨텍스트는 `structure/`에 둔다
+- ✅ `AGENTS.md`, `README*.md`, `structure/` 문서는 jwc 기준 정본으로 유지한다. upstream gajae-code 기준 문구는 `devlog/_upstream_gjc/`·`struct_har/gjc_origin/` 같은 비교/근거 문맥에만 남긴다
 
 ### 커밋 트레일러 규약 (fork-delta 동기 — 067.1 §3.1)
 
@@ -91,9 +90,9 @@ git fetch upstream && git rebase upstream/main    # worktree — 변경 정리 �
 
 | 표기 | 의미 | 사용 위치 | 근거 |
 |---|---|---|---|
-| `[확정]` | 인터뷰에서 확정된 결정. 구현은 이 결정을 기준으로 한다. | MOC/roadmap/structure 문서 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/000_roadmap.md:34` |
-| `[기본값]` | repo(업스트림 gjc)의 실제 동작. 별도 결정이 없으면 이대로 간다. | 코드 실사 결과, default behavior | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/000_roadmap.md:34` |
-| `[제안]` | repo 기본값에서 벗어나는 변경안. 채택은 인터뷰 결정 필요. | 설계 옵션, 향후 개선안 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/000_roadmap.md:34` |
+| `[확정]` | 인터뷰에서 확정된 결정. 구현은 이 결정을 기준으로 한다. | MOC/roadmap/structure 문서 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:34` |
+| `[기본값]` | repo(upstream gajae-code)의 실제 동작. 별도 결정이 없으면 이대로 간다. | 코드 실사 결과, default behavior | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:34` |
+| `[제안]` | repo 기본값에서 벗어나는 변경안. 채택은 인터뷰 결정 필요. | 설계 옵션, 향후 개선안 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:34` |
 
 ## 4.2 문서 근거 규칙
 

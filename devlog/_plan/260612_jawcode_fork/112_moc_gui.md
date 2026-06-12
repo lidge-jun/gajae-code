@@ -5,6 +5,13 @@
 > + "cli-jaw 내부에 code 모드 — electron cli-jaw와는 별개로 jwc를 실행하는 모드" (260612 21시, 스크린샷 기준).
 > 조사: 웹 리서치 서브에이전트 (Claude Desktop 표면 / 네이티브 GUI 옵션 / 선행 사례 3트랙).
 > 소속: 110 밴드 (JawRuntime 상주 서비스의 표면 트랙) — jwc가 cli-jaw에 임베드되면 GUI는 cli-jaw 대시보드/셸이 표면이 된다.
+> **260613 플립 기준 재구체화 (gjc→jwc flip 반영)**: 본 문서 코드 사실은 cli-jaw 측 위주라 플립
+> 영향 최소. 엔진 측 교차 갱신 — Code 모드가 소비할 이벤트/세션 표면은 `src/jwc-runtime/`·
+> `modes/acp/`(`_jwc/` extMethod canonical, `_gjc/` legacy 별칭)·`modes/bridge/` 기준. **연기 계약
+> 주의**: HTML export의 `gjc-share:v1:*` localStorage 키·`"GJC Session Export"` 타이틀은 기존
+> export 파일 호환 때문에 플립 연기 — Code 모드가 export 뷰를 재사용한다면 이 키를 그대로 읽을 것
+> ([260613_gjc_flip/05](../260613_gjc_flip/05_plan_flip.md) §연기). 113(웹 네이티브 표면)이 본
+> 밴드의 데이터 계약 자매 문서.
 
 핵심 발견: **cli-jaw에는 electron 데스크톱 셸이 이미 절반 구축되어 있다.** 따라서 이 밴드의 본선은
 "새 GUI 만들기"가 아니라 **기존 셸 완성**이고, Claude Desktop은 주 GUI가 될 수 없어 보조 채널로만 쓴다.
@@ -134,7 +141,7 @@ D130-1 정합: Chat=boss 파이프라인 스코프(cli-jaw DB 정본), Code=세�
 설계 파급:
 
 1. **임베디드(M2) 메모리 방향**: 영속 기억의 정본은 cli-jaw — jwc 세션에는 **하향 주입**(Profile/Soul/Task
-   Snapshot, 130 스코프 A 패턴과 동형). jwc 자체 consolidation(gjc stage1/phase2)은 임베디드 모드에서
+   Snapshot, 130 스코프 A 패턴과 동형). jwc 자체 consolidation(memories stage1/phase2)은 임베디드 모드에서
    **비활성 [확정 260612 — 사용자]** — 세션은 주입만 받는 소비자, 자체 축적 없음 (이중 기억 방지).
    기억할 가치는 cli-jaw flush/reflect가 수확. (격하안·현행 유지안 기각 — 세션이 일회용인데 정체성을 축적하면 모순.)
    (단독 실행 jwc(M1)는 현행 자체 메모리 유지 — 이 원칙은 임베디드 아키텍처에만 적용.)

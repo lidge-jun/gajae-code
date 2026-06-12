@@ -1,7 +1,7 @@
 # Memory Pipeline
 
 > jwc 메모리 서브시스템의 쓰기/읽기 경로와, 99.01 밴드(`jwc memory` 동사 표면)가 얹힐 접합점.
-> cli-jaw 원본 메모리의 대조 요약 포함. 실측: 260612 병렬 조사 (devlog [99.01.00](../devlog/_plan/260612_jawcode_fork/99.01.00_moc_memory.md) 밴드 근거).
+> cli-jaw 원본 메모리의 대조 요약 포함. 실측: 260612 병렬 조사 (devlog [99.01.00](../devlog/_plan/260612_jawcode_fork/phase1/99.01.00_moc_memory.md) 밴드 근거).
 
 ## 쓰기 경로 (자동 — startup 트리거 단일)
 
@@ -64,5 +64,5 @@ SQLite 3.38+ 필요. recency 부스트는 파일명 `YYYY-MM-DD` 규약 의존 �
 
 ## 관련 문서
 
-- 설계/스키마: `devlog/_plan/260612_jawcode_fork/99.01.01_design_memory_merge.md`, `99.01.02_schema_cli_jaw_memory.md`
+- 설계/스키마: `devlog/_plan/260612_jawcode_fork/phase1/99.01.01_design_memory_merge.md`, `99.01.02_schema_cli_jaw_memory.md`
 - 주입 레일 전반: [prompt_flow.md](./prompt_flow.md) §매 턴 주입 레일

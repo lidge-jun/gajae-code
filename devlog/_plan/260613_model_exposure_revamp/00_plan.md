@@ -4,7 +4,7 @@
 > 결정 확정: D1 auto-review 숨김 ✅ / D2 multi-agent **라이브 검증으로 제외 확정**
 > (chat completions 400 — Responses 전용; 나머지 allowlist 5종 전부 200) / D3 unlisted
 > 직접 선택 허용 / D4 잘게 분할(슬라이스=커밋). 잔여: 수동 e2e (§P4).
-> 소속: [99.30.00 MOC](../260612_jawcode_fork/99.30.00_moc_feature_improvement.md) 99.30.04 슬롯.
+> 소속: [99.30.00 MOC](../260612_jawcode_fork/phase1/99.30.00_moc_feature_improvement.md) 99.30.04 슬롯.
 > 입력: 사용자 260613 — ① `/model`이 OAuth로 실제 지원 안 되는 모델까지 기본 노출(codex
 > 17개 중 실지원 ~5개), ② xai도 progrok 런타임 지원분만 사용 가능, ③ ALL 탭에서 Profiles와
 > 모델이 한 리스트에 섞이는 UX 이상, ④ spark는 cli-jaw 구현 확인 전 판단 보류.

@@ -1,13 +1,13 @@
 # Jawcode (jwc)
 
-> cli-jaw의 네이티브 에이전트 런타임. [gajae-code](./README.md) 0.4.4 포크 위에 jaw 표면을 얹은 빌드.
+> cli-jaw의 네이티브 에이전트 런타임. upstream gajae-code 0.4.4 포크 위에 Jaw/jwc 표면을 얹은 빌드.
 
 ## 관계
 
 - **엔진**: gajae-code 0.4.4 포크 — **소스 하드 수정 원칙** (인터뷰 260612 02:04 확정): 프롬프트·번들 스킬에 Jaw/jwc 어휘 직접 기입, 가드는 jwc 기준. 업스트림 머지 시 프롬프트 충돌은 수용 비용. 기능 식별자(`.jwc/` 경로·`GJC_*` env·`@gajae-code/*` 스코프)는 보존
-- **jwc bin**: `packages/jwc/bin/jwc.js` — **단일 진입점** (gjc 셸 패키지는 제거됨; 필요 시 업스트림 npm `gajae-code` 별도 설치)
+- **jwc bin**: `packages/jwc/bin/jwc.js` — **단일 진입점** (legacy shell package는 제거됨; 필요 시 upstream npm `gajae-code` 별도 설치)
 - **임베딩 표면**: `jwc/sdk` (`packages/jwc/src/sdk.ts`) — cli-jaw가 import하는 단일 통로
-- 상태 경로(`.jwc/`)·패키지 스코프(`@gajae-code/*`)·릴리스 에셋명은 엔진(gjc) 그대로
+- 상태 경로(`.jwc/`)·패키지 스코프(`@gajae-code/*`)·릴리스 에셋명은 upstream engine 계보 그대로
 
 ## 실행
 
@@ -17,6 +17,7 @@ bun packages/jwc/bin/jwc.js --version  # jwc/<engine version>
 ```
 
 기여: [CONTRIBUTING.jwc.md](./CONTRIBUTING.jwc.md) · beta 문서 마감: [structure/beta_v0.1_closeout.md](structure/beta_v0.1_closeout.md)
+문서 정본 가이드와 에이전트용 개발로그는 [`AGENTS.md`](./AGENTS.md)에 적는다.
 
 ## 아이덴티티 설정
 

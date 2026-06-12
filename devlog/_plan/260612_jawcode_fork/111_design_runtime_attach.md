@@ -3,6 +3,11 @@
 > M2 착수 전 정본 설계 (260612 05:20, 사용자 지시). 각 밴드 P에서 diff 레벨로 구체화.
 > 구조: D1(2-제품) — cli-jaw 서버가 `jwc/sdk`를 import해 상주. spawn/resume 계층 소멸이 목적.
 > **260612 실측 보강**: §착수 전 실측 보강 추가됨 — attach 표면 인벤토리, cli-jaw 어댑터 솔기, 성능 논거 계층 표, M1→M2 드리프트 목록.
+> **260613 플립 기준 재구체화 (gjc→jwc flip 반영)**: 엔진 측 앵커 갱신 — `GajaeCodeRpc`→`JawcodeRpc`
+> (`harness-control-plane/rpc-adapter.ts:112`, 기본 명령 `["jwc","--mode","rpc"]`) · pabcd 정본
+> `src/jwc-runtime/orchestrate-state.ts`(구 gjc-runtime) · 임베디드 스킬 `embedded:jwc/` ·
+> receipt owner `jwc-*`(legacy read-both). 열린 질문 2(자가 전이 단락)의 명령 표기는 이제
+> `jwc orchestrate <stage>`로 일관 — 플립이 어휘 충돌 제거. 엔진 어휘 "gjc"는 아래에서 jwc로 통일.
 
 ## 0. 선행 조건 체인
 
@@ -31,7 +36,7 @@ JawRuntime
 └─ dispose/recreate — 예외 격리 (런타임 크래시가 서버를 죽이지 않게 경계 try/catch + 세션 재생성)
 ```
 
-## 3. 이벤트 매핑 — gjc AgentEvent → cli-jaw bus
+## 3. 이벤트 매핑 — jwc AgentSessionEvent → cli-jaw bus
 
 - 수신: `createAgentSession` 이벤트 스트림 (메시지 델타/도구 시작·종료/thinking/컴팩션/에러)
 - 송신: `src/core/bus.ts:49 broadcast(type, data, audience)` — SSE로 Web UI 도달 (public 게이트 주의)
@@ -41,9 +46,9 @@ JawRuntime
 ## 4. 세션 영속화 (120) — jaw.db 정본
 
 - 쓰기: **완료 시 1회 기록** (스트리밍 중간 저장 금지 — AGY 진행문 저장 버그 교훈, 120 MOC 계약)
-- resume: 서버 재시작 → jaw.db messages 로드 → 세션 재구성. gjc 쪽 주입 경로는 110 P에서 실사
+- resume: 서버 재시작 → jaw.db messages 로드 → 세션 재구성. jwc 쪽 주입 경로는 110 P에서 실사
   (후보: sessionManager 복원 / createAgentSession 메시지 시드 옵션 / agent db 캐시 동기화)
-- gjc agent db는 내부 캐시로 유지, 충돌 시 jaw.db 승 (D6)
+- jwc agent db는 내부 캐시로 유지, 충돌 시 jaw.db 승 (D6)
 - resume-classifier/session-persistence/spawn/resume.ts는 cli='jwc' 경로에서 전체 우회
 
 ## 5. 주입 3종 (130) — M2 done 지점
@@ -52,7 +57,7 @@ JawRuntime
 |------|---------|------|
 | 스킬 | **서버가 GJC_BRAND_NAME=jwc 설정 → 030 네이티브 디스커버리 그대로** | cli-jaw 프롬프트 빌더 산출물 주입(구 1안)은 불필요해짐 — 중복 주의만 검증 |
 | 아이덴티티/프롬프트 | A2 사용자 설정 → identity.* config 매핑 (020 산출물) + cli-jaw A1 시스템 프롬프트와 합성 규칙 1개 | 020·130 MOC 충돌 주의 항목 |
-| PABCD | cli-jaw orchestrate 상태머신을 정본으로, 051 이식분과 텍스트 리소스 공유 (사본 드리프트 방지) | 단계 도구 게이팅은 gjc role 패턴 |
+| PABCD | cli-jaw orchestrate 상태머신을 정본으로, 051 이식분과 텍스트 리소스 공유 (사본 드리프트 방지) | 단계 도구 게이팅은 jwc role 패턴 (`src/jwc-runtime/restricted-role-agent-bash.ts`) |
 | 인증 | `discoverAuthStorage(agentDir)` 공유 (sdk.ts:409) + 090 시딩 브리지를 서버 기동 경로에서 호출 | |
 
 ## 6. 라이프사이클·롤아웃
@@ -65,7 +70,7 @@ JawRuntime
 
 1. **Node 포팅 표면적** — stream.test.ts 1,662줄 등 업스트림 테스트가 베이스라인 (100 완료 기준)
 2. **이벤트 순서/중복** — 스트리밍 델타와 완료 기록의 정합 (120 테스트로 고정)
-3. **이중 컴팩션** — gjc 자체 컴팩션 vs cli-jaw compact 핸드오프 (기본: gjc 위임, 120 MOC)
+3. **이중 컴팩션** — jwc 자체 컴팩션 vs cli-jaw compact 핸드오프 (기본: jwc 위임, 120 MOC)
 4. **discoverSkills 스텁** — sdk 표면 의존 금지, loadSkills 경로 재수출 (030 경고 승계)
 5. **natives(napi-rs)** — Node 로드 검증 (100)
 
@@ -80,7 +85,7 @@ JawRuntime
 | 표면 | 진입점 (파일:줄) | 전송 방식 | 도구 이벤트 피델리티 | 사고(thinking) 피델리티 | 생명주기 |
 |------|---------------|-----------|-------------------|----------------------|---------|
 | **ACP stdio** (`jwc acp`) | `commands/acp.ts` → `modes/acp/acp-mode.ts` | 표준 입출력 NDJSON 스트림 (`@agentclientprotocol/sdk`) | **1등급** — `tool_execution_start/update/end` 구조화 (acp-event-mapper.ts:167-221) | **1등급** — `thinking_delta/end` AssistantMessageEvent를 SessionNotification으로 매핑 (acp-event-mapper.ts:281) | ACP 클라이언트가 세션 생성·종료를 소유; jwc 프로세스는 계속 상주 |
-| **harness RPC** (`jwc --mode rpc`) | `GajaeCodeRpc` (harness-control-plane/rpc-adapter.ts:112) | 서브프로세스 spawn + stdio NDJSON | **2등급** — event_type=agent_start 등 제어 프레임; 도구 내용은 cli-jaw harness 자체 파싱 필요 | **2등급** — thinking 이벤트를 직접 소비하지 않음 (cli-jaw 쪽 observer 없음) | 세션당 **spawn 1회** (상주 아님); 프로세스는 에이전트 완료 시 종료 |
+| **harness RPC** (`jwc --mode rpc`) | `JawcodeRpc` (harness-control-plane/rpc-adapter.ts:112 — 260613 플립) | 서브프로세스 spawn + stdio NDJSON | **2등급** — event_type=agent_start 등 제어 프레임; 도구 내용은 cli-jaw harness 자체 파싱 필요 | **2등급** — thinking 이벤트를 직접 소비하지 않음 (cli-jaw 쪽 observer 없음) | 세션당 **spawn 1회** (상주 아님); 프로세스는 에이전트 완료 시 종료 |
 | **bridge 모드** (`jwc --mode bridge`) | `runBridgeMode` (modes/bridge/bridge-mode.ts:511) → HTTP + SSE | HTTP endpoint + SSE 스트림 | **1등급** — AgentSessionEvent 전체 직렬화 (event-envelope.ts) | **1등급** — thinking_level_changed 포함, message_update 내 thinking_delta 전달 | cli-jaw가 HTTP 서버에 접속; jwc 프로세스 상주 |
 | **in-process SDK** (`createAgentSession`) | `sdk.ts:796 createAgentSession()` → `session.subscribe()` | 동일 프로세스 직접 함수 호출 | **0등급(최상)** — AgentSessionEvent 원본 참조, 직렬화 0 | **0등급(최상)** — thinking_delta/end 원본 이벤트, 암호화 여부까지 완전 전달 | cli-jaw 서버 프로세스 = jwc 런타임 수명; 별도 프로세스 없음 |
 
@@ -100,7 +105,7 @@ JawRuntime
 | 도구/thinking 파싱 | `events/index.ts:157-204` | claude stream_event → `thinking_delta`/`input_json_delta` 버퍼 축적 → `content_block_stop`에서 `toolLog.push` — 텍스트 스크레이핑. in-process 대체 시 `AgentSessionEvent.tool_execution_*` + `AssistantMessageEvent.thinking_*`로 교체 |
 | `broadcast()` 타깃 | `src/core/bus.ts` (111 §3 기존 앵커) | SSE로 Web UI 전달, `audience` 파라미터로 public/internal 게이트 |
 | `isAgentBusy()/queueCtrl` | `src/agent/gateway.ts` | 110 §기본값 "cli 값 jwc 추가만으로 편입" 확인 필요 — **실사 미완** (gateway.ts 미열람) |
-| PABCD 상태 | `src/orchestrator/state-machine.ts:3`, `src/core/db.ts:83` | cli-jaw는 `orc_state` DB 테이블(jaw.db 내) 정본 — **jwc는 `.jwc/state/pabcd-state.json` 파일 정본** (orchestrate-state.ts:234). **두 정본이 다른 저장소** → 130 연결 시 동기화 규칙 필요 |
+| PABCD 상태 | `src/orchestrator/state-machine.ts:3`, `src/core/db.ts:83` | cli-jaw는 `orc_state` DB 테이블(jaw.db 내) 정본 — **jwc는 `.jwc/state/pabcd-state.json` 파일 정본** (`src/jwc-runtime/orchestrate-state.ts:241` — 260613 플립 경로). **두 정본이 다른 저장소** → 130 연결 시 동기화 규칙 필요 |
 
 ### (c) 성능 논거 계층 표
 

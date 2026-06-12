@@ -1,7 +1,7 @@
 # 080_tui — 01 overview (gjc_origin)
 
-> upstream `devlog/_upstream_gjc/` @ `67427c6`  
-> MOC: [`080_moc_tui.md`](../../../devlog/_plan/260612_jawcode_fork/080_moc_tui.md)
+> upstream `devlog/_upstream_gjc/` @ `75d103f45145`
+> MOC: [`080_moc_tui.md`](../../../devlog/_plan/260612_jawcode_fork/phase1/080_moc_tui.md)
 
 ## TUI / jaw 브랜딩
 

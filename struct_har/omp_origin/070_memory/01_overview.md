@@ -1,7 +1,7 @@
 # 070_memory — 01 overview (omp_origin)
 
-> omp @ `e13ad3805` · 클론 [`devlog/_upstream_omp/`](../../../devlog/_upstream_omp/)  
-> MOC (jaw 밴드 정렬): [`99.01.00_moc_memory.md`](../../../devlog/_plan/260612_jawcode_fork/99.01.00_moc_memory.md)
+> omp @ `db421bb2ef68` · 클론 [`devlog/_upstream_omp/`](../../../devlog/_upstream_omp/)
+> MOC (jaw 밴드 정렬): [`99.01.00_moc_memory.md`](../../../devlog/_plan/260612_jawcode_fork/phase1/99.01.00_moc_memory.md)
 
 ## 메모리 · mnemopi
 

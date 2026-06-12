@@ -6,7 +6,7 @@
 
 - 시스템 프롬프트: 매 턴 주입 레일 7종 (`structure/prompt_flow.md`)
 - PABCD: cli-jaw 4층 push vs jwc pull 스킬 (`099_stabilization/01_overview.md`)
-- Memory: `local-query`/`memory-fts` + `jwc memory` 표면 🟡 — **99.01** 마감
+- Memory: jwc 검색 없음 → 99.01 local-query 예정
 - Workflow 명칭: ralplan hard rename 대신 **IPABCD 우산** re-facing
 
 ## 정본

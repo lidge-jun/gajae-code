@@ -5,14 +5,14 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-const ROOT = path.resolve(import.meta.dir, "..");
+const ROOT = path.resolve(import.meta.dir, "../..");
 const OMP_CLONE = path.join(ROOT, "devlog/_upstream_omp");
 const STRUCT = path.join(ROOT, "struct_har/omp_origin");
 const PLAN = path.join(ROOT, "devlog/_plan/260612_jawcode_fork");
 
-const OMP_HEAD = "e13ad3805";
-const GJC_HEAD = "67427c6";
-const FORK_HEAD = "81bcea96";
+const OMP_HEAD = "db421bb2ef68";
+const GJC_HEAD = "75d103f45145";
+const FORK_HEAD = "dc4f22672581";
 
 const OMP_ABS = "/Users/jun/Developer/new/700_projects/jawcode/devlog/_upstream_omp";
 
@@ -233,7 +233,7 @@ function writeBand(b: OmpBand): void {
 		path.join(dir, "01_overview.md"),
 		`# ${b.id} — 01 overview (omp_origin)
 
-> omp @ \`${OMP_HEAD}\` · 클론 [\`devlog/_upstream_omp/\`](../../../devlog/_upstream_omp/)  
+> omp @ \`${OMP_HEAD}\` · 클론 [\`devlog/_upstream_omp/\`](../../../devlog/_upstream_omp/)
 > MOC (jaw 밴드 정렬): [\`${b.moc}\`](../../../devlog/_plan/260612_jawcode_fork/${b.moc})
 
 ## ${b.title}
@@ -259,7 +259,7 @@ ${b.jwcContrast}
 		path.join(dir, "02_code_facts.md"),
 		`# ${b.id} — 02 code facts (omp_origin)
 
-> 클론 @ \`${OMP_HEAD}\` · cite: \`${cite}\`  
+> 클론 @ \`${OMP_HEAD}\` · cite: \`${cite}\`
 > gjc @ \`${GJC_HEAD}\` · jwc @ \`${FORK_HEAD}\` (대조만)
 
 ## 앵커
@@ -287,7 +287,7 @@ diff -u devlog/_upstream_omp/${b.anchors[0] ?? "packages/coding-agent"} devlog/_
 		path.join(dir, "02_logic_changes.md"),
 		`# ${b.id} — 02 logic changes (omp_origin)
 
-> **omp 자체 런타임** (gjc/jwc fork changelog 아님).  
+> **omp 자체 런타임** (gjc/jwc fork changelog 아님).
 > fork 로직: [structure/fork_logic_changelog.md](../../../structure/fork_logic_changelog.md) · jaw 갭: [structure/m1_closeout.md](../../../structure/m1_closeout.md)
 
 ## 동작 (omp)
@@ -377,7 +377,7 @@ fs.writeFileSync(
 	path.join(STRUCT, "01_overview.md"),
 	`# omp_origin — 01 overview (hub)
 
-> **전수 밴드**: gjc/jwc와 동일 id (\`010_shell\` … \`100_node\`) — 각 폴더에 01/02/03/02_logic_changes.  
+> **전수 밴드**: gjc/jwc와 동일 id (\`010_shell\` … \`100_node\`) — 각 폴더에 01/02/03/02_logic_changes.
 > 클론 @ \`${OMP_HEAD}\` · 재생성: \`bun struct_har/_scripts/struct-har-regenerate-omp.ts\`
 
 ## 밴드 인덱스

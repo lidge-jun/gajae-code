@@ -8,7 +8,7 @@
 |---|---|---|
 | **Patched SoT** | [structure/](./README.md) | jawcode **현재** 계약·아키텍처·포크 규칙 |
 | **양축 대조** | [struct_har/](../struct_har/README.md) | `gjc_origin` ↔ `jwc_patched` 밴드별 code facts |
-| **OMP 참조축** | [struct_har/omp_origin/](../struct_har/omp_origin/README.md) | oh-my-pi — **13 밴드** (gjc/jwc 동형 id), fork diff 아님 |
+| **OMP 참조축** | [struct_har/omp_origin/](../struct_har/omp_origin/README.md) | oh-my-pi — **13 밴드** (gajae-code/jwc 동형 id), fork diff 아님 |
 
 ## 업스트림 클론 (gitignored)
 
@@ -22,9 +22,9 @@
 1. [README.jwc.md](../README.jwc.md) — jwc가 뭔지
 2. [architecture.md](./architecture.md) — 모노레포 형태
 3. [workflows.md](./workflows.md) — 번들 스킬 4종
-4. [struct_har/README.md](../struct_har/README.md) — 포크가 gjc에서 어디가 달라졌는지
-5. [upstream_lineage.md](./upstream_lineage.md) — omp → gjc → jawcode 관계
-6. `devlog/_plan/260612_jawcode_fork/000_roadmap.md` — M1/M2 밴드
+4. [struct_har/README.md](../struct_har/README.md) — 포크가 upstream gajae-code에서 어디가 달라졌는지
+5. [upstream_lineage.md](./upstream_lineage.md) — omp → gajae-code → jawcode 관계
+6. `devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md` — M1/M2 밴드
 
 ## cli-jaw (제3 축)
 
@@ -49,9 +49,10 @@ struct_har 밴드 문서의 **cli-jaw cite**는 PABCD·memory·주입 레일 비
 | `struct_har/jwc_patched/099_stabilization/` | 99 밴드·레디니스·8기 조사 스냅샷 |
 | [jwc_readiness.md](./jwc_readiness.md) | **지금 jwc 쓸 수 있나** (MLB·블로커·착수 순서) |
 | [m1_closeout.md](./m1_closeout.md) | 99 패키지·결정·착수 순서·struct_har 매핑 |
+| [todo_pipeline.md](./todo_pipeline.md) | todo_write · 세션 phases · TUI 접힘(99.30) | agent-session, interactive-mode |
 | [beta_v0.1_closeout.md](./beta_v0.1_closeout.md) | beta v0.1 문서 세트·OSS·착수 순서 단일 정본 |
 | [struct_har/chase/](../struct_har/chase/README.md) | 갭 · **`10_*` / `20_*` 플랜 정본** |
-| [10_gjc_chase_MOC](../struct_har/chase/10_gjc_chase_MOC.md) | gjc `10.NNN_*` |
+| [10_gjc_chase_MOC](../struct_har/chase/10_gjc_chase_MOC.md) | upstream gajae-code `10.NNN_*` |
 | [20_omp_chase_MOC](../struct_har/chase/20_omp_chase_MOC.md) | omp `20.NNN_*` |
 | [chase/_legacy](../struct_har/chase/_legacy/INDEX.md) | 완료 아카이브 |
 ## struct_har 재생성

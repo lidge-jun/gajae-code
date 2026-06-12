@@ -1,6 +1,6 @@
 # 100_node — 01 overview (omp_origin)
 
-> omp @ `e13ad3805` · 클론 [`devlog/_upstream_omp/`](../../../devlog/_upstream_omp/)  
+> omp @ `db421bb2ef68` · 클론 [`devlog/_upstream_omp/`](../../../devlog/_upstream_omp/)
 > MOC (jaw 밴드 정렬): [`100_moc_node_porting.md`](../../../devlog/_plan/260612_jawcode_fork/100_moc_node_porting.md)
 
 ## 런타임 · Worker · Node

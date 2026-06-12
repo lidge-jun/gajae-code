@@ -1,12 +1,12 @@
 # M1 마감 — 99 밴드·결정 정본 (structure)
 
-> **질문별 진입**: [jwc_readiness.md](./jwc_readiness.md) (지금 쓸 수 있나) · 본 문서 (무엇을 언제 고쳤나/고칠 예정인가) · [99.00.00 MOC](../devlog/_plan/260612_jawcode_fork/99.00.00_moc_stabilization.md) (패키지 상세).
+> **질문별 진입**: [jwc_readiness.md](./jwc_readiness.md) (지금 쓸 수 있나) · 본 문서 (무엇을 언제 고쳤나/고칠 예정인가) · [99.00.00 MOC](../devlog/_plan/260612_jawcode_fork/phase1/99.00.00_moc_stabilization.md) (패키지 상세).
 
 ## 로드맵 축 (확정 260612)
 
 | 구간 | 의미 | 정본 |
 |---|---|---|
-| **000–099** | jwc 만들기 (M1) | [000_roadmap.md](../devlog/_plan/260612_jawcode_fork/000_roadmap.md) |
+| **000–099** | jwc 만들기 (M1) | [000_roadmap.md](../devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md) |
 | **100~** | cli-jaw 런타임 이식 (M2) | [100_moc](../devlog/_plan/260612_jawcode_fork/100_moc_node_porting.md) · [111_design_runtime_attach](../devlog/_plan/260612_jawcode_fork/111_design_runtime_attach.md) |
 
 M1 done = 090–099 release gate. **실질 드라이버 임계점**은 99 전체가 아니라 **99.02 + 99.03** (레디니스 62).
@@ -17,15 +17,15 @@ M1 done = 090–099 release gate. **실질 드라이버 임계점**은 99 전체
 
 | ID | 결정 | structure 반영 | 구현 상태 |
 |---|---|---|---|
-| **D10** | 사용자 표면 명령은 cli-jaw 어휘 (`jwc orchestrate`, `jwc goal`, `jwc memory` …) | [workflows.md](./workflows.md), [051_design_command_port](../devlog/_plan/260612_jawcode_fork/051_design_command_port.md) | orchestrate/goal **런타임 ✅** · memory CLI **99.01** 🟡 어댑터·명령 존재 / 밴드 마감 ⬜ |
-| **99.03-M1** | 시스템 프롬프트에 **native IPABCD orchestration** discovery | [prompt_flow.md](./prompt_flow.md) §99.03 | ⬜ — [99.03.01 PASS v2](../devlog/_plan/260612_jawcode_fork/99.03.01_impl_workflow_surface.md) |
-| **99.03-M2** | [확정] 매 턴 `pabcd-stage-context` (cli-jaw `getPrefix()` 동형) | `agent-session.ts` (설계만) | ⬜ |
-| **99.03-M3** | 스테이지 프롬프트 말미 자가 전이 (`jwc orchestrate <next>`) | `prompts/jaw/orchestrate-*.md` | ⬜ |
+| **D10** | 사용자 표면 명령은 cli-jaw 어휘 (`jwc orchestrate`, `jwc goal`, `jwc memory` …) | [workflows.md](./workflows.md), [051_design_command_port](../devlog/_plan/260612_jawcode_fork/phase1/051_design_command_port.md) | orchestrate/goal **런타임 ✅** · memory CLI ✅ **99.01 완료** (`ada449b2`) |
+| **99.03-M1** | 시스템 프롬프트에 **native IPABCD orchestration** discovery | [prompt_flow.md](./prompt_flow.md) §99.03 | ✅ 완료 (`45cba4e2`) |
+| **99.03-M2** | [확정] 매 턴 `pabcd-stage-context` (cli-jaw `getPrefix()` 동형) | `agent-session.ts` | ✅ 완료 (`8a7ea342`) |
+| **99.03-M3** | 스테이지 프롬프트 말미 자가 전이 (`jwc orchestrate <next>`) | `prompts/jaw/orchestrate-*.md` | ✅ 완료 (`90ef5223`) |
 | **99.03 jwc surface** | [확정] hard rename ❌ — 스킬 **속성·경로 무변경**, 산문에 IPABCD 우산만 | `system-prompt.md` | ⬜ (ralplan slug·`.jwc/plans/ralplan/` 유지) |
-| **99.01** | `jwc memory search/read/save/context` + `jwc chat search` | [memory_pipeline.md](./memory_pipeline.md) | 🟡 구현 중 ([99.01.03](../devlog/_plan/260612_jawcode_fork/99.01.03_impl_memory_merge.md)) |
+| **99.01** | `jwc memory search/read/save/context` + `jwc chat search` | [memory_pipeline.md](./memory_pipeline.md) | ✅ 구현 완료 (`ada449b2`·`693c5ee0`·`56fcf0de`) |
 | **99.04** | HUD — 문서 legacy `.gjc/` → `.jwc/` 정정 + 세그먼트 | struct_har 085 이관 | 설계 ✅ / 구현 ⬜ |
 | **99.02** | CI: `config.schema.json` + biome + docs 마감 | — | 코드 ✅ / 마감 ⬜ |
-| **99.07** | 슬래시 패리티 (`/interview`, `/plan`, `/sessions` …) | — | 조사 ✅ |
+| **99.07** | 슬래시 패리티 + `orchestrate reset`(U1)·`interview cancel`(U2) | [workflows.md](./workflows.md) | ✅ U1(`2cf37f35`)·U2(`c0ca9a53`) 완료; 슬래시 패리티 잔여 조사 중 |
 
 **제외**: Phase β goal `3f6989ac` (struct_har/Node) — 99에 흡수 안 함.
 
@@ -38,11 +38,11 @@ M1 done = 090–099 release gate. **실질 드라이버 임계점**은 99 전체
 | CLI / slash | `jwc orchestrate`, `/orchestrate i\|p\|a\|b\|c\|d` ✅ | — |
 | state machine | `orchestrate-state.ts`, `pabcd-state.json` ✅ | — |
 | stage prompts | `orchestrate-runtime.ts`, `prompts/jaw/orchestrate-*.md` ✅ | pull only (사용자/모델이 CLI 실행 시) |
-| system prompt | 4 bundled skills + routing | **orchestrate/IPABCD 0건** ❌ → 99.03 M1 |
-| 매 턴 헤더 | plan/goal 레일만 | **pabcd 헤더 없음** ❌ → 99.03 M2 |
+| system prompt | 4 bundled skills + routing | ✅ **orchestrate/IPABCD 등재** (99.03 M1, `45cba4e2`) |
+| 매 턴 헤더 | plan/goal 레일만 | ✅ **pabcd 헤더 주입** (99.03 M2, `8a7ea342`) |
 | dev-pabcd 스킬 | — | jaw 브랜드에서 **차단** (`skills.ts`) — native 표면으로 대체(99.03) |
 
-근거: [99.00.01](../devlog/_plan/260612_jawcode_fork/99.00.01_audit_jwc_readiness.md) §4–5, [99.02.00](../devlog/_plan/260612_jawcode_fork/99.03.00_plan_workflow_surface_revision.md).
+근거: [99.00.01](../devlog/_plan/260612_jawcode_fork/phase1/99.00.01_audit_jwc_readiness.md) §4–5, [99.02.00](../devlog/_plan/260612_jawcode_fork/phase1/99.03.00_plan_workflow_surface_revision.md).
 
 ---
 
@@ -52,7 +52,7 @@ M1 done = 090–099 release gate. **실질 드라이버 임계점**은 99 전체
 99.01 → 99.02 → 99.03 → 99.04 → 99.05 → 99.06 → 99.07
 ```
 
-- 정본: [99.00.00](../devlog/_plan/260612_jawcode_fork/99.00.00_moc_stabilization.md) · [beta_v0.1_closeout](./beta_v0.1_closeout.md). 99.01(memory)와 99.02(CI)는 병렬 가능; MLB 62는 **99.02+99.03**.
+- 정본: [99.00.00](../devlog/_plan/260612_jawcode_fork/phase1/99.00.00_moc_stabilization.md) · [beta_v0.1_closeout](./beta_v0.1_closeout.md). 99.01(memory)와 99.02(CI)는 병렬 가능; MLB 62는 **99.02+99.03**.
 - 99.03 구현은 **99.03.01** 스펙 + co-update: `fork-delta.md`, `workflow-surface-orchestrate.test.ts`, `pabcd-stage-header.test.ts`.
 
 ---
@@ -85,7 +85,7 @@ M1 done = 090–099 release gate. **실질 드라이버 임계점**은 99 전체
 | upstream gajae-code | `struct_har/gjc_origin/<band>/` |
 | jaw fork | `struct_har/jwc_patched/<band>/` |
 | **omp 상류** | `struct_har/omp_origin/<band>/` (참조, fork 아님) |
-| **chase** | `struct_har/chase/` — `10_*` `20_*` · [05](../struct_har/chase/05_devlog_numbering.md) |
+| **chase** | `struct_har/chase/` — `10_*` `20_*` · [05](../struct_har/chase/005_devlog_numbering.md) |
 | **chase 완료** | `struct_har/chase/_legacy/` |
 | 99 GG | struct_har / structure |
 |---|---|

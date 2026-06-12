@@ -1,6 +1,6 @@
 # Git Structure / Fork Operation
 
-> fork 운영 원칙: jaw 표면은 만들되, `.gjc/` 상태 경로와 `@gajae-code/*` namespace는 유지해 업스트림 리베이스 비용을 낮춘다.
+> fork 운영 원칙: 공개 명령·문서·상태 경로는 `jwc`/`.jwc` 기준으로 유지하고, 내부 `@gajae-code/*` namespace는 리베이스 비용을 낮추기 위해 보존한다.
 
 ## 현재 Git 상태
 
@@ -13,17 +13,17 @@
 | 기존 worktree 변경 | `packages/ai/*` (kiro provider WIP), `devlog/_plan/260612_jawcode_fork/*` | `git -C /Users/jun/Developer/new/700_projects/jawcode status --short` 실행 결과 |
 | structure/ | modified 8 files (jaw-interview sync, HEAD/path/meta 갱신) | `git -C /Users/jun/Developer/new/700_projects/jawcode status --short structure/` 실행 결과 |
 
-## 표면 리네이밍 정책
+## JWC 표면 정책
 
 | 정책 | 상태 | 근거 |
 |---|---|---|
 | bin 표면 | `packages/jwc`가 `jwc` bin을 제공한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:7` |
 | 내부 실행 | 현재 `jwc` bin은 `@gajae-code/coding-agent/cli`를 import한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/bin/jwc.js:1` |
 | SDK 표면 | `jwc/sdk`는 coding-agent SDK를 재수출한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:15`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/src/sdk.ts:1` |
-| default workflow slug | fork runtime은 `jaw-interview`; upstream `AGENTS.md`는 `deep-interview` 유지 | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/defaults/gjc-defaults.ts:13`, `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:11` |
+| default workflow slug | jwc runtime은 `jaw-interview`를 표준으로 쓴다. legacy `deep-interview`는 upstream baseline/read-compat 문맥에만 둔다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/defaults/gjc-defaults.ts:13`, `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:11` |
 | package namespace | upstream `@gajae-code/*` 유지, jawcode 신규 패키지만 별도 namespace 가능. | `/Users/jun/Developer/new/700_projects/jawcode/structure/conventions.md:24` |
 | state path | 런타임 `.jwc/` (`CONFIG_DIR_NAME`, `~/.jwc`) — repo 문서·마이그레이션은 Phase β 기준 | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:219` |
-| D4 결정 | bin `jwc`, 브랜딩/문서/스킬명만 jaw; `.jwc/`와 `@gajae-code/*` 유지. | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/05_interview_conclusions.md:13` |
+| D4 결정 | bin `jwc`, 브랜딩/문서/스킬명은 jwc 기준; 내부 `@gajae-code/*` 스코프는 보존. | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md:13` |
 
 ## 리베이스 가드
 
@@ -32,7 +32,7 @@
 | Guard | 적용 | 근거 |
 |---|---|---|
 | upstream 파일 수정 최소화 | jaw 전용 context는 `structure/`, `devlog/`, 신규 패키지에 둔다. | `/Users/jun/Developer/new/700_projects/jawcode/structure/conventions.md:7` |
-| `AGENTS.md` 수정 금지 | repo-local workflow 계약이므로 fork context는 structure에 둔다. | `/Users/jun/Developer/new/700_projects/jawcode/structure/conventions.md:10`, `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:1` |
+| public docs stay jwc-first | `AGENTS.md`, `README*.md`, `structure/`는 jwc 기준 정본으로 유지한다. | `/Users/jun/Developer/new/700_projects/jawcode/structure/conventions.md:10`, `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:1` |
 | model catalog 직접 수정 금지 | `packages/ai/src/models.json`은 generator/descriptors/resolvers로 바꾸고 regenerate한다. | `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:73` |
 | workflow default surface gate | default workflow skill 변경 후 required gates가 있다. | `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:128` |
 | no push/reset/clean | task context와 repo AGENTS 모두 destructive git 회피를 요구한다. | `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:125` |
@@ -44,7 +44,7 @@
 | 0 | `git -C devlog/_upstream_gjc fetch origin` | **참조 클론 pull** — gjc_origin 근거·diff 전에 실행. 최초: `git clone … devlog/_upstream_gjc`. |
 | 1 | `git -C /Users/jun/Developer/new/700_projects/jawcode fetch upstream` | worktree remote. |
 | 2 | `git -C /Users/jun/Developer/new/700_projects/jawcode rebase upstream/main` | rebase 전 worktree 변경을 정리해야 한다. |
-| 3 | conflict 확인 | `.gjc/`, `@gajae-code/*` 유지 정책과 충돌하면 D4를 우선한다. |
+| 3 | conflict 확인 | `.jwc/`, `@gajae-code/*` 보존 정책과 충돌하면 D4를 우선한다. |
 | 4 | gates | workflow/default surface 변경이 있으면 `bun scripts/check-visible-definitions.ts`, `bun scripts/verify-g002-gates.ts`, `bun scripts/rebrand-inventory.ts --strict`, `bun test packages/coding-agent/test/default-gjc-definitions.test.ts` (가드는 jwc 어휘 기준 — 02:04 하드 수정 개정). 근거: `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:128` |
 | 5 | 문서 | 클론 HEAD·밴드 diff → `struct_har/gjc_origin/`, `struct_har/README.md`; patched → `structure/` |
 

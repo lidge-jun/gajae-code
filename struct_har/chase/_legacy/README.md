@@ -8,4 +8,4 @@
 | [10/](./10/README.md) | gjc chase 완료 |
 | [20/](./20/README.md) | omp chase 완료 |
 
-규약: [05_devlog_numbering.md](../05_devlog_numbering.md)
+규약: [005_devlog_numbering.md](../005_devlog_numbering.md)

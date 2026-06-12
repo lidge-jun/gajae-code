@@ -5,12 +5,12 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-const ROOT = path.resolve(import.meta.dir, "..");
+const ROOT = path.resolve(import.meta.dir, "../..");
 const STRUCT = path.join(ROOT, "struct_har");
 const CHANGELOG = path.join(ROOT, "structure/fork_logic_changelog.md");
 
-const FORK_HEAD = "81bcea96";
-const GJC_HEAD = "67427c6";
+const FORK_HEAD = "dc4f22672581";
+const GJC_HEAD = "75d103f45145";
 
 type BandLogic = { id: string; jwcSection: string; gjcBaseline: string };
 

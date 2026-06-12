@@ -7,4 +7,4 @@
 | [superseded/](./superseded/) | 구 `10.00.00` 번호 체계 |
 | [INDEX.md](./INDEX.md) | (구) 매핑 — 신규 완료는 struct_har INDEX |
 
-규약: [struct_har/chase/05_devlog_numbering.md](../../../struct_har/chase/05_devlog_numbering.md)
+규약: [struct_har/chase/005_devlog_numbering.md](../../../struct_har/chase/005_devlog_numbering.md)

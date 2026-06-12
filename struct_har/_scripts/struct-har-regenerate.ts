@@ -5,12 +5,12 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
 
-const ROOT = path.resolve(import.meta.dir, "..");
+const ROOT = path.resolve(import.meta.dir, "../..");
 const GJC_CLONE = path.join(ROOT, "devlog/_upstream_gjc");
 const STRUCT = path.join(ROOT, "struct_har");
 
-const FORK_HEAD = "81bcea96";
-const GJC_HEAD = "67427c6";
+const FORK_HEAD = "dc4f22672581";
+const GJC_HEAD = "75d103f45145";
 
 type BandDef = {
 	id: string;
@@ -203,10 +203,10 @@ function body(side: "gjc_origin" | "jwc_patched", band: BandDef): string {
 	const isGjc = side === "gjc_origin";
 	const title = `# ${band.id} — code facts (${side})`;
 	const header = isGjc
-		? `> **upstream 클론**: \`devlog/_upstream_gjc/\` @ \`${GJC_HEAD}\`  
+		? `> **upstream 클론**: \`devlog/_upstream_gjc/\` @ \`${GJC_HEAD}\`
 > MOC: \`devlog/_plan/260612_jawcode_fork/${band.moc}\``
-		: `> **worktree**: jawcode @ \`${FORK_HEAD}\`  
-> **gjc 대조**: \`devlog/_upstream_gjc/\` @ \`${GJC_HEAD}\`  
+		: `> **worktree**: jawcode @ \`${FORK_HEAD}\`
+> **gjc 대조**: \`devlog/_upstream_gjc/\` @ \`${GJC_HEAD}\`
 > MOC: \`devlog/_plan/260612_jawcode_fork/${band.moc}\``;
 
 	const base = isGjc ? GJC_CLONE : ROOT;
@@ -257,7 +257,7 @@ fs.writeFileSync(
 	path.join(stabDir, "02_code_facts.md"),
 	`# 099_stabilization — code facts (jwc_patched)
 
-> worktree @ \`${FORK_HEAD}\` · 정본 overview: \`01_overview.md\`  
+> worktree @ \`${FORK_HEAD}\` · 정본 overview: \`01_overview.md\`
 > structure: \`structure/prompt_flow.md\`, \`structure/memory_pipeline.md\`
 
 ## 1. 앵커

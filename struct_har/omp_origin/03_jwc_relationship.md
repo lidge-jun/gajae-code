@@ -1,6 +1,6 @@
 # omp_origin — 03 relationship to gjc and jawcode (jwc)
 
-> 결정·스코프 정본: `structure/upstream_lineage.md`, `devlog/_plan/260612_jawcode_fork/05_interview_conclusions.md`.
+> 결정·스코프 정본: `structure/upstream_lineage.md`, `devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md`.
 
 ## 계보
 
@@ -13,7 +13,7 @@ pi-mono (badlogic)
 
 ## chase (갭 · 참조)
 
-- [02_gap_inventory.md](../chase/02_gap_inventory.md) · [04_reference_from_omp.md](../chase/04_reference_from_omp.md)
+- [002_gap_inventory.md](../chase/002_gap_inventory.md) · [004_reference_from_omp.md](../chase/004_reference_from_omp.md)
 
 ## 이식 후보 (참고만)
 | omp 영역 | jawcode M1/M2 연결 | 상태 |

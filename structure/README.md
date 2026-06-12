@@ -1,6 +1,6 @@
 # structure/ — Jawcode Source of Truth
 
-> Jawcode = gajae-code(gjc) 0.4.4 fork. cli-jaw의 메인 네이티브 런타임이 되는 것이 목표다.
+> Jawcode(`jwc`) = gajae-code 0.4.4 fork 위에 Jaw/jwc 표면을 얹은 빌드. cli-jaw의 메인 네이티브 런타임이 되는 것이 목표다.
 > 업스트림 remote: `upstream = https://github.com/Yeachan-Heo/gajae-code`. worktree HEAD: `81bcea96` (기록 시점). upstream 클론: `devlog/_upstream_gjc` @ `67427c6`.
 
 ## 시작점
@@ -15,6 +15,7 @@
 | [prompt_flow.md](./prompt_flow.md) | 시스템 프롬프트 조립 흐름 | `/Users/jun/Developer/new/700_projects/jawcode/structure/prompt_flow.md:1` |
 | [workflows.md](./workflows.md) | default workflow skill 4종 계약 | `/Users/jun/Developer/new/700_projects/jawcode/structure/workflows.md:1` |
 | [session_storage.md](./session_storage.md) | SQLite/session/history/auth/memory storage | `/Users/jun/Developer/new/700_projects/jawcode/structure/session_storage.md:1` |
+| [todo_pipeline.md](./todo_pipeline.md) | `todo_write` · 리마인더 · composer todo 패널 | `99.30.01` |
 | [extensibility.md](./extensibility.md) | skills/slash/custom-tools/hooks/plugins 확장 표면 | `/Users/jun/Developer/new/700_projects/jawcode/structure/extensibility.md:1` |
 | [gitstructure.md](./gitstructure.md) | fork 운영, 표면 리네이밍, 리베이스 가드 | `/Users/jun/Developer/new/700_projects/jawcode/structure/gitstructure.md:1` |
 | [conventions.md](./conventions.md) | 포크 규칙, 업스트림 동기화, devlog/MOC 규약 | `/Users/jun/Developer/new/700_projects/jawcode/structure/conventions.md:1` |
@@ -28,11 +29,11 @@
 
 | 항목 | 현재값 | 근거 |
 |---|---|---|
-| 제품 방향 | M1 = jwc 단독 완성, M2 = cli-jaw 런타임 이식 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/000_roadmap.md:1` |
+| 제품 방향 | M1 = jwc 단독 완성, M2 = cli-jaw 런타임 이식 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:1` |
 | 공개 wrapper | `packages/jwc`가 `jwc` bin과 `jwc/sdk` export 제공 | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:7`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:15` |
 | 실제 SDK 구현 | `packages/coding-agent/src/sdk.ts` | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:217` |
 | default workflows | `jaw-interview`, `ralplan`, `ultragoal`, `team` | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/defaults/gjc-defaults.ts:13` |
-| upstream AGENTS contract | `deep-interview` 표기 유지 (수정 금지) | `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:11` |
+| upstream baseline | legacy `deep-interview` 등은 `struct_har/gjc_origin/`과 `devlog/_upstream_gjc/`에서만 비교 기준으로 읽는다 | `/Users/jun/Developer/new/700_projects/jawcode/struct_har/gjc_origin/` |
 | config / project state dir | 런타임 `.jwc/` (`~/.jwc`, 프로젝트 `.jwc/`) | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:219` |
 | package namespace | `@gajae-code/*` 유지 | `/Users/jun/Developer/new/700_projects/jawcode/structure/conventions.md:69` |
 
@@ -66,11 +67,11 @@ diff -u devlog/_upstream_gjc/packages/coding-agent/src/cli.ts packages/coding-ag
 
 ## 관련 문서
 
-- 업스트림 운영 계약: `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md` (수정 금지 — conventions.md 참조)
+- 프로젝트 운영 계약: `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md`
 - **업스트림 코드 클론**: `devlog/_upstream_gjc/` (gitignored — [conventions.md §2](./conventions.md))
 - **양쪽 대조 스냅샷**: [struct_har/](../struct_har/README.md)
 - **OMP 참조 클론**: `devlog/_upstream_omp/` → [struct_har/omp_origin/](../struct_har/omp_origin/README.md)
 - 활성 플랜: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/`
 - **계보**: [upstream_lineage.md](./upstream_lineage.md)
-- gjc 프로바이더 계층 분석 노트(외부): `/Users/jun/Developer/new/002_proxy/003_gjc/`
+- upstream provider 계층 분석 노트(외부): `/Users/jun/Developer/new/002_proxy/003_gjc/`
 - cli-jaw 본체: `/Users/jun/Developer/new/700_projects/cli-jaw/`

@@ -1,7 +1,7 @@
 # 020_prompt — 01 overview (gjc_origin)
 
-> upstream `devlog/_upstream_gjc/` @ `67427c6`  
-> MOC: [`020_moc_prompting.md`](../../../devlog/_plan/260612_jawcode_fork/020_moc_prompting.md)
+> upstream `devlog/_upstream_gjc/` @ `75d103f45145`
+> MOC: [`020_moc_prompting.md`](../../../devlog/_plan/260612_jawcode_fork/phase1/020_moc_prompting.md)
 
 ## 프롬프팅 / 시스템 프롬프트
 

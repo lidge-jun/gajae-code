@@ -32,7 +32,7 @@
 |---|---|---|
 | 구현 위치 | credential storage types와 `AuthStorage`는 `@gajae-code/ai`에서 재수출된다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/session/auth-storage.ts:1`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/session/auth-storage.ts:17` |
 | SDK discovery | broker config가 있으면 `RemoteAuthCredentialStore`, 아니면 local SQLite `AuthStorage.create(dbPath)`를 사용한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:409`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:415`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:425` |
-| D7 연결 | 기존 로컬 로그인 토큰을 jwc AuthStorage에 시딩하는 결정. | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/05_interview_conclusions.md:16` |
+| D7 연결 | 기존 로컬 로그인 토큰을 jwc AuthStorage에 시딩하는 결정. | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md:16` |
 
 ## `history-storage.ts` (`history.db`)
 
@@ -56,6 +56,10 @@
 | startup order | `runMemoryStartup()`은 `runPhase1()` → `runPhase2()` → `refreshBaseSystemPrompt()` 순서. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:202` |
 | phase1 | session threads 수집, stage1 jobs claim, model call, `stage1_outputs` 저장. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:214`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:229`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:250`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:311` |
 | phase2 | cwd별 global job claim, stage1 outputs sync, consolidation model, artifacts apply. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:346`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:361`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:373`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:430` |
+| **local-query / memory-fts** | `memories/local-query.ts` — LIKE+kind/recency 검색(`searchLocalMemories`), manual save(`saveLocalMemoryManual`), `buildLocalTaskSnapshot`; `memories/memory-fts.ts` — FTS5/LIKE 하이브리드 + synonym expansion. 99.01 완료 (260613). | `memories/local-query.ts`, `memories/memory-fts.ts` |
+| **manual save** | `thread_id = "manual:<file>"`, `source_kind="manual"` — stage1 자동 추론 우회, phase2 cwd 조인으로 합류. 계약: [memory_pipeline.md](./memory_pipeline.md) §쓰기 경로. | `memories/local-query.ts` `saveLocalMemoryManual` |
+
+> 메모리 서브시스템 전체 쓰기/읽기/CLI 표면 정본: [memory_pipeline.md](./memory_pipeline.md).
 
 ## Memory DB Schema
 
@@ -72,6 +76,6 @@
 
 | 결정 | 현재 코드 상태 | M2 판단 |
 |---|---|---|
-| TUI/Web 세션 비공유 | jwc has own sessions/history under `~/.jwc/agent`; D6은 cli-jaw Web 세션 정본을 jaw.db로 둔다. | session adapter는 search federation만 후순위로 붙인다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/05_interview_conclusions.md:15`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/05_interview_conclusions.md:18` |
+| TUI/Web 세션 비공유 | jwc has own sessions/history under `~/.jwc/agent`; D6은 cli-jaw Web 세션 정본을 jaw.db로 둔다. | session adapter는 search federation만 후순위로 붙인다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md:15`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md:18` |
 | OAuth 공유 | `AuthStorage` 주입이 SDK에 있다. | local token seeding bridge는 `discoverAuthStorage()` 또는 host-created `AuthStorage`로 들어간다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:225`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:409` |
-| memory 통합 | current memory root는 `~/.jwc/agent/memories/<encoded-cwd>`. | 070 밴드에서 jwc memory 폴더 규약을 확정한다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:1111`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/000_roadmap.md:19` |
+| memory 통합 | current memory root는 `~/.jwc/agent/memories/<encoded-cwd>`. | 070 밴드에서 jwc memory 폴더 규약을 확정한다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:1111`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:19` |

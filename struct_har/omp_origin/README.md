@@ -1,8 +1,8 @@
 # omp_origin/ — oh-my-pi (OMP) 참조 축
 
-> **목적**: gjc/jwc **포크 diff의 한쪽 면이 아님** — 상류 벤치·계보·밴드별 경로 대조.  
-> **깊이**: gjc/jwc와 **동일 밴드 id** (`010_shell` … `100_node`) + `architecture/`.  
-> 클론 @ `e13ad3805` · [`devlog/_upstream_omp/`](../../devlog/_upstream_omp/)
+> **목적**: gjc/jwc **포크 diff의 한쪽 면이 아님** — 상류 벤치·계보·밴드별 경로 대조.
+> **깊이**: gjc/jwc와 **동일 밴드 id** (`010_shell` … `100_node`) + `architecture/`.
+> 클론 @ `db421bb2ef68` · [`devlog/_upstream_omp/`](../../devlog/_upstream_omp/)
 
 ## 재생성
 

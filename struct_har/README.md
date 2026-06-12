@@ -1,19 +1,19 @@
 # struct_har/ — gjc_origin ↔ jwc_patched 계층 대조
 
-> **스냅샷 (2026-06-13)**: 전수 재생성 + 로직 보강 + **99 레디니스** (`structure/jwc_readiness.md`, [99.03.01](../devlog/_plan/260612_jawcode_fork/99.03.01_impl_workflow_surface.md) PASS v2).
+> **스냅샷 (2026-06-13)**: 전수 재생성 + 로직 보강 + **99 레디니스** (`structure/jwc_readiness.md`, [99.03.01](../devlog/_plan/260612_jawcode_fork/phase1/99.03.01_impl_workflow_surface.md) PASS v2).
 
-> **목적**: 업스트림 gajae-code(`gjc_origin`)과 jawcode 포크(`jwc_patched`)의 **현재 형태**를 devlog MOC 밴드별로 병렬 기록한다.  
+> **목적**: 업스트림 gajae-code(`gjc_origin`)과 jawcode 포크(`jwc_patched`)의 **현재 형태**를 devlog MOC 밴드별로 병렬 기록한다.
 > `structure/`가 patched 단일 SoT라면, `struct_har/`는 **양쪽 스냅샷 대조용**이다.
 
 ## 기준선
 
-| 쪽 | 코드 소스 | HEAD (기록 시점) |
+| 쪽 | 코드 소스 | HEAD (reviewed through) |
 |---|---|---|
-| **gjc_origin** | [`devlog/_upstream_gjc/`](../devlog/_upstream_gjc/) — Yeachan-Heo/gajae-code 클론 (gitignored) | `67427c6` |
-| **jwc_patched** | jawcode worktree (포크 패치 반영) | `81bcea96` |
-
-| **omp_origin** | [`devlog/_upstream_omp/`](../devlog/_upstream_omp/) | `e13ad3805` |
+| **gjc_origin** | [`devlog/_upstream_gjc/`](../devlog/_upstream_gjc/) — Yeachan-Heo/gajae-code 클론 (gitignored), branch `dev` | `75d103f45145` |
+| **jwc_patched** | jawcode worktree (포크 패치 반영; dirty local edits respected) | `dc4f22672581` |
+| **omp_origin** | [`devlog/_upstream_omp/`](../devlog/_upstream_omp/) | `db421bb2ef68` |
 - 업스트림 remote: `https://github.com/Yeachan-Heo/gajae-code`
+- chase reviewed-through 정본: GJC MOC는 GJC+JWC, OMP MOC는 OMP+JWC를 기록하고, 횡단 인벤토리/INDEX/README는 세 축을 모두 기록한다.
 - **gjc_origin 문서의 code facts는 `devlog/_upstream_gjc/` 아래 파일을 정본으로 cite** (절대경로 `/Users/jun/Developer/new/700_projects/jawcode/devlog/_upstream_gjc/…`).
 - jwc_patched는 repo root `packages/`·`structure/`를 정본으로 cite.
 
@@ -41,7 +41,7 @@ struct_har/
 
 - **밴드 폴더명** = devlog `NNN_moc_*` 접두와 정렬 (`010_shell` … `100_node`, `architecture`).
 - **파일명** = `01_overview` → `02_code_facts` → **`02_logic_changes`** → `03_devlog_refs`
-- **갱신 규칙**: 포크 밴드 완료 시 `jwc_patched` 먼저; upstream fetch 후 `gjc_origin`은 `devlog/_upstream_gjc` HEAD·경로 인벤토리 갱신.
+- **갱신 규칙**: 포크 밴드 완료 시 `jwc_patched` 먼저; upstream fetch 후 `gjc_origin`/`omp_origin` HEAD, chase MOC reviewed-through 행, `002_gap_inventory`, `INDEX.md`, 본 README 기준선을 함께 갱신.
 - **로직 정본**: [structure/fork_logic_changelog.md](../structure/fork_logic_changelog.md)
 - **재생성**: `struct-har-regenerate.ts` · `struct-har-regenerate-logic.ts` · `struct-har-regenerate-architecture.ts` · `struct-har-regenerate-overviews.ts` · **`struct-har-regenerate-omp.ts`**
 
@@ -52,7 +52,9 @@ struct_har/
 git clone https://github.com/Yeachan-Heo/gajae-code devlog/_upstream_gjc
 
 # 갱신
-git -C devlog/_upstream_gjc fetch origin
+git -C devlog/_upstream_gjc fetch origin dev
+git -C devlog/_upstream_gjc switch dev
+git -C devlog/_upstream_gjc pull --ff-only origin dev
 git -C devlog/_upstream_gjc log -1 --oneline
 
 # gjc_origin 대조 시 diff 예
@@ -121,6 +123,9 @@ diff -u devlog/_upstream_gjc/packages/coding-agent/src/cli.ts packages/coding-ag
 
 | 날짜 | 변경 |
 |---|---|
+| 2026-06-13 (3차) | 기준선 전진: gjc `75d103f45145` (+2: receipt spool exporter, model-profiles UX), jwc `dc4f22672581`. **10.009·10.010 채택 완료** (99.11.01/02 구현 랜딩) → `_legacy/10/` 이동. 신규 chase: [10.011 receipt spool](./chase/10.011_gjc_chase_receipt_spool.md) (가치 60, owner/storage clean 실측); `a12a751` model-profiles는 **사용자 직접 패치 중** (카드 미발급). chase 공유 문서 `0NN` 3자리 리네임 (`001_overview`…`006_jwc_own_backlog`). |
+| 2026-06-13 (2차) | 기준선 전진: gjc `2b4d407b471b` (+2: pi-shell UTF-8 panic, harness submit gate), omp `db421bb2ef68` (15.12.3, +11), jwc `ff0003db6ac0` (+17: 99.00.03·99.07·99.20). 신규 chase: `10.009`·`10.010`·`20.005`·`20.006`. **구현가치 MLB 표** 신설 ([002_gap_inventory](./chase/002_gap_inventory.md)). 재생성 스크립트 `ROOT` 경로 버그 수정 (`../..`). |
+| 2026-06-13 | chase 기준선 reviewed through: gjc `050aa1731551`, omp `ba27bbd3a327`, jwc `a771f492d382`; GJC `10.007` team `@gjc-profile` gap과 `10.008` RPC lifecycle gap 할당. |
 | 2026-06-13 | **전수 재생성** (26×02, 26×01/03, architecture×14, 스크립트 3종) + omp_origin |
 | 2026-06-13 | **chase/** — 갭·gjc/omp 참조 + bands/13 |
 | 2026-03-13 | 초기 struct_har 94 md 생성 |

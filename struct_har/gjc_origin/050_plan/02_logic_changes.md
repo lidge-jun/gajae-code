@@ -1,6 +1,6 @@
 # 050_plan — 02 logic changes (gjc_origin)
 
-> gjc_origin: upstream **기준 동작** (변경 전). 클론 @ `67427c6`.
+> gjc_origin: upstream **기준 동작** (변경 전). 클론 @ `75d103f45145`.
 
 ## upstream 기준 동작
 

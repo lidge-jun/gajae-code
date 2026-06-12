@@ -4,6 +4,13 @@
 > 스킬 주입 1차 경로가 "서버 GJC_BRAND_NAME=jwc 설정"으로 단순화됨 (프롬프트 합성 주입안 대체).
 
 > 상태: ⬜. 결정 근거: D5/D7 [확정]. **이 밴드 완료 = M2 done 3항목 충족.**
+> **260613 플립 기준 재구체화 (gjc→jwc flip 반영)** — 앵커 재검증·추가:
+> `loadSkills`(`src/extensibility/skills.ts:108`, dir 단위는 `:71 loadSkillsFromDir`) ·
+> `discoverAuthStorage`(`src/sdk.ts:409`, 세션 주입 계약은 `sdk.ts:225` AuthStorage 옵션) ·
+> pabcd 상태 정본 `src/jwc-runtime/orchestrate-state.ts`(구 gjc-runtime — 플립) ·
+> 스킬 임베디드 prefix `embedded:jwc/`(`jwc-defaults.ts`). **이별 교차(99.30.02→260613 확정)**:
+> 주입 대상 워크플로 스킬은 jaw-interview·ultragoal·team — ralplan은 superseded 스텁이라
+> 주입 카탈로그에서 제외 후보 (착수 시 CANONICAL_JWC_WORKFLOW_SKILLS 축소와 동행 검토).
 
 ## 스코프 A — 스킬 주입 (M2 done ③)
 
@@ -14,7 +21,7 @@
 1. [기본값] 1차는 프롬프트 합성 경로: cli-jaw `src/prompt/builder.ts` 산출(스킬 목록 포함)을
    `createAgentSession()` 시스템 프롬프트로 주입 — 최소 작업, 기존 Web UI와 표면 동일
 2. 2차(개선): 030의 디스커버리 3계층을 임베디드 런타임에도 활성 — SKILL.md 본문을 도구로 직접 읽는
-   gjc 네이티브 방식과 cli-jaw "읽어라" 지시 방식의 중복 제거
+   jwc 네이티브 방식과 cli-jaw "읽어라" 지시 방식의 중복 제거
 3. 충돌 주의: 020 jaw 아이덴티티 오버레이와 cli-jaw 시스템 프롬프트의 이중 적용 방지 — 합성 규칙 1개로 통일
 
 > [D10 이득, R14] M1에서 jwc 명령 표면이 cli-jaw와 통일되므로(orchestrate/goal/memory),
@@ -38,7 +45,7 @@
      ③ HUD 세그먼트의 스코프 우선순위, ④ 자가 전이 단락 훅(아래 열린 질문)과의 결합.
    - (구 [기본값] "cli-jaw 상태머신을 정본으로"는 boss 스코프에 한정해 유지; 텍스트 리소스 공유로
      사본 드리프트 방지 원칙도 유지.)
-3. 단계별 도구 게이팅: P/A에서 write/edit 비활성 (gjc role agent read-only 패턴 재사용)
+3. 단계별 도구 게이팅: P/A에서 write/edit 비활성 (jwc role agent read-only 패턴 재사용 — `src/jwc-runtime/restricted-role-agent-bash.ts`)
 
 ## 스코프 C — 인증 공유 (M2 done ②)
 
@@ -56,7 +63,7 @@
 ## 열린 질문
 
 - 스킬 주입 1차(프롬프트)→2차(네이티브) 전환 시점
-- cli-jaw A1 시스템 프롬프트(`src/prompt/templates/a1-system.md`)와 gjc 시스템 프롬프트의 권한 어휘 충돌 목록
+- cli-jaw A1 시스템 프롬프트(`src/prompt/templates/a1-system.md`)와 jwc 시스템 프롬프트의 권한 어휘 충돌 목록
 - 자가 전이 단락 훅: 상주 환경에서 모델의 `jwc orchestrate <stage>` shell 호출을 in-process로 가로채는
   방식 (BashTool 인터셉트 vs 전용 도구 등록) — [111 §착수 전 실측 보강](./111_design_runtime_attach.md) 열린 질문 2 승계
 - D130-1 튜닝 항목 ①~④의 확정 시점 (130 착수 시 프로토타입으로 결정)

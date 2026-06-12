@@ -1,6 +1,6 @@
 # 100_node — code facts (jwc_patched)
-> **worktree**: jawcode @ `81bcea96`  
-> **gjc 대조**: `devlog/_upstream_gjc/` @ `67427c6`  
+> **worktree**: jawcode @ `dc4f22672581`
+> **gjc 대조**: `devlog/_upstream_gjc/` @ `75d103f45145`
 > MOC: `devlog/_plan/260612_jawcode_fork/100_moc_node_porting.md`
 ## 1. patched 앵커 경로
 
@@ -16,13 +16,13 @@
 ## 3. 검증
 
 ```bash
-git -C devlog/_upstream_gjc rev-parse --short HEAD   # 67427c6
-git rev-parse --short HEAD               # 81bcea96
+git -C devlog/_upstream_gjc rev-parse --short HEAD   # 75d103f45145
+git rev-parse --short HEAD               # dc4f22672581
 diff -u devlog/_upstream_gjc/packages/coding-agent/src/cli.ts packages/coding-agent/src/cli.ts | head
 ```
 
 ## 부록
 
 - **struct_har** 전수 갱신: `bun struct_har/_scripts/struct-har-regenerate.ts` (2026-06-13)
-- **로드맵**: `devlog/_plan/260612_jawcode_fork/000_roadmap.md`
+- **로드맵**: `devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md`
 

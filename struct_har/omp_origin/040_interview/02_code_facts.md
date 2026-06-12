@@ -1,7 +1,7 @@
 # 040_interview — 02 code facts (omp_origin)
 
-> 클론 @ `e13ad3805` · cite: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_upstream_omp/<path>:<line>`  
-> gjc @ `67427c6` · jwc @ `81bcea96` (대조만)
+> 클론 @ `db421bb2ef68` · cite: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_upstream_omp/<path>:<line>`
+> gjc @ `75d103f45145` · jwc @ `dc4f22672581` (대조만)
 
 ## 앵커
 

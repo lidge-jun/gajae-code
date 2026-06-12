@@ -1,7 +1,7 @@
 # 050_plan — 01 overview (jwc_patched)
 
-> worktree @ `81bcea96` · gjc @ `67427c6`  
-> MOC: [`050_moc_plan_pabcd.md`](../../../devlog/_plan/260612_jawcode_fork/050_moc_plan_pabcd.md)
+> worktree @ `dc4f22672581` · gjc @ `75d103f45145`
+> MOC: [`050_moc_plan_pabcd.md`](../../../devlog/_plan/260612_jawcode_fork/phase1/050_moc_plan_pabcd.md)
 
 ## Plan + PABCD
 

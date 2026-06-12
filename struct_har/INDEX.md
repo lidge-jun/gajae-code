@@ -1,6 +1,6 @@
 # struct_har INDEX (lexicographic)
 
-> 생성: 2026-03-13 · **전수 갱신: 2026-06-13** · fork `81bcea96` · gjc `67427c6` · omp `e13ad3805`
+> 생성: 2026-03-13 · **전수 갱신: 2026-06-13 (3차)** · fork `dc4f22672581` · gjc `75d103f45145` · omp `db421bb2ef68`
 
 ## upstream 기준선
 
@@ -8,12 +8,13 @@
 |---|---|
 | 클론 경로 | [`devlog/_upstream_gjc/`](../devlog/_upstream_gjc/) |
 | 절대경로 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_upstream_gjc/` |
-| HEAD (gjc) | `67427c6` |
+| HEAD (gjc) | `75d103f45145` |
 | remote | `https://github.com/Yeachan-Heo/gajae-code` |
 | gjc_origin | 위 클론 = code facts 정본 |
 | jwc_patched | jawcode worktree root |
+| HEAD (jwc) | `dc4f22672581` |
 | omp 클론 | [`devlog/_upstream_omp/`](../devlog/_upstream_omp/) — oh-my-pi |
-| HEAD (omp) | `e13ad3805` |
+| HEAD (omp) | `db421bb2ef68` |
 
 ## gjc_origin
 
@@ -45,7 +46,7 @@
 - [082_input](./jwc_patched/082_input/) — 01_overview · 02_code_facts · 03_devlog_refs
 - [083_output](./jwc_patched/083_output/) — 01_overview · 02_code_facts · 03_devlog_refs
 - [090_auth](./jwc_patched/090_auth/) — 01_overview · 02_code_facts · 03_devlog_refs
-- [099_stabilization](./jwc_patched/099_stabilization/) — 01 · **02_logic_changes** · MLB 50→62→68 ([jwc_readiness](../structure/jwc_readiness.md))
+- [099_stabilization](./jwc_patched/099_stabilization/) — 01 · **02_logic_changes** · MLB 50→62→68 ([jwc_readiness](../structure/jwc_readiness.md)) — 99 밴드 안정화: 99.01·99.02·99.09 랜딩 + 99.00.03(UX 감사)·99.07(orchestrate reset)·99.20(frontend) 진행 (`ff0003db6ac0`)
 - [100_node](./jwc_patched/100_node/) — 01_overview · 02_code_facts · 03_devlog_refs
 ## omp_origin
 
@@ -63,9 +64,9 @@
 
 > [chase/README](./chase/README.md) · [10_gjc_chase_MOC](./chase/10_gjc_chase_MOC.md) · [20_omp_chase_MOC](./chase/20_omp_chase_MOC.md) · [_legacy](./chase/_legacy/INDEX.md)
 
-- `10.001`…`10.006` · `20.001`…`20.004` — chase/ 루트
-- [01_overview](./chase/01_overview.md) · [02_gap_inventory](./chase/02_gap_inventory.md) · [03](./chase/03_reference_from_gjc.md) · [04](./chase/04_reference_from_omp.md)
-- bands: [chase/bands/README](./chase/bands/README.md) · 횡단 [02_gap_inventory](./chase/02_gap_inventory.md)
+- `10.001`…`10.011` · `20.001`…`20.006` — chase/ 루트 · **구현가치 MLB 표**: [002_gap_inventory](./chase/002_gap_inventory.md)
+- [001_overview](./chase/001_overview.md) · [002_gap_inventory](./chase/002_gap_inventory.md) · [003](./chase/003_reference_from_gjc.md) · [004](./chase/004_reference_from_omp.md) · [005](./chase/005_devlog_numbering.md) · [006_jwc_own_backlog](./chase/006_jwc_own_backlog.md)
+- bands: [chase/bands/README](./chase/bands/README.md) · 횡단 [002_gap_inventory](./chase/002_gap_inventory.md)
 
 ## 재생성 명령
 
@@ -87,4 +88,4 @@ bun struct_har/_scripts/struct-har-regenerate-omp.ts
 | **MOC** | 밴드 스코프·완료기준 — devlog `99.00.00` 등 |
 | **D5 / D10** | 글로벌 스킬 `~/.cli-jaw/skills` · cli-jaw 명령 어휘 |
 | **99 M1** | [jwc_readiness](../structure/jwc_readiness.md) · [beta_v0.1_closeout](../structure/beta_v0.1_closeout.md) |
-| 갱신 규칙 | jwc_patched 선행 → gjc_origin HEAD — [conventions §2.2](../structure/conventions.md) |
+| 갱신 규칙 | jwc_patched 선행 → gjc_origin/omp_origin HEAD + chase MOC reviewed-through marker 동시 갱신 — [conventions §2.2](../structure/conventions.md) |

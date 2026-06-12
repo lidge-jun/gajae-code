@@ -1,7 +1,7 @@
 # 081_cursor — 01 overview (jwc_patched)
 
-> worktree @ `81bcea96` · gjc @ `67427c6`  
-> MOC: [`081_moc_cursor_tools.md`](../../../devlog/_plan/260612_jawcode_fork/081_moc_cursor_tools.md)
+> worktree @ `dc4f22672581` · gjc @ `75d103f45145`
+> MOC: [`081_moc_cursor_tools.md`](../../../devlog/_plan/260612_jawcode_fork/phase1/081_moc_cursor_tools.md)
 
 ## cursor 도구군
 

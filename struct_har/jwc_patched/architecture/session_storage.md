@@ -1,7 +1,7 @@
 # architecture / session_storage.md (jwc_patched)
 
-> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/session_storage.md`](../../../structure/session_storage.md).  
-> fork `81bcea96` · gjc clone `67427c6`.
+> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/session_storage.md`](../../../structure/session_storage.md).
+> fork `dc4f22672581` · gjc clone `75d103f45145`.
 
 ## structure/ 발췌 (첫 12줄)
 

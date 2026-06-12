@@ -1,7 +1,7 @@
 # 081_cursor — 01 overview (gjc_origin)
 
-> upstream `devlog/_upstream_gjc/` @ `67427c6`  
-> MOC: [`081_moc_cursor_tools.md`](../../../devlog/_plan/260612_jawcode_fork/081_moc_cursor_tools.md)
+> upstream `devlog/_upstream_gjc/` @ `75d103f45145`
+> MOC: [`081_moc_cursor_tools.md`](../../../devlog/_plan/260612_jawcode_fork/phase1/081_moc_cursor_tools.md)
 
 ## cursor 도구군
 

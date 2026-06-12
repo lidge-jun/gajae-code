@@ -1,7 +1,7 @@
 # architecture / architecture.md (gjc_origin)
 
-> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/architecture.md`](../../../structure/architecture.md).  
-> fork `81bcea96` · gjc clone `67427c6`.
+> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/architecture.md`](../../../structure/architecture.md).
+> fork `dc4f22672581` · gjc clone `75d103f45145`.
 
 ## structure/ 발췌 (첫 12줄)
 
@@ -13,7 +13,7 @@
 
 ## 1. 정체
 
-Jawcode는 gajae-code(`gjc`) 모노레포의 포크다. gjc는 Bun 런타임 기반의
+Jawcode는 gajae-code 모노레포의 포크이며 공개 실행 표면은 `jwc`다. 엔진은 Bun 런타임 기반의
 Claude Code급 풀 코딩 에이전트로, 프로바이더 계층부터 TUI까지 전부 자체 구현돼 있다.
 
 - 런타임: **Bun 1.3.14** (workspaces + catalog)

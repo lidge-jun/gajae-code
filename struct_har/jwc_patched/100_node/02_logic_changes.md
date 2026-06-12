@@ -1,7 +1,7 @@
 # 100_node — 02 logic changes (jwc_patched)
 
 > jwc_patched: fork **실제 로직**. git `upstream/main..HEAD` + [fork_logic_changelog.md](../../../structure/fork_logic_changelog.md).
-> worktree @ `81bcea96`.
+> worktree @ `dc4f22672581`.
 
 ## 상태 (260612)
 

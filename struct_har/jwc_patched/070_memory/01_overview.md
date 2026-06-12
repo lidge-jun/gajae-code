@@ -1,7 +1,7 @@
 # 070_memory — 01 overview (jwc_patched)
 
-> worktree @ `81bcea96` · gjc @ `67427c6`  
-> MOC: [`99.01.00_moc_memory.md`](../../../devlog/_plan/260612_jawcode_fork/99.01.00_moc_memory.md)
+> worktree @ `dc4f22672581` · gjc @ `75d103f45145`
+> MOC: [`99.01.00_moc_memory.md`](../../../devlog/_plan/260612_jawcode_fork/phase1/99.01.00_moc_memory.md)
 
 ## 메모리 (99.01 이관)
 
