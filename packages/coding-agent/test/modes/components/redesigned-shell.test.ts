@@ -83,14 +83,14 @@ beforeAll(async () => {
 });
 
 describe("redesigned interactive shell chrome", () => {
-	it("renders opencode-style minimal user and gajae turns", () => {
+	it("renders opencode-style minimal user and jaw turns", () => {
 		const user = Bun.stripANSI(new UserMessageComponent("hello").render(80).join("\n"));
 		const assistant = Bun.stripANSI(
 			new AssistantMessageComponent(createAssistantMessage("hi")).render(80).join("\n"),
 		);
 
 		expect(user).toContain("user");
-		expect(assistant).toContain("gajae");
+		expect(assistant).toContain("jaw");
 		expect(user).not.toContain("operator input");
 		expect(assistant).not.toContain("assistant");
 		expect(assistant).not.toContain("gajae reply");
@@ -98,14 +98,13 @@ describe("redesigned interactive shell chrome", () => {
 		expect(assistant).not.toContain("▌");
 	});
 
-	it("keeps the GJC forge launch surface responsive", () => {
+	it("keeps the launch surface responsive (fork default Jawcode banner)", () => {
 		const component = new WelcomeComponent("1.2.3", "gpt-5.5", "openai");
 		const lines = component.render(54);
 		const rendered = Bun.stripANSI(lines.join("\n"));
 
-		expect(rendered).toContain("Gajae forge");
-		expect(rendered).toContain("╭────────────────╮        ╭────────╮");
-		expect(rendered).toContain("╰────────────────╯        ╰────────╯");
+		expect(rendered).toContain("Jawcode");
+		expect(rendered).toContain("bite · build · ship");
 		expect(rendered).not.toContain("●");
 		for (const line of lines) {
 			expect(visibleWidth(line)).toBeLessThanOrEqual(54);

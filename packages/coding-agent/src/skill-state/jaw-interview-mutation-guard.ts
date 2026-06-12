@@ -15,7 +15,7 @@ import {
 export const JAW_INTERVIEW_MUTATION_BLOCK_MESSAGE =
 	"Jaw-interview phase boundary: continue gathering context/questions/risks and emit a handoff/spec before code edits. Mutation tools and patch execution are blocked while jaw-interview is active; finalize specs through `jwc interview --write --stage final` or hand off to an execution phase.";
 export const WORKFLOW_STATE_MUTATION_BLOCK_MESSAGE =
-	".gjc workflow state and artifacts are runtime-owned. Agent mutation tools cannot edit `.gjc/**`; use the sanctioned `gjc` CLI instead.";
+	".gjc workflow state and artifacts are runtime-owned. Agent mutation tools cannot edit `.gjc/**`; use the sanctioned `jwc` CLI instead.";
 
 const BLOCKED_TOOL_NAMES = new Set(["edit", "write", "ast_edit", "bash"]);
 const ARCHIVE_OR_SQLITE_BASE_RE = /^(.+?\.(?:tar\.gz|sqlite3|sqlite|db3|zip|tgz|tar|db))(?:$|:)/i;
@@ -414,7 +414,7 @@ export async function getJawInterviewMutationDecision(
 	const targets = extractTargets(input.tool, input.args);
 	if (input.enforceWorkflowState !== false && hasBlockedGjcTarget(input.cwd, targets)) {
 		const stateSkill = firstBlockedWorkflowStateSkill(input.cwd, targets);
-		const command = stateSkill ? sanctionedWorkflowStateCommand(stateSkill) : "gjc <workflow-command>";
+		const command = stateSkill ? sanctionedWorkflowStateCommand(stateSkill) : "jwc <workflow-command>";
 		return {
 			blocked: true,
 			message: `${WORKFLOW_STATE_MUTATION_BLOCK_MESSAGE}\nUse: ${command}`,

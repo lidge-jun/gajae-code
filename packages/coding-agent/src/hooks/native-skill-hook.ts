@@ -268,10 +268,10 @@ export async function runGjcNativeSkillHookCli(): Promise<void> {
 		process.stdout.write(
 			`${JSON.stringify({
 				decision: "block",
-				reason: "GJC native hook received malformed JSON input.",
+				reason: "jwc native hook received malformed JSON input.",
 				hookSpecificOutput: {
 					hookEventName: "Unknown",
-					additionalContext: `stdin JSON parsing failed inside gjc codex-native-hook: ${parseError.message}`,
+					additionalContext: `stdin JSON parsing failed inside jwc codex-native-hook: ${parseError.message}`,
 				},
 			})}\n`,
 		);
@@ -293,9 +293,9 @@ export async function runGjcNativeSkillHookCli(): Promise<void> {
 			process.stdout.write(
 				`${JSON.stringify({
 					decision: "block",
-					reason: "GJC native Stop hook failed before normal continuation handling.",
+					reason: "jwc native Stop hook failed before normal continuation handling.",
 					stopReason: "gjc_native_stop_dispatch_failure",
-					systemMessage: `GJC native Stop hook failed before normal continuation handling. Failure: ${detail}`,
+					systemMessage: `jwc native Stop hook failed before normal continuation handling. Failure: ${detail}`,
 				})}\n`,
 			);
 		} else {

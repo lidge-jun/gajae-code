@@ -171,7 +171,7 @@ async function runToken(flags: AuthBrokerCommandArgs["flags"]): Promise<void> {
 async function runLogin(flags: AuthBrokerCommandArgs["flags"]): Promise<void> {
 	const providerArg = flags.provider;
 	if (!providerArg) {
-		throw new Error("Usage: gjc auth-broker login <provider> [--via=user@host]");
+		throw new Error("Usage: jwc auth-broker login <provider> [--via=user@host]");
 	}
 	const oauthProviders = new Set<string>(getOAuthProviders().map(p => p.id));
 	if (!oauthProviders.has(providerArg)) {
@@ -238,7 +238,7 @@ async function runRemoteLogin(provider: string, via: string, dryRun: boolean): P
 async function runLogout(flags: AuthBrokerCommandArgs["flags"]): Promise<void> {
 	const providerArg = flags.provider;
 	if (!providerArg) {
-		throw new Error("Usage: gjc auth-broker logout <provider>");
+		throw new Error("Usage: jwc auth-broker logout <provider>");
 	}
 	const store = await SqliteAuthCredentialStore.open(getAgentDbPath());
 	try {
@@ -394,7 +394,7 @@ function describeImportEntry(entry: ImportPlanEntry): string {
 async function runImport(flags: AuthBrokerCommandArgs["flags"]): Promise<void> {
 	const target = flags.source;
 	if (!target) {
-		throw new Error("Usage: gjc auth-broker import <file|dir> [--provider=<id>] [--include-disabled] [--dry-run]");
+		throw new Error("Usage: jwc auth-broker import <file|dir> [--provider=<id>] [--include-disabled] [--dry-run]");
 	}
 	const resolvedTarget = path.resolve(target.startsWith("~") ? target.replace(/^~/, os.homedir()) : target);
 	const { entries, skipped } = await loadImportPlan(resolvedTarget, flags.provider, flags.includeDisabled === true);
@@ -533,12 +533,12 @@ async function runMigrate(flags: AuthBrokerCommandArgs["flags"]): Promise<void> 
 	const brokerConfig = await resolveAuthBrokerConfig();
 	if (!brokerConfig) {
 		throw new Error(
-			"GJC_AUTH_BROKER_URL must be set (or `auth.broker.url` in config.yml). `migrate` uploads local credentials to a configured broker.",
+			"JWC_AUTH_BROKER_URL must be set (or `auth.broker.url` in config.yml). `migrate` uploads local credentials to a configured broker.",
 		);
 	}
 	if (flags.fromLocal !== true) {
 		throw new Error(
-			"`gjc auth-broker migrate` requires an explicit source. Pass `--from-local` to migrate from the local SQLite store and env vars.",
+			"`jwc auth-broker migrate` requires an explicit source. Pass `--from-local` to migrate from the local SQLite store and env vars.",
 		);
 	}
 
@@ -686,7 +686,7 @@ async function runMigrate(flags: AuthBrokerCommandArgs["flags"]): Promise<void> 
 async function runStatus(flags: AuthBrokerCommandArgs["flags"]): Promise<void> {
 	const cfg = await resolveAuthBrokerConfig();
 	if (!cfg) {
-		const message = "No auth-broker configured (set GJC_AUTH_BROKER_URL to enable).";
+		const message = "No auth-broker configured (set JWC_AUTH_BROKER_URL to enable).";
 		if (flags.json) process.stdout.write(`${JSON.stringify({ ok: false, reason: "not_configured" })}\n`);
 		else process.stdout.write(`${chalk.yellow(message)}\n`);
 		return;

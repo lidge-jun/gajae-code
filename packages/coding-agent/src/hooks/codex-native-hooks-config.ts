@@ -53,7 +53,7 @@ function normalizeHooksMap(root: JsonObject): Record<string, unknown> {
 
 function commandIsGjcManaged(value: unknown): boolean {
 	if (typeof value !== "string") return false;
-	return /\bgjc(?:\.exe)?\b/.test(value) && /\bcodex-native-hook\b/.test(value);
+	return /\b(?:gjc|jwc)(?:\.exe)?\b/.test(value) && /\bcodex-native-hook\b/.test(value);
 }
 
 function entryContainsGjcManagedHook(value: unknown): boolean {
@@ -62,14 +62,14 @@ function entryContainsGjcManagedHook(value: unknown): boolean {
 }
 
 function managedCommand(): string {
-	return "gjc codex-native-hook";
+	return "jwc codex-native-hook";
 }
 
 function managedEntry(event: GjcManagedCodexHookEvent): CodexHookEntry {
 	const hook: CodexCommandHook = {
 		type: "command",
 		command: managedCommand(),
-		statusMessage: "GJC skill state",
+		statusMessage: "jwc skill state",
 		...(event === "Stop" ? { timeout: 30 } : {}),
 	};
 	return { hooks: [hook] };

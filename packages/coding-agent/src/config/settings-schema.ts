@@ -382,6 +382,11 @@ export const SETTINGS_SCHEMA = {
 		validate: (value: number) => Number.isFinite(value) && value > 0 && value <= 1,
 	},
 
+	"jwc.github.prBase": {
+		type: "string",
+		default: undefined,
+	},
+
 	/** @deprecated legacy key — migrated to `jwc.interview.ambiguityThreshold` on load (042 D041-D). */
 	"gjc.deepInterview.ambiguityThreshold": {
 		type: "number",

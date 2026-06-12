@@ -1,5 +1,5 @@
 /**
- * `gjc harness <verb>` — AI-native stateless JSON CLI for the coding-harness
+ * `jwc harness <verb>` — AI-native stateless JSON CLI for the coding-harness
  * operations control plane (v1, gajae-code adapter).
  *
  * Every verb emits the universal contract `{ ok, state, evidence, nextAllowedActions }`.
@@ -520,7 +520,7 @@ export default class Harness extends Command {
 				preflight,
 				guidance: preflight.ok
 					? "workspace metadata is normalized"
-					: "fix blockers before gjc harness start; branch must match the actual checkout and issueOrPr must be numeric or a recognized PR/issue form",
+					: "fix blockers before jwc harness start; branch must match the actual checkout and issueOrPr must be numeric or a recognized PR/issue form",
 			},
 		});
 		if (!preflight.ok) process.exitCode = 1;
@@ -692,7 +692,7 @@ export default class Harness extends Command {
 				evidence: {
 					preflight: { ...preflight, blockers: fatalBlockers, ok: false },
 					guidance:
-						"fix blockers before start; run gjc harness preflight with the same input for branch and issue/PR diagnostics",
+						"fix blockers before start; run jwc harness preflight with the same input for branch and issue/PR diagnostics",
 				},
 			});
 			process.exitCode = 1;

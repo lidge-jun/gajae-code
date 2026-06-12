@@ -979,11 +979,11 @@ disabledExtensions:
 		};
 
 		expect(parsed.hooks.UserPromptSubmit?.flatMap(entry => entry.hooks.map(hook => hook.command))).toEqual([
-			"gjc codex-native-hook",
+			"jwc codex-native-hook",
 			"echo user-prompt",
 		]);
 		expect(parsed.hooks.Stop?.flatMap(entry => entry.hooks.map(hook => hook.command))).toEqual([
-			"gjc codex-native-hook",
+			"jwc codex-native-hook",
 			"echo user-stop",
 		]);
 		expect(readGjcManagedCodexHooksStatus(merged.content, "/tmp/hooks.json")).toMatchObject({

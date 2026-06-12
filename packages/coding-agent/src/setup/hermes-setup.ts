@@ -400,7 +400,7 @@ export async function runHermesSetup(flags: HermesSetupFlags): Promise<HermesSet
 		previews,
 		warnings: spec.sessionCommand
 			? [
-					"Using explicit GJC_COORDINATOR_MCP_SESSION_COMMAND exactly as supplied; provider/model validation is not performed.",
+					"Using explicit JWC_COORDINATOR_MCP_SESSION_COMMAND exactly as supplied; provider/model validation is not performed.",
 				]
 			: ["No session command supplied; spawned sessions use the default GJC command/model resolution."],
 		smoke,
