@@ -33,11 +33,12 @@ function parseEffortArg(raw: string): ThinkingLevel | undefined {
 	// "inherit" is a model-selector concept, not a session effort.
 	return level === "inherit" ? undefined : level;
 }
+
 import { buildContextReportText } from "./helpers/context-report";
 import { formatDuration } from "./helpers/format";
 import { commandConsumed, errorMessage, parseSlashCommand, usage } from "./helpers/parse";
 import { handleSshAcp } from "./helpers/ssh";
-import { buildUsageReportText } from "./helpers/usage-report";
+import { buildQuotaText, buildUsageReportText } from "./helpers/usage-report";
 import type {
 	BuiltinSlashCommand,
 	ParsedSlashCommand,
@@ -699,6 +700,38 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 		},
 		handleTui: async (_command, runtime) => {
 			await runtime.ctx.handleUsageCommand();
+			runtime.ctx.editor.setText("");
+		},
+	},
+	{
+		name: "quota",
+		description: "Show provider quota and usage limits",
+		acpDescription: "Show quota for an OAuth provider",
+		acpInputHint: "[provider]",
+		subcommands: [
+			{ name: "anthropic", description: "Anthropic (Claude Pro/Max)" },
+			{ name: "openai-codex", description: "OpenAI (Codex/ChatGPT Plus)" },
+			{ name: "xai", description: "xAI (Grok)" },
+			{ name: "kiro", description: "Kiro" },
+		],
+		allowArgs: true,
+		handle: async (command, runtime) => {
+			const provider = command.args.trim() || null;
+			if (provider) {
+				const text = await buildQuotaText(runtime, provider);
+				await runtime.output(text);
+			} else {
+				await runtime.output(await buildUsageReportText(runtime));
+			}
+			return commandConsumed();
+		},
+		handleTui: (command, runtime) => {
+			const provider = command.args.trim();
+			if (provider) {
+				void runtime.ctx.handleQuotaForProvider(provider);
+			} else {
+				runtime.ctx.showQuotaSelector();
+			}
 			runtime.ctx.editor.setText("");
 		},
 	},

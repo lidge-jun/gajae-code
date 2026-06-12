@@ -16,6 +16,7 @@ import {
 	getPluginsCacheDir,
 	MarketplaceManager,
 } from "../../extensibility/plugins/marketplace";
+import { DynamicBorder } from "../../modes/components/dynamic-border";
 import {
 	getAvailableThemes,
 	getCurrentThemeName,
@@ -29,7 +30,6 @@ import {
 	setTheme,
 	theme,
 } from "../../modes/theme/theme";
-import { DynamicBorder } from "../../modes/components/dynamic-border";
 import type { InteractiveModeContext } from "../../modes/types";
 import { type SessionInfo, SessionManager } from "../../session/session-manager";
 import { FileSessionStorage } from "../../session/session-storage";
@@ -273,6 +273,43 @@ export class SelectorController {
 				this.ctx.statusLine.invalidate();
 				this.ctx.showStatus(`Reasoning effort set to ${this.ctx.session.thinkingLevel ?? "off"}.`);
 				this.ctx.ui.requestRender();
+			};
+			list.onCancel = () => {
+				done();
+				this.ctx.ui.requestRender();
+			};
+			container.addChild(list);
+			container.addChild(new DynamicBorder());
+			return { component: container, focus: list };
+		});
+	}
+
+	/** 094.4: dropdown for /quota — pick an OAuth provider to show usage. */
+	showQuotaSelector(): void {
+		const oauthProviders = getOAuthProviders().filter(provider =>
+			this.ctx.session.modelRegistry.authStorage.hasOAuth(provider.id),
+		);
+		if (oauthProviders.length === 0) {
+			this.ctx.showStatus("No OAuth credentials found. Use /login to authenticate with a provider first.");
+			return;
+		}
+		if (oauthProviders.length === 1) {
+			void this.ctx.handleQuotaForProvider(oauthProviders[0].id);
+			return;
+		}
+		const items: SelectItem[] = oauthProviders.map(provider => ({
+			value: provider.id,
+			label: provider.name,
+			description: provider.id,
+		}));
+		this.showSelector(done => {
+			const container = new Container();
+			container.addChild(new DynamicBorder());
+			container.addChild(new Text(theme.fg("accent", " Provider quota"), 1, 0));
+			const list = new SelectList(items, 8, getSelectListTheme());
+			list.onSelect = item => {
+				done();
+				void this.ctx.handleQuotaForProvider(item.value);
 			};
 			list.onCancel = () => {
 				done();

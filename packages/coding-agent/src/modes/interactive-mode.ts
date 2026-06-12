@@ -2444,6 +2444,14 @@ export class InteractiveMode implements InteractiveModeContext {
 		this.#selectorController.showEffortSelector();
 	}
 
+	showQuotaSelector(): void {
+		this.#selectorController.showQuotaSelector();
+	}
+
+	handleQuotaForProvider(providerId: string): Promise<void> {
+		return this.#commandController.handleQuotaForProvider(providerId);
+	}
+
 	showModelSelector(options?: { temporaryOnly?: boolean }): void {
 		this.#selectorController.showModelSelector(options);
 	}

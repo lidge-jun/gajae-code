@@ -242,6 +242,8 @@ export interface InteractiveModeContext {
 	showAgentsDashboard(): void;
 	showModelSelector(options?: { temporaryOnly?: boolean }): void;
 	showEffortSelector(): void;
+	showQuotaSelector(): void;
+	handleQuotaForProvider(providerId: string): Promise<void>;
 	showProviderOnboarding(): void;
 	showPluginSelector(mode?: "install" | "uninstall"): void;
 	showUserMessageSelector(): void;

@@ -524,6 +524,39 @@ export class CommandController {
 		this.ctx.ui.requestRender();
 	}
 
+	/** 094.4: fetch + render quota for a single OAuth provider. */
+	async handleQuotaForProvider(providerId: string): Promise<void> {
+		const authStorage = this.ctx.session.modelRegistry.authStorage;
+		if (!authStorage.hasOAuth(providerId)) {
+			this.ctx.showError(`No OAuth credentials for ${providerId}. Use /login ${providerId} first.`);
+			return;
+		}
+		const fetcher = authStorage as {
+			fetchUsageReports?: (options?: { signal?: AbortSignal }) => Promise<UsageReport[] | null>;
+		};
+		if (!fetcher.fetchUsageReports) {
+			this.ctx.showWarning("Usage reporting is not configured for this session.");
+			return;
+		}
+		let reports: UsageReport[] | null;
+		try {
+			reports = await fetcher.fetchUsageReports();
+		} catch (error) {
+			this.ctx.showError(`Failed to fetch quota: ${error instanceof Error ? error.message : String(error)}`);
+			return;
+		}
+		const filtered = reports?.filter(report => report.provider === providerId) ?? [];
+		if (filtered.length === 0) {
+			this.ctx.showWarning(`No quota data available for ${providerId}.`);
+			return;
+		}
+		const availableWidth = Math.max(40, (this.ctx.ui.terminal.columns ?? 100) - 2);
+		const output = renderUsageReports(filtered, theme, Date.now(), availableWidth);
+		this.ctx.chatContainer.addChild(new Spacer(1));
+		this.ctx.chatContainer.addChild(new Text(output, 1, 0));
+		this.ctx.ui.requestRender();
+	}
+
 	async handleChangelogCommand(showFull = false): Promise<void> {
 		const allEntries = getDisplayChangelogEntries();
 		// Default to showing only the latest 3 versions unless --full is specified

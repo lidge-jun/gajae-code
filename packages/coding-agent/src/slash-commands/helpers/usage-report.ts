@@ -65,6 +65,20 @@ function renderUsageReports(reports: UsageReport[], nowMs: number): string {
 }
 
 /**
+ * Build the `/quota` ACP-mode text for a single OAuth provider.
+ */
+export async function buildQuotaText(runtime: SlashCommandRuntime, providerId: string): Promise<string> {
+	const session = runtime.session as SlashCommandRuntime["session"] & {
+		fetchUsageReports?: () => Promise<UsageReport[] | null>;
+	};
+	if (!session.fetchUsageReports) return "Quota tracking is not available for this session.";
+	const reports = await session.fetchUsageReports();
+	const filtered = reports?.filter(report => report.provider === providerId);
+	if (!filtered || filtered.length === 0) return `No quota data available for ${providerId}.`;
+	return renderUsageReports(filtered, Date.now());
+}
+
+/**
  * Build the `/usage` ACP-mode text. Prefers provider-reported limits when the
  * session exposes `fetchUsageReports`; otherwise falls back to the local
  * session-manager tallies.
