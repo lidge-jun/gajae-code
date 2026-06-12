@@ -8,6 +8,7 @@
  * recorded via `orchestrate verdict --worker-output <path>`.
  */
 import * as fs from "node:fs/promises";
+import * as path from "node:path";
 import orchestrateA from "../prompts/jaw/orchestrate-a.md" with { type: "text" };
 import auditArchitect from "../prompts/jaw/orchestrate-audit-architect.md" with { type: "text" };
 import auditPlanner from "../prompts/jaw/orchestrate-audit-planner.md" with { type: "text" };
@@ -32,6 +33,7 @@ import {
 	writeNativeWorkflowEnvelopeAtomic,
 } from "./orchestrate-state";
 import { buildAuditLensSkillPointer, buildStageSkillPointer } from "./stage-skill-map";
+import { appendText } from "./state-writer";
 import { checkpointUltragoalGoal, readUltragoalPlan } from "./ultragoal-runtime";
 
 export interface OrchestrateCommandResult {
@@ -71,6 +73,7 @@ interface ParsedArgs {
 	dryRun?: boolean;
 	planRef?: string;
 	workerOutput?: string;
+	note?: string;
 }
 
 function parseArgs(argv: string[]): ParsedArgs | { error: string } {
@@ -93,6 +96,7 @@ function parseArgs(argv: string[]): ParsedArgs | { error: string } {
 			case "--dry-run":
 				parsed.dryRun = true;
 				break;
+			case "--note":
 			case "--session-id":
 			case "--audit-mode":
 			case "--spec-ref":
@@ -100,7 +104,8 @@ function parseArgs(argv: string[]): ParsedArgs | { error: string } {
 			case "--worker-output": {
 				const value = argv[++i];
 				if (value === undefined) return { error: `missing value for ${arg}` };
-				if (arg === "--session-id") parsed.sessionId = value;
+				if (arg === "--note") parsed.note = value;
+				else if (arg === "--session-id") parsed.sessionId = value;
 				else if (arg === "--audit-mode") {
 					if (value !== "solo" && value !== "dual")
 						return { error: `--audit-mode must be solo|dual, got: ${value}` };
@@ -390,13 +395,55 @@ export async function runNativeOrchestrateCommand(argv: string[], cwd: string): 
 	// fail the transition. Direct internal call, no shell-out.
 	await recordGoalCheckpointForTransition(cwd, from ?? "idle", target, envelope);
 
+	// 99.00.03 P1-6: D-completion leaves a durable receipt (worklog ## Final
+	// Summary 동형). Best-effort — a receipt problem must never fail the close.
+	const receiptPath =
+		target === "complete" ? await writeFinalSummaryReceipt(cwd, parsed, envelope, from ?? "idle") : undefined;
+
 	if (parsed.json) {
-		return { stdout: `${JSON.stringify({ ok: true, from, to: target, state_path: written.path })}\n`, status: 0 };
+		return {
+			stdout: `${JSON.stringify({ ok: true, from, to: target, state_path: written.path, ...(receiptPath ? { receipt_path: receiptPath } : {}) })}\n`,
+			status: 0,
+		};
 	}
 	const stagePointer = target === "complete" ? null : buildStageSkillPointer(target);
 	const basePrompt = target === "complete" ? "pabcd: orchestration complete — state closed.\n" : STAGE_PROMPTS[target];
 	const prompt = stagePointer ? `${basePrompt}\n\n${stagePointer}` : basePrompt;
-	return { stdout: `✅ pabcd → ${target}\n\n${prompt}`, status: 0 };
+	const receiptLine = receiptPath ? `\nFinal Summary receipt: ${receiptPath}\n` : "";
+	return { stdout: `✅ pabcd → ${target}\n\n${prompt}${receiptLine}`, status: 0 };
+}
+
+/**
+ * 99.00.03 P1-6: deterministic D-completion receipt appended to the
+ * session-scoped worklog (`.jwc/state/[sessions/<id>/]worklog.md`). The model's
+ * own summary can ride along via `--note`. Returns the path, or undefined when
+ * writing failed (best-effort by design).
+ */
+async function writeFinalSummaryReceipt(
+	cwd: string,
+	parsed: ParsedArgs,
+	envelope: PabcdEnvelope,
+	from: string,
+): Promise<string | undefined> {
+	try {
+		const worklogPath = path.join(path.dirname(pabcdStatePath(cwd, parsed.sessionId)), "worklog.md");
+		const lines = [
+			"",
+			`## Final Summary — ${new Date().toISOString()}`,
+			"",
+			`- transition: ${from} → complete`,
+			`- session: ${parsed.sessionId ?? "shared"}`,
+			`- spec: ${envelope.spec_ref ?? "-"} · plan: ${envelope.plan_ref ?? "-"}`,
+			`- audit: ${envelope.ctx?.audit_status ?? "-"} · verification: ${envelope.ctx?.verification_status ?? "-"}`,
+		];
+		if (parsed.note) {
+			lines.push("", parsed.note.trim());
+		}
+		lines.push("");
+		return await appendText(worklogPath, `${lines.join("\n")}\n`, { cwd });
+	} catch {
+		return undefined;
+	}
 }
 
 /** 99.08-B: append a goal-ledger checkpoint for a pabcd stage transition (no-op without an active goal). */

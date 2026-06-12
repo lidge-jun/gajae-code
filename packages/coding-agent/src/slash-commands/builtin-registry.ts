@@ -252,6 +252,11 @@ async function executeOrchestrateSlashCommand(
 ): Promise<SlashCommandResult> {
 	const args = (command.args ?? "").trim();
 	const argv = args.length > 0 ? args.split(/\s+/) : [];
+	// A-F1 (99.00.04): the TUI main process has no JWC_SESSION_ID env, so the
+	// session scope must ride the argv for session-scoped state and receipts.
+	if (!argv.includes("--session-id") && runtime.session.sessionId) {
+		argv.push("--session-id", runtime.session.sessionId);
+	}
 	const result = await runNativeOrchestrateCommand(argv, process.cwd());
 	if (result.stderr) await runtime.output(result.stderr.trimEnd());
 	const sub = argv[0]?.toLowerCase();
