@@ -148,6 +148,14 @@ function renderGoalMode(ctx: SegmentContext, mode: { enabled: boolean; paused: b
 	if (showUsage && goal) {
 		parts.push(formatGoalUsage(goal.tokensUsed));
 	}
+	// 99.04.04 — ledger checkpoint count + evidence warning + agent-pause audit pending.
+	const ledger = ctx.ultragoal;
+	if (ledger?.checkpointCount) parts.push(theme.fg("success", `\u2713${ledger.checkpointCount}`));
+	if (ledger?.lastEvidenceBlank) parts.push(theme.fg("warning", "!ev"));
+	const goalModeState = ctx.session.getGoalModeState();
+	if ((goalModeState?.agentPauseCount ?? 0) > 0 && !goalModeState?.pauseAudit) {
+		parts.push(theme.fg("warning", `${theme.icon.pause || "\u23f8"}audit`));
+	}
 	return { content: theme.fg(color, parts.join(" ")), visible: true };
 }
 
