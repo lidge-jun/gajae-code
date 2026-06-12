@@ -1199,12 +1199,9 @@ export class SelectorController {
 		try {
 			await this.ctx.session.modelRegistry.authStorage.logout(providerId);
 			await this.ctx.session.modelRegistry.refresh();
-			this.ctx.chatContainer.addChild(new Spacer(1));
-			this.ctx.chatContainer.addChild(
-				new Text(theme.fg("success", `${theme.status.success} Successfully logged out of ${providerId}`), 1, 0),
-			);
-			this.ctx.chatContainer.addChild(
-				new Text(theme.fg("dim", `Credentials removed from ${getAgentDbPath()}`), 1, 0),
+			// 99.20.07 P3: one-line success notices ride the status surface.
+			this.ctx.showStatus(
+				`${theme.status.success} Successfully logged out of ${providerId}\nCredentials removed from ${getAgentDbPath()}`,
 			);
 			this.ctx.ui.requestRender();
 		} catch (error: unknown) {

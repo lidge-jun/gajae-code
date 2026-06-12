@@ -184,10 +184,7 @@ export class ExtensionUiController {
 				this.ctx.streamingMessage = undefined;
 				this.ctx.pendingTools.clear();
 
-				this.ctx.chatContainer.addChild(new Spacer(1));
-				this.ctx.chatContainer.addChild(
-					new Text(`${theme.fg("accent", `${theme.status.success} New session started`)}`, 1, 1),
-				);
+				this.ctx.showStatus(`${theme.status.success} New session started`);
 				await this.ctx.reloadTodos();
 				this.ctx.ui.requestRender();
 
@@ -423,10 +420,7 @@ export class ExtensionUiController {
 				this.ctx.streamingMessage = undefined;
 				this.ctx.pendingTools.clear();
 
-				this.ctx.chatContainer.addChild(new Spacer(1));
-				this.ctx.chatContainer.addChild(
-					new Text(`${theme.fg("accent", `${theme.status.success} New session started`)}`, 1, 1),
-				);
+				this.ctx.showStatus(`${theme.status.success} New session started`);
 				await this.ctx.reloadTodos();
 				this.ctx.ui.requestRender();
 

@@ -935,8 +935,8 @@ export class CommandController {
 		this.ctx.streamingMessage = undefined;
 		this.ctx.pendingTools.clear();
 
-		this.ctx.chatContainer.addChild(new Spacer(1));
-		this.ctx.chatContainer.addChild(new Text(`${theme.fg("accent", `${theme.status.success} ${label}`)}`, 1, 1));
+		// 99.20.07 P3: one-line success notices ride the status surface, not the transcript.
+		this.ctx.showStatus(`${theme.status.success} ${label}`);
 		await this.ctx.reloadTodos();
 		this.ctx.ui.requestRender();
 	}
@@ -1044,10 +1044,7 @@ export class CommandController {
 			this.ctx.statusLine.invalidate();
 			this.ctx.updateEditorTopBorder();
 
-			this.ctx.chatContainer.addChild(new Spacer(1));
-			this.ctx.chatContainer.addChild(
-				new Text(`${theme.fg("accent", `${theme.status.success} Session moved to ${resolvedPath}`)}`, 1, 1),
-			);
+			this.ctx.showStatus(`${theme.status.success} Session moved to ${resolvedPath}`);
 			this.ctx.ui.requestRender();
 		} catch (err) {
 			this.ctx.showError(`Move failed: ${err instanceof Error ? err.message : String(err)}`);
@@ -1285,10 +1282,7 @@ export class CommandController {
 			this.ctx.updateEditorBorderColor();
 			await this.ctx.reloadTodos();
 
-			this.ctx.chatContainer.addChild(new Spacer(1));
-			this.ctx.chatContainer.addChild(
-				new Text(`${theme.fg("accent", `${theme.status.success} New session started with handoff context`)}`, 1, 1),
-			);
+			this.ctx.showStatus(`${theme.status.success} New session started with handoff context`);
 			if (result.savedPath) {
 				this.ctx.showStatus(`Handoff document saved to: ${result.savedPath}`);
 			}
@@ -1316,13 +1310,6 @@ export class CommandController {
 					`Manifest: ${result.manifestPath}`,
 					`Worker prompt: ${result.workerPromptPath}`,
 				].join("\n"),
-			);
-			this.ctx.chatContainer.addChild(
-				new Text(
-					`${theme.fg("accent", `${theme.status.success} Contribution prep ready`)}\nManifest: ${result.manifestPath}`,
-					1,
-					1,
-				),
 			);
 			this.ctx.ui.requestRender();
 		} catch (error) {
