@@ -18,13 +18,20 @@
 		}
 	},
 	"dependencies": {
-		"@gajae-code/coding-agent": "catalog:"
+		"@gajae-code/natives": "catalog:",
+		"markit-ai": "catalog:"
 	},
 	"engines": {
 		"bun": ">=1.3.14"
 	},
 	"files": [
 		"bin",
-		"src"
-	]
+		"dist"
+	],
+	"scripts": {
+		"bundle": "bun build src/cli-entry.ts --target=bun --outfile=dist/jwc.bundle.js --external mupdf --external markit-ai --external @gajae-code/natives"
+	},
+	"devDependencies": {
+		"@gajae-code/coding-agent": "catalog:"
+	}
 }

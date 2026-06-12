@@ -95,6 +95,10 @@
         "jwc": "bin/jwc.js",
       },
       "dependencies": {
+        "@gajae-code/natives": "catalog:",
+        "markit-ai": "catalog:",
+      },
+      "devDependencies": {
         "@gajae-code/coding-agent": "catalog:",
       },
     },

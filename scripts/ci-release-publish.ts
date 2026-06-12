@@ -56,7 +56,7 @@ export const packages: PublishPackage[] = [
 	},
 	{ dir: "packages/agent", kind: "typescript" },
 	{ dir: "packages/coding-agent", kind: "typescript" },
-	{ dir: "packages/jwc", kind: "manifest" },
+	{ dir: "packages/jwc", kind: "manifest", preBuild: [["bun", "run", "bundle"]] },
 	{ dir: "packages/bridge-client", kind: "typescript" },
 ];
 const dependencyFieldNames = [
@@ -197,11 +197,11 @@ async function rewriteNativeManifest(pkgDir: string): Promise<PackageManifest> {
 
 async function preparePackage(pkg: PublishPackage): Promise<PackageManifest> {
 	const pkgDir = path.join(repoRoot, pkg.dir);
-	if (pkg.kind === "native" || pkg.kind === "manifest") {
-		return rewriteNativeManifest(pkgDir);
-	}
 	for (const argv of pkg.preBuild ?? []) {
 		await $`${argv}`.cwd(pkgDir);
+	}
+	if (pkg.kind === "native" || pkg.kind === "manifest") {
+		return rewriteNativeManifest(pkgDir);
 	}
 	await $`bun x tsgo -p tsconfig.publish.json`.cwd(pkgDir);
 	for (const cfg of pkg.extraTypeConfigs ?? []) {
