@@ -255,8 +255,8 @@ export const SETTINGS_SCHEMA = {
 
 	// ────────────────────────────────────────────────────────────────────────
 	// Identity — agent persona rendered into the system prompt identity block.
-	// All fields default to undefined; when none are set the system prompt is
-	// byte-identical to upstream (no identity block is rendered).
+	// All fields default to undefined; when none are set no identity block is
+	// rendered and the hard-edited Jaw baseline prompt is used as-is.
 	// ────────────────────────────────────────────────────────────────────────
 	"identity.name": {
 		type: "string",

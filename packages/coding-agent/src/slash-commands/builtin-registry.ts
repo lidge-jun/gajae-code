@@ -1233,7 +1233,7 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 
 const QUARANTINED_UTILITY_SLASH_COMMANDS = new Set(["agents"]);
 
-/** Jaw-brand-only slash surface (D050-24) — hidden for the engine brand (gjc diff-0). */
+/** Jaw-brand-only slash surface (D050-24) — hidden for env-unset engine runs. */
 const JAW_ONLY_SLASH_COMMANDS = new Set(["orchestrate"]);
 
 const ACTIVE_BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = BUILTIN_SLASH_COMMAND_REGISTRY.filter(

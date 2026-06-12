@@ -1,5 +1,7 @@
 # har_struct/ — gjc_origin ↔ jwc_patched 계층 대조
 
+> ⚠️ **STALE (260612)**: 이 스냅샷 트리는 하드 수정 원칙 전환(085.5 개정·095) 이전 기준이다. diff-0/무수정 서술은 구원칙 기록 — W3(C1~C12) 완료 후 재생성 예정 (095 §2-#6).
+
 > **목적**: 업스트림 gajae-code(`gjc_origin`)과 jawcode 포크(`jwc_patched`)의 **현재 형태**를 devlog MOC 밴드별로 병렬 기록한다.  
 > `structure/`가 patched 단일 SoT라면, `har_struct/`는 **양쪽 스냅샷 대조용**이다.
 

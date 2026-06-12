@@ -1,5 +1,7 @@
 # 059 — 스키마: cli-jaw 런타임 계약 (bgtask·C분류·Interview 증거)
 
+> ⚠️ **[구원칙 폐기 — 인터뷰 260612 02:04]** 본 문서의 'gjc diff-0 / 무수정 추종 / 런타임 치환 / 무회귀' 서술은 폐기된 구원칙 기록이다. 현행 원칙은 **소스 하드 수정**(Jaw/jwc 어휘 직접 기입, 가드 jwc 기준 반전) — [085.5 개정판](./085.5_plan_prompt_rebrand.md) · [095](./095_plan_debt_cleanup.md) 참조.
+
 > 상위: [055_moc_dev_skills_compat.md](./055_moc_dev_skills_compat.md). 조사: CLI 서브에이전트 (260612 13:05, cli-jaw 소스 기준 경로).
 > 058이 "스킬이 가정하는 워크플로우 골격"이면 059는 "스킬이 인용하는 **부속 계약** 3종" — jwc에서 각각 이식/치환/degraded 판정.
 

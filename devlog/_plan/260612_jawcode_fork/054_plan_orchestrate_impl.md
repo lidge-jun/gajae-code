@@ -1,5 +1,7 @@
 # 054 — `jwc orchestrate` 구현 diff 플랜 (M1)
 
+> ⚠️ **[구원칙 폐기 — 인터뷰 260612 02:04]** 본 문서의 'gjc diff-0 / 무수정 추종 / 런타임 치환 / 무회귀' 서술은 폐기된 구원칙 기록이다. 현행 원칙은 **소스 하드 수정**(Jaw/jwc 어휘 직접 기입, 가드 jwc 기준 반전) — [085.5 개정판](./085.5_plan_prompt_rebrand.md) · [095](./095_plan_debt_cleanup.md) 참조.
+
 > 2026-06-12 10:17 초안 (Boss-author). 선행: [051](./051_design_command_port.md) §1–3, [053](./053_decisions_p_boss_author.md) D050-10~21.
 > 본 문서는 **D050-19~21 개정 topology 기준** — P = Boss+Critic 1-pass, A = Planner∥Architect 병렬 감사.
 > 상태: **v7 — goal A단계 v6델타 감사(F1~F3) 반영, B 착수** (1R 병렬 FAIL → v2 → 결정 3건 → v3 → 2R solo FAIL → v4 → 3R solo PASS → v5 → 클로징 v6 → **goal A 델타: D050-26 PASS·D050-25 F1~F3 반영 v7**).

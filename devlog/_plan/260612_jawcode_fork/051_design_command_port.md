@@ -1,5 +1,7 @@
 # 051 — 설계: cli-jaw 명령 체계의 jwc 이식 (D10 표면 — orchestrate/goal/memory)
 
+> ⚠️ **[구원칙 폐기 — 인터뷰 260612 02:04]** 본 문서의 'gjc diff-0 / 무수정 추종 / 런타임 치환 / 무회귀' 서술은 폐기된 구원칙 기록이다. 현행 원칙은 **소스 하드 수정**(Jaw/jwc 어휘 직접 기입, 가드 jwc 기준 반전) — [085.5 개정판](./085.5_plan_prompt_rebrand.md) · [095](./095_plan_debt_cleanup.md) 참조.
+
 > 050/060/070 밴드 공통 기반 설계 (260612 05:20). **050 정본 = Orchestrate IPABCD** (본 문서 §3).
 > P Boss-author 재매핑: [053_decisions_p_boss_author.md](./053_decisions_p_boss_author.md).
 > 착수 시 각 밴드 P에서 diff 레벨로 구체화 (P 구현 = 054 plan).

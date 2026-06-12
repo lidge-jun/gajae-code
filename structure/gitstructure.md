@@ -43,7 +43,7 @@
 | 1 | `git -C /Users/jun/Developer/new/700_projects/jawcode fetch upstream` | worktree remote. |
 | 2 | `git -C /Users/jun/Developer/new/700_projects/jawcode rebase upstream/main` | rebase 전 worktree 변경을 정리해야 한다. |
 | 3 | conflict 확인 | `.gjc/`, `@gajae-code/*` 유지 정책과 충돌하면 D4를 우선한다. |
-| 4 | gates | workflow/default surface 변경이 있으면 `bun scripts/check-visible-definitions.ts`, `bun scripts/verify-g002-gates.ts`, `bun scripts/rebrand-inventory.ts --strict`, `bun test packages/coding-agent/test/default-gjc-definitions.test.ts`. 근거: `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:128` |
+| 4 | gates | workflow/default surface 변경이 있으면 `bun scripts/check-visible-definitions.ts`, `bun scripts/verify-g002-gates.ts`, `bun scripts/rebrand-inventory.ts --strict`, `bun test packages/coding-agent/test/default-gjc-definitions.test.ts` (가드는 jwc 어휘 기준 — 02:04 하드 수정 개정). 근거: `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:128` |
 | 5 | 문서 | 클론 HEAD·밴드 diff → `har_struct/gjc_origin/`, `har_struct/README.md`; patched → `structure/` |
 
 ## upstream 참조 클론 (`devlog/_upstream_gjc/`)

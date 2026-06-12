@@ -277,8 +277,8 @@ export async function loadProjectContextFiles(
 /**
  * Render the agent identity block from `identity.*` settings (name, emoji,
  * vibe, language). Returns null when no field is set or when the settings
- * singleton is not initialized (bare SDK/embedding paths), so the default
- * system prompt stays byte-identical to upstream.
+ * singleton is not initialized (bare SDK/embedding paths), so the hard-edited
+ * Jaw baseline prompt is used unchanged.
  */
 export function renderIdentityBlock(): string | null {
 	let name: string | undefined;

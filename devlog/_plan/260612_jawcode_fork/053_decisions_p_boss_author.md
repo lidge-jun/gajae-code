@@ -1,5 +1,7 @@
 # 053 — P 단계 Boss-author + 3-reviewer (050 IPABCD 재매핑)
 
+> ⚠️ **[구원칙 폐기 — 인터뷰 260612 02:04]** 본 문서의 'gjc diff-0 / 무수정 추종 / 런타임 치환 / 무회귀' 서술은 폐기된 구원칙 기록이다. 현행 원칙은 **소스 하드 수정**(Jaw/jwc 어휘 직접 기입, 가드 jwc 기준 반전) — [085.5 개정판](./085.5_plan_prompt_rebrand.md) · [095](./095_plan_debt_cleanup.md) 참조.
+
 > 2026-06-12 후속 결정. **050번대 lexicographic 연속** (D050-3).
 > 선행: [050_moc_plan_pabcd.md](./050_moc_plan_pabcd.md), [051_design_command_port.md](./051_design_command_port.md), [052_decisions_ipabcd.md](./052_decisions_ipabcd.md)
 > 배경: cli-jaw **P = Boss 1명이 계획 초안** vs gjc **ralplan = Planner가 작성** — 050은 **표면 cli-jaw, 리뷰 엔진 gjc**로 합친다.

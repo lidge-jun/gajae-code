@@ -53,7 +53,7 @@ const baseCommands: CommandEntry[] = [
 
 /**
  * Jaw-brand-only command surface (D050-24, interview retrofitted per D050-25).
- * Not registered for the engine brand — gjc keeps CLI diff-0. Mirrors
+ * Not registered for the engine brand (env-unset runs). Mirrors
  * `discovery/helpers.ts isJawBrand()`; duplicated as a local check so the CLI
  * entry keeps its lazy import graph (helpers pulls the capability/discovery
  * module tree).

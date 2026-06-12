@@ -4,8 +4,8 @@
 
 ## 관계
 
-- **엔진**: gajae-code (`gjc`) — 업스트림 무수정 추종 원칙, 표면 리네이밍만 (D4)
-- **jwc bin**: `packages/jwc/bin/jwc.js` — `GJC_BRAND_NAME=jwc`로 브랜드만 전환해 같은 엔진 구동
+- **엔진**: gajae-code 0.4.4 포크 — **소스 하드 수정 원칙** (인터뷰 260612 02:04 확정): 프롬프트·번들 스킬에 Jaw/jwc 어휘 직접 기입, 가드는 jwc 기준. 업스트림 머지 시 프롬프트 충돌은 수용 비용. 기능 식별자(`.gjc/` 경로·`GJC_*` env·`@gajae-code/*` 스코프)는 보존
+- **jwc bin**: `packages/jwc/bin/jwc.js` — **단일 진입점** (gjc 셸 패키지는 제거됨; 필요 시 업스트림 npm `gajae-code` 별도 설치)
 - **임베딩 표면**: `jwc/sdk` (`packages/jwc/src/sdk.ts`) — cli-jaw가 import하는 단일 통로
 - 상태 경로(`.gjc/`)·패키지 스코프(`@gajae-code/*`)·릴리스 에셋명은 엔진(gjc) 그대로
 

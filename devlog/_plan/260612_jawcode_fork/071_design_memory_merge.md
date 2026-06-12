@@ -1,5 +1,7 @@
 # 071 — 설계: jwc memory 어댑터 (070 구체화, memories 엔진 실사 기반)
 
+> ⚠️ **[구원칙 폐기 — 인터뷰 260612 02:04]** 본 문서의 'gjc diff-0 / 무수정 추종 / 런타임 치환 / 무회귀' 서술은 폐기된 구원칙 기록이다. 현행 원칙은 **소스 하드 수정**(Jaw/jwc 어휘 직접 기입, 가드 jwc 기준 반전) — [085.5 개정판](./085.5_plan_prompt_rebrand.md) · [095](./095_plan_debt_cleanup.md) 참조.
+
 > 상위: [070_moc_memory.md](./070_moc_memory.md). 실사: Docs 직원 (260612 11:40, read-only). 확정 갱신: 인터뷰 260612 01:36.
 > 방향 [확정]: 엔진 = gjc memories 그대로, 경로 = `~/.gjc/agent/memories/state`, 표면 = `jwc memory search/read/save/context` + `jwc chat search` (cli-jaw 어휘, D10).
 > ⚠️ 경로 정정: 070 MOC의 `utils/dirs.ts:431` → 정확히는 **`packages/utils/src/dirs.ts:434`** (`getMemoriesDir`).

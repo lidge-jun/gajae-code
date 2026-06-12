@@ -1,5 +1,7 @@
 # 062 — 스키마: cli-jaw goal 시스템 전수 (061 어댑터의 원본 계약)
 
+> ⚠️ **[구원칙 폐기 — 인터뷰 260612 02:04]** 본 문서의 'gjc diff-0 / 무수정 추종 / 런타임 치환 / 무회귀' 서술은 폐기된 구원칙 기록이다. 현행 원칙은 **소스 하드 수정**(Jaw/jwc 어휘 직접 기입, 가드 jwc 기준 반전) — [085.5 개정판](./085.5_plan_prompt_rebrand.md) · [095](./095_plan_debt_cleanup.md) 참조.
+
 > 상위: [060_moc_goal_merge.md](./060_moc_goal_merge.md). 조사: CLI 서브에이전트 (260612 13:05, cli-jaw 소스 `/Users/jun/Developer/new/700_projects/cli-jaw` 기준 경로).
 > 061이 gjc ultragoal **엔진** 실사였다면 062는 cli-jaw **goal 워크플로우** 전수 — D10(표면 동형)의 "동형"이 정확히 무엇인지 필드 단위로 고정. 인터뷰 확정: 260612 01:36.
 
