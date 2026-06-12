@@ -20,6 +20,9 @@ import { resizeImage } from "../../utils/image-resize";
 import { generateSessionTitle, setSessionTerminalTitle } from "../../utils/title-generator";
 import { AssistantMessageComponent } from "../components/assistant-message";
 import { ToolExecutionComponent } from "../components/tool-execution";
+
+/** 99.10: focus ring / transcript cells — tools and thinking-bearing assistant messages share the expand protocol. */
+type FocusableCell = ToolExecutionComponent | AssistantMessageComponent;
 import { ToolTranscriptOverlayComponent } from "../components/tool-transcript-overlay";
 
 interface Expandable {
@@ -919,12 +922,14 @@ export class InputController {
 
 	// =========================================================================
 	// Tool focus mode (083.1 pattern B): ctrl+up enters / moves up, ↑↓ navigate,
-	// enter toggles the focused tool's expansion, esc or typing exits.
+	// enter toggles the focused cell's expansion, esc or typing exits.
+	// 99.10: the ring covers tool blocks AND thinking-bearing assistant cells —
+	// both share the duck-typed setFocused/expanded/setExpanded protocol.
 	// =========================================================================
 
 	#toolFocus:
 		| {
-				tools: ToolExecutionComponent[];
+				tools: FocusableCell[];
 				index: number;
 				prevOnChange: ((text: string) => void) | undefined;
 				prevInterruptPriority: (() => boolean) | undefined;
@@ -936,8 +941,11 @@ export class InputController {
 			this.#moveToolFocus(-1);
 			return;
 		}
+		// 99.10: thinking-bearing assistant cells join the ring alongside tools.
 		const tools = this.ctx.chatContainer.children.filter(
-			(child): child is ToolExecutionComponent => child instanceof ToolExecutionComponent,
+			(child): child is FocusableCell =>
+				child instanceof ToolExecutionComponent ||
+				(child instanceof AssistantMessageComponent && child.hasThinking),
 		);
 		if (tools.length === 0) {
 			this.ctx.showStatus("No tool blocks to focus");
@@ -1002,11 +1010,13 @@ export class InputController {
 		this.ctx.ui.requestRender();
 	}
 
-	/** 083.1 pattern A: full tool transcript in a scrollable overlay (alt+t). */
+	/** 083.1 pattern A: full tool transcript in a scrollable overlay (alt+t) — thinking cells included (99.10). */
 	showToolTranscript(): void {
 		this.#exitToolFocus();
 		const tools = this.ctx.chatContainer.children.filter(
-			(child): child is ToolExecutionComponent => child instanceof ToolExecutionComponent,
+			(child): child is FocusableCell =>
+				child instanceof ToolExecutionComponent ||
+				(child instanceof AssistantMessageComponent && child.hasThinking),
 		);
 		if (tools.length === 0) {
 			this.ctx.showStatus("No tool blocks to show");

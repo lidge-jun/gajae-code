@@ -21,6 +21,8 @@ export class AssistantMessageComponent extends Container {
 	#thinkingExpanded = false;
 	/** True while this component renders the live streaming segment. */
 	#streaming = false;
+	/** Focus-ring marker state (99.10 — tool-focus mode includes thinking cells). */
+	#focused = false;
 	#responseHeader = new Text(theme.bold(theme.fg("statusLineModel", resolveAgentDisplayName().toLowerCase())), 1, 0);
 
 	constructor(
@@ -67,6 +69,32 @@ export class AssistantMessageComponent extends Container {
 	/** Global expand sweep entry (ctrl+o) — same protocol as ToolExecutionComponent. */
 	setExpanded(expanded: boolean): void {
 		this.setThinkingExpanded(expanded);
+	}
+
+	/** Focus marker for tool-focus mode (083.1 pattern B / 99.10). Render-only — no layout change. */
+	setFocused(focused: boolean): void {
+		this.#focused = focused;
+	}
+
+	/** Individual expand state (read by tool-focus mode for toggling) — thinking collapse state. */
+	get expanded(): boolean {
+		return this.#thinkingExpanded;
+	}
+
+	/** Whether this message carries a non-empty thinking block (focus-ring eligibility, 99.10). */
+	get hasThinking(): boolean {
+		return this.#lastMessage?.content.some(c => c.type === "thinking" && c.thinking.trim()) ?? false;
+	}
+
+	/**
+	 * Replace the leading separator blank line with an accent focus marker —
+	 * same line count, so toggling focus never reflows the chat
+	 * (ToolExecutionComponent #applyFocusMarker 동형).
+	 */
+	override render(width: number): string[] {
+		const lines = super.render(width);
+		if (!this.#focused || lines.length === 0 || lines[0] !== "") return lines;
+		return [theme.fg("accent", " ❯"), ...lines.slice(1)];
 	}
 
 	/**

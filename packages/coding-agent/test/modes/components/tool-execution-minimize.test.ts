@@ -67,7 +67,8 @@ describe("ToolExecutionComponent minimize", () => {
 		const overlay = new ToolTranscriptOverlayComponent([tool], { close() {}, requestRender() {} });
 		const rendered = strip(overlay.render(100)).join("\n");
 		expect(rendered).toContain("line3");
-		expect(rendered).toContain("Tool transcript (1 tools");
+		// 99.10: header counts cells (tools + thinking messages)
+		expect(rendered).toContain("Tool transcript (1 cells");
 		expect(tool.expanded).toBe(false);
 		expect(tool.render(100).length).toBe(2);
 	});
