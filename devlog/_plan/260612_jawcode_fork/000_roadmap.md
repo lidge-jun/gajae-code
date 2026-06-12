@@ -55,10 +55,11 @@
 설계 정본 (밴드 횡단): [051_design_command_port.md](./051_design_command_port.md) — D10 명령 이식 (050/060/070 기반) ·
 [111_design_runtime_attach.md](./111_design_runtime_attach.md) — M2 런타임 부착 통합 설계 (100–130 기반)
 
-밴드 내 이슈/서브플랜 (260612 06시 추가) — **번호는 소속 분류일 뿐, 081/082/091은 밴드 순서와 무관하게 선착수 가능**:
-[081](./081_issue_tui_toolcall_render.md)·[082](./082_issue_cursor_tools_fail.md)·[083](./083_issue_cursor_exec_unbound.md)
-— cursor 도구 미표시(081)/타이틀 환각(082)/**실행 unbound this 버그(083)** + Glob — **✅ 4건 수정·e2e 검증 완료**,
-해결 정본 [084](./084_fix_cursor_tools_resolution.md) (080 밴드 발현, hotfix 트랙) ·
+밴드 내 이슈/서브플랜 (260612 06–09시) — **번호는 소속 분류일 뿐, 밴드 순서와 무관하게 선착수 가능**.
+버그가 많은 군은 하위번호(081.n)로 묶음:
+[081](./081_moc_cursor_tools.md) **cursor 도구군** (MOC/정본) — 081.1 미표시·081.2 타이틀환각·081.3 실행 unbound this·081.4 Glob —
+**✅ 4건 수정·e2e 검증 완료** (080 밴드 발현, hotfix 트랙). 081.5 = cursor 외 동형 패턴 감사 ·
+082.n = **TUI Ctrl/한글 IME 키 미작동** (조사 중) ·
 [091](./091_plan_provider_kiro.md) — kiro 프로바이더 [제안] (090 밴드, 기술 의존 없음 — 게이트는 ToS 결정뿐) ·
 [112](./112_moc_gui.md) — GUI/Claude Desktop 옵션 (110 밴드 표면 트랙, M2 산출물 의존)
 

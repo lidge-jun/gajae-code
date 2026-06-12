@@ -1,8 +1,18 @@
-# 084 — cursor 도구 사용 이슈 해결 종합 (해결 방법 정본)
+# 081 — cursor 도구 사용 이슈 (MOC / 해결 정본)
 
-> 상태: ✅ 해결 완료·사용자 e2e 검증 (260612 08시). 081·082·083·Glob 4건 수정 묶음.
-> 소속: 080 밴드. 개별 분석: [081](./081_issue_tui_toolcall_render.md)·[082](./082_issue_cursor_tools_fail.md)·[083](./083_issue_cursor_exec_unbound.md).
-> 본 문서 = "어떻게 해결했나"의 정본 (디버깅 여정 + 수정 + 검증법).
+> 상태: ✅ 해결 완료·사용자 e2e 검증 (260612 08시). 081.1~081.4 = 4건 수정 묶음.
+> 소속: 080 밴드. 본 문서 = cursor 도구군 이슈의 **인덱스 + "어떻게 해결했나" 정본** (디버깅 여정 + 수정 + 검증법).
+> ⚠️ 번호 규약: cursor 도구 버그가 많아 081 하위(081.1~)로 묶음. 다른 이슈군은 082.n(TUI Ctrl/IME) 등 별도.
+
+## 하위 문서
+
+| # | 이슈 | 상태 |
+|---|------|------|
+| [081.1](./081.1_issue_toolcall_render.md) | TUI에 도구 행 미표시 (cursor 파서 oneof 드롭) | ✅ 수정 |
+| [081.2](./081.2_issue_title_hallucination.md) | 환각 세션 타이틀 저장 (composer 모델) | ✅ 수정 |
+| [081.3](./081.3_issue_exec_unbound.md) | 도구 실행 crash (exec 핸들러 unbound this) ★핵심 | ✅ 수정 |
+| [081.4](./081.4_issue_glob_empty_pattern.md) | Glob 빈 패턴 "Pattern must not be empty" | ✅ 수정 |
+| [081.5](./081.5_audit_unbound_elsewhere.md) | cursor 외 동형 패턴(unbound-this/oneof-drop) 감사 | 🔍 조사 |
 
 ## 증상 (사용자 보고)
 
@@ -33,38 +43,38 @@
 
 | # | 증상 | 근본 원인 | 파일 |
 |---|------|-----------|------|
-| 081 | 도구 행 미표시 | `processInteractionUpdate`가 ToolCall oneof 중 mcp/todo 2종만 처리, native variant 드롭 | `packages/ai/src/providers/cursor.ts` |
-| 082 | 환각 타이틀 저장 | `extractGeneratedTitle`이 toolCall 없는 긴 평문도 제목으로 채택 | `packages/coding-agent/src/utils/title-generator.ts` |
-| 083 | **도구 실행 crash** | exec 핸들러를 인스턴스에서 unbound 추출 → `this` undefined → `this.#optionsForCall` 폭발 | `packages/agent/src/agent.ts` |
-| Glob | "Pattern must not be empty" | native Glob이 grep exec(빈 pattern)로 도착, search 도구가 빈 패턴 거부 | `packages/coding-agent/src/cursor.ts` |
+| 081.1 | 도구 행 미표시 | `processInteractionUpdate`가 ToolCall oneof 중 mcp/todo 2종만 처리, native variant 드롭 | `packages/ai/src/providers/cursor.ts` |
+| 081.2 | 환각 타이틀 저장 | `extractGeneratedTitle`이 toolCall 없는 긴 평문도 제목으로 채택 | `packages/coding-agent/src/utils/title-generator.ts` |
+| 081.3 | **도구 실행 crash** | exec 핸들러를 인스턴스에서 unbound 추출 → `this` undefined → `this.#optionsForCall` 폭발 | `packages/agent/src/agent.ts` |
+| 081.4 | "Pattern must not be empty" | native Glob이 grep exec(빈 pattern)로 도착, search 도구가 빈 패턴 거부 | `packages/coding-agent/src/cursor.ts` |
 
 ## 해결 방법 (적용된 수정)
 
-### 081 — native toolCall 폴백 렌더 (`cursor.ts`)
+### 081.1 — native toolCall 폴백 렌더 (`cursor.ts`)
 `toolCallStarted`에서 mcp/todo가 아니면 `buildNativeToolCallBlock`로 `*ToolCall` 키를 스캔해
 `kind:"native"` 블록 push + `toolcall_start` emit. 이름 별칭(`cursorNativeToolName`)은 cli-jaw
 `cursorToolKindLabel`(커밋 `0ff4e544`) 차용 — `shell→bash`, `semSearch→codebase_search` 등.
 `ToolCallState.kind`에 `"native"` 추가.
 
-### 083 — exec 핸들러 this 보존 (`agent.ts`) ★ 도구가 실제로 돌게 한 핵심
+### 081.3 — exec 핸들러 this 보존 (`agent.ts`) ★ 도구가 실제로 돌게 한 핵심
 `#cursorExecHandlersForRun`의 9개 핸들러 추출을 전부 `?.bind(source)`로 변경:
 `read/ls/grep/write/delete/shell/shellStream/diagnostics/mcp`. run 가드(`#assertActiveRun`) 래핑은 유지.
 ```ts
 const read = source.read?.bind(source);   // (전) const read = source.read;
 ```
 
-### 082 — 타이틀 환각 가드 (`title-generator.ts`)
+### 081.2 — 타이틀 환각 가드 (`title-generator.ts`)
 `extractGeneratedTitle`이 toolCall 없는 평문 폴백을 80자/12단어 초과 시 `""` 반환 → 호출자 fallback.
 상수 `MAX_TITLE_CHARS=80` / `MAX_TITLE_WORDS=12`.
 
-### Glob — 빈 패턴은 find로 라우팅 (`coding-agent/src/cursor.ts`)
+### 081.4 — Glob 빈 패턴은 find로 라우팅 (`coding-agent/src/cursor.ts`)
 grep 핸들러에서 `pattern.trim()`이 비면 content search 대신 `find` 도구로 glob path 전달.
 
 ## 검증
 
 - **타입체크·biome**: `packages/ai`·`packages/coding-agent`·`packages/agent` 전부 통과.
-- **격리 재현**: 083 before/after 대조 (`bare ERROR: …this.#opt` → `bound: 15`).
-- **사용자 e2e** (081+083 적용 후 "tool 10개"): Bash 실제 출력(`pwd && ls -la`), Read package.json,
+- **격리 재현**: 081.3 before/after 대조 (`bare ERROR: …this.#opt` → `bound: 15`).
+- **사용자 e2e** (081.1+081.3 적용 후 "tool 10개"): Bash 실제 출력(`pwd && ls -la`), Read package.json,
   Grep/Find/Search, Web Search(DuckDuckGo 실결과), MCP 도구(CronList/IRC/Job) **전부 실제 실행·렌더**.
   수정 전(0 toolCall 블록, 환각 표) → 수정 후(실제 도구 행) 대조 확인.
 

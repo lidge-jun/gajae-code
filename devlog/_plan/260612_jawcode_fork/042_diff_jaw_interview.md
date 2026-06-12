@@ -15,6 +15,9 @@
 | L2 영속 상태 | `skill: "deep-interview"` (state JSON·receipt·audit), zod `CANONICAL_GJC_WORKFLOW_SKILLS` | **신규값 기록 + 구값 read-normalize** — 읽기 시 `deep-interview`→`jaw-interview` 정규화 후 검증, 쓰기는 항상 신규값 |
 | L3 와이어 | RPC `stage: "deep-interview"` (rpc-types, bridge-client, gate-broker) | **신규값 송신 + 유니언에 구값 유지** — 브릿지 클라이언트가 둘 다 수용 (양단 모두 본 리포라 동시 개정) |
 
+> **경로 표기 규약 (F5)**: 아래 `src/...`는 전부 `packages/coding-agent/src/...`의 약기.
+> 예외는 `packages/bridge-client/...`, `scripts/...`, `schemas/...`, `docs/...`처럼 명시된 경우뿐.
+
 ## B1 — 기계적 rename + 호환 심 (커밋 1~2개)
 
 ### B1-a. 디렉토리·파일 rename (git mv)
@@ -36,11 +39,13 @@ test/fixtures/gjc-state/v1/deep-interview-legacy.json → **유지** (레거시 
 
 | 파일 | 변경 |
 |------|------|
-| `src/cli.ts:50` | `{ name: "interview", aliases: ["deep-interview"], load: () => import("./commands/interview") }` — CommandEntry.aliases 패턴(:45 contribute-pr 선례), findEntry가 alias 해석(:364) |
-| `src/gjc-runtime/state-schema.ts:17` | `CANONICAL_GJC_WORKFLOW_SKILLS = ["jaw-interview", ...]` + **NEW** `LEGACY_SKILL_ALIASES = { "deep-interview": "jaw-interview" }` + read 경로 normalize 함수(검증 전 적용). write(`RequiredOnWriteEnvelopeSchema`)는 신규값만 |
-| `src/skill-state/active-state.ts:12,520` | CANONICAL import 추종 + `PLANNING_PIPELINE_SKILLS` 갱신 + legacy normalize 적용 |
+| `src/cli.ts:50` | `{ name: "interview", aliases: ["deep-interview"], load: () => import("./commands/interview") }` — CommandEntry.aliases 패턴(cli.ts:45 contribute-pr 선례), alias 해석은 `packages/utils/src/cli.ts:363-364` `findEntry` (F4 정정) |
+| `src/gjc-runtime/state-schema.ts:17` | `CANONICAL_GJC_WORKFLOW_SKILLS = ["jaw-interview", ...]` + **NEW 공용 `normalizeWorkflowSkillSlug()`** (`deep-interview`→`jaw-interview`, 검증 전 적용) — `readGjcJson`(:175-191)과 `WorkflowStateReceiptSchema.skill` 파싱 전단에 삽입. write(`state-writer.ts:399` `RequiredOnWriteEnvelopeSchema`)는 신규값만 (fail-closed 유지) |
+| **(F2) legacy normalize 전파** | `normalizeWorkflowSkillSlug()`를 다음 전부에 적용: `src/skill-state/workflow-state-contract.ts:131-134` `canonicalWorkflowSkill` / `src/skill-state/active-state.ts:284-285` `isCanonicalGjcWorkflowSkill` / `src/gjc-runtime/workflow-command-ref.ts:237-238` **중복 정의된** `isCanonicalGjcWorkflowSkill` / `src/gjc-runtime/state-runtime.ts:330,537,560` 호출 경로 / `src/gjc-runtime/state-migrations.ts:54`. ⚠️ CANONICAL 배열이 `state-schema.ts:17`(private)과 `active-state.ts:12`(exported, scripts가 import) **2곳 독립 정의** — 둘 다 갱신 + 단일 소스로 통합 검토 |
+| `src/skill-state/active-state.ts:12,520` | CANONICAL 갱신 + `PLANNING_PIPELINE_SKILLS` 갱신 + normalize 적용 |
+| `src/extensibility/gjc-plugins/types.ts:7` | `GJC_SUBSKILL_PARENT_SKILLS` — active-state 추종 확인 + alias normalize 적용 여부 검증 |
 | `src/skill-state/initial-phase.ts:14` | `if (skill === "jaw-interview") return "interviewing";` (normalize 후 비교라 단일값) |
-| `src/hooks/skill-state.ts:50,62,362,459` | 노출 문구·비교값·`DEFAULT_DEEP_INTERVIEW_AMBIGUITY_THRESHOLD`→`DEFAULT_JAW_INTERVIEW_AMBIGUITY_THRESHOLD` |
+| `src/hooks/skill-state.ts:50,62,362,459` | 노출 문구(:50,62)·threshold 비교 분기(:362-363, 상수 `DEFAULT_DEEP_INTERVIEW_*`→`DEFAULT_JAW_INTERVIEW_*`)·`isHandoffRequiredSkill`의 skill 비교(:459) |
 | `src/hooks/skill-keywords.ts` | `$deep-interview`→`$interview` (+구 키워드 alias 항목 유지 4건) |
 | `src/gjc-runtime/workflow-manifest.ts:144-172` | 키·skill·`graphLabel: "Jaw Interview"` |
 | `src/gjc-runtime/workflow-command-ref.ts` | skill·skillPath 갱신 + **NEW** legacy slug alias 맵(`/skill:deep-interview` 해석용) |
@@ -49,7 +54,8 @@ test/fixtures/gjc-state/v1/deep-interview-legacy.json → **유지** (레거시 
 | `src/modes/rpc/rpc-types.ts:405` | `RpcWorkflowStage = "jaw-interview" \| "deep-interview" \| ...` (구값 유니언 유지, deprecated 주석) |
 | `packages/bridge-client/src/workflow-gate.ts:11,57` | 동일 — 유니언·배열에 양값 |
 | `src/modes/shared/agent-wire/jaw-interview-gate.ts:134` | `stage: "jaw-interview"` 송신 |
-| `src/modes/shared/agent-wire/workflow-gate-broker.ts` | stages 양값 수용 |
+| `src/modes/shared/agent-wire/workflow-gate-broker.ts:28` | **`V1_STAGES` 배열에 양값 명시 추가** (현재 `"deep-interview"`만) |
+| `docs/rpc.md:744` | stage 문서 갱신 (신규값 + 구값 deprecated 표기) |
 | `src/skill-state/jaw-interview-mutation-guard.ts:15,133-144,360,363` | BLOCK_MESSAGE 명령 힌트 `jwc interview --write --stage final`로, 비교값 normalize 경유, 폴백 반환 신규값 |
 | `src/tools/ask.ts:32-35` / `src/tools/ast-edit.ts` / `src/session/agent-session.ts` | import 경로·심볼명 추종 |
 | `src/modes/components/assistant-message.ts:5,159` | import 추종 (B3에서 교체) |
@@ -91,8 +97,9 @@ spec 경로 `jaw-interview-${slug}.md`(:401), stdout/에러 문구 `jwc intervie
 
 ## B3 — ask 스키마 확장 + 구조화 렌더러 (커밋 1~2개)
 
-조사 확정 제약: gate 경로(`AskGateQuestion{id,question,options,multi?,recommended?}`)는 형태 유지,
-timeout·recommended·Other 동작 보존, render-middleware 소비처는 ask.ts(3 export)·assistant-message.ts(1 export) 단 2곳.
+조사 확정 제약: gate 경로(`AskGateQuestion{id,question,options,multi?,recommended?}`)는 기존 5필드 불변
+(+옵셔널 meta만 추가), timeout·recommended·Other 동작 보존, render-middleware 소비처는
+ask.ts(4 export 사용)·assistant-message.ts(1 export) 단 2곳.
 
 1. **MODIFY `src/tools/ask.ts:49-63`** — 스키마 확장(기존 필드 전부 호환 유지):
    ```ts
@@ -113,6 +120,12 @@ timeout·recommended·Other 동작 보존, render-middleware 소비처는 ask.ts
    });
    ```
    gate 경로(:512-517)는 meta를 `context.stage_state`로 패스스루(스키마 형태 불변).
+1.5. **(F1) MODIFY `src/modes/shared/agent-wire/jaw-interview-gate.ts`** — `questionToGate`가 현재
+   `deepInterviewQuestionState(question.question)` **정규식으로 stage_state를 채움**(:66,134-157).
+   D041-A로 텍스트 헤더가 사라지면 unattended gate의 round/topology/ambiguity 메타가 소실되므로:
+   `AskGateQuestion`에 `meta?: QuestionMeta` 옵셔널 추가(기존 5필드 불변) → `questionToGate`는
+   **meta 우선으로 stage_state 구성, 정규식 파싱은 meta 부재 시 fallback으로 강등**.
+   `gateAnswerToResult`는 무변경. ask.ts:512-517에서 gateQuestion에 meta 전달 1줄 추가.
 2. **NEW `src/jaw-interview/structured-renderer.ts`** — `renderInterviewQuestion(q: QuestionItem, theme): Component`
    meta 구조화 필드에서 직접 렌더(정규식 파싱 제거). 기존 `Deep Interview · Round N` 헤더 컴포넌트
    트리 재사용(Container/Text/Markdown/Spacer). 진행 리포트는 `renderInterviewProgress(payload, theme)` —
@@ -133,8 +146,12 @@ timeout·recommended·Other 동작 보존, render-middleware 소비처는 ask.ts
 2. **MODIFY `jaw-interview-runtime.ts` `readSettingsAmbiguityThreshold`(:168-191)·`readModernSettingsAmbiguityThreshold`(:201-213)**:
    `parsed?.jwc?.interview?.ambiguityThreshold` 우선 → `parsed?.gjc?.deepInterview?.ambiguityThreshold` fallback (D041-D)
 3. **MODIFY `src/config/settings.ts:624` `#migrateRawSettings`**: `gjc.deepInterview.ambiguityThreshold`→
-   `jwc.interview.ambiguityThreshold` 이동 블록 추가 (선례: queueMode→steeringMode :626)
-4. 진입 어휘는 B1-b의 cli.ts(`interview` + alias `deep-interview`)·workflow-command-ref legacy slug 맵으로 완결
+   `jwc.interview.ambiguityThreshold` 이동 블록 추가. ⚠️ 기존 선례(queueMode→steeringMode :626)는
+   **top-level flat key**라 nested(`gjc.deepInterview`) 이동은 중첩 객체 안전 접근/정리 코드가 필요 (F3)
+4. **(F3) MODIFY `scripts/generate-json-schemas.ts:100`** — 하드코딩된 구 키를 신 키로 갱신 후
+   **`schemas/config.schema.json` 재생성** (:157-165 nested 스키마가 산출물로 갱신됨, 수동 편집 금지)
+5. **(F3) MODIFY `test/config-cli.test.ts:84-93`** — 구 키 CLI 테스트를 신 키로 갱신 + 구 키 fallback 케이스 추가
+6. 진입 어휘는 B1-b의 cli.ts(`interview` + alias `deep-interview`)·workflow-command-ref legacy slug 맵으로 완결
 
 ## B5 — 신규 테스트 + 계약 문서 (커밋 1개)
 
