@@ -14,9 +14,15 @@ export async function coerceWriteData(data: unknown): Promise<string | Uint8Arra
 	if (data instanceof Uint8Array) return data;
 	if (data instanceof ArrayBuffer) return new Uint8Array(data);
 	if (ArrayBuffer.isView(data)) return new Uint8Array(data.buffer, data.byteOffset, data.byteLength);
-	if (typeof Blob !== "undefined" && data instanceof Blob) return new Uint8Array(await data.arrayBuffer());
+	// Response / Blob / BunFile-like: read RAW BYTES via arrayBuffer. Using
+	// .text() here would UTF-8-decode binary bodies and corrupt every
+	// downloaded executable/archive (audit SQ-1 — tools-manager downloads).
+	if (data && typeof (data as { arrayBuffer?: unknown }).arrayBuffer === "function") {
+		return new Uint8Array(await (data as { arrayBuffer(): Promise<ArrayBuffer> }).arrayBuffer());
+	}
+	// Last resort: a text-only source (e.g. a stringifiable with .text() but no
+	// arrayBuffer). Bun treats these as UTF-8 text.
 	if (data && typeof (data as { text?: unknown }).text === "function") {
-		// BunFile-like / Response-like sources.
 		return (data as { text(): Promise<string> }).text();
 	}
 	throw new Error(`Bun.write shim: unsupported data type ${Object.prototype.toString.call(data)}`);

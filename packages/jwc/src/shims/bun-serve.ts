@@ -1,25 +1,36 @@
 /**
  * `Bun.serve` Node adapter (100.07 / inventory J).
  *
- * Covers the fetch-handler HTTP shape used by the OAuth callback server and
- * the py tool-bridge: `serve({ hostname, port, fetch }) → { port, stop }`.
- * WebSocket upgrade (bridge-mode full e2e) is explicitly deferred — passing a
- * `websocket` option throws with a pointer to this plan.
+ * Covers the fetch-handler HTTP shape used by the OAuth callback server, the
+ * py tool-bridge, and the bridge mode: `serve({ hostname, port, tls, fetch })
+ * → { port, stop }`. TLS is honored via node:https (audit SQ-2 — dropping it
+ * served bridge bearer tokens in cleartext). WebSocket upgrade is deferred —
+ * passing a `websocket` option throws.
  */
-import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { createServer as createHttpServer, type IncomingMessage, type ServerResponse } from "node:http";
+import { createServer as createHttpsServer } from "node:https";
 import { Readable } from "node:stream";
+
+interface BunServeTlsOptions {
+	cert?: string | Buffer;
+	key?: string | Buffer;
+	ca?: string | Buffer;
+	passphrase?: string;
+	serverName?: string;
+}
 
 interface BunServeOptions {
 	hostname?: string;
 	port?: number;
 	reusePort?: boolean;
+	tls?: BunServeTlsOptions;
 	fetch: (request: Request) => Response | Promise<Response>;
 	websocket?: unknown;
 	error?: (error: Error) => Response | Promise<Response>;
 }
 
-function toRequest(req: IncomingMessage, hostname: string, port: number): Request {
-	const url = `http://${hostname}:${port}${req.url ?? "/"}`;
+function toRequest(req: IncomingMessage, hostname: string, port: number, scheme: "http" | "https"): Request {
+	const url = `${scheme}://${hostname}:${port}${req.url ?? "/"}`;
 	const headers = new Headers();
 	for (const [key, value] of Object.entries(req.headers)) {
 		if (typeof value === "string") headers.set(key, value);
@@ -43,11 +54,29 @@ async function writeResponse(res: ServerResponse, response: Response): Promise<v
 	});
 	res.writeHead(response.status, headers);
 	if (response.body) {
-		for await (const chunk of response.body as unknown as AsyncIterable<Uint8Array>) {
-			res.write(chunk);
+		// Cancel the source stream when the client disconnects, so SSE
+		// producers (BridgeEventStream) run their ReadableStream cancel() and
+		// drop the subscriber instead of leaking forever (audit SQ-4).
+		const reader = (response.body as ReadableStream<Uint8Array>).getReader();
+		let aborted = false;
+		const onClose = () => {
+			aborted = true;
+			reader.cancel().catch(() => {});
+		};
+		res.once("close", onClose);
+		try {
+			for (;;) {
+				const { done, value } = await reader.read();
+				if (done || aborted) break;
+				if (!res.write(value)) {
+					await new Promise<void>(resolve => res.once("drain", resolve));
+				}
+			}
+		} finally {
+			res.removeListener("close", onClose);
 		}
 	}
-	res.end();
+	if (!res.writableEnded) res.end();
 }
 
 export function bunServe(options: BunServeOptions) {
@@ -56,10 +85,12 @@ export function bunServe(options: BunServeOptions) {
 	}
 	const hostname = options.hostname ?? "0.0.0.0";
 	const requestedPort = options.port ?? 0;
+	const useTls = Boolean(options.tls?.cert && options.tls?.key);
+	const scheme: "http" | "https" = useTls ? "https" : "http";
 
-	const server = createServer((req, res) => {
+	const handler = (req: IncomingMessage, res: ServerResponse) => {
 		Promise.resolve()
-			.then(() => options.fetch(toRequest(req, hostname, boundPort())))
+			.then(() => options.fetch(toRequest(req, hostname, boundPort(), scheme)))
 			.catch(async error => {
 				if (options.error) return options.error(error instanceof Error ? error : new Error(String(error)));
 				return new Response("Internal Server Error", { status: 500 });
@@ -69,7 +100,19 @@ export function bunServe(options: BunServeOptions) {
 				res.statusCode = 500;
 				res.end();
 			});
-	});
+	};
+
+	const server = useTls
+		? createHttpsServer(
+				{
+					cert: options.tls?.cert,
+					key: options.tls?.key,
+					ca: options.tls?.ca,
+					passphrase: options.tls?.passphrase,
+				},
+				handler,
+			)
+		: createHttpServer(handler);
 
 	server.listen(requestedPort, hostname);
 	const boundPort = () => {
@@ -85,7 +128,7 @@ export function bunServe(options: BunServeOptions) {
 			return hostname;
 		},
 		get url(): URL {
-			return new URL(`http://${hostname}:${boundPort()}/`);
+			return new URL(`${scheme}://${hostname}:${boundPort()}/`);
 		},
 		stop(_closeActiveConnections?: boolean): void {
 			server.close();

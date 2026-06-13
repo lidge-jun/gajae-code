@@ -27,11 +27,75 @@ function normalizeBindings(args: BindArgs): unknown[] {
 	});
 }
 
+/**
+ * Count bind placeholders in a SQL string the way bun:sqlite's
+ * Statement.paramsCount does. better-sqlite3 exposes no equivalent, so parse
+ * the source: count `?`, `?NNN`, `:name`, `@name`, `$name`, skipping string
+ * literals (`'...'`, `"..."`), and `--` / block comments. Numbered/`?` params
+ * count by distinct index; named params count once per distinct name.
+ */
+function countSqlParams(sql: string): number {
+	let anonymous = 0;
+	const numbered = new Set<number>();
+	const named = new Set<string>();
+	for (let i = 0; i < sql.length; i++) {
+		const ch = sql[i];
+		if (ch === "'" || ch === '"') {
+			const quote = ch;
+			i++;
+			while (i < sql.length && sql[i] !== quote) i++;
+			continue;
+		}
+		if (ch === "-" && sql[i + 1] === "-") {
+			while (i < sql.length && sql[i] !== "\n") i++;
+			continue;
+		}
+		if (ch === "/" && sql[i + 1] === "*") {
+			i += 2;
+			while (i < sql.length && !(sql[i] === "*" && sql[i + 1] === "/")) i++;
+			i++;
+			continue;
+		}
+		if (ch === "?") {
+			let j = i + 1;
+			let digits = "";
+			while (j < sql.length && sql[j] >= "0" && sql[j] <= "9") digits += sql[j++];
+			if (digits) numbered.add(Number(digits));
+			else anonymous++;
+			i = j - 1;
+			continue;
+		}
+		if (ch === ":" || ch === "@" || ch === "$") {
+			let j = i + 1;
+			let name = "";
+			while (j < sql.length && /[A-Za-z0-9_]/.test(sql[j] as string)) name += sql[j++];
+			if (name) named.add(`${ch}${name}`);
+			i = j - 1;
+		}
+	}
+	return anonymous + numbered.size + named.size;
+}
+
 export class Statement<T = unknown> {
 	#stmt: BetterSqlite3.Statement;
 
 	constructor(stmt: BetterSqlite3.Statement) {
 		this.#stmt = stmt;
+	}
+
+	/** bun:sqlite parity: number of bind parameters in the prepared SQL. */
+	get paramsCount(): number {
+		return countSqlParams(this.#stmt.source);
+	}
+
+	/** bun:sqlite parity: result column names (empty for non-returning statements). */
+	get columnNames(): string[] {
+		try {
+			return this.#stmt.columns().map(column => column.name);
+		} catch {
+			// better-sqlite3 throws columns() on statements that return no data.
+			return [];
+		}
 	}
 
 	get(...args: BindArgs[number][]): T | null {

@@ -13,6 +13,7 @@ export interface BunFileShim {
 	stat(): Promise<import("node:fs").Stats>;
 	stream(): ReadableStream<Uint8Array>;
 	writer(): { write(chunk: string | Uint8Array): void; flush(): Promise<void> | void; end(): Promise<void> | void };
+	slice(begin?: number, end?: number): BunFileShim;
 	readonly size: number;
 	readonly name?: string;
 }

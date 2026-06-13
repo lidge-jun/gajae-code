@@ -53,6 +53,15 @@ class NodeBunFile implements BunFileShim {
 		return bytes.slice().buffer;
 	}
 
+	/**
+	 * Byte-range view, like BunFile.slice(begin, end) (audit SQ-2 fileio —
+	 * sqlite-reader reads the first bytes for the magic-number probe). Reads
+	 * only the requested window via a positioned fd read.
+	 */
+	slice(begin = 0, end?: number): BunFileShim {
+		return new NodeBunFileSlice(this.#path, begin, end);
+	}
+
 	async exists(): Promise<boolean> {
 		try {
 			await stat(this.#path);
@@ -92,6 +101,93 @@ class NodeBunFile implements BunFileShim {
 
 	async delete(): Promise<void> {
 		await fs.promises.rm(this.#path, { force: true });
+	}
+}
+
+/** Byte-range slice of a file — reads only [begin, end) on demand. */
+class NodeBunFileSlice implements BunFileShim {
+	constructor(
+		private readonly path: string,
+		private readonly begin: number,
+		private readonly end?: number,
+	) {}
+
+	get name(): string {
+		return this.path;
+	}
+
+	get size(): number {
+		try {
+			const full = fs.statSync(this.path).size;
+			const stop = this.end ?? full;
+			return Math.max(0, Math.min(stop, full) - this.begin);
+		} catch {
+			return 0;
+		}
+	}
+
+	async bytes(): Promise<Uint8Array> {
+		const length = this.end === undefined ? undefined : Math.max(0, this.end - this.begin);
+		if (length === 0) return new Uint8Array(0);
+		const handle = await open(this.path, "r");
+		try {
+			if (length === undefined) {
+				const buffer = await handle.readFile();
+				return new Uint8Array(
+					buffer.buffer,
+					buffer.byteOffset + this.begin,
+					Math.max(0, buffer.byteLength - this.begin),
+				);
+			}
+			const buffer = Buffer.allocUnsafe(length);
+			const { bytesRead } = await handle.read(buffer, 0, length, this.begin);
+			return new Uint8Array(buffer.buffer, buffer.byteOffset, bytesRead);
+		} finally {
+			await handle.close();
+		}
+	}
+
+	async arrayBuffer(): Promise<ArrayBuffer> {
+		return (await this.bytes()).slice().buffer;
+	}
+
+	async text(): Promise<string> {
+		return new TextDecoder().decode(await this.bytes());
+	}
+
+	async json(): Promise<unknown> {
+		return JSON.parse(await this.text());
+	}
+
+	async exists(): Promise<boolean> {
+		try {
+			await stat(this.path);
+			return true;
+		} catch {
+			return false;
+		}
+	}
+
+	stat(): Promise<fs.Stats> {
+		return stat(this.path);
+	}
+
+	stream(): ReadableStream<Uint8Array> {
+		const nodeStream = fs.createReadStream(this.path, {
+			start: this.begin,
+			...(this.end !== undefined ? { end: this.end - 1 } : {}),
+		});
+		return ReadableStream.from(nodeStream) as ReadableStream<Uint8Array>;
+	}
+
+	writer(): never {
+		throw new Error("Bun.file slice is read-only");
+	}
+
+	slice(begin = 0, end?: number): BunFileShim {
+		const base = this.begin + begin;
+		const stop = end === undefined ? this.end : this.begin + end;
+		return new NodeBunFileSlice(this.path, base, stop);
 	}
 }
 

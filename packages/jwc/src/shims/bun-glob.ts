@@ -102,15 +102,20 @@ export class BunGlob {
 	}
 
 	*#walkSync(options: GlobScanOptions): IterableIterator<string> {
-		const cwd = options.cwd ?? process.cwd();
 		const onlyFiles = options.onlyFiles !== false;
 		const includeDot = options.dot === true;
+		// Absolute patterns are matched against absolute candidate paths and
+		// walked from the pattern's static (glob-free) base dir — walking from
+		// cwd would test relative entries against an absolute-anchored regex and
+		// never match (audit SQ-1 data — youtube subtitle glob is absolute).
+		const isAbsolute = path.isAbsolute(this.#pattern);
+		const walkBase = isAbsolute ? staticGlobBase(this.#pattern) : (options.cwd ?? process.cwd());
 		const stack: string[] = [""];
 		while (stack.length > 0) {
 			const relDir = stack.pop() as string;
 			let dirents: fs.Dirent[];
 			try {
-				dirents = fs.readdirSync(path.join(cwd, relDir), { withFileTypes: true });
+				dirents = fs.readdirSync(path.join(walkBase, relDir), { withFileTypes: true });
 			} catch {
 				continue;
 			}
@@ -120,8 +125,10 @@ export class BunGlob {
 				const isDir = dirent.isDirectory();
 				if (isDir) stack.push(rel);
 				if (isDir && onlyFiles) continue;
-				if (this.match(rel)) {
-					yield options.absolute ? path.join(cwd, rel) : rel;
+				const absPath = path.join(walkBase, rel);
+				const candidate = isAbsolute ? absPath : rel;
+				if (this.match(candidate)) {
+					yield isAbsolute ? absPath : options.absolute ? absPath : rel;
 				}
 			}
 		}
@@ -130,4 +137,24 @@ export class BunGlob {
 	toString(): string {
 		return this.#pattern;
 	}
+}
+
+/**
+ * Longest leading directory of a glob pattern with no glob metachar. The first
+ * segment containing a metachar (and everything after) is excluded, so the
+ * joined stable segments are always a real directory prefix.
+ */
+function staticGlobBase(pattern: string): string {
+	const segments = pattern.split("/");
+	const stable: string[] = [];
+	for (const segment of segments) {
+		if (/[*?[\]{}]/.test(segment)) break;
+		stable.push(segment);
+	}
+	if (stable.length === segments.length) {
+		// No glob metachar at all — the parent dir is the base.
+		return path.dirname(pattern) || "/";
+	}
+	const base = stable.join("/");
+	return base === "" ? "/" : base;
 }

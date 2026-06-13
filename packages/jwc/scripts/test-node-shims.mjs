@@ -6,7 +6,8 @@
  * Usage: node scripts/test-node-shims.mjs   (cwd: packages/jwc)
  */
 import assert from "node:assert/strict";
-import { existsSync, readFileSync, rmSync } from "node:fs";
+import { execFileSync } from "node:child_process";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { build } from "esbuild";
@@ -99,6 +100,148 @@ try {
 		rmSync(tmpTar, { force: true });
 		rmSync(archiveOut, { force: true });
 	}
+}
+
+// ── Round-2 audit regressions (SQ-1 write, sqlite params/columns, file slice,
+//    spawnSync stdio, serve tls, glob absolute) ──────────────────────────────
+{
+	const bundleOut = path.join(process.cwd(), "dist-node", `_round2-shim-test-${process.pid}.mjs`);
+	const barrel = path.join(process.cwd(), "dist-node", `_round2-barrel-${process.pid}.ts`);
+	writeFileSync(
+		barrel,
+		[
+			'export { bunWrite } from "../src/shims/bun-write";',
+			'export { bunFile } from "../src/shims/bun-file";',
+			'export { Database } from "../src/shims/bun-sqlite";',
+			'export { BunGlob } from "../src/shims/bun-glob";',
+		].join("\n"),
+	);
+	await build({
+		entryPoints: [barrel],
+		outfile: bundleOut,
+		bundle: true,
+		platform: "node",
+		format: "esm",
+		external: ["better-sqlite3"],
+	});
+	rmSync(barrel, { force: true });
+	const mod = await import(bundleOut);
+
+	// SQ-1: Bun.write(dest, Response) must write RAW bytes, not UTF-8 text.
+	{
+		const binary = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0xff, 0xfe, 0x80, 0x00, 0x1f, 0x8b]);
+		const dest = path.join(tmpdir(), `jwc-bin-${process.pid}.bin`);
+		try {
+			await mod.bunWrite(dest, new Response(binary));
+			const written = new Uint8Array(readFileSync(dest));
+			assert.deepEqual([...written], [...binary], "Response body corrupted (not raw bytes)");
+			console.log("[test-node-shims] write(Response) binary fidelity OK");
+		} finally {
+			rmSync(dest, { force: true });
+		}
+	}
+
+	// file slice: .slice(0,N).bytes() reads only the window.
+	{
+		const src = path.join(tmpdir(), `jwc-slice-${process.pid}.bin`);
+		try {
+			writeFileSync(src, Buffer.from([1, 2, 3, 4, 5, 6, 7, 8]));
+			const head = await mod.bunFile(src).slice(0, 4).bytes();
+			assert.deepEqual([...head], [1, 2, 3, 4], "slice window wrong");
+			console.log("[test-node-shims] file.slice(0,N).bytes() OK");
+		} finally {
+			rmSync(src, { force: true });
+		}
+	}
+
+	// sqlite paramsCount + columnNames.
+	{
+		const db = new mod.Database(":memory:");
+		try {
+			db.exec("CREATE TABLE t (a, b)");
+			db.run("INSERT INTO t (a,b) VALUES (1,2)");
+			assert.equal(db.prepare("SELECT * FROM t LIMIT ? OFFSET ?").paramsCount, 2, "paramsCount ? count");
+			assert.equal(db.prepare("SELECT * FROM t WHERE a=:x AND b=:x").paramsCount, 1, "paramsCount distinct named");
+			assert.equal(db.prepare("SELECT * FROM t").paramsCount, 0, "paramsCount zero");
+			assert.equal(db.prepare("SELECT a, b FROM t WHERE a='?notaparam'").paramsCount, 0, "paramsCount ignores string literal");
+			assert.deepEqual([...db.prepare("SELECT a, b FROM t").columnNames], ["a", "b"], "columnNames");
+			assert.deepEqual([...db.prepare("INSERT INTO t (a,b) VALUES (3,4)").columnNames], [], "columnNames non-returning");
+			console.log("[test-node-shims] sqlite paramsCount/columnNames OK");
+		} finally {
+			db.close();
+		}
+	}
+
+	// glob absolute pattern.
+	{
+		const dir = mkdtempSync(path.join(tmpdir(), "jwc-glob-"));
+		try {
+			writeFileSync(path.join(dir, "sub-abc.vtt"), "x");
+			writeFileSync(path.join(dir, "other.txt"), "y");
+			const hits = [];
+			for await (const hit of new mod.BunGlob(`${dir}/sub-*.vtt`).scan({ absolute: true })) hits.push(hit);
+			assert.deepEqual(hits, [path.join(dir, "sub-abc.vtt")], "absolute glob match");
+			console.log("[test-node-shims] glob absolute pattern OK");
+		} finally {
+			rmSync(dir, { recursive: true, force: true });
+		}
+	}
+
+	rmSync(bundleOut, { force: true });
+}
+
+// spawnSync stdio: an explicit "pipe" must capture (not inherit/ignore).
+{
+	const spawnOut = path.join(process.cwd(), "dist-node", `_spawn-shim-test-${process.pid}.mjs`);
+	await build({
+		entryPoints: ["src/shims/bun-spawn.ts"],
+		outfile: spawnOut,
+		bundle: true,
+		platform: "node",
+		format: "esm",
+	});
+	const { bunSpawnSync } = await import(spawnOut);
+	const r = bunSpawnSync(["echo", "captured"], { stdout: "pipe" });
+	assert.ok(r.stdout && new TextDecoder().decode(r.stdout).includes("captured"), "spawnSync stdout pipe not captured");
+	assert.equal(r.exitCode, 0);
+	console.log("[test-node-shims] spawnSync stdio mapping OK");
+	rmSync(spawnOut, { force: true });
+}
+
+// serve tls: cert/key must yield an https server (not plaintext).
+{
+	const serveOut = path.join(process.cwd(), "dist-node", `_serve-shim-test-${process.pid}.mjs`);
+	await build({
+		entryPoints: ["src/shims/bun-serve.ts"],
+		outfile: serveOut,
+		bundle: true,
+		platform: "node",
+		format: "esm",
+	});
+	const { bunServe } = await import(serveOut);
+	const { cert, key } = makeSelfSigned();
+	const server = bunServe({ hostname: "127.0.0.1", port: 0, tls: { cert, key }, fetch: () => new Response("ok") });
+	try {
+		assert.equal(server.url.protocol, "https:", "tls server must use https");
+		console.log("[test-node-shims] serve tls → https OK");
+	} finally {
+		server.stop();
+	}
+}
+
+function makeSelfSigned() {
+	// Minimal RSA self-signed cert for the https-selection assertion.
+	const dir = mkdtempSync(path.join(tmpdir(), "jwc-tls-"));
+	const keyPath = path.join(dir, "k.pem");
+	const certPath = path.join(dir, "c.pem");
+	execFileSync(
+		"openssl",
+		["req", "-x509", "-newkey", "rsa:2048", "-nodes", "-keyout", keyPath, "-out", certPath, "-days", "1", "-subj", "/CN=localhost"],
+		{ stdio: "ignore" },
+	);
+	const result = { cert: readFileSync(certPath, "utf8"), key: readFileSync(keyPath, "utf8") };
+	rmSync(dir, { recursive: true, force: true });
+	return result;
 }
 
 /** Minimal ustar tar with a single `../../etc/passwd` file entry. */

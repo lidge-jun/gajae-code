@@ -126,6 +126,10 @@ export function bunSpawnSync(cmdOrOptions: string[] | BunSpawnOptions, maybeOpti
 	const result = nodeSpawnSync(command, args, {
 		cwd: options.cwd,
 		env: (options.env as NodeJS.ProcessEnv) ?? process.env,
+		signal: options.signal,
+		// Honor stdio so interactive/inherited-TTY spawns (tmux attach) work
+		// instead of silently capturing to pipes (audit SQ-3 proc).
+		stdio: [mapStdio(options.stdin, "ignore"), mapStdio(options.stdout, "pipe"), mapStdio(options.stderr, "inherit")],
 	});
 	return {
 		pid: result.pid,
