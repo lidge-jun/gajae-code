@@ -414,7 +414,8 @@ export class Markdown implements Component {
 					const ascii = this.#theme.resolveMermaidAscii(token.text);
 
 					if (ascii) {
-						for (const asciiLine of Bun.stripANSI(ascii).split("\n")) {
+						const stripAnsi = typeof Bun !== "undefined" ? Bun.stripANSI : (s: string) => s.replace(/\x1b\[[0-9;]*m/g, "");
+						for (const asciiLine of stripAnsi(ascii).split("\n")) {
 							lines.push(asciiLine);
 						}
 						if (nextTokenType && nextTokenType !== "space") {

@@ -55,14 +55,25 @@ export class Box implements Component {
 	#computeCacheKey(width: number, childLines: string[], bgSample: string | undefined): bigint | number {
 		Box.#tmp[0] = width;
 		Box.#tmp[1] = childLines.length;
-		let h = Bun.hash(Box.#tmp);
+		const bh = typeof Bun !== "undefined" ? Bun.hash : Box.#nodeHash;
+		let h = bh(Box.#tmp);
 		for (const line of childLines) {
-			h = Bun.hash(line, h);
+			h = bh(line, h);
 		}
 		if (bgSample) {
-			h = Bun.hash(bgSample, h);
+			h = bh(bgSample, h);
 		}
 		return h;
+	}
+
+	static #nodeHash(data: string | ArrayBuffer | Uint32Array, seed?: number | bigint): number {
+		const { createHash } = require("node:crypto") as typeof import("node:crypto");
+		const h = createHash("md5");
+		if (seed !== undefined) h.update(String(seed));
+		if (typeof data === "string") h.update(data);
+		else if (data instanceof Uint32Array) h.update(Buffer.from(data.buffer));
+		else h.update(Buffer.from(data));
+		return h.digest().readUInt32LE(0);
 	}
 
 	#matchCache(cacheKey: bigint | number): boolean {

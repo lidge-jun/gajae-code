@@ -130,8 +130,9 @@ export function visibleWidthRaw(str: string): number {
 	}
 
 	const normalized = normalizeForWidth(str);
-	if (tabCount === 0) return Bun.stringWidth(normalized);
-	return Bun.stringWidth(normalized.replaceAll("\t", " ".repeat(getDefaultTabWidth())));
+	const sw = typeof Bun !== "undefined" ? Bun.stringWidth : (s: string) => s.length;
+	if (tabCount === 0) return sw(normalized);
+	return sw(normalized.replaceAll("\t", " ".repeat(getDefaultTabWidth())));
 }
 
 /**
