@@ -95,6 +95,7 @@
 | 카테고리 리스트 | 브라우저/터미널/trading/media bundle-id 집합. | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/safety/bundleIds.ts` |
 | full-tier 오버라이드 | `CU_TIER_OVERRIDE=full`이면 `isFullTierOverride()`가 모든 카테고리(미디어 포함)를 full로. jwc는 `mcp.json`의 `env`로 켬(개인 사용). 기본값은 안전 tier 유지 → cli-jaw 멀티-프로바이더는 safe-by-construction. 시스템 키콤보(⌘Q 등)는 별개로 차단. | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/safety/tiers.ts:25`, `…/src/safety/tiers.ts:36` |
 | 단일 세션 락 | 머신당 1세션 락 `~/.claude/computer-use.lock`. | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/safety/lock.ts` |
+| Anthropic 표면 추종 | cu-mcp는 **Claude Code 내장 computer-use(`computer_20250124`)의 도구 표면을 정본**으로 따른다. 도구명·파라미터 타입·description을 Anthropic 표면에 맞추고, cu-mcp 전용 확장(inspect/ax_press/teach)은 상위 호환으로 추가. 주요 맞춤: `switch_display` 모니터 **이름**(string) 기반 / `screenshot`·`zoom`에 `save_to_disk` 파라미터(`/tmp/cu-mcp-screenshots/`) / `coordinate` description Anthropic 원문 / screenshot 응답에 멀티모니터 이름 안내 / auto 모드에서 frontmost 앱 디스플레이 자동 감지. | Claude Code `/mcp` 도구 스키마 대조 기준 |
 
 ## D5와 현재 gap
 
