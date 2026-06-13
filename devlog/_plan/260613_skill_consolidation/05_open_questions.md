@@ -17,6 +17,10 @@
 | D9 | standalone PABCD = HITL, goal-wrapped = HOTL. goal이 게이트를 자동 통과 | 유저 |
 | D10 | goal 모드에서 프롬프트가 "HOTL이므로 너가 알아서 pabcd 넘겨라" 지시 | 유저 |
 | D11 | /interview, /goal, /goalplan 슬래시 커맨드 우선순위 | 유저 |
+| D12 | goal HOTL: 모든 게이트 건너뜀, 프롬프트 가이드로 자동 진행 (이미 jawcode에 구현) | 유저 |
+| D13 | A=계획검증, C=구현검증(의도대로 패치? 사이드이펙트?), 서브에이전트는 에이전트 동적 판단 | 유저 |
+| D14 | /goal=인간이 목표 설정, /goalplan=에이전트가 맥락에서 목표 파악+자율 실행 | 유저 |
+| D15 | ask tool JSON vs elicitation fence: 별도 트랙 (현재 플랜 밖) | 유저 |
 
 ## 인터뷰 ask 포맷 (D12 후보)
 
@@ -33,25 +37,38 @@ cli-jaw: 에이전트가 자연어 + ` ```elicitation` 펜스 (light)
 - SKILL.md의 ask JSON 예시 전부 교체
 - TUI selector가 elicitation fence 파싱하도록
 
-## 미결정 질문 (유저 답변 대기)
+## 미결정 질문
 
-### Q1. 인터뷰 ask 포맷
-jawcode도 cli-jaw처럼 elicitation fence 방식으로 전환? 아니면 ask tool JSON 유지하면서 개선?
+### Q1. 인터뷰 ask 포맷 — 🔍 추가 조사 필요
+jawcode의 ask tool JSON은 무거움 (에이전트가 full schema 구성).
+cli-jaw의 elicitation fence 방식이 더 자연스러움.
+→ 전환 여부는 별도 트랙으로 분리. 현재 플랜 범위 밖.
+
+## 확정된 질문
 
 ### Q2. goal HOTL 자동 진행 범위 — ✅ 확정
-P/A/B 게이트: goal checkpoint (`goal update --evidence`)로 대체, 유저 승인 불필요.
-C/D: 원래 자동.
-구현: 이미 jawcode에 있음 (dev-pabcd Rule 4 + `#scheduleGoalContinuation()` + `recordGoalCheckpointForTransition()`).
-→ **추가 구현 불필요. 기존 메커니즘 유지.**
+**모든 게이트** 건너뜀 (P/A/B 전부). goal checkpoint로 대체.
+구현: 이미 jawcode에 있음 (dev-pabcd Rule 4 + `#scheduleGoalContinuation()`).
 
-### Q3. A-phase 서브에이전트
-goal HOTL에서 A를 서브에이전트 병렬 audit (architect + critic 동시)로?
+### Q3. A-phase / C-phase 서브에이전트 — ✅ 확정
+**에이전트가 동적으로 판단** — 프롬프트 주입으로. 고정 구성 아님.
+- A = **계획 검증**. 이 계획이 좋은가?
+- C = **구현 검증**. 계획대로 구현됐는가? 의도대로 패치됐는가? 사이드 이펙트 없는가?
+  goal objective를 기준으로 재검증.
+이것도 cli-jaw에 이미 있음.
 
-### Q4. C-phase 교차검증 구체적 범위
-테스트 + 아키텍처 리뷰 + plan compliance 3종? 아니면 테스트만?
+### Q4. (Q3에 통합)
 
-### Q5. goal done 판단 기준
-에이전트가 "다 했다" vs "더 있다" 판단 기준? objective 대비? acceptance criteria?
+### Q5. goal done / 계속 진행 — ✅ 확정
+goal이 설정되면 **"계속 진행하라"는 가이드가 주입** → 그 시점부터 HOTL.
+에이전트가 goal objective 대비 현재 상태를 보고 판단.
+D→IDLE 시 goal active면 → 아직 할 게 남았으면 P 재진입 (에이전트 판단).
 
-### Q6. standalone → goal 전환
-HITL로 시작 → 중간에 goal로 감싸기 가능?
+### Q6. /goal vs /goalplan — ✅ 확정
+| 커맨드 | 누가 목표 설정 | 흐름 |
+|---|---|---|
+| `/goal <objective>` | **인간** | 인간이 목표 명시 → HOTL 시작 |
+| `/goalplan` | **에이전트** | 인간이 프롬프팅 안 함 → 에이전트가 대화 맥락에서 목표 파악 → `/goal refine` → HOTL 시작 |
+
+`/goalplan`이 존재하는 이유: `/goal`로 박으면 인간이 직접 objective를 써야 함.
+하지만 인간이 "알아서 해줘" 하고 싶을 때 → `/goalplan` → 에이전트가 맥락 분석해서 목표 설정 → 자율 실행.
