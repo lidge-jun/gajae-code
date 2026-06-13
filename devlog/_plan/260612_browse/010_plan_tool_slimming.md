@@ -101,6 +101,18 @@ bun -e 'import { createTools } from "./packages/coding-agent/src/tools/index.ts"
 | `defaults/jwc/skills/browse/SKILL.md` | 신규. hide:true. 기존 browser.md 전체 guidance + 020 draft 병합 |
 | `defaults/jwc-defaults.ts` | browse를 DEFAULT_GJC_DEFINITIONS에 등록 |
 
+### Token measurement — 260613
+
+| component | before (est.) | after |
+|---|---:|---:|
+| name | 1 | 1 |
+| description | ~1,800 | 235 |
+| schema | ~2,700 | 2,729 |
+| **total** | **~4,500** | **2,965** |
+
+Result: **34% 감소** (4,500 → 2,965). 목표 2,500 미달.
+Residual: schema가 2,729로 92% 차지. `.describe()` 제거로는 schema 구조 자체 비용을 줄일 수 없음. 추가 감소는 B4 compact schema (follow-up)에서 다룸.
+
 ## Non-goals
 
 - cli-jaw web-ai runtime 포팅.
