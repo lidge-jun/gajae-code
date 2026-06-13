@@ -7,13 +7,13 @@
 | # | path | status |
 |---:|---|---|
 | 1 | `packages/coding-agent/src/memories/` | present |
-| 2 | `structure/memory_pipeline.md` | present |
+| 2 | `structure/session_storage.md` | present |
 | 3 | `devlog/_plan/260612_jawcode_fork/phase1/99.01.00_moc_memory.md` | present |
 
 ## 2. fork-delta (structure/fork-delta.md)
 
 - 99.01 local-query (planned)
-- memory_pipeline.md NEW
+- session_storage.md NEW
 
 ## 3. 검증
 

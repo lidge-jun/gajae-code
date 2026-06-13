@@ -29,7 +29,7 @@ bun struct_har/_scripts/struct-har-regenerate-omp.ts
 
 ## 관련
 
-- [structure/fork_logic_changelog.md](../../structure/fork_logic_changelog.md)
+- [structure/fork-delta.md](../../structure/fork-delta.md)
 - [structure/INDEX.md](../../structure/INDEX.md)
 - 대조: [../gjc_origin/](../gjc_origin/) · [../jwc_patched/](../jwc_patched/)
 

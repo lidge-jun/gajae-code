@@ -1,7 +1,7 @@
 # 040_interview — 02 logic changes (omp_origin)
 
 > **omp 자체 런타임** (gjc/jwc fork changelog 아님).
-> fork 로직: [structure/fork_logic_changelog.md](../../../structure/fork_logic_changelog.md) · jaw 갭: [structure/status.md](../../../structure/status.md)
+> fork 로직: [structure/fork-delta.md](../../../structure/fork-delta.md) · jaw 갭: [structure/status.md](../../../structure/status.md)
 
 ## 동작 (omp)
 

@@ -49,4 +49,4 @@
 - Phase β `.jwc` 경로
 - cli-jaw skill substitution (031)
 
-→ [fork_logic_changelog](../../structure/fork_logic_changelog.md) · [jwc_patched/050_plan/02_logic_changes](../jwc_patched/050_plan/02_logic_changes.md)
+→ [fork_logic_changelog](../../structure/fork-delta.md) · [jwc_patched/050_plan/02_logic_changes](../jwc_patched/050_plan/02_logic_changes.md)

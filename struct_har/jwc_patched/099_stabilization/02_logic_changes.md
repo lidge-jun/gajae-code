@@ -11,5 +11,5 @@
 
 ## 정본
 
-[fork_logic_changelog.md](../../../structure/fork_logic_changelog.md)
+[fork-delta.md](../../../structure/fork-delta.md)
 

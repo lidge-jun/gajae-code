@@ -1,7 +1,7 @@
 # struct_har/chase/ — 뒤쳐진 영역 · 참조 방안
 
 > **목적**: jawcode(jwc)가 **선택적으로 따라잡거나 참고**할 gjc·omp·cli-jaw 축의 갭을 한곳에 모은다.
-> **아님**: git cherry-pick 절차, fork 리베이스, upstream에 기여하는 PR 목록 — 그건 [structure/fork-delta.md](../../structure/fork-delta.md) · [gitstructure.md](../../structure/gitstructure.md).
+> **아님**: git cherry-pick 절차, fork 리베이스, upstream에 기여하는 PR 목록 — 그건 [structure/fork-delta.md](../../structure/fork-delta.md) · [conventions.md](../../structure/conventions.md).
 
 ## gjc / omp 플랜 (정본 = 이 디렉터리)
 

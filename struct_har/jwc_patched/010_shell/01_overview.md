@@ -11,7 +11,7 @@
 | [02_logic_changes.md](./02_logic_changes.md) | **동작·런타임 변경** (git 히스토리 기반) |
 | [03_devlog_refs.md](./03_devlog_refs.md) | 플랜 링크 |
 
-횡단 정본: [structure/fork_logic_changelog.md](../../../structure/fork_logic_changelog.md)
+횡단 정본: [structure/fork-delta.md](../../../structure/fork-delta.md)
 
 ## 부록
 

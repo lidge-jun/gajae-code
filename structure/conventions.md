@@ -60,7 +60,7 @@ git fetch upstream && git rebase upstream/main    # worktree — 변경 정리 �
 - upstream baseline: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_upstream_gjc/<repo-relative-path>:<line>`
 - fork patched: `/Users/jun/Developer/new/700_projects/jawcode/<path>:<line>`
 
-클론 HEAD 갱신 후: `struct_har/gjc_origin/**/02_code_facts.md`, `struct_har/README.md`, `structure/gitstructure.md`; omp fetch 시 `struct_har/omp_origin/**` 동기화.
+클론 HEAD 갱신 후: `struct_har/gjc_origin/**/02_code_facts.md`, `struct_har/README.md`, `structure/conventions.md`; omp fetch 시 `struct_har/omp_origin/**` 동기화.
 `bun struct_har/_scripts/struct-har-regenerate.ts` (+ architecture, overviews)로 밴드 스냅샷 일괄 갱신 가능 (2026-06-13).
 
 ## 3. 코드 컨벤션
@@ -99,7 +99,7 @@ git fetch upstream && git rebase upstream/main    # worktree — 변경 정리 �
 | 규칙 | 적용 |
 |---|---|
 | 구조 문서의 사실 주장은 실제 파일 경로와 라인 번호를 단다. | `structure/*.md` |
-| 실행 결과 근거는 명령과 관찰값을 같이 쓴다. | `gitstructure.md`의 remote/status/HEAD |
+| 실행 결과 근거는 명령과 관찰값을 같이 쓴다. | `conventions.md`의 remote/status/HEAD |
 | 계획/결정과 코드 사실을 분리한다. | `[확정]`, `[기본값]`, `[제안]` 표기 |
 | `structure/INDEX.md`는 문서 추가/삭제/범위 변경 때 같이 갱신한다. | `/Users/jun/Developer/new/700_projects/jawcode/structure/INDEX.md:1` |
 
@@ -107,3 +107,93 @@ git fetch upstream && git rebase upstream/main    # worktree — 변경 정리 �
 
 현 단계에서는 사용하지 않는다 (경량 표준). 모듈 단위 함수 문서가 필요해지는
 첫 광역 기능 작업 때 도입을 재검토한다.
+
+
+---
+
+# (merged) Git 구조 · 리베이스 가드
+
+
+---
+
+## Git Structure / Fork Operation
+
+> fork 운영 원칙: 공개 명령·문서·상태 경로는 `jwc`/`.jwc` 기준으로 유지하고, 내부 `@gajae-code/*` namespace는 리베이스 비용을 낮추기 위해 보존한다.
+
+### 현재 Git 상태
+
+| 항목 | 값 | 근거 |
+|---|---|---|
+| Project root | `/Users/jun/Developer/new/700_projects/jawcode` | task instruction |
+| HEAD | `81bcea96` | `git -C /Users/jun/Developer/new/700_projects/jawcode rev-parse --short HEAD` |
+| upstream fetch/push | `https://github.com/Yeachan-Heo/gajae-code` | `git -C /Users/jun/Developer/new/700_projects/jawcode remote -v` 실행 결과 |
+| origin | 없음 | `git -C /Users/jun/Developer/new/700_projects/jawcode remote -v` 실행 결과에 upstream만 있음 |
+| 기존 worktree 변경 | `packages/ai/*` (kiro provider WIP), `devlog/_plan/260612_jawcode_fork/*` | `git -C /Users/jun/Developer/new/700_projects/jawcode status --short` 실행 결과 |
+| structure/ | modified 8 files (jaw-interview sync, HEAD/path/meta 갱신) | `git -C /Users/jun/Developer/new/700_projects/jawcode status --short structure/` 실행 결과 |
+
+### JWC 표면 정책
+
+| 정책 | 상태 | 근거 |
+|---|---|---|
+| bin 표면 | `packages/jwc`가 `jwc` bin을 제공한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:7` |
+| 내부 실행 | 현재 `jwc` bin은 `@gajae-code/coding-agent/cli`를 import한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/bin/jwc.js:1` |
+| SDK 표면 | `jwc/sdk`는 coding-agent SDK를 재수출한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:15`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/src/sdk.ts:1` |
+| default workflow slug | jwc runtime은 `jaw-interview`를 표준으로 쓴다. legacy `deep-interview`는 upstream baseline/read-compat 문맥에만 둔다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/defaults/gjc-defaults.ts:13`, `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:11` |
+| package namespace | upstream `@gajae-code/*` 유지, jawcode 신규 패키지만 별도 namespace 가능. | `/Users/jun/Developer/new/700_projects/jawcode/structure/conventions.md:24` |
+| state path | 런타임 `.jwc/` (`CONFIG_DIR_NAME`, `~/.jwc`) — repo 문서·마이그레이션은 Phase β 기준 | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:219` |
+| D4 결정 | bin `jwc`, 브랜딩/문서/스킬명은 jwc 기준; 내부 `@gajae-code/*` 스코프는 보존. | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md:13` |
+
+### 리베이스 가드
+
+> 충돌 예상 파일 사전 점검: `grep "CONFLICT-EXPECTED" structure/fork-delta.md` ↔ `git diff upstream/main --name-only` 대조 ([fork-delta.md](./fork-delta.md) 정본).
+
+| Guard | 적용 | 근거 |
+|---|---|---|
+| upstream 파일 수정 최소화 | jaw 전용 context는 `structure/`, `devlog/`, 신규 패키지에 둔다. | `/Users/jun/Developer/new/700_projects/jawcode/structure/conventions.md:7` |
+| public docs stay jwc-first | `AGENTS.md`, `README*.md`, `structure/`는 jwc 기준 정본으로 유지한다. | `/Users/jun/Developer/new/700_projects/jawcode/structure/conventions.md:10`, `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:1` |
+| model catalog 직접 수정 금지 | `packages/ai/src/models.json`은 generator/descriptors/resolvers로 바꾸고 regenerate한다. | `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:73` |
+| workflow default surface gate | default workflow skill 변경 후 required gates가 있다. | `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:128` |
+| no push/reset/clean | task context와 repo AGENTS 모두 destructive git 회피를 요구한다. | `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:125` |
+
+### Upstream Sync 절차
+
+| 단계 | 명령 | 주의 |
+|---|---|---|
+| 0 | `git -C devlog/_upstream_gjc fetch origin` | **참조 클론 pull** — gjc_origin 근거·diff 전에 실행. 최초: `git clone … devlog/_upstream_gjc`. |
+| 1 | `git -C /Users/jun/Developer/new/700_projects/jawcode fetch upstream` | worktree remote. |
+| 2 | `git -C /Users/jun/Developer/new/700_projects/jawcode rebase upstream/main` | rebase 전 worktree 변경을 정리해야 한다. |
+| 3 | conflict 확인 | `.jwc/`, `@gajae-code/*` 보존 정책과 충돌하면 D4를 우선한다. |
+| 4 | gates | workflow/default surface 변경이 있으면 `bun scripts/check-visible-definitions.ts`, `bun scripts/verify-g002-gates.ts`, `bun scripts/rebrand-inventory.ts --strict`, `bun test packages/coding-agent/test/default-gjc-definitions.test.ts` (가드는 jwc 어휘 기준 — 02:04 하드 수정 개정). 근거: `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:128` |
+| 5 | 문서 | 클론 HEAD·밴드 diff → `struct_har/gjc_origin/`, `struct_har/README.md`; patched → `structure/` |
+
+### upstream 참조 클론 (`devlog/_upstream_gjc/`)
+
+| 항목 | 값 | 근거 |
+|---|---|---|
+| 경로 | `devlog/_upstream_gjc/` | jawcode `.gitignore`, `devlog/.gitignore` |
+| remote | `https://github.com/Yeachan-Heo/gajae-code` | upstream remote와 동일 |
+| 클론 HEAD (기록 시점) | `67427c6` | `git -C devlog/_upstream_gjc rev-parse --short HEAD` |
+| paired docs | `struct_har/gjc_origin/` | upstream baseline 스냅샷 |
+| patched SoT | `structure/` | worktree 현재 형태 |
+
+개발 중 upstream과의 차이 확인:
+
+```bash
+diff -qr devlog/_upstream_gjc/packages/coding-agent/src/ packages/coding-agent/src/ | head
+grep -n deep-interview devlog/_upstream_gjc/packages/coding-agent/src/defaults/gjc-defaults.ts
+```
+
+- **pull하면서 개발**: 밴드 착수·리베이스 전에 클론 fetch + worktree fetch/rebase를 한 세트로 돌린다.
+- upstream-only 이슈(081 cursor 등)는 클론에서 line 확인 후 fork hotfix 또는 upstream PR.
+
+### 문서 동기화
+
+| 변경 | 갱신 문서 |
+|---|---|
+| `packages/jwc` public export 변경 | `architecture.md`, `architecture.md`, `conventions.md` |
+| `.jwc` 경로 정책 변경 | `conventions.md`, `session_storage.md`, `extensibility.md` |
+| default workflow skill 변경 | `extensibility.md`, `prompt_flow.md`, `extensibility.md`, `INDEX.md` |
+| upstream sync 정책 변경 | `conventions.md`, `conventions.md` |
+| `devlog/_upstream_gjc` HEAD 갱신 | `struct_har/README.md`, `struct_har/gjc_origin/**`, `conventions.md` |
+| patched 밴드 완료 | `structure/*`, `struct_har/jwc_patched/**` |
+| `devlog/_upstream_omp` HEAD 갱신 | `struct_har/omp_origin/**`, `bun struct_har/_scripts/struct-har-regenerate-omp.ts`, `fork-delta.md` |

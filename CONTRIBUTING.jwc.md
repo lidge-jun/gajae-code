@@ -30,7 +30,7 @@ Use `bun check` / package tests for focused changes — do not run raw `tsc` ([A
 
 ## Documentation
 
-- Patched SoT: [structure/](structure/README.md) · map: [structure/INDEX.md](structure/INDEX.md).
+- Patched SoT: [structure/](structure/INDEX.md) · map: [structure/INDEX.md](structure/INDEX.md).
 - Fork diff snapshots: [struct_har/](struct_har/README.md). Gaps: [struct_har/chase/](struct_har/chase/README.md).
 - 99 band work: [devlog/_plan/260612_jawcode_fork/99.00.00_moc_stabilization.md](devlog/_plan/260612_jawcode_fork/99.00.00_moc_stabilization.md).
 
@@ -47,7 +47,7 @@ When you change HARD-EDIT/NEW fork files, update [structure/fork-delta.md](struc
 ## Commits & upstream
 
 - Do **not** commit unless explicitly asked.
-- Upstream mirror: `devlog/_upstream_gjc/` (gitignored). Rebase: [structure/gitstructure.md](structure/gitstructure.md).
+- Upstream mirror: `devlog/_upstream_gjc/` (gitignored). Rebase: [structure/conventions.md](structure/conventions.md).
 
 ## Questions
 

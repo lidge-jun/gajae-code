@@ -92,7 +92,7 @@ createAgentSession()
 | 5 | TTSR(prose) | 스트림 중단→재시도 시 hidden custom message | `ttsr-interrupt.md` 렌더, repeatMode 게이트. **checkDelta는 16KB tail 윈도로 바운드**(무제한 정규식 O(n²) 제거, `1814bb95`) | `agent-session.ts` `#retryWithTtsr` |
 | 6 | TTSR(tool) | `afterToolCall` 훅 — 도구 결과 content 선두 prepend (in-band) | `ttsr-tool-reminder.md` | `agent-session.ts` `#ttsrAfterToolCall` |
 | 7 | plan 결정 리마인더 | plan→execute 전환 시 steer | `plan-mode-tool-decision-reminder.md` | `prompts/system/plan-mode-tool-decision-reminder.md` |
-| 8 | todo eager prelude | 사용자 `prompt()` 직전, `todo.eager` && phases 비어 있음 | `eager-todo.md` + `toolChoice: todo_write` | `agent-session.ts` `#createEagerTodoPrelude` — 상세 [todo_pipeline.md](./todo_pipeline.md) |
+| 8 | todo eager prelude | 사용자 `prompt()` 직전, `todo.eager` && phases 비어 있음 | `eager-todo.md` + `toolChoice: todo_write` | `agent-session.ts` `#createEagerTodoPrelude` — 상세 [session_storage.md](./session_storage.md) |
 | 9 | todo stop 리마인더 | final stop (마지막 assistant에 toolCall 없음), incomplete만 | `<system-reminder>` + `todo_reminder` + auto-continue | `#checkTodoCompletion` — **99.30.01 M1** (`done` ops 예시) |
 
 상태 파일을 읽어 컨텍스트로 보내는 기존 사례는 `skill-active-state.json`(서브스킬 phase 해석)과
@@ -123,6 +123,6 @@ I/P 진입 첫 턴만 `getStatePrompt()`로 프롬프트 전체 치환, A/B/C/D�
 | M2 지속성 | 레일 #8 `pabcd-stage-context` (plan/goal 동형) | ✅ 완료 (`8a7ea342`) | `agent-session.ts` + `readPabcdState` |
 | M2b plan 본문 | `plan_ref` prepend | 후속 99.03.02 | — |
 | M3 자가 전이 | `orchestrate-*.md` 말미 | ✅ 완료 (`90ef5223`) | 99.03.01 §M3 |
-| 99.08 goal 융합 | **매 턴 헤더에 goal objective 병기**(`09f7fb20`) + **pabcd 전이마다 goal 체크포인트 자동 기록**(`a771f492`) | ✅ 완료 | [workflows.md](./workflows.md) |
+| 99.08 goal 융합 | **매 턴 헤더에 goal objective 병기**(`09f7fb20`) + **pabcd 전이마다 goal 체크포인트 자동 기록**(`a771f492`) | ✅ 완료 | [extensibility.md](./extensibility.md) |
 
 착수 순서: [status.md](./status.md) · MLB: [status.md](./status.md).

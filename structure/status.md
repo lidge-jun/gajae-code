@@ -45,15 +45,15 @@ M1 done = 090–099 release gate. **실질 드라이버 임계점 = 99.02 + 99.0
 
 **착수 순서 (단일 정본)**: `99.01 → 99.02 → 99.03 → 99.04 → 99.05 → 99.06 → 99.07`. MLB 62 임계 = 99.02+99.03.
 
-문서 동기화: `system-prompt.md`(99.03)→`prompt_flow.md`·`workflows.md`·`fork-delta.md`;
-`memory` CLI(99.01)→`memory_pipeline.md`·`extensibility.md`; readiness/MOC 변경→본 문서 + 99.00.00.
+문서 동기화: `system-prompt.md`(99.03)→`prompt_flow.md`·`extensibility.md`·`fork-delta.md`;
+`memory` CLI(99.01)→`session_storage.md`·`extensibility.md`; readiness/MOC 변경→본 문서 + 99.00.00.
 
 ## 3. M2 (100~) — 100 밴드 완료 (260613)
 
 - **100 Node 포팅 ✅**: `dist-node/` esbuild 번들 + `src/shims/`(Bun→Node), Node22 SDK import·
   createAgentSession·스트리밍 green, 적대 감사 1–5 통과(path traversal·archive mtime·serve TLS·
   PK-tar 포함, `0debe38b`·`40a4a2f0`). 커밋 `2e9efc59`…`fba5cd56`, closeout `fdb8d41d`.
-  [packages_overview.md](./packages_overview.md) · [100_moc](../devlog/_plan/260612_jawcode_fork/100_moc_node_porting.md)
+  [architecture.md](./architecture.md) · [100_moc](../devlog/_plan/260612_jawcode_fork/100_moc_node_porting.md)
 - 110–130 JawRuntime·jaw.db·주입: 설계만 ([111](../devlog/_plan/260612_jawcode_fork/111_design_runtime_attach.md))
 
 ## 4. 문서/OSS 마감 (beta v0.1, 260612)

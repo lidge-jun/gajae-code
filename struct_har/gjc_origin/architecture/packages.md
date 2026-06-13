@@ -1,6 +1,6 @@
 # architecture / packages.md (gjc_origin)
 
-> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/packages_overview.md`](../../../structure/packages_overview.md).
+> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/architecture.md`](../../../structure/architecture.md).
 > fork `dc4f22672581` · gjc clone `75d103f45145`.
 
 ## structure/ 발췌 (첫 12줄)

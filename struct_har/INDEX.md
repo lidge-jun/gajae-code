@@ -82,7 +82,7 @@ bun struct_har/_scripts/struct-har-regenerate-omp.ts
 
 | 용어 | 의미 |
 |------|------|
-| **SoT** | [structure/](../structure/README.md) = patched 단일 정본 |
+| **SoT** | [structure/](../structure/INDEX.md) = patched 단일 정본 |
 | **struct_har** | `gjc_origin` ↔ `jwc_patched` 병렬 스냅샷 (+ `omp_origin` 참조축) |
 | **chase** | 갭·`10_*`/`20_*` 플랜 — [chase/README](./chase/README.md) |
 | **MOC** | 밴드 스코프·완료기준 — devlog `99.00.00` 등 |

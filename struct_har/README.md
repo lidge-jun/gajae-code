@@ -42,7 +42,7 @@ struct_har/
 - **밴드 폴더명** = devlog `NNN_moc_*` 접두와 정렬 (`010_shell` … `100_node`, `architecture`).
 - **파일명** = `01_overview` → `02_code_facts` → **`02_logic_changes`** → `03_devlog_refs`
 - **갱신 규칙**: 포크 밴드 완료 시 `jwc_patched` 먼저; upstream fetch 후 `gjc_origin`/`omp_origin` HEAD, chase MOC reviewed-through 행, `002_gap_inventory`, `INDEX.md`, 본 README 기준선을 함께 갱신.
-- **로직 정본**: [structure/fork_logic_changelog.md](../structure/fork_logic_changelog.md)
+- **로직 정본**: [structure/fork-delta.md](../structure/fork-delta.md)
 - **재생성**: `struct-har-regenerate.ts` · `struct-har-regenerate-logic.ts` · `struct-har-regenerate-architecture.ts` · `struct-har-regenerate-overviews.ts` · **`struct-har-regenerate-omp.ts`**
 
 ## upstream 클론 사용법
@@ -74,7 +74,7 @@ diff -u devlog/_upstream_gjc/packages/coding-agent/src/cli.ts packages/coding-ag
 |---|---|
 | [`devlog/_upstream_gjc/`](../devlog/_upstream_gjc/) | **업스트림 코드 정본** (gjc_origin 근거) |
 | [structure/](../structure/) | jawcode patched 단일 SoT |
-| [structure/fork_logic_changelog.md](../structure/fork_logic_changelog.md) | fork 동작 (git) |
+| [structure/fork-delta.md](../structure/fork-delta.md) | fork 동작 (git) |
 | [structure/status.md](../structure/status.md) | MLB 50→62→68 |
 | [structure/status.md](../structure/status.md) | 99 결정·착수 순서 |
 | [structure/status.md](../structure/status.md) | beta v0.1 문서·OSS 마감 |

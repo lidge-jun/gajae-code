@@ -1,6 +1,6 @@
 # 010_shell — 02 logic changes (jwc_patched)
 
-> jwc_patched: fork **실제 로직**. git `upstream/main..HEAD` + [fork_logic_changelog.md](../../../structure/fork_logic_changelog.md).
+> jwc_patched: fork **실제 로직**. git `upstream/main..HEAD` + [fork-delta.md](../../../structure/fork-delta.md).
 > worktree @ `dc4f22672581`.
 
 ## 런타임·표면
@@ -21,7 +21,7 @@
 `7d55513b`, `59d10c66`, `bb6571a0`, `6c9b3c53`
 ## 정본
 
-- 횡단: [structure/fork_logic_changelog.md](../../../structure/fork_logic_changelog.md)
+- 횡단: [structure/fork-delta.md](../../../structure/fork-delta.md)
 - 파일 단위: [structure/fork-delta.md](../../../structure/fork-delta.md)
 - 앵커 경로: [02_code_facts.md](./02_code_facts.md)
 

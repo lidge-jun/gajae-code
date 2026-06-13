@@ -1,7 +1,7 @@
 # 099_stabilization — code facts (jwc_patched)
 
 > worktree @ `dc4f22672581` · 정본 overview: `01_overview.md`
-> structure: `structure/prompt_flow.md`, `structure/memory_pipeline.md`
+> structure: `structure/prompt_flow.md`, `structure/session_storage.md`
 
 ## 1. 앵커
 

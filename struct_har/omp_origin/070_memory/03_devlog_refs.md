@@ -10,4 +10,4 @@
 
 - [000_roadmap.md](../../../devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md)
 - [05_interview_conclusions.md](../../../devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md)
-- [structure/fork_logic_changelog.md](../../../structure/fork_logic_changelog.md)
+- [structure/fork-delta.md](../../../structure/fork-delta.md)

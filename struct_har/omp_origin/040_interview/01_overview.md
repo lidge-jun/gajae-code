@@ -18,4 +18,4 @@ jwc: `jaw-interview` native + gate + structured ask (040 fork).
 | [02_logic_changes.md](./02_logic_changes.md) | omp 동작 요약 (fork 아님) |
 | [03_devlog_refs.md](./03_devlog_refs.md) | 플랜 링크 |
 
-횡단: [../README.md](../README.md) · [../architecture/](../architecture/) · [structure/fork_logic_changelog.md](../../../structure/fork_logic_changelog.md)
+횡단: [../README.md](../README.md) · [../architecture/](../architecture/) · [structure/fork-delta.md](../../../structure/fork-delta.md)
