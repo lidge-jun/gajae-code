@@ -65,5 +65,8 @@ a1-system.md·orchestration.md). jwc도 computer-use MCP를 갖게 됐으므로 
   - [ ] cu-mcp 통합 MCP 등록 → 전파 (수동 등록 가능, syncToAll 런타임 확인 필요)
   - [x] 프롬프트 2-tier 게이트 재작성 (Tier1=cu-mcp self-serve / Tier2=codex AX dispatch)
   - [x] cli-jaw 빌드 완료 (`npm run build`, dist 반영 검증)
-- [ ] **좌표 정밀도 개선 (deferred)** — GPT-5.5 등 비-Claude 모델의 비전 좌표 추론이 부정확. cu-mcp 코드베이스에 이미 구현된 인프라: 그리드 오버레이(`cu-native drawGrid`), 비전 보정 계수(`est:N` 1.56x/1.97x), AX semantic press(`ax_press`), 커서 프리뷰(`cmdPreview`), 그리드 줌(`cmdGridZoom`). 가장 효과적인 미구현: **Set-of-Mark(SoM)** — AX 요소 열거 → 스크린샷에 번호 바운딩 박스 → 모델이 번호 지정 → 서버가 중심 좌표 변환. 순수 JS(inspect+sharp). cli-jaw 2-tier와 연계 시 cu-mcp 프로바이더별 정밀도 보상 전략.
+- [ ] **좌표 정밀도 개선 (deferred)** — GPT-5.5 등 비-Claude 모델의 비전 좌표 추론이 부정확.
+  - **참조 구현: hermes-agent** (`~/Developer/codex/hermes-agent/tools/computer_use/`): `capture(mode='som')` → 스크린샷에 번호 오버레이 + AX 트리 반환 → `click(element=N)`으로 좌표 없이 클릭. `cua-driver` 백엔드(trycua/cua, SkyLight SPI, 백그라운드 윈도우 제어). 핵심 파일: `schema.py`(SoM 스키마), `cua_backend.py`(element_index 클릭), `vision_routing.py`(비전 모델 라우팅).
+  - cu-mcp 기존 인프라: 그리드 오버레이(`cu-native drawGrid`), 비전 보정 계수(`est:N`), `ax_press`(좌표 없이 AX press), 커서 프리뷰, 그리드 줌. MCP 도구로 미노출.
+  - **추천 경로**: hermes SoM 패턴을 cu-mcp에 이식 — `screenshot(annotate=true)` → inspect 그리드 프로브로 요소 열거 → sharp로 번호 오버레이 → `left_click(element=N)` 파라미터 추가. 순수 JS, cu-native 수정 불필요.
 - [ ] 사용자 검수
