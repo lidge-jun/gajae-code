@@ -119,9 +119,10 @@ I/P 진입 첫 턴만 `getStatePrompt()`로 프롬프트 전체 치환, A/B/C/D�
 
 | 모듈 | 레일 | 상태 | 정본 |
 |---|---|---|---|
-| M1 discovery | `system-prompt.md` `<native-workflow orchestrate>` + routing | ⬜ 착수 가능 | [99.03.01](../devlog/_plan/260612_jawcode_fork/phase1/99.03.01_impl_workflow_surface.md) **PASS v2** |
-| M2 지속성 | 레일 #8 `pabcd-stage-context` (plan/goal 동형) | ⬜ | `agent-session.ts` + `readPabcdState` |
+| M1 discovery | `system-prompt.md` `<native-workflow orchestrate>` + routing | ✅ 완료 (`45cba4e2`) | [99.03.01](../devlog/_plan/260612_jawcode_fork/phase1/99.03.01_impl_workflow_surface.md) **PASS v2** |
+| M2 지속성 | 레일 #8 `pabcd-stage-context` (plan/goal 동형) | ✅ 완료 (`8a7ea342`) | `agent-session.ts` + `readPabcdState` |
 | M2b plan 본문 | `plan_ref` prepend | 후속 99.03.02 | — |
-| M3 자가 전이 | `orchestrate-*.md` 말미 | ⬜ | 99.03.01 §M3 |
+| M3 자가 전이 | `orchestrate-*.md` 말미 | ✅ 완료 (`90ef5223`) | 99.03.01 §M3 |
+| 99.08 goal 융합 | **매 턴 헤더에 goal objective 병기**(`09f7fb20`) + **pabcd 전이마다 goal 체크포인트 자동 기록**(`a771f492`) | ✅ 완료 | [workflows.md](./workflows.md) |
 
 착수 순서: [m1_closeout.md](./m1_closeout.md) · MLB: [jwc_readiness.md](./jwc_readiness.md).

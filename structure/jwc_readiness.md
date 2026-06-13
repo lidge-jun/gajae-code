@@ -44,7 +44,7 @@
 
 ## M2 (100~) — 100밴드 구현 완료 (260613)
 
-- **100** Node 포팅: ✅ **완료** — `dist-node/` esbuild 번들 + `src/shims/`(Bun→Node 셰임), Node 22 SDK import·createAgentSession·스트리밍 green, 적대 감사 라운드 1-3 통과. [packages_overview.md](./packages_overview.md) M2 행·[100_moc_node_porting.md](../devlog/_plan/260612_jawcode_fork/100_moc_node_porting.md) · 커밋 `2e9efc59`…`fba5cd56`, closeout `fdb8d41d`
+- **100** Node 포팅: ✅ **완료** — `dist-node/` esbuild 번들 + `src/shims/`(Bun→Node 셰임), Node 22 SDK import·createAgentSession·스트리밍 green, 적대 감사 라운드 1-4 통과(보안: archive long-name tar path traversal·archive mtime·serve TLS/disconnect 포함, `0debe38b`). [packages_overview.md](./packages_overview.md) M2 행·[100_moc_node_porting.md](../devlog/_plan/260612_jawcode_fork/100_moc_node_porting.md) · 커밋 `2e9efc59`…`fba5cd56`, closeout `fdb8d41d`
 - **111** 런타임 부착 설계: [111_design_runtime_attach.md](../devlog/_plan/260612_jawcode_fork/111_design_runtime_attach.md) — 100→110→120→130 체인; **100 밴드 실측 보강** 진행 중(260612)
 
 ## struct_har

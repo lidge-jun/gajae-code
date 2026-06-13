@@ -34,6 +34,7 @@
 | native scan | builtin provider는 config dirs의 `commands/*.md`를 scan한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/discovery/builtin.ts:325`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/discovery/builtin.ts:330` |
 | active commands | builtin slash names include `settings`, `theme`, `goal`, `model`, `memory`, `provider`, `login`, `searchengine`, etc. `searchengine`는 [search.md](./search.md) 참조. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/slash-commands/builtin-registry.ts:212`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/slash-commands/builtin-registry.ts:228`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/slash-commands/builtin-registry.ts:910` |
 | `/help` 도킹 2-페인 카탈로그 (99.20.08) | 모델-셀렉터 문법의 docked 2-pane 선택기: builtin/skill/custom 탭 분할, enter로 커맨드 삽입. ACP는 plain 카탈로그 핸들. | `8e17a1ce` (99.20.08), `src/slash-commands/builtin-registry.ts` |
+| 세션 슬래시 표면 (99.07.01) | `/fork [msg]`·`/branch`·`/resume <id>`·`/sessions`·`/switch`(alias). `AgentSession.fork()`는 큐 메시지 클리어. | `7fa8a9d0` (99.07.01) |
 
 ## Custom Tools
 

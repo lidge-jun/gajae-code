@@ -76,7 +76,7 @@ getLatestTodoPhasesFromEntries(branch)  ← 재개 시 completed/abandoned 보�
 
 설정: `todo.reminders.max` (기본 3). 이벤트: `TodoReminderComponent` → `chatContainer` (스크롤 영역 알림).
 
-**갭 (99.30.01 M1)**: 리마인더에 `{"op":"done","task":"…"}` 예시 없음. incomplete 0인데 UI만 길게 펼침 → **M2**.
+**갭 (99.30.01 M1)**: 리마인더에 `{"op":"done","task":"…"}` 예시 없음. UI 길게 펼침은 **M2 ✅ 완료**(`a7543582`).
 
 ---
 
@@ -101,7 +101,7 @@ getLatestTodoPhasesFromEntries(branch)  ← 재개 시 completed/abandoned 보�
 | `#getActivePhase` | pending/in_progress 페이즈 → 없으면 **마지막 페이즈** |
 | `toggleTodoExpansion` | 키바인드 → `todoExpanded` flip |
 
-**확정 요구 (260612 사용자)**: 세션 상태가 **전부 `completed`** (또는 terminal `abandoned`만)일 때 **hermes식 1줄 접힘** — [99.30.01 M2](../devlog/_plan/260612_jawcode_fork/phase1/99.30.01_plan_todo_done_collapse.md).
+**99.30.01 M2 ✅ 완료 (`a7543582`)**: 세션 상태가 **전부 `completed`**(또는 terminal `abandoned`만)일 때 **hermes식 1줄 영수증 접힘** — [99.30.01 M2 플랜](../devlog/_plan/260612_jawcode_fork/phase1/99.30.01_plan_todo_done_collapse.md).
 
 참조 UI: `~/Developer/codex/hermes-agent/ui-tui/src/components/todoPanel.tsx` (`▸ Todo (done/total)`, `!effectiveCollapsed`일 때만 본문).
 

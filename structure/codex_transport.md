@@ -20,8 +20,8 @@ Codex는 다른 OpenAI-compat 프로바이더와 달리 **WebSocket 우선, SSE 
 
 - **300s idle floor + first-event floor**: 첫 이벤트까지/이벤트 간 유휴를 300초 바닥으로 둬
   네이티브 Codex 클라이언트와 동일한 끊김 판정. 너무 짧은 타임아웃이 정상 스트림을 죽이던 문제 교정.
-- 위치: `packages/ai/src/providers/register-builtins.ts`, `packages/ai/src/utils/idle-iterator.ts`
-  (`93b7b66e`).
+- 위치: `packages/ai/src/providers/register-builtins.ts`, `packages/ai/src/utils/idle-iterator.ts`,
+  `openai-codex-responses.ts`(SSE idle 폴백) (`93b7b66e`).
 
 ## 3. 콘텐츠 프리워밍 (T1)
 
@@ -32,9 +32,13 @@ Codex는 다른 OpenAI-compat 프로바이더와 달리 **WebSocket 우선, SSE 
 
 ## 4. 레이트리밋 텔레메트리 + 과부하 분류 (D5)
 
-- 스트림 내 `codex.rate_limits` 푸시 이벤트를 캡처해 사용률을 추적, **≥75%면 푸터에 `%` 마커**.
+- 스트림 내 `codex.rate_limits` 푸시 이벤트를 캡처해 사용률을 추적, **≥75%면 푸터에 `%` 마커**
+  (마커 렌더는 `packages/coding-agent/src/modes/components/status-line/segments.ts`).
 - `server_is_overloaded`를 명시 분류해 일반 오류와 구분.
-- 위치: `packages/ai/src/provider-details.ts`, `agent-session.ts` (`bad0a8e1`).
+- 위치: `packages/ai/src/provider-details.ts`(레이트리밋 값), `agent-session.ts`, `segments.ts`(푸터 `%`) (`bad0a8e1`).
+- **레이트리밋 watchdog 우회 (`65d36ec3`)**: `codex.rate_limits`를 `CODEX_PROGRESS_EVENT_TYPES`에
+  넣어, 추론 정적 구간에서 레이트리밋 푸시만 흐를 때 300s idle 워치독이 오발화해 스트림을 죽이던
+  문제를 막는다(+ final-args refresh 중복 제거).
 
 ## 5. 전송 상태 가시성 (visibility)
 

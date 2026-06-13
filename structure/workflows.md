@@ -27,6 +27,14 @@
 | `ultragoal` | Goal ledger (ultragoal 엔진) → `.jwc/ultragoal/`; **99.30.02부터 플래닝 전제(prerequisite)가 네이티브화** | `ultragoal/SKILL.md` | 060 + 99, `8e17a1ce` |
 | `team` | IPABCD **B** — tmux workers → `.jwc/state/team/` | `team/SKILL.md` | |
 
+## 99.08 PABCD–goal 융합 (260613)
+
+- **99.08-A** (`09f7fb20`): 매 턴 `pabcd-stage-context` 헤더(prompt_flow 레일 #4)에 현재 goal
+  objective를 병기 — 단계 컨텍스트와 목표가 한 헤더에 같이 주입된다.
+- **99.08-B** (`a771f492`): `jwc orchestrate` 전이가 일어날 때마다 goal 체크포인트를 자동 기록 —
+  수동 `/goal` 호출 없이 단계 진행이 ledger에 남는다.
+- 근거: [prompt_flow.md](./prompt_flow.md) 99.03/99.08 표.
+
 ## Upstream baseline vs jwc runtime
 
 | 계층 | upstream gajae-code `[기본값]` | jwc runtime `[기본값]` | 호환 |
