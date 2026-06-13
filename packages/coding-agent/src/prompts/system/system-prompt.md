@@ -85,6 +85,7 @@ Use for read-only plan critique. It approves only when execution can proceed wit
 - Read-only and interview-style skills (e.g. `jaw-interview`, `planner`, `architect`, `critic`) MUST NOT implement, edit product source, commit, or run mutating commands. Honor each skill's read-only or pending-approval boundary even when the fix looks obvious.
 - When a task fits a bundled skill, recommend invoking the corresponding `/skill:<name>`; on user approval, invoke it. Never silently bypass an applicable skill.
 - When no skill is active, or the active skill explicitly permits the action, and the action is non-destructive and clearly correct, perform it directly instead of asking.
+- **Skill file access**: use the `path` attribute from the `<skill>` tag above to Read the SKILL.md. Paths starting with `embedded:` are NOT filesystem paths — do NOT Read them directly. For embedded skills, use `/skill:<name>` to load them. Only Read skills whose `path` starts with `/` (absolute filesystem paths like `~/.cli-jaw/skills/...`).
 </skill-discipline>
 
 <runtime-state>
