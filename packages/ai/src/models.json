@@ -3101,6 +3101,31 @@
 				"cacheRead": 0.5,
 				"cacheWrite": 6.25
 			},
+			"contextWindow": 200000,
+			"maxTokens": 128000,
+			"thinking": {
+				"mode": "anthropic-adaptive",
+				"minLevel": "minimal",
+				"maxLevel": "xhigh"
+			}
+		},
+		"claude-opus-4-6[1m]": {
+			"id": "claude-opus-4-6[1m]",
+			"name": "Anthropic Opus 4.6 [1m]",
+			"api": "anthropic-messages",
+			"provider": "anthropic",
+			"baseUrl": "https://api.anthropic.com",
+			"reasoning": true,
+			"input": [
+				"text",
+				"image"
+			],
+			"cost": {
+				"input": 5,
+				"output": 25,
+				"cacheRead": 0.5,
+				"cacheWrite": 6.25
+			},
 			"contextWindow": 1000000,
 			"maxTokens": 128000,
 			"thinking": {
@@ -3126,6 +3151,31 @@
 				"cacheRead": 0.5,
 				"cacheWrite": 6.25
 			},
+			"contextWindow": 200000,
+			"maxTokens": 128000,
+			"thinking": {
+				"mode": "anthropic-adaptive",
+				"minLevel": "minimal",
+				"maxLevel": "xhigh"
+			}
+		},
+		"claude-opus-4-7[1m]": {
+			"id": "claude-opus-4-7[1m]",
+			"name": "Anthropic Opus 4.7 [1m]",
+			"api": "anthropic-messages",
+			"provider": "anthropic",
+			"baseUrl": "https://api.anthropic.com",
+			"reasoning": true,
+			"input": [
+				"text",
+				"image"
+			],
+			"cost": {
+				"input": 5,
+				"output": 25,
+				"cacheRead": 0.5,
+				"cacheWrite": 6.25
+			},
 			"contextWindow": 1000000,
 			"maxTokens": 128000,
 			"thinking": {
@@ -3137,6 +3187,31 @@
 		"claude-opus-4-8": {
 			"id": "claude-opus-4-8",
 			"name": "Anthropic Opus 4.8",
+			"api": "anthropic-messages",
+			"provider": "anthropic",
+			"baseUrl": "https://api.anthropic.com",
+			"reasoning": true,
+			"input": [
+				"text",
+				"image"
+			],
+			"cost": {
+				"input": 5,
+				"output": 25,
+				"cacheRead": 0.5,
+				"cacheWrite": 6.25
+			},
+			"contextWindow": 200000,
+			"maxTokens": 128000,
+			"thinking": {
+				"mode": "anthropic-adaptive",
+				"minLevel": "minimal",
+				"maxLevel": "xhigh"
+			}
+		},
+		"claude-opus-4-8[1m]": {
+			"id": "claude-opus-4-8[1m]",
+			"name": "Anthropic Opus 4.8 [1m]",
 			"api": "anthropic-messages",
 			"provider": "anthropic",
 			"baseUrl": "https://api.anthropic.com",
@@ -3266,6 +3341,31 @@
 		"claude-sonnet-4-6": {
 			"id": "claude-sonnet-4-6",
 			"name": "Anthropic Sonnet 4.6",
+			"api": "anthropic-messages",
+			"provider": "anthropic",
+			"baseUrl": "https://api.anthropic.com",
+			"reasoning": true,
+			"input": [
+				"text",
+				"image"
+			],
+			"cost": {
+				"input": 3,
+				"output": 15,
+				"cacheRead": 0.3,
+				"cacheWrite": 3.75
+			},
+			"contextWindow": 200000,
+			"maxTokens": 64000,
+			"thinking": {
+				"mode": "anthropic-adaptive",
+				"minLevel": "minimal",
+				"maxLevel": "high"
+			}
+		},
+		"claude-sonnet-4-6[1m]": {
+			"id": "claude-sonnet-4-6[1m]",
+			"name": "Anthropic Sonnet 4.6 [1m]",
 			"api": "anthropic-messages",
 			"provider": "anthropic",
 			"baseUrl": "https://api.anthropic.com",

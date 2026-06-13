@@ -1825,9 +1825,13 @@ export interface AnthropicModelManagerConfig {
 const ANTHROPIC_OAUTH_LISTED_MODELS = new Set([
 	"claude-fable-5",
 	"claude-opus-4-8",
+	"claude-opus-4-8[1m]",
 	"claude-opus-4-7",
+	"claude-opus-4-7[1m]",
 	"claude-opus-4-6",
+	"claude-opus-4-6[1m]",
 	"claude-sonnet-4-6",
+	"claude-sonnet-4-6[1m]",
 	"claude-haiku-4-5",
 ]);
 
