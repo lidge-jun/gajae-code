@@ -3,6 +3,7 @@ import * as fs from "node:fs";
 import * as path from "node:path";
 import { Agent } from "@gajae-code/agent-core";
 import { estimateMessageTokensHeuristic } from "@gajae-code/agent-core/compaction";
+import { AssistantMessageEventStream } from "@gajae-code/ai/utils/event-stream";
 import type { AssistantMessage, ToolResultMessage } from "@gajae-code/ai";
 import { getBundledModel } from "@gajae-code/ai/models";
 import { ModelRegistry } from "@gajae-code/coding-agent/config/model-registry";
@@ -37,6 +38,7 @@ describe("AgentSession auto-compaction queue resume", () => {
 	let sessionManager: SessionManager;
 	let authStorage: AuthStorage;
 	let modelRegistry: ModelRegistry;
+	let streamCallCount: number;
 
 	beforeEach(async () => {
 		tempDir = TempDir.createSync("@pi-auto-compaction-queue-");
@@ -97,6 +99,7 @@ describe("AgentSession auto-compaction queue resume", () => {
 		if (!model) {
 			throw new Error("Expected built-in anthropic model to exist");
 		}
+		streamCallCount = 0;
 
 		const agent = new Agent({
 			initialState: {
@@ -104,6 +107,33 @@ describe("AgentSession auto-compaction queue resume", () => {
 				systemPrompt: ["Test"],
 				tools: [],
 				messages: [],
+			},
+			streamFn: () => {
+				streamCallCount++;
+				const stream = new AssistantMessageEventStream();
+				queueMicrotask(() => {
+					const message: AssistantMessage = {
+						role: "assistant",
+						content: [{ type: "text", text: "ok" }],
+						api: "anthropic-messages",
+						provider: "anthropic",
+						model: "claude-sonnet-4-5",
+						stopReason: "stop",
+						usage: {
+							input: 100,
+							output: 10,
+							cacheRead: 0,
+							cacheWrite: 0,
+							totalTokens: 110,
+							cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, total: 0 },
+						},
+						timestamp: Date.now(),
+					};
+					stream.push({ type: "message_start", message });
+					stream.push({ type: "message_end", message });
+					stream.end(message);
+				});
+				return stream;
 			},
 		});
 
