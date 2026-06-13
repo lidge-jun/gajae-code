@@ -499,7 +499,10 @@ export class StatusLineComponent implements Component {
 		this.#skillHudInFlight = true;
 		void readVisibleSkillActiveState(cwd, sessionId)
 			.then(state => {
-				this.#skillHudEntries = state?.active_skills ?? [];
+				const entries = state?.active_skills ?? [];
+				this.#skillHudEntries = sessionId
+					? entries.filter(e => !e.session_id || e.session_id === sessionId)
+					: entries;
 			})
 			.catch(() => {
 				this.#skillHudEntries = [];
