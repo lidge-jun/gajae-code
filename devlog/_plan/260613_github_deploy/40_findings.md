@@ -83,7 +83,22 @@
 **영향**: onboarding friction.
 **해결안**: postinstall에서 기본 mcp.json 템플릿 생성, 또는 `.jwc/mcp.json`에 기본 설정.
 
-### 181 — 35개 도구 중 대부분 미사용
+### 181 — jwc 설치 시 ~/.cli-jaw/skills 세팅 누락
+
+**발견**: jwc(jaw brand)는 `~/.cli-jaw/skills`를 global skill root로 사용 (`discovery/cli-jaw.ts:25`).
+이 디렉터리가 없으면 native user root(`~/.jwc/agent/skills`)로 fallback하지만, cli-jaw 임베딩 시 스킬
+공유가 안 됨. postinstall에서 이 경로 생성 + 기본 스킬 링크가 누락.
+**영향**: jwc만 설치한 사용자가 cli-jaw 스킬을 못 씀.
+**해결안**: postinstall에서 `~/.cli-jaw/skills` 디렉터리 생성 + 기본 스킬 symlink (task 070).
+
+### 182 — ~/.jwc/agent/ 런타임 설정 파일 부재
+
+**발견**: `mcp.json`, `settings.json`이 repo 밖 user config. clone 후 파일이 없어서
+MCP 서버 등록, discoveryMode 등 설정이 기본값으로만 동작.
+**영향**: onboarding friction — 문서 읽고 수동 생성해야 함.
+**해결안**: postinstall에서 기본 템플릿 생성 (task 071, 072).
+
+### 183 — 35개 도구 중 대부분 미사용
 
 **발견**: `recipe`, `irc`, `render_mermaid`, `ssh` 등 대부분의 턴에서 안 쓰이는 도구가 항상 로드.
 **영향**: 토큰 낭비 + 모델 도구 선택 혼란 가능.

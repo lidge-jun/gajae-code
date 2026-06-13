@@ -33,3 +33,6 @@ cli-jaw 패턴 참조: `scripts/postinstall-guard.cjs` (CommonJS, zero-dep, safe
 | 067 | postinstall-entry | root `package.json`에 `"postinstall": "node scripts/postinstall-guard.cjs"` | S |
 | 068 | postinstall orchestrator | `src/bin/postinstall.ts` → 063-066 순차 실행 | M |
 | 069 | postinstall-ci-skip | `CI=true` → brew/curl 스킵, tsc + binary verify만 | S |
+| 070 | cli-jaw-skills-setup | `~/.cli-jaw/skills` 디렉터리 생성 + 기본 스킬 symlink/복사. jwc가 jaw brand일 때 이 경로를 global skill root로 사용(`discovery/cli-jaw.ts:25`). 없으면 native user root(`~/.jwc/agent/skills`) fallback이지만 cli-jaw 임베딩 시 필수 | S |
+| 071 | mcp-json-template | `~/.jwc/agent/mcp.json` 기본 템플릿 생성 (빈 `mcpServers: {}`). 없으면 MCP discovery가 user-scope 설정 없이 동작 — CU 등 선택적 서버 등록 안내 | S |
+| 072 | settings-json-template | `~/.jwc/agent/settings.json` 기본 템플릿 생성 (`mcp.enableProjectConfig: true` 등). 없으면 기본값 사용되지만 명시적 설정 권장 | S |
