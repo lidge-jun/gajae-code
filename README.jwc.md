@@ -8,7 +8,7 @@
 - **npm package**: `jawcode` — `npm install -g jawcode`
 - **jwc bin**: `packages/jwc/bin/jwc.js` — 설치 후 사용자 명령은 `jwc`
 - **임베딩 표면**: `jawcode/sdk` (`packages/jwc/src/sdk.ts`가 현 소스 위치) — cli-jaw가 import하는 단일 통로
-- 상태 경로(`.jwc/`)·패키지 스코프(`@gajae-code/*`)·릴리스 에셋명은 upstream engine 계보 그대로
+- 상태 경로(`.jwc/`)·패키지 스코프(`@gajae-code/*`)는 내부 호환 계층으로 유지한다. 공개 릴리스 에셋명은 `jwc-<platform>-<arch>` 기준이다.
 
 ## 실행
 

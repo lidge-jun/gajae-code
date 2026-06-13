@@ -1,11 +1,11 @@
 blank_issues_enabled: true
 contact_links:
   - name: Model Configuration
-    url: https://github.com/can1357/gajae-code/blob/main/docs/models.md
-    about: How to add custom providers and models via models.yml
+    url: https://www.npmjs.com/package/jawcode
+    about: See the Jawcode package README for provider and model configuration notes
   - name: Extensions Guide
-    url: https://github.com/can1357/gajae-code/blob/main/docs/extensions.md
-    about: Build custom tools, commands, and integrations
+    url: https://www.npmjs.com/package/jawcode
+    about: See the Jawcode package README for extension and integration notes
   - name: Skills Documentation
-    url: https://github.com/can1357/gajae-code/blob/main/docs/skills.md
-    about: How to create and use skills
+    url: https://www.npmjs.com/package/jawcode
+    about: See the Jawcode package README for bundled workflow skill documentation

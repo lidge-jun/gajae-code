@@ -9,7 +9,7 @@ Only the latest release is supported with security updates.
 To report a security issue, either:
 
 - Email can1357 directly, or
-- Open a [private security advisory](https://github.com/can1357/gajae-code/security/advisories/new) on GitHub
+- Open a private security advisory in the Jawcode GitHub repository
 
 Include steps to reproduce and any relevant details. Do not open a public issue for security vulnerabilities.
 

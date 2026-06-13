@@ -177,7 +177,7 @@
 
 ### 010 — 셸·브랜드·릴리스
 
-- `packages/jwc`: bin `jwc`, `jwc/sdk` 재수출; `cli-entry` 번들 퍼블리시 (P12).
+- `packages/jwc`: package `jawcode`, bin `jwc`, `jawcode/sdk` 재수출; `cli-entry` 번들 퍼블리시 (P12).
 - `packages/gajae-code` **삭제** — 더 이상 repo 내 `gjc` bin 없음.
 - `dirs.ts`: `APP_NAME` 기본 `jwc`, config `~/.jwc`; `ENGINE_NAME`/`gjc` 내부 식별자 보존.
 - `rebrand-inventory` / `verify-g002-gates`: 기대 bin·스킬 4종을 **jwc 어휘**로 확장·반전.

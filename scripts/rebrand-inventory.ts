@@ -35,7 +35,7 @@ const expectedBundledRoleAgents = ["architect", "critic", "executor", "planner"]
 const expectedPackageScope = "@gajae-code/";
 const expectedCliBins = ["gjc", "gjc-stats", "jwc"] as const;
 const expectedRootPackageName = "gajae-code";
-const allowedUnscopedPackageNames = new Set([expectedRootPackageName, "jwc"]);
+const allowedUnscopedPackageNames = new Set([expectedRootPackageName, "jawcode"]);
 const rootPublicMetadataFields = ["name", "description", "homepage", "repository", "bugs"] as const;
 const rootLegacyScriptKeys = new Set(["test:py"]);
 

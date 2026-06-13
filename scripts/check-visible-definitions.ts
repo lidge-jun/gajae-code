@@ -4,6 +4,7 @@ import * as path from "node:path";
 
 const expectedWorkflowSkills = ["jaw-interview", "ralplan", "team", "ultragoal"];
 const expectedRoleAgents = ["architect", "critic", "executor", "planner"];
+const bundledNonWorkflowSkills = new Set(["browse", "search"]);
 const repoRoot = process.cwd();
 
 function listSkillDirs(dir: string): string[] {
@@ -33,7 +34,9 @@ const otherVisibleDefinitions = [
 	...listDefinitionFiles(".jwc/commands", [".md"]),
 	...listDefinitionFiles(".jwc/rules", [".md"]),
 ].sort();
-const bundledSkills = listSkillDirs("packages/coding-agent/src/defaults/jwc/skills").sort();
+const bundledSkills = listSkillDirs("packages/coding-agent/src/defaults/jwc/skills")
+	.filter(name => !bundledNonWorkflowSkills.has(name))
+	.sort();
 const bundledRoleAgents = listDefinitionFiles("packages/coding-agent/src/prompts/agents", [".md"])
 	.filter(name => expectedRoleAgents.includes(name))
 	.sort();

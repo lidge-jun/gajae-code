@@ -24,14 +24,14 @@ packages/
   stats/           @gajae-code/stats       — 사용량/통계
   natives/         @gajae-code/natives     — Rust napi 바인딩
   bridge-client/   @gajae-code/bridge-client — 원격 브리지
-  jwc/             jwc                     — jaw 표면 (bin: jwc, export: ./sdk)
+  jwc/             jawcode                 — jaw 표면 (npm: jawcode, bin: jwc, export: ./sdk)
 ```
 
 전체 package/crate 표는 [architecture.md](./10_architecture.md)가 정본이다.
 
 | 핵심 패키지 | 현재 역할 | 근거 |
 |---|---|---|
-| `packages/jwc` | `jwc` bin + `jwc/sdk` public boundary wrapper | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:1`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/src/sdk.ts:1` |
+| `packages/jwc` | `jawcode` npm package + `jwc` bin + `jawcode/sdk` public boundary wrapper | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:1`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/src/sdk.ts:1` |
 | `packages/coding-agent` | 실제 CLI/runtime/SDK 구현 | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/package.json:3`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:796` |
 | `packages/agent` | agent loop/core abstraction | `/Users/jun/Developer/new/700_projects/jawcode/packages/agent/package.json:3`, `/Users/jun/Developer/new/700_projects/jawcode/packages/agent/package.json:5` |
 | `packages/ai` | provider/model/auth layer | `/Users/jun/Developer/new/700_projects/jawcode/packages/ai/package.json:3`, `/Users/jun/Developer/new/700_projects/jawcode/packages/ai/package.json:5` |
@@ -48,7 +48,7 @@ packages/
 
 | 표면 | 현재 사실 | 근거 |
 |---|---|---|
-| `jwc/sdk` | coding-agent SDK를 재수출한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/src/sdk.ts:1` |
+| `jawcode/sdk` | coding-agent SDK를 재수출한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:18`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/src/sdk.ts:1` |
 | `createAgentSession()` | `CreateAgentSessionOptions`를 받아 `AgentSession`을 만든다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:217`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:796` |
 | system prompt override | `options.systemPrompt`는 array 또는 default prompt transformer function이다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:240`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:1613` |
 | auth injection | `options.authStorage`와 `discoverAuthStorage()`가 credential bridge 지점이다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:225`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:409` |
@@ -146,7 +146,7 @@ jwc CLI/package
 
 | 패키지 | 역할 | 핵심 진입 파일/표면 | 의존 방향 | 근거 |
 |---|---|---|---|---|
-| `packages/jwc` | jwc 공개 CLI wrapper. 현재 `jwc` bin은 coding-agent CLI를 재수출한다. | `bin/jwc.js`, `src/sdk.ts`, `src/index.ts` | `@gajae-code/coding-agent`만 의존 | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:1`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/bin/jwc.js:1`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/src/sdk.ts:1` |
+| `packages/jwc` | `jawcode` 공개 npm 패키지. `jwc` Node launcher가 managed Bun runtime으로 bundle/workspace CLI를 실행하고 `jawcode/sdk`를 제공한다. | `bin/jwc.js`, `src/sdk.ts`, `src/index.ts`, `dist-node/sdk.js` | `@gajae-code/coding-agent` + package-local `bun` runtime dependency | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:3`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/bin/jwc.js:1`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/src/sdk.ts:1` |
 | `packages/coding-agent` | jwc CLI 본체. 도구, 세션, 스킬, 슬래시커맨드, prompt, mode, workflow runtime이 있다. | `src/cli.ts`, `src/sdk.ts`, `src/main.ts` | `agent-core`, `ai`, `natives`, `tui`, `utils`, `stats` | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/package.json:3`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/package.json:30`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/package.json:49` |
 | `packages/agent` | provider-agnostic agent loop/core. transport/state/attachment abstraction. | `src/index.ts` export | `ai`, `natives`, `utils` | `/Users/jun/Developer/new/700_projects/jawcode/packages/agent/package.json:3`, `/Users/jun/Developer/new/700_projects/jawcode/packages/agent/package.json:27`, `/Users/jun/Developer/new/700_projects/jawcode/packages/agent/package.json:37` |
 | `packages/ai` | provider/model registry, stream, auth broker/gateway, OAuth/API key 계층. | `src/index.ts`, `src/cli.ts`(`pi-ai`) | `utils`, OpenAI/Anthropic SDK 등 외부 provider deps | `/Users/jun/Developer/new/700_projects/jawcode/packages/ai/package.json:3`, `/Users/jun/Developer/new/700_projects/jawcode/packages/ai/package.json:31`, `/Users/jun/Developer/new/700_projects/jawcode/packages/ai/package.json:43` |
@@ -174,8 +174,8 @@ jwc CLI/package
 
 | 구분 | 현재 상태 | 개발 판단 | 근거 |
 |---|---|---|---|
-| M1 `jwc` 표면 | `packages/jwc`는 wrapper만 있고, bin은 coding-agent CLI import 1줄이다. | 공개 표면은 `packages/jwc`와 coding-agent CLI help/branding에서 jwc 기준으로 유지한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/bin/jwc.js:1`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/000_roadmap.md:12` |
-| M2 임베딩 | `packages/jwc/src/sdk.ts`가 `@gajae-code/coding-agent/sdk`를 재수출한다. | cli-jaw는 내부 `@gajae-code/*`가 아니라 `jwc/sdk`를 import해야 리베이스 흡수 지점이 생긴다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/src/sdk.ts:1`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:15` |
+| M1 `jwc` 표면 | `packages/jwc`는 Node launcher + managed Bun runtime wrapper다. | 공개 표면은 `packages/jwc`와 coding-agent CLI help/branding에서 jwc 기준으로 유지한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/bin/jwc.js:1`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/000_roadmap.md:12` |
+| M2 임베딩 | `jawcode/sdk`가 `@gajae-code/coding-agent/sdk`를 재수출한다. | cli-jaw는 내부 `@gajae-code/*`가 아니라 `jawcode/sdk`를 import해야 리베이스 흡수 지점이 생긴다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/src/sdk.ts:1`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:15` |
 | Node 포팅 위험 | package engines는 Bun `>=1.3.14`가 기본이다. | M2 Node 포팅은 `bun:sqlite`, Bun imports, Bun APIs를 별도 밴드에서 다뤄야 한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/package.json:77`, `/Users/jun/Developer/new/700_projects/jawcode/packages/agent/package.json:48`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/05_interview_conclusions.md:17` |
 | **M2 Node 포팅 — 100밴드 완료 (260613)** | `packages/jwc/dist-node/`(esbuild 번들) + `packages/jwc/src/shims/`: global Bun shim, file/write/sleep/stdio, `Bun.spawn`/`spawnSync` Node 어댑터, data-core(`bun:sqlite`/hash/JSONL/JSON5/stripANSI), peripheral shims. Node 22 SDK import·`createAgentSession`·스트리밍 green, 적대 감사 라운드 1-5 통과(보안: path traversal·archive mtime·serve TLS/disconnect·PK-tar misroute 포함, `0debe38b`·`40a4a2f0`). | "문서만"에서 **구현 완료**로 전환 — Bun API가 dist-node 셰임으로 대체됨. | `packages/jwc/scripts/build-node.ts`, `packages/jwc/src/shims/`, devlog 100밴드 (`2e9efc59`…`fba5cd56`, closeout `fdb8d41d`) |
 
@@ -189,14 +189,14 @@ jwc CLI/package
 
 ## SDK Surface
 
-> cli-jaw 임베딩 관점의 단일 통로는 `jwc/sdk`다. 현재 `jwc/sdk`는 `@gajae-code/coding-agent/sdk`를 그대로 재수출한다.
+> cli-jaw 임베딩 관점의 단일 통로는 `jawcode/sdk`다. 현재 `jawcode/sdk`는 `@gajae-code/coding-agent/sdk`를 그대로 재수출한다.
 
 ### Public Boundary
 
 | 표면 | 의미 | 근거 |
 |---|---|---|
-| `packages/jwc/src/sdk.ts` | jwc가 외부 호스트에 제공하는 SDK boundary. 현재는 coding-agent SDK 재수출. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/src/sdk.ts:1` |
-| `packages/jwc/package.json` export `./sdk` | `import "jwc/sdk"` 공개 export. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:15` |
+| `packages/jwc/src/sdk.ts` | jawcode가 외부 호스트에 제공하는 SDK boundary. 현재는 coding-agent SDK 재수출. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/src/sdk.ts:1` |
+| `packages/jwc/package.json` export `./sdk` | `import "jawcode/sdk"` 공개 export. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:15` |
 | `packages/coding-agent/src/sdk.ts` | 실제 구현체. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:217` |
 
 ### `CreateAgentSessionOptions`

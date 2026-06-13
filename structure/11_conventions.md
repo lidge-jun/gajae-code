@@ -67,7 +67,7 @@ git fetch upstream && git rebase upstream/main    # worktree — 변경 정리 �
 
 업스트림 컨벤션을 그대로 따른다:
 - Bun workspaces + catalog, biome (린트/포맷), TypeScript strict
-- 패키지 네임스페이스: 업스트림 `@gajae-code/*`는 유지, jawcode 신규 패키지만 `@jaw/*`
+- 패키지 네임스페이스: 업스트림 `@gajae-code/*`는 유지하고, 공개 standalone npm 패키지는 `jawcode`(`bin: jwc`, `import: jawcode/sdk`)로 둔다.
 - 커밋: 업스트림은 conventional commits (`fix(scope):`, `docs(changelog):`) — 동일하게
 
 | 규칙 | 근거 |
@@ -135,11 +135,12 @@ git fetch upstream && git rebase upstream/main    # worktree — 변경 정리 �
 
 | 정책 | 상태 | 근거 |
 |---|---|---|
-| bin 표면 | `packages/jwc`가 `jwc` bin을 제공한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:7` |
-| 내부 실행 | 현재 `jwc` bin은 `@gajae-code/coding-agent/cli`를 import한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/bin/jwc.js:1` |
-| SDK 표면 | `jwc/sdk`는 coding-agent SDK를 재수출한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:15`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/src/sdk.ts:1` |
+| package 표면 | `packages/jwc`가 npm package `jawcode`를 제공한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:2` |
+| bin 표면 | `packages/jwc`가 `jwc` bin을 제공한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:8` |
+| 내부 실행 | `jwc` bin은 Node 엔트리에서 managed Bun runtime을 찾아 재실행한 뒤 workspace CLI 또는 bundle을 import한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/bin/jwc.js:1` |
+| SDK 표면 | `jawcode/sdk`는 coding-agent SDK를 재수출한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:18`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/src/sdk.ts:1` |
 | default workflow slug | jwc runtime은 `jaw-interview`를 표준으로 쓴다. legacy `deep-interview`는 upstream baseline/read-compat 문맥에만 둔다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/defaults/gjc-defaults.ts:13`, `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:11` |
-| package namespace | upstream `@gajae-code/*` 유지, jawcode 신규 패키지만 별도 namespace 가능. | `/Users/jun/Developer/new/700_projects/jawcode/structure/11_conventions.md:24` |
+| package namespace | 내부 workspace는 upstream `@gajae-code/*`를 유지하고, 공개 standalone package는 `jawcode`다. | `/Users/jun/Developer/new/700_projects/jawcode/structure/11_conventions.md:70` |
 | state path | 런타임 `.jwc/` (`CONFIG_DIR_NAME`, `~/.jwc`) — repo 문서·마이그레이션은 Phase β 기준 | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:219` |
 | D4 결정 | bin `jwc`, 브랜딩/문서/스킬명은 jwc 기준; 내부 `@gajae-code/*` 스코프는 보존. | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/05_interview_conclusions.md:13` |
 

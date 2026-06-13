@@ -76,7 +76,7 @@ jobs:
               fi
               echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
 
-   # Branch protection must add the always-present `gjc-state-gates` status as required.
+   # Branch protection may keep the always-present `gjc-state-gates` compatibility status.
    gjc-state-gates:
       name: gjc-state-gates
       if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
@@ -101,7 +101,7 @@ jobs:
               path: ~/.bun/install/cache
               key: bun-${{ runner.os }}-${{ hashFiles('**/bun.lock') }}
          - run: bun install --frozen-lockfile
-         - name: Run GJC state gates
+         - name: Run JWC state gates
            run: bun scripts/ci-jwc-state-gates.ts
 
    # Fast lint + type check (no Rust, no native build needed)
@@ -303,35 +303,35 @@ jobs:
                     platform: linux,
                     arch: x64,
                     target_id: linux-x64,
-                    binary_path: packages/coding-agent/binaries/gjc-linux-x64,
+                    binary_path: packages/coding-agent/binaries/jwc-linux-x64,
                  }
                - {
                     os: ubuntu-24.04-arm,
                     platform: linux,
                     arch: arm64,
                     target_id: linux-arm64,
-                    binary_path: packages/coding-agent/binaries/gjc-linux-arm64,
+                    binary_path: packages/coding-agent/binaries/jwc-linux-arm64,
                  }
                - {
                     os: macos-15-intel,
                     platform: darwin,
                     arch: x64,
                     target_id: darwin-x64,
-                    binary_path: packages/coding-agent/binaries/gjc-darwin-x64,
+                    binary_path: packages/coding-agent/binaries/jwc-darwin-x64,
                  }
                - {
                     os: macos-14,
                     platform: darwin,
                     arch: arm64,
                     target_id: darwin-arm64,
-                    binary_path: packages/coding-agent/binaries/gjc-darwin-arm64,
+                    binary_path: packages/coding-agent/binaries/jwc-darwin-arm64,
                  }
                - {
                     os: windows-latest,
                     platform: win32,
                     arch: x64,
                     target_id: win32-x64,
-                    binary_path: packages/coding-agent/binaries/gjc-windows-x64.exe,
+                    binary_path: packages/coding-agent/binaries/jwc-windows-x64.exe,
                  }
       runs-on: ${{ matrix.os }}
       permissions:
@@ -370,7 +370,7 @@ jobs:
            if: runner.os == 'Windows'
            shell: pwsh
            run: |
-              $runtimeDir = Join-Path $env:TEMP ("gjc-runtime-" + [System.Guid]::NewGuid().ToString("N"))
+              $runtimeDir = Join-Path $env:TEMP ("jwc-runtime-" + [System.Guid]::NewGuid().ToString("N"))
               New-Item -ItemType Directory -Force -Path $runtimeDir | Out-Null
               $env:HOME = Join-Path $runtimeDir "home"
               $env:XDG_DATA_HOME = Join-Path $runtimeDir "xdg"
@@ -379,7 +379,7 @@ jobs:
          - name: Upload release binary artifact
            uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4
            with:
-              name: gjc-binary-${{ matrix.target_id }}
+              name: jwc-binary-${{ matrix.target_id }}
               path: ${{ matrix.binary_path }}
 
    release-github:
@@ -397,14 +397,14 @@ jobs:
          - name: Download release binaries
            uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093  # v4
            with:
-              pattern: gjc-binary-*
+              pattern: jwc-binary-*
               path: packages/coding-agent/binaries
               merge-multiple: true
          - name: Create GitHub Release
            uses: softprops/action-gh-release@3bb12739c298aeb8a4eeaf626c5b8d85266b0e65  # v2
            with:
               files: |
-                 packages/coding-agent/binaries/gjc-*
+                 packages/coding-agent/binaries/jwc-*
               generate_release_notes: true
 
 
@@ -419,13 +419,13 @@ jobs:
       steps:
          - name: Download published macOS arm64 binary
            run: |
-              curl -fsSL -o gjc-darwin-arm64 "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/gjc-darwin-arm64"
-              chmod +x gjc-darwin-arm64
+              curl -fsSL -o jwc-darwin-arm64 "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/jwc-darwin-arm64"
+              chmod +x jwc-darwin-arm64
          - name: Verify published macOS arm64 binary
            run: |
-              codesign -dv ./gjc-darwin-arm64
+              codesign -dv ./jwc-darwin-arm64
               runtime_dir="$(mktemp -d)"
-              HOME="$runtime_dir/home" XDG_DATA_HOME="$runtime_dir/xdg" ./gjc-darwin-arm64 --version
+              HOME="$runtime_dir/home" XDG_DATA_HOME="$runtime_dir/xdg" ./jwc-darwin-arm64 --version
 
    release-npm:
       timeout-minutes: 30
