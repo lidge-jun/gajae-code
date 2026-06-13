@@ -35,6 +35,7 @@
 | active commands | builtin slash names include `settings`, `theme`, `goal`, `model`, `memory`, `provider`, `login`, `searchengine`, etc. `searchengine`는 [search.md](./search.md) 참조. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/slash-commands/builtin-registry.ts:212`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/slash-commands/builtin-registry.ts:228`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/slash-commands/builtin-registry.ts:910` |
 | `/help` 도킹 2-페인 카탈로그 (99.20.08) | 모델-셀렉터 문법의 docked 2-pane 선택기: builtin/skill/custom 탭 분할, enter로 커맨드 삽입. ACP는 plain 카탈로그 핸들. | `8e17a1ce` (99.20.08), `src/slash-commands/builtin-registry.ts` |
 | 세션 슬래시 표면 (99.07.01) | `/fork [msg]`·`/branch`·`/resume <id>`·`/sessions`·`/switch`(alias). `AgentSession.fork()`는 큐 메시지 클리어. | `7fa8a9d0` (99.07.01) |
+| `/model` 2-페인 키보드 (99.30.04 S7.1) | 화살표로 리스트 순환, space로 provider/model 페인 전환 복원. | `04132930` (99.30.04 S7.1) |
 
 ## Custom Tools
 

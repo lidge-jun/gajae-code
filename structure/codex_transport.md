@@ -27,8 +27,10 @@ Codex는 다른 OpenAI-compat 프로바이더와 달리 **WebSocket 우선, SSE 
 
 - `generate:false` prefill로 모델 호스트를 미리 데우고, **유휴 시 최대 6회까지 4분 간격 갱신**.
   콜드스타트 2m15s를 상각. SDK 진입(`sdk.ts`)에서 세션 생성 시 best-effort로 발화.
+- **모델 전환 시 idle-refresh 타이머 취소**(`1efee068`): 모델을 바꾸면 진행 중인 유휴 갱신 타이머를
+  취소하고, 다음 turn_end에 새 모델이 여전히 codex면 재무장한다(stale 모델 프리워밍 방지).
 - 위치: `packages/agent/src/agent.ts`, `packages/coding-agent/src/sdk.ts`,
-  `packages/coding-agent/src/session/agent-session.ts` (`cd41e54d`).
+  `packages/coding-agent/src/session/agent-session.ts` (`cd41e54d`, `1efee068`).
 
 ## 4. 레이트리밋 텔레메트리 + 과부하 분류 (D5)
 
