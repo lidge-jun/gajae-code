@@ -102,10 +102,14 @@ const modelSegment: StatusLineSegment = {
 
 		// Codex transport marker: ws = websocket (delta rounds), sse = plain SSE,
 		// sse! = degraded after a websocket fallback (full-context rounds).
+		// A trailing percentage appears when the server-reported rate-limit
+		// window is ≥75% used (output throttling becomes likely near the cap).
 		const codexTransport = ctx.session.getCodexTransportStatus?.();
 		if (codexTransport) {
-			const marker =
-				codexTransport.transport === "websocket" ? "ws" : codexTransport.fallback ? "sse!" : "sse";
+			let marker = codexTransport.transport === "websocket" ? "ws" : codexTransport.fallback ? "sse!" : "sse";
+			if (codexTransport.primaryUsedPercent !== undefined && codexTransport.primaryUsedPercent >= 75) {
+				marker += `·${Math.round(codexTransport.primaryUsedPercent)}%`;
+			}
 			content += `${theme.sep.dot}${marker}`;
 		}
 

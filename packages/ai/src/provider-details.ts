@@ -48,6 +48,10 @@ export function getProviderDetails(context: ProviderDetailsContext): ProviderDet
 		fields.push({ label: "Transport", value: formatCodexTransport(codexDetails) });
 		fields.push({ label: "WebSocket", value: formatCodexWebSocket(codexDetails) });
 		fields.push({ label: "Reuse", value: formatCodexReuse(codexDetails, context.sessionId) });
+		const rateLimits = formatCodexRateLimits(codexDetails);
+		if (rateLimits) {
+			fields.push({ label: "Rate limit", value: rateLimits });
+		}
 	}
 
 	return {
@@ -87,4 +91,18 @@ function formatCodexWebSocket(details: OpenAICodexTransportDetails): string {
 function formatCodexReuse(details: OpenAICodexTransportDetails, sessionId: string | undefined): string {
 	if (!sessionId) return "no session key";
 	return details.canAppend ? "append enabled" : "full request";
+}
+
+function formatCodexRateLimits(details: OpenAICodexTransportDetails): string | undefined {
+	const rateLimits = details.rateLimits;
+	if (!rateLimits) return undefined;
+	const parts: string[] = [];
+	if (rateLimits.primary?.usedPercent !== undefined) {
+		parts.push(`primary ${Math.round(rateLimits.primary.usedPercent)}%`);
+	}
+	if (rateLimits.secondary?.usedPercent !== undefined) {
+		parts.push(`secondary ${Math.round(rateLimits.secondary.usedPercent)}%`);
+	}
+	if (parts.length === 0) return undefined;
+	return parts.join(", ");
 }

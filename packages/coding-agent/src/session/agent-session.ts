@@ -1635,7 +1635,9 @@ export class AgentSession {
 	 * Codex transport snapshot for footer/notice surfaces. Returns undefined for
 	 * non-codex models or before the first request establishes a transport.
 	 */
-	getCodexTransportStatus(): { transport: "websocket" | "sse"; fallback: boolean } | undefined {
+	getCodexTransportStatus():
+		| { transport: "websocket" | "sse"; fallback: boolean; primaryUsedPercent?: number }
+		| undefined {
 		const model = this.model;
 		if (!model || model.api !== "openai-codex-responses") return undefined;
 		const details = getOpenAICodexTransportDetails(model as Model<"openai-codex-responses">, {
@@ -1647,6 +1649,7 @@ export class AgentSession {
 		return {
 			transport: details.lastTransport,
 			fallback: details.websocketDisabled || details.fallbackCount > 0,
+			primaryUsedPercent: details.rateLimits?.primary?.usedPercent,
 		};
 	}
 
@@ -1706,9 +1709,18 @@ export class AgentSession {
 	 * outside PI_CODEX_DEBUG logs.
 	 */
 	#maybeNoticeCodexTransportFallback(): void {
-		if (this.#codexFallbackNoticed) return;
 		const status = this.getCodexTransportStatus();
-		if (!status || status.transport !== "sse" || !status.fallback) return;
+		if (!status) return;
+		if (!this.#codexRateLimitNoticed && status.primaryUsedPercent !== undefined && status.primaryUsedPercent >= 90) {
+			this.#codexRateLimitNoticed = true;
+			this.emitNotice(
+				"warning",
+				`Codex rate-limit window ${Math.round(status.primaryUsedPercent)}% used — the server may throttle output token rate until it resets.`,
+				"codex-rate-limit",
+			);
+		}
+		if (this.#codexFallbackNoticed) return;
+		if (status.transport !== "sse" || !status.fallback) return;
 		this.#codexFallbackNoticed = true;
 		this.emitNotice(
 			"warning",
@@ -1716,6 +1728,8 @@ export class AgentSession {
 			"codex-transport",
 		);
 	}
+
+	#codexRateLimitNoticed = false;
 
 	#queuedExtensionEvents: Promise<void> = Promise.resolve();
 

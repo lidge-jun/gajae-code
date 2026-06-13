@@ -147,6 +147,18 @@ export interface OpenAICodexWebSocketDebugStats {
 	lastPreviousResponseId?: string;
 }
 
+export interface OpenAICodexRateLimitWindow {
+	usedPercent?: number;
+	windowMinutes?: number;
+	resetAt?: number;
+}
+
+export interface OpenAICodexRateLimitsSnapshot {
+	primary?: OpenAICodexRateLimitWindow;
+	secondary?: OpenAICodexRateLimitWindow;
+	capturedAt: number;
+}
+
 type CodexWebSocketSessionState = {
 	disableWebsocket: boolean;
 	lastRequest?: RequestBody;
@@ -154,6 +166,8 @@ type CodexWebSocketSessionState = {
 	lastResponseItems?: InputItem[];
 	/** In-flight content prewarm; real requests await it (it prefills the same context). */
 	activeContentPrewarm?: Promise<unknown>;
+	/** Last in-stream `codex.rate_limits` push from the backend. */
+	rateLimits?: OpenAICodexRateLimitsSnapshot;
 	canAppend: boolean;
 	turnState?: string;
 	modelsEtag?: string;
@@ -877,6 +891,36 @@ async function processCodexResponseStream(
 	}
 }
 
+function parseCodexRateLimitWindow(value: unknown): OpenAICodexRateLimitWindow | undefined {
+	const record = asRecord(value);
+	if (!record) return undefined;
+	const usedPercent = typeof record.used_percent === "number" ? record.used_percent : undefined;
+	const windowMinutes = typeof record.window_minutes === "number" ? record.window_minutes : undefined;
+	const resetAt = typeof record.reset_at === "number" ? record.reset_at : undefined;
+	if (usedPercent === undefined && windowMinutes === undefined && resetAt === undefined) return undefined;
+	return { usedPercent, windowMinutes, resetAt };
+}
+
+function captureCodexRateLimitsEvent(
+	state: CodexWebSocketSessionState | undefined,
+	rawEvent: Record<string, unknown>,
+): void {
+	if (!state) return;
+	const details = asRecord(rawEvent.rate_limits);
+	if (!details) return;
+	const snapshot: OpenAICodexRateLimitsSnapshot = {
+		primary: parseCodexRateLimitWindow(details.primary),
+		secondary: parseCodexRateLimitWindow(details.secondary),
+		capturedAt: Date.now(),
+	};
+	if (!snapshot.primary && !snapshot.secondary) return;
+	state.rateLimits = snapshot;
+	logCodexDebug("codex rate limits", {
+		primaryUsedPercent: snapshot.primary?.usedPercent,
+		secondaryUsedPercent: snapshot.secondary?.usedPercent,
+	});
+}
+
 function handleCodexStreamEvent(args: {
 	model: Model<"openai-codex-responses">;
 	output: AssistantMessage;
@@ -892,6 +936,14 @@ function handleCodexStreamEvent(args: {
 	const blocks = output.content;
 	const blockIndex = () => blocks.length - 1;
 	let firstTokenTime = args.firstTokenTime;
+
+	// Mid-stream rate-limit telemetry push (native parity: codex.rate_limits
+	// carries primary/secondary window used_percent + reset_at). Capturing it
+	// lets the UI distinguish "server is throttling output" from client issues.
+	if (eventType === "codex.rate_limits") {
+		captureCodexRateLimitsEvent(runtime.websocketState, rawEvent);
+		return firstTokenTime;
+	}
 
 	if (eventType === "response.output_item.added") {
 		if (!firstTokenTime) firstTokenTime = Date.now();
@@ -1873,6 +1925,7 @@ export interface OpenAICodexTransportDetails {
 	prewarmed: boolean;
 	hasSessionState: boolean;
 	lastFallbackAt?: number;
+	rateLimits?: OpenAICodexRateLimitsSnapshot;
 }
 
 function getCodexWebSocketStateForPublicSession(
@@ -1931,6 +1984,7 @@ export function getOpenAICodexTransportDetails(
 		prewarmed: state?.prewarmed ?? false,
 		hasSessionState: state !== undefined,
 		lastFallbackAt: state?.lastFallbackAt,
+		rateLimits: state?.rateLimits,
 	};
 }
 
@@ -2724,6 +2778,13 @@ function formatCodexFailure(rawEvent: Record<string, unknown>): string | null {
 	const meta: string[] = [];
 	if (code) meta.push(`code=${code}`);
 	if (status) meta.push(`status=${status}`);
+
+	// Server congestion gets a distinct, user-readable classification (native
+	// parity: codex-rs maps these codes to a dedicated ServerOverloaded error
+	// instead of a generic retry).
+	if (code === "server_is_overloaded" || code === "slow_down") {
+		return `Codex server overloaded (${code}) — the backend is shedding load; retry shortly${message ? `: ${message}` : ""}`;
+	}
 
 	if (message) {
 		const metaText = meta.length ? ` (${meta.join(", ")})` : "";
