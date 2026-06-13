@@ -8,14 +8,14 @@ PABCD 모드 활성 시 채팅 입력 테두리에 phase별 색상 띠 + breathi
 
 ### Phase 색상
 
-| Phase | 색상 | HSL 기준 hue | 의미 |
-|---|---|---|---|
-| I | cyan | 180° | 정보 수집 |
-| P | yellow | 50° | 계획 수립 |
-| A | magenta | 300° | 감사/검증 |
-| B | green | 120° | 구현 |
-| C | red | 0° | 최종 검증 |
-| D | white | — | 완료 |
+| Phase | 색상 | HSL hue | cli-jaw oklch | 색감 |
+|---|---|---|---|---|
+| I | cyan-blue | 200° | `oklch(70% 0.15 200)` | 정보 수집 |
+| P | blue-purple | 240° | `oklch(63% 0.17 260)` | 계획 수립 |
+| A | amber/gold | 45° | `oklch(78% 0.16 75)` | 감사/검증 |
+| B | teal-green | 150° | `oklch(72% 0.17 150)` | 구현 |
+| C | purple-magenta | 290° | `oklch(60% 0.2 300)` | 최종 검증 |
+| D | white | — | — | 완료 |
 
 ### Breathing Pulse
 
