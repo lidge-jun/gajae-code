@@ -22,9 +22,9 @@
 
 | Workflow skill | 목적 | bundled source | 근거 |
 |---|---|---|---|
-| `jaw-interview` | IPABCD **I** — Socratic interview → `.jwc/specs/` | `defaults/gjc/skills/jaw-interview/SKILL.md` | `gjc-defaults.ts:13` |
-| `ralplan` | IPABCD **P** — consensus plan → `.jwc/plans/ralplan/` pending approval | `ralplan/SKILL.md` | jwc surface 산문 **99.03** (slug 유지) |
-| `ultragoal` | Goal ledger (ultragoal 엔진) → `.jwc/ultragoal/` | `ultragoal/SKILL.md` | 060 + 99 |
+| `jaw-interview` | IPABCD **I** — Socratic interview → `.jwc/specs/`; **99.30.02부터 핸드오프가 `jwc orchestrate p --spec-ref`로 재배선** | `defaults/gjc/skills/jaw-interview/SKILL.md` | `gjc-defaults.ts:13`, `8e17a1ce` |
+| `ralplan` | ⚠️ **99.30.02 supersession** — ralplan SKILL은 superseded(스텁), 플래닝은 `jwc orchestrate p`(네이티브)로 이전. autocomplete 상단 핀도 `/orchestrate`·`/goal`로 교체, ralplan 핀 강등 | `ralplan/SKILL.md`(스텁) | `8e17a1ce` (99.30.02 ralplan 이별), [fork-delta.md](./fork-delta.md) |
+| `ultragoal` | Goal ledger (ultragoal 엔진) → `.jwc/ultragoal/`; **99.30.02부터 플래닝 전제(prerequisite)가 네이티브화** | `ultragoal/SKILL.md` | 060 + 99, `8e17a1ce` |
 | `team` | IPABCD **B** — tmux workers → `.jwc/state/team/` | `team/SKILL.md` | |
 
 ## Upstream baseline vs jwc runtime

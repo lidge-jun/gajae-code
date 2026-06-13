@@ -152,6 +152,26 @@
 | 99.01 | memory CLI + local-query/FTS | [memory_pipeline.md](./memory_pipeline.md) |
 | 99.02 | CI schemas·biome | [jwc_readiness.md](./jwc_readiness.md) |
 
+## 99.20 / 99.30 밴드 + gjc→jwc 플립 (260613)
+
+- **gjc→jwc 소스 플립** (`8e17a1ce`, F1–F5): 디렉터리(jwc-runtime/jwc-plugins/defaults/jwc 등)·심볼
+  (Gjc→Jwc 88파일, GajaeCode→Jawcode)·receipt owner(jwc-* write, gjc-* read-both)·goals.json 필드
+  (jwc* + 레거시 폴백)·ACP `_jwc/` 별칭(+`_gjc/` 유지)·기본 커맨드 `jwc`·테스트/픽스처 리네임. 내부
+  패키지 스코프 `@gajae-code/*`는 보존(D4). 상세: [_fin/260613_gjc_flip](../devlog/_fin/260613_gjc_flip/00_moc_flip.md), 인덱스 [fork-delta.md](./fork-delta.md).
+- **99.20.08 `/help` 도킹 2-페인 카탈로그**: 모델-셀렉터 문법, builtin/skill/custom 탭 분할, enter로
+  커맨드 삽입 — [extensibility.md](./extensibility.md).
+- **99.30.02 ralplan 이별**: jaw-interview 핸드오프를 `jwc orchestrate p --spec-ref`로 재배선,
+  ralplan SKILL superseded(스텁), ultragoal 플래닝 전제 네이티브화 — [workflows.md](./workflows.md).
+- **`/model` allowArgs**: `/model <id>`가 채팅으로 폴스루하던 버그 수리(`492913de`) + TUI handleTui
+  인자형 위임(`bc732ce7`). cmd_audit P1 종결 — [search.md](./search.md) §4.
+
+## fast / service_tier · Codex 전송 (관측성)
+
+- `/fast` 설정 영속화(`serviceTier`)는 [fork-delta.md](./fork-delta.md). 실현-vs-요청 표시 시도
+  (`bf4feb28`, ⚡? 푸터)는 **되돌림**(`7315a7a6`): `service_tier` 에코는 fast-실현 신호 아님.
+- Codex WS/SSE 전송·프리워밍·워치독·레이트리밋 텔레메트리 = [codex_transport.md](./codex_transport.md)
+  (`76176ce3`·`93b7b66e`·`36738838`·`cd41e54d`·`bad0a8e1`).
+
 ## 리베이스 시 주의
 
 - HARD-EDIT 파일에서 **동작** 우선: D4(`.jwc/`, `@gajae-code/*`, receipt owner) > upstream 문구.

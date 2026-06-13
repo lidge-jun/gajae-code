@@ -25,6 +25,10 @@ jwc에서 "모델이 이상하다"는 문제는 대부분 네 층 중 하나에�
 | 전 모델 | bash 타임아웃 kill이 부분 출력만 반환 → 성공 오인 | ④ 호스트 | `coding-agent/src/tools/bash.ts` `formatTimedOutResult` (KILLED 명시) | 081.11 옵션 B |
 | 전 모델 (표시) | 상태줄 session_name이 composer 환각 타이틀 전문 렌더 | ④ 호스트 | `status-line/segments.ts` sessionNameSegment 미렌더 | [081.10](../devlog/_plan/260612_jawcode_fork/phase1/081.10_issue_statusline_title_leak.md) |
 | (프록시, 레포 밖) composer via progrok | 자체 하네스 도구 호출·effort 400 | 외부 | `002_proxy/05_progrok/src/proxy/composer-inject.ts` | progrok devlog 260604 |
+| codex spark 모델 | reasoning 파라미터 전송 시 거부 | ② 변환기 | `packages/ai/src/providers/openai-codex/request-transformer.ts` (spark id면 reasoning strip) | 99.30.04 S3 (`a0fa4b6a`) |
+| codex provider 노출 | auto-review·legacy id가 셀렉터를 오염 | ① 카탈로그(노출 정책) | `provider-models/special.ts` + `utils/discovery/codex.ts` — spark 유지, auto-review/legacy는 `unlisted` | 99.30.04 S2 (`f2e2858a`) |
+| xai/grok-composer-2.5-fast | OAuth `/v1/models` 응답에서 누락 | ① 카탈로그(정적 주입) | `provider-models/openai-compat.ts` — xai OAuth 경로에서 정적 주입 + OAuth allowlist | 99.30.04 S10/S4 (`1b9a1289`, `0eed7753`) |
+| antigravity·anthropic (동적 외) | 동적 디스커버리 밖에서 카탈로그-only id 노출 | ① 카탈로그(노출 정책) | `provider-models/google.ts`·`openai-compat.ts` `markUnlistedOutsideDynamic` | 99.30.04 S4+S5 (`0eed7753`) |
 
 ## 2. 패치 층별 코드 지도
 
@@ -38,6 +42,10 @@ jwc에서 "모델이 이상하다"는 문제는 대부분 네 층 중 하나에�
 - ⚠️ **모델 캐시 함정**: `~/.jwc/agent/models.db`(`model_cache`, authoritative 플래그)가
   스테일 compat을 서빙할 수 있다. 카탈로그 수정 후 살아있는 400이 계속되면 캐시 row를
   확인하고 갱신/삭제할 것 (081 밴드에서 실제로 당함).
+- **`Model.unlisted` 노출 정책 (99.30.04)**: 디스커버리 기반 프로바이더가 카탈로그-only id를
+  드롭하는 대신 `unlisted`로 태깅한다(`Model.unlisted` 필드 `types.ts`, `markUnlistedOutsideDynamic`
+  `model-manager.ts`, `f3215869`). 셀렉터는 기본 숨김·요청 시 노출. provider별 노출 결정은 §1
+  표의 codex/xai/antigravity/anthropic 행 참조 — **드롭이 아니라 노출 제어로 처리**하는 게 원칙.
 
 ### ② 요청 변환기 — 프로바이더별 wire 가공
 

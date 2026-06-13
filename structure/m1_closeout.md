@@ -57,12 +57,12 @@ M1 done = 090–099 release gate. **실질 드라이버 임계점**은 99 전체
 
 ---
 
-## M2 (100~) — 설계만
+## M2 (100~)
 
-| 밴드 | 내용 | struct_har |
-|---|---|---|
-| 100 | Node 셰임·sqlite·stream 테스트 | [100_node](../struct_har/jwc_patched/100_node/) |
-| 110–130 | JawRuntime · jaw.db · 주입 | [111](../devlog/_plan/260612_jawcode_fork/111_design_runtime_attach.md) |
+| 밴드 | 내용 | 상태 | struct_har |
+|---|---|---|---|
+| 100 | Node 셰임·sqlite·stream 테스트 | ✅ **완료 (260613)** — `dist-node/`+`src/shims/`, SDK import·스트리밍 green, 감사 라운드 1-3 통과 (`2e9efc59`…`fba5cd56`) | [100_node](../struct_har/jwc_patched/100_node/), [packages_overview.md](./packages_overview.md) |
+| 110–130 | JawRuntime · jaw.db · 주입 | 설계만 | [111](../devlog/_plan/260612_jawcode_fork/111_design_runtime_attach.md) |
 | 선행 | M1 030 brand-aware discovery (`GJC_BRAND_NAME=jwc`) | [030_skills](../struct_har/jwc_patched/030_skills/) |
 
 ---

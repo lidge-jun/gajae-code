@@ -89,7 +89,7 @@ createAgentSession()
 | 2 | plan 모드 | 매 턴, 유저 메시지 앞 custom message(`plan-mode-context`) | PLAN.md 본문 + AC/검증 | `agent-session.ts` `#buildPlanModeMessage` |
 | 3 | goal 모드 | 매 턴 custom message(`goal-mode-context`) + 주기적 `<system-reminder>` continuation | `goal-mode-active.md` / `goal-continuation.md` 렌더 (objective·tokensUsed) | `goals/runtime.ts:100-107` |
 | 4 | 스킬/서브스킬 주입 | `/skill:` 호출·yield 시, `sendCustomMessage(deliverAs: steer\|followUp)` | SKILL.md **본문 통주입** + `<gjc-subskill>` 래퍼, phase는 `skill-active-state.json` | `extensibility/gjc-plugins/injection.ts:50-114` |
-| 5 | TTSR(prose) | 스트림 중단→재시도 시 hidden custom message | `ttsr-interrupt.md` 렌더, repeatMode 게이트 | `agent-session.ts` `#retryWithTtsr` |
+| 5 | TTSR(prose) | 스트림 중단→재시도 시 hidden custom message | `ttsr-interrupt.md` 렌더, repeatMode 게이트. **checkDelta는 16KB tail 윈도로 바운드**(무제한 정규식 O(n²) 제거, `1814bb95`) | `agent-session.ts` `#retryWithTtsr` |
 | 6 | TTSR(tool) | `afterToolCall` 훅 — 도구 결과 content 선두 prepend (in-band) | `ttsr-tool-reminder.md` | `agent-session.ts` `#ttsrAfterToolCall` |
 | 7 | plan 결정 리마인더 | plan→execute 전환 시 steer | `plan-mode-tool-decision-reminder.md` | `prompts/system/plan-mode-tool-decision-reminder.md` |
 | 8 | todo eager prelude | 사용자 `prompt()` 직전, `todo.eager` && phases 비어 있음 | `eager-todo.md` + `toolChoice: todo_write` | `agent-session.ts` `#createEagerTodoPrelude` — 상세 [todo_pipeline.md](./todo_pipeline.md) |
