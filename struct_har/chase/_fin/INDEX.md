@@ -6,6 +6,12 @@
 |---|---|---|---|
 | 10.009 | pi-shell bash fixup UTF-8 boundary panic (즉시 채택, 가치 70) | 260613 | [10/10.009](./10/10.009_gjc_chase_pishell_utf8_fixup.md) |
 | 10.010 | harness RPC submit readiness gate (선별 병합, 가치 65) | 260613 | [10/10.010](./10/10.010_gjc_chase_harness_submit_readiness.md) |
+| 10.012 | perf(serialization) StablePrefix identity cache + digest overhaul (가치 70) | 260613 | [10/10.012](./10/10.012_gjc_chase_perf_serialization.md) |
+| 10.013 | perf(compaction) token estimation cache + findCutPoint bugfix (가치 65) | 260613 | [10/10.013](./10/10.013_gjc_chase_perf_compaction.md) |
+| 10.014 | perf(session) EphemeralBlobStore + exportFromFile close (가치 65) | 260613 | [10/10.014](./10/10.014_gjc_chase_perf_session_cache.md) |
+| 10.015 | context maintenance #542+#570 pre-prompt check + estimator split (가치 65) | 260613 | [10/10.015](./10/10.015_gjc_chase_context_maintenance_race.md) |
+| 10.016 | forced tool_choice capability + runtime 400 fallback #561 (가치 65) | 260613 | [10/10.016](./10/10.016_gjc_chase_tool_choice_fallback.md) |
+| 10.017 | retired Fable profiles #dd70181 — N/A (jawcode keeps Fable) | 260613 | [10/10.017](./10/10.017_gjc_retired_fable_na.md) |
 
 ## superseded (devlog)
 
