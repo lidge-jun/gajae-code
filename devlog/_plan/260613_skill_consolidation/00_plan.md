@@ -112,14 +112,73 @@ ultragoal SKILL.md의 핵심 가이드를 goal tool의 description에 통합:
 
 ## 구현 순서
 
-| # | 내용 | 위험도 |
+| # | 내용 | 위험도 | 병렬 |
+|---|---|---|---|
+| M0 | **파일 + 타입 리네임** (아래 상세) | 낮음 (기계적) | ✅ W1-W4 병렬 |
+| M1 | ralplan 스킬 표면 제거 + orchestrate p redirect | 낮음 | M0 후 |
+| M2 | system-prompt.md 하드코딩 제거 + 라우팅 개편 | 낮음 | M1과 병렬 |
+| M3 | ultragoal SKILL.md → goal tool description 이전 | 중간 | M0 후 |
+| M4 | defaults 정리 (스킬 등록 업데이트) | 낮음 | M3 후 |
+| M5 | `/interview` + `/goalplan` 슬래시 커맨드 등록 | 낮음 | M0 후 병렬 |
+| M6 | HUD 통합 — goal + PABCD phase 표시 | 중간 | M0 후 |
+| M7 | goal→PABCD 브릿지 + multi-cycle + C-phase 병렬 검증 | 높음 | M5,M6 후 |
+| M8 | 테스트 — 전체 워크플로우 검증 | — | 마지막 |
+
+### M0: 파일 + 타입 리네임 (Phase 0 — 기계적, 병렬 실행)
+
+#### 파일 리네임
+
+| 현재 | 변경 | 비고 |
 |---|---|---|
-| M1 | ralplan 스킬 제거 + 모든 참조 orchestrate p로 치환 | 낮음 (이미 superseded) |
-| M2 | system-prompt.md에서 ralplan/ultragoal 하드코딩 제거 | 낮음 (동적 렌더로 대체) |
-| M3 | ultragoal SKILL.md 가이드 → goal tool description 이전 | 중간 (가이드 손실 주의) |
-| M4 | ultragoal 스킬 제거 + defaults 정리 | 낮음 (엔진 유지) |
-| M5 | HUD 통합 — ultragoal HUD → goal + PABCD phase 표시 | 중간 |
-| M6 | 테스트 — goal 워크플로우 정상, ralplan 레거시 아티팩트 읽기 가능 | — |
+| `ultragoal-runtime.ts` | `goal-engine.ts` | 엔진 (1700줄) |
+| `ultragoal-guard.ts` | `goal-guard.ts` | 검증 가드 |
+| `goal-runtime.ts` | `goal-cli.ts` | CLI 어댑터 (이름 충돌 해소) |
+| `ralplan-runtime.ts` | `plan-writer.ts` | orchestrate-p 퍼시스턴스 채널 |
+| `goal-mode-request.ts` | 유지 | 충돌 없음 |
+
+#### 타입 리네임
+
+| 현재 | 변경 |
+|---|---|
+| `UltragoalPlan` | `GoalPlan` |
+| `UltragoalGoal` | `GoalStory` |
+| `UltragoalGuardState` | `GoalGuardState` |
+| `UltragoalGuardDiagnostic` | `GoalGuardDiagnostic` |
+| `UltragoalLedgerStats` | `GoalLedgerStats` |
+| `UltragoalCheckpointEvidence` | `GoalCheckpointEvidence` |
+| `UltragoalPaths` | `GoalPaths` |
+| `RalplanCommandError` | `PlanWriterError` |
+| `isKnownUltragoalObjective` | `isKnownGoalObjective` |
+| `hasDurableUltragoalState` | `hasDurableGoalState` |
+| `readUltragoalVerificationState` | `readGoalVerificationState` |
+| `assertCanCompleteCurrentGoal` | 유지 (이미 goal 네이밍) |
+| `getUltragoalPaths` | `getGoalPaths` |
+| `readUltragoalLedgerStats` | `readGoalLedgerStats` |
+| `createUltragoalPlan` | `createGoalPlan` |
+| `readUltragoalPlan` | `readGoalPlan` |
+| `renderUltragoalHelp` | `renderGoalHelp` |
+
+#### 데이터 계약 (문자열 값 유지 — 리네임 금지)
+
+| 값 | 위치 | 이유 |
+|---|---|---|
+| `"ultragoal"` in `payload.skill` | goal-engine.ts | `.jwc/state/` 퍼시스트 |
+| `"ultragoal"` in `RpcWorkflowStage` | rpc-types.ts | 와이어 프로토콜 |
+| `source: "ultragoal"` | goal-mode-request.ts | 퍼시스트 JSON |
+| `BLOCK_ULTRAGOAL_COMPLETION:` | skill-state.ts | 머신 파싱 토큰 |
+| `gjc_ultragoal_verification_*` | skill-state.ts | stop-reason 토큰 |
+| `.jwc/ultragoal/` | 디스크 경로 | 기존 아티팩트 호환 |
+| `.jwc/plans/ralplan/` | 디스크 경로 | 기존 아티팩트 호환 |
+
+#### 병렬 실행 단위
+
+| Worker | 범위 | 파일 수 |
+|---|---|---|
+| W1 | `ultragoal-runtime.ts` → `goal-engine.ts` + 모든 import 업데이트 | ~15 |
+| W2 | `ultragoal-guard.ts` → `goal-guard.ts` + import 업데이트 | ~5 |
+| W3 | `goal-runtime.ts` → `goal-cli.ts` + import 업데이트 | ~3 |
+| W4 | `ralplan-runtime.ts` → `plan-writer.ts` + import 업데이트 | ~8 |
+| 후속 | 타입명 일괄 리네임 (W1-W4 머지 후, sed/replace_all) | 전체 |
 
 ### M5: HUD 통합 상세
 
