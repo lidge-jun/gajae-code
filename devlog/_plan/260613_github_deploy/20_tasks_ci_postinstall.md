@@ -36,3 +36,18 @@ cli-jaw 패턴 참조: `scripts/postinstall-guard.cjs` (CommonJS, zero-dep, safe
 | 070 | cli-jaw-skills-setup | `~/.cli-jaw/skills` 디렉터리 생성 + 기본 스킬 symlink/복사. jwc가 jaw brand일 때 이 경로를 global skill root로 사용(`discovery/cli-jaw.ts:25`). 없으면 native user root(`~/.jwc/agent/skills`) fallback이지만 cli-jaw 임베딩 시 필수 | S |
 | 071 | mcp-json-template | `~/.jwc/agent/mcp.json` 기본 템플릿 생성 (빈 `mcpServers: {}`). 없으면 MCP discovery가 user-scope 설정 없이 동작 — CU 등 선택적 서버 등록 안내 | S |
 | 072 | settings-json-template | `~/.jwc/agent/settings.json` 기본 템플릿 생성 (`mcp.enableProjectConfig: true` 등). 없으면 기본값 사용되지만 명시적 설정 권장 | S |
+| 073 | natives-addon-verify | `@gajae-code/natives` .node 로드 확인. arm64 only prebuilt → non-arm64 darwin에서 경고 + graceful degrade. hard dep라 실패 시 core 기능(grep/PTY/clipboard) 불가 | S |
+| 074 | first-run-hint | `~/.jwc/agent/` 없거나 provider 미설정 시 `/provider add` 안내 출력. `model-onboarding-guidance.ts` 연계 | S |
+| 075 | skill-deps-opt-in | 스킬 의존성(uv, playwright-core 등) 선택적 설치. `JWC_INSTALL_SKILL_DEPS=1` env로 opt-in (cli-jaw 패턴) | S |
+
+| 076 | jwc-setup-defaults | `jwc setup defaults` 실행 — 기본 워크플로 스킬(jaw-interview/ralplan/ultragoal/team) 설치. `installDefaultJwcDefinitions` (idempotent, `--force` overwrite). **핵심 postinstall 액션** | S |
+| 077 | bun-version-check | `bun --version >= 1.2.14` 확인 — 미달 시 hard fail + 설치 안내. jwc는 bun-native (`bun:sqlite`, `bun build --target=bun`) | S |
+
+**Note**: task 068 (orchestrator)에서 `mkdir -p ~/.jwc/agent/` 선행 필수.
+
+**Sonnet 5건 감사 결론**:
+- DB (agent.db/history.db/github-cache.db): 전부 auto-init → postinstall 불필요
+- Auth: 수동 (`/provider add` 또는 env var) → task 074에서 안내 출력
+- Natives: hard dep, arm64 only → task 073에서 검증/경고
+- Runtime dirs: `~/.jwc/agent/` 이하 전부 lazy mkdir → 명시적 생성은 편의 (task 068)
+- 스킬: `jwc setup defaults`가 핵심 → task 076

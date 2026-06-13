@@ -16,7 +16,8 @@
 | **040-049** | CI 파이프라인 (GitHub Actions) | darwin jobs, cache, gate, test scope |
 | **050-059** | (예약) | 도구 토큰 최적화 / discoveryMode |
 | **060-069** | postinstall / --safeinstall | platform detect, tmux, cua-driver, cu-mcp build |
-| **070-079** | (예약) | 릴리스 자동화 / changelog |
+| **070-077** | postinstall 확장 | skills setup, mcp/settings 템플릿, natives 검증, first-run hint, bun 체크, jwc setup defaults |
+| **078-079** | (예약) | 릴리스 자동화 / changelog |
 | **080-089** | (예약) | 테스트 인프라 보강 |
 | **090-099** | (예약) | 최종 배포 체크리스트 |
 

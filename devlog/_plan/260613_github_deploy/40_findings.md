@@ -98,7 +98,19 @@ MCP 서버 등록, discoveryMode 등 설정이 기본값으로만 동작.
 **영향**: onboarding friction — 문서 읽고 수동 생성해야 함.
 **해결안**: postinstall에서 기본 템플릿 생성 (task 071, 072).
 
-### 183 — 35개 도구 중 대부분 미사용
+### 183 — natives addon: hard dep, arm64 only prebuilt
+
+**발견**: `@gajae-code/natives`는 grep/PTY/clipboard/토큰카운팅의 hard dependency. 로드 실패 시 즉시 throw (fallback 없음). prebuilt는 `darwin-arm64`만 커밋. `linux-x64/arm64`, `darwin-x64`, `win32-x64` 지원하지만 prebuilt 없음 — cargo + napi-rs 빌드 필요.
+**영향**: Intel Mac / Linux 사용자는 Rust 툴체인 설치 후 빌드해야 jwc 사용 가능.
+**해결안**: CI에서 멀티 arch prebuilt 생성 + GitHub Releases 배포, 또는 postinstall에서 cargo 빌드 시도.
+
+### 184 — 첫 실행 시 provider 안내 없음 (README/postinstall)
+
+**발견**: jwc 첫 실행 시 provider 미설정이면 `model-onboarding-guidance.ts`가 에러 메시지로 안내하지만, README에 첫 실행 섹션 없고 postinstall에서도 안내 안 함.
+**영향**: 사용자가 "jwc 깔았는데 안 됨" 경험.
+**해결안**: README에 Quick Start 섹션 (task 020) + postinstall first-run hint (task 074).
+
+### 185 — 35개 도구 중 대부분 미사용
 
 **발견**: `recipe`, `irc`, `render_mermaid`, `ssh` 등 대부분의 턴에서 안 쓰이는 도구가 항상 로드.
 **영향**: 토큰 낭비 + 모델 도구 선택 혼란 가능.
