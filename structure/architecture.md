@@ -1,7 +1,7 @@
 # Jawcode 아키텍처 (현재 형태)
 
 > 2026-06-13 기준. gajae-code 0.4.4 fork, worktree HEAD `81bcea96`.
-> **현재 코드 형태** 기록. 로드맵·밴드: `devlog/_plan/260612_jawcode_fork/`. 계보: [upstream_lineage.md](./upstream_lineage.md).
+> **현재 코드 형태** 기록. 로드맵·밴드: `devlog/_plan/260612_jawcode_fork/`. 계보: [fork_logic_changelog.md](./fork_logic_changelog.md).
 
 ## 1. 정체
 

@@ -1,7 +1,7 @@
 # Contributing to Jawcode (jwc)
 
 > **upstream gajae-code** 기여는 [Yeachan-Heo/gajae-code](https://github.com/Yeachan-Heo/gajae-code) 정책을 따른다.
-> 본 문서는 **jawcode 포크**(jwc M1 · cli-jaw M2)용 최소 안내다. beta v0.1: [structure/beta_v0.1_closeout.md](structure/beta_v0.1_closeout.md).
+> 본 문서는 **jawcode 포크**(jwc M1 · cli-jaw M2)용 최소 안내다. beta v0.1: [structure/status.md](structure/status.md).
 
 ## Before you change code
 
@@ -30,7 +30,7 @@ Use `bun check` / package tests for focused changes — do not run raw `tsc` ([A
 
 ## Documentation
 
-- Patched SoT: [structure/](structure/README.md) · map: [structure/doc_map.md](structure/doc_map.md).
+- Patched SoT: [structure/](structure/README.md) · map: [structure/INDEX.md](structure/INDEX.md).
 - Fork diff snapshots: [struct_har/](struct_har/README.md). Gaps: [struct_har/chase/](struct_har/chase/README.md).
 - 99 band work: [devlog/_plan/260612_jawcode_fork/99.00.00_moc_stabilization.md](devlog/_plan/260612_jawcode_fork/99.00.00_moc_stabilization.md).
 

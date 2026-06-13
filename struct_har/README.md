@@ -1,6 +1,6 @@
 # struct_har/ — gjc_origin ↔ jwc_patched 계층 대조
 
-> **스냅샷 (2026-06-13)**: 전수 재생성 + 로직 보강 + **99 레디니스** (`structure/jwc_readiness.md`, [99.03.01](../devlog/_plan/260612_jawcode_fork/phase1/99.03.01_impl_workflow_surface.md) PASS v2).
+> **스냅샷 (2026-06-13)**: 전수 재생성 + 로직 보강 + **99 레디니스** (`structure/status.md`, [99.03.01](../devlog/_plan/260612_jawcode_fork/phase1/99.03.01_impl_workflow_surface.md) PASS v2).
 
 > **목적**: 업스트림 gajae-code(`gjc_origin`)과 jawcode 포크(`jwc_patched`)의 **현재 형태**를 devlog MOC 밴드별로 병렬 기록한다.
 > `structure/`가 patched 단일 SoT라면, `struct_har/`는 **양쪽 스냅샷 대조용**이다.
@@ -75,9 +75,9 @@ diff -u devlog/_upstream_gjc/packages/coding-agent/src/cli.ts packages/coding-ag
 | [`devlog/_upstream_gjc/`](../devlog/_upstream_gjc/) | **업스트림 코드 정본** (gjc_origin 근거) |
 | [structure/](../structure/) | jawcode patched 단일 SoT |
 | [structure/fork_logic_changelog.md](../structure/fork_logic_changelog.md) | fork 동작 (git) |
-| [structure/jwc_readiness.md](../structure/jwc_readiness.md) | MLB 50→62→68 |
-| [structure/m1_closeout.md](../structure/m1_closeout.md) | 99 결정·착수 순서 |
-| [structure/beta_v0.1_closeout.md](../structure/beta_v0.1_closeout.md) | beta v0.1 문서·OSS 마감 |
+| [structure/status.md](../structure/status.md) | MLB 50→62→68 |
+| [structure/status.md](../structure/status.md) | 99 결정·착수 순서 |
+| [structure/status.md](../structure/status.md) | beta v0.1 문서·OSS 마감 |
 | [devlog/_plan/260612_jawcode_fork/](../devlog/_plan/260612_jawcode_fork/) | MOC·플랜·이슈 원본 |
 | [AGENTS.md](../AGENTS.md) | upstream 운영 계약 (수정 금지) |
 | [chase/](./chase/README.md) | gjc/omp **뒤쳐짐** · 참조 방안 |

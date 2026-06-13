@@ -5,7 +5,7 @@
 
 ## 상태 (260612)
 
-- M2 **미착수** — Bun 1.3.14; M1 마감은 **99 밴드** ([jwc_readiness](../../../structure/jwc_readiness.md)).
+- M2 **미착수** — Bun 1.3.14; M1 마감은 **99 밴드** ([status](../../../structure/status.md)).
 - [100_moc_node_porting.md](../../../devlog/_plan/260612_jawcode_fork/100_moc_node_porting.md) — 셰임·esbuild·sqlite.
 - [111_design_runtime_attach.md](../../../devlog/_plan/260612_jawcode_fork/111_design_runtime_attach.md) — cli-jaw `jwc/sdk` 부착; 100→110→120→130.
 - 100/111 **실측 보강** 조사 진행 (M2 진입 준비).

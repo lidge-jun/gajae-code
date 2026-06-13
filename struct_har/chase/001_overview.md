@@ -23,7 +23,7 @@ devlog 스텁만: `devlog/.../10_gjc_chase_MOC.md`. 구 `10_phase1_jwc_shell` = 
 
 ## 우선순위 (착수)
 
-1. **G3** — [99.02 + 99.03](../../structure/jwc_readiness.md) (드라이버 임계 MLB 62)
+1. **G3** — [99.02 + 99.03](../../structure/status.md) (드라이버 임계 MLB 62)
 2. **G1 선별** — auth/cursor/ai 범용 (fork-delta ✅ 후보)
 3. **G2 참고** — 밴드 착수 전 omp `02_code_facts` 스캔
 4. **G4** — 99 마감 후 100/110

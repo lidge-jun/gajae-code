@@ -43,8 +43,8 @@
 
 ## 관련
 
-- [structure/jwc_readiness.md](../../structure/jwc_readiness.md)
-- [structure/m1_closeout.md](../../structure/m1_closeout.md)
-- [structure/beta_v0.1_closeout.md](../../structure/beta_v0.1_closeout.md)
+- [structure/status.md](../../structure/status.md)
+- [structure/status.md](../../structure/status.md)
+- [structure/status.md](../../structure/status.md)
 
 *정본: `struct_har/chase/10_` · `20_`.*

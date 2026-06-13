@@ -29,8 +29,8 @@ bun struct_har/_scripts/struct-har-regenerate-omp.ts
 
 ## 관련
 
-- [structure/upstream_lineage.md](../../structure/upstream_lineage.md)
-- [structure/doc_map.md](../../structure/doc_map.md)
+- [structure/fork_logic_changelog.md](../../structure/fork_logic_changelog.md)
+- [structure/INDEX.md](../../structure/INDEX.md)
 - 대조: [../gjc_origin/](../gjc_origin/) · [../jwc_patched/](../jwc_patched/)
 
 ## changelog

@@ -11,7 +11,7 @@
 | **62** | 99.02 + 99.03 후 — **데일리 드라이버 임계점** |
 | **68** | 99.01~07 마감 후 |
 
-요약 SoT: [jwc_readiness.md](../../../structure/jwc_readiness.md) · [m1_closeout.md](../../../structure/m1_closeout.md) · [beta_v0.1_closeout.md](../../../structure/beta_v0.1_closeout.md)
+요약 SoT: [status.md](../../../structure/status.md) · [status.md](../../../structure/status.md) · [status.md](../../../structure/status.md)
 
 ## 99 패키지 현황 (MOC 도장, 260612 저녁 — 260612 번호 재정렬: lexicographic=착수 순서)
 

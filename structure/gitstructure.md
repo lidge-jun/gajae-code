@@ -78,4 +78,4 @@ grep -n deep-interview devlog/_upstream_gjc/packages/coding-agent/src/defaults/g
 | upstream sync 정책 변경 | `gitstructure.md`, `conventions.md` |
 | `devlog/_upstream_gjc` HEAD 갱신 | `struct_har/README.md`, `struct_har/gjc_origin/**`, `gitstructure.md` |
 | patched 밴드 완료 | `structure/*`, `struct_har/jwc_patched/**` |
-| `devlog/_upstream_omp` HEAD 갱신 | `struct_har/omp_origin/**`, `bun struct_har/_scripts/struct-har-regenerate-omp.ts`, `upstream_lineage.md` |
+| `devlog/_upstream_omp` HEAD 갱신 | `struct_har/omp_origin/**`, `bun struct_har/_scripts/struct-har-regenerate-omp.ts`, `fork_logic_changelog.md` |

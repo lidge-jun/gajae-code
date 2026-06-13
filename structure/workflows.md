@@ -19,7 +19,7 @@
 | **매 턴 단계 헤더** | `pabcd-stage-context` custom message | ✅ **99.03 M2** 완료 (`8a7ea342`) |
 | dev-pabcd 스킬 | 글로벌 스킬 | jaw에서 **의도 차단** — native 표면으로 대체 |
 
-레디니스: [jwc_readiness.md](./jwc_readiness.md) · 마감 맵: [m1_closeout.md](./m1_closeout.md).
+레디니스: [status.md](./status.md) · 마감 맵: [status.md](./status.md).
 
 ## Bundled workflow skills (4종)
 
@@ -80,6 +80,6 @@
 | 밴드 | 병합 대상 | 상태 | 근거 |
 |---|---|---|---|
 | 040 | `jaw-interview` (구 `deep-interview` + jaw Interview) | `[확정]` 구현 완료 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/042_diff_jaw_interview.md:3` |
-| 050 | `ralplan` + PABCD + orchestrate | 런타임 ✅ · discovery **99.03** | `m1_closeout`, `050_plan/02_code_facts` |
+| 050 | `ralplan` + PABCD + orchestrate | 런타임 ✅ · discovery **99.03** | `status`, `050_plan/02_code_facts` |
 | 060 | `ultragoal` + `jwc goal` | 런타임 ✅ | `060_goal` |
 | 030/050 | `team` + dispatch/PABCD | 대기 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md:12` |

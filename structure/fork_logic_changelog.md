@@ -1,7 +1,7 @@
 # Fork logic changelog (jawcode vs gajae-code upstream)
 
 > **정본**: upstream `67427c6` 대비 worktree `81bcea96`의 **동작·계약·런타임** 변경. 파일 목록은 [fork-delta.md](./fork-delta.md), 밴드 스냅샷은 [struct_har/](../struct_har/README.md).  
-> **미구현 갭(99)**: pabcd discovery·memory CLI·CI 등은 [jwc_readiness.md](./jwc_readiness.md) · [099_stabilization](../struct_har/jwc_patched/099_stabilization/01_overview.md).
+> **미구현 갭(99)**: pabcd discovery·memory CLI·CI 등은 [status.md](./status.md) · [099_stabilization](../struct_har/jwc_patched/099_stabilization/01_overview.md).
 > 생성: git `log upstream/main..HEAD` + 주요 커밋 메시지·diff 경로 교차 (2026-06-13).
 
 ## 요약 축
@@ -67,7 +67,7 @@
 - `ralplan` SKILL: jwc CLI 예시; pending-approval; handoff ultragoal.
 - 테스트: `orchestrate-state.test.ts`, `cli-command-surface` brand 분기.
 - 커밋: `595350bf` B1, `975302db` B3, `0d38fe05` B4, `09c76c23` B2, `5f1d442a` B2 surface.
-- **모델 discovery**: orchestrate 표면은 **99.03** (런타임만 ✅) — [m1_closeout.md](./m1_closeout.md)
+- **모델 discovery**: orchestrate 표면은 **99.03** (런타임만 ✅) — [status.md](./status.md)
 
 ## 060 — Goal / ultragoal
 
@@ -148,9 +148,9 @@
 
 | GG | 갭 | structure |
 |---|---|---|
-| 99.03 | discovery M1/M2/M3 + re-facing [확정] | [m1_closeout.md](./m1_closeout.md) |
+| 99.03 | discovery M1/M2/M3 + re-facing [확정] | [status.md](./status.md) |
 | 99.01 | memory CLI + local-query/FTS | [memory_pipeline.md](./memory_pipeline.md) |
-| 99.02 | CI schemas·biome | [jwc_readiness.md](./jwc_readiness.md) |
+| 99.02 | CI schemas·biome | [status.md](./status.md) |
 
 ## 99.20 / 99.30 밴드 + gjc→jwc 플립 (260613)
 
@@ -181,5 +181,27 @@
 
 - HARD-EDIT 파일에서 **동작** 우선: D4(`.jwc/`, `@gajae-code/*`, receipt owner) > upstream 문구.
 - Phase β 이후 문서·스냅샷은 `.jwc/` 기준; AGENTS.md upstream 계약은 수정 금지.
+
+## 업스트림 계보 (omp → gajae-code → jawcode)
+
+> **Pi**(badlogic/pi-mono) → **oh-my-pi(omp)** → **gajae-code** → **jawcode(`jwc`)**.
+> jawcode는 gajae-code 0.4.4 포크; 공개 명령·상태는 `jwc`/`.jwc`, 내부 식별자(`@gajae-code/*`,
+> `GJC_*`)는 리베이스 보존 경계.
+
+| | omp | gajae-code(upstream) | jawcode(jwc) |
+|---|---|---|---|
+| CLI bin | `omp` | `gjc` | **`jwc`** (단일 진입) |
+| npm scope | `@oh-my-pi/*` | `@gajae-code/*` | `@gajae-code/*` 유지 + `packages/jwc` |
+| interview | (스킬/`.omp`) | `deep-interview` | **`jaw-interview`** |
+| config dir | omp 관례 | `.gjc/`→`.jwc` 전환 | **`.jwc/`** |
+| 문서 SoT | README+docs | upstream docs | **AGENTS.md + structure/** + devlog |
+
+- gajae-code는 omp 계열 포크. jawcode 리베이스 1차 대상 = **gajae-code**; omp는 기능/아키텍처
+  선행 참고. 스냅샷: [struct_har/omp_origin/](../struct_har/omp_origin/README.md).
+- 보존(리베이스 비용): `@gajae-code/*` 워크스페이스, `packages/coding-agent/` 코어(HARD-EDIT는
+  [fork-delta.md](./fork-delta.md) 추적), upstream baseline(`devlog/_upstream_gjc/`·`struct_har/gjc_origin/`).
+- 표면(jwc): bin·브랜딩·번들 스킬 slug(`jaw-interview`)·시스템 프롬프트 Jaw 아이덴티티·cli-jaw 정렬.
+- 동기화: `git fetch upstream`+rebase→`gitstructure.md`·`struct_har/gjc_origin/**`;
+  `_upstream_omp` fetch→`struct_har/omp_origin/**`+regenerate-omp 스크립트.
 
 *갱신: struct_har 밴드 `02_logic_changes.md`는 본 문서 절을 밴드별로 요약·링크한다.*
