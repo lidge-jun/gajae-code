@@ -47,6 +47,8 @@
 | 180 | `180_validation_matrix.md` | 검증 행렬 |
 | 190 | `190_risks.md` | 리스크/중단 조건 |
 | 200 | `200_execution_order.md` | 실제 실행 순서 |
+| 211 | `211_computer_use_mcp_default_restore_plan.md` | macOS-only MCP/Computer Use/CUA packaging restore |
+| 220 | `220_pabcd_execution_plan.md` | 150까지 반복 PABCD 실행 계획 |
 
 ## 이번 문서의 비범위
 

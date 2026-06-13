@@ -1,5 +1,6 @@
 import * as path from "node:path";
 import { getAgentDir, isEnoent, parseFrontmatter } from "@gajae-code/utils";
+import { getPackageDir } from "../config";
 import { readMCPConfigFile, writeMCPConfigFile } from "../runtime-mcp/config-writer";
 import type { MCPConfigFile, MCPServerConfig } from "../runtime-mcp/types";
 import mcpDefaults from "./jwc/mcp-defaults.json" with { type: "json" };
@@ -77,8 +78,12 @@ export interface DefaultJwcDefinitionInstallResult {
 export interface DefaultMcpConfigInstallResult {
 	targetRoot: string;
 	path: string;
-	serverName: "context7";
+	serverNames: string[];
 	status: DefaultJwcInstallStatus;
+}
+
+export interface InstallDefaultMcpConfigOptions extends InstallDefaultJwcDefinitionsOptions {
+	platform?: NodeJS.Platform;
 }
 
 const DEFAULT_GJC_DEFINITIONS: readonly DefaultJwcDefinition[] = [
@@ -191,35 +196,84 @@ export async function installDefaultJwcDefinitions(
 }
 
 export async function installDefaultMcpConfig(
-	options: InstallDefaultJwcDefinitionsOptions = {},
+	options: InstallDefaultMcpConfigOptions = {},
 ): Promise<DefaultMcpConfigInstallResult> {
 	const targetRoot = options.targetRoot ?? getAgentDir();
 	const destination = path.join(targetRoot, "mcp.json");
-	const defaults = mcpDefaults as MCPConfigFile;
-	const defaultContext7 = defaults.mcpServers?.context7;
-	if (!defaultContext7) throw new Error("Bundled MCP defaults are missing the context7 server entry.");
+	const managedDefaults = getManagedDefaultMcpServers(options.platform);
+	const serverNames = Object.keys(managedDefaults);
 
 	const existing = await readMCPConfigFile(destination);
-	const currentContext7 = existing.mcpServers?.context7;
-	const status =
-		currentContext7 === undefined
-			? "missing"
-			: configsEqual(currentContext7, defaultContext7)
-				? "matching"
-				: "different";
+	const status = getManagedDefaultMcpStatus(existing, managedDefaults);
 
 	if (options.check || status === "matching") {
-		return { targetRoot, path: destination, serverName: "context7", status };
+		return { targetRoot, path: destination, serverNames, status };
 	}
 
 	await writeMCPConfigFile(destination, {
 		...existing,
 		mcpServers: {
 			...existing.mcpServers,
-			context7: defaultContext7,
+			...managedDefaults,
 		},
 	});
-	return { targetRoot, path: destination, serverName: "context7", status: "written" };
+	return { targetRoot, path: destination, serverNames, status: "written" };
+}
+
+export function getManagedDefaultMcpServers(
+	platform: NodeJS.Platform = process.platform,
+): Record<string, MCPServerConfig> {
+	const defaults = mcpDefaults as MCPConfigFile;
+	const defaultContext7 = defaults.mcpServers?.context7;
+	if (!defaultContext7) throw new Error("Bundled MCP defaults are missing the context7 server entry.");
+
+	const managedServers: Record<string, MCPServerConfig> = {
+		context7: defaultContext7,
+	};
+
+	if (platform === "darwin") {
+		managedServers["computer-use"] = getCuMcpServerConfig();
+		managedServers["cua-driver"] = {
+			command: "cua-driver",
+			args: ["mcp"],
+		};
+	}
+
+	return managedServers;
+}
+
+function getCuMcpServerConfig(): MCPServerConfig {
+	return {
+		command: "node",
+		args: [getCuMcpServerEntryPath()],
+		env: {
+			CU_MCP_MODE: "consolidated",
+			CU_NATIVE_PATH: getCuNativePath(),
+		},
+	};
+}
+
+function getCuMcpServerEntryPath(): string {
+	return path.resolve(getPackageDir(), "../cu-mcp-server/dist/index.js");
+}
+
+function getCuNativePath(): string {
+	return path.resolve(getPackageDir(), "../cu-mcp-server/bin/cu-native");
+}
+
+function getManagedDefaultMcpStatus(
+	existing: MCPConfigFile,
+	managedDefaults: Record<string, MCPServerConfig>,
+): DefaultJwcInstallStatus {
+	let hasDifferent = false;
+	for (const [serverName, defaultConfig] of Object.entries(managedDefaults)) {
+		const currentConfig = existing.mcpServers?.[serverName];
+		if (!currentConfig) return "missing";
+		if (!configsEqual(currentConfig, defaultConfig)) {
+			hasDifferent = true;
+		}
+	}
+	return hasDifferent ? "different" : "matching";
 }
 
 async function readExistingText(filePath: string): Promise<string | undefined> {

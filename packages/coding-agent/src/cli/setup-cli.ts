@@ -357,6 +357,7 @@ async function handleDefaultsSetup(flags: { json?: boolean; check?: boolean; for
 	const mcpResult = await installDefaultMcpConfig({ check: flags.check, force: flags.force });
 	const hasMcpCheckFailure = mcpResult.status === "missing" || mcpResult.status === "different";
 	const hasCheckFailure = result.missing > 0 || result.different > 0 || hasMcpCheckFailure;
+	const mcpServerList = mcpResult.serverNames.join(", ");
 
 	if (flags.json) {
 		console.log(JSON.stringify({ ...result, mcp: mcpResult }, null, 2));
@@ -371,19 +372,19 @@ async function handleDefaultsSetup(flags: { json?: boolean; check?: boolean; for
 			console.error(
 				chalk.dim(`Missing: ${result.missing}; different: ${result.different}; matching: ${result.matching}`),
 			);
-			console.error(chalk.dim(`MCP context7: ${mcpResult.status}; target: ${mcpResult.path}`));
+			console.error(chalk.dim(`MCP defaults (${mcpServerList}): ${mcpResult.status}; target: ${mcpResult.path}`));
 			process.exit(1);
 		}
 		console.log(chalk.green(`${theme.status.success} Default GJC workflow skills and MCP defaults are installed`));
 		console.log(chalk.dim(`Target: ${result.targetRoot}`));
-		console.log(chalk.dim(`MCP context7: ${mcpResult.path}`));
+		console.log(chalk.dim(`MCP defaults (${mcpServerList}): ${mcpResult.path}`));
 		return;
 	}
 
 	console.log(chalk.green(`${theme.status.success} Default GJC workflow skills and MCP defaults installed`));
 	console.log(chalk.dim(`Target: ${result.targetRoot}`));
 	console.log(chalk.dim(`Written: ${result.written}; skipped: ${result.skipped}`));
-	console.log(chalk.dim(`MCP context7: ${mcpResult.status}; target: ${mcpResult.path}`));
+	console.log(chalk.dim(`MCP defaults (${mcpServerList}): ${mcpResult.status}; target: ${mcpResult.path}`));
 	if (result.skipped > 0 && !flags.force) {
 		console.log(chalk.dim("Use --force to overwrite existing default workflow skill files."));
 	}

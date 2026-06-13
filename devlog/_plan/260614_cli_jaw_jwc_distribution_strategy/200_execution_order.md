@@ -19,6 +19,7 @@
    - release artifact path.
 5. **150 visible cleanup**
    - docs/bin/artifacts/statuses/MCP names;
+   - macOS-only Computer Use/CUA MCP defaults;
    - compatibility aliases where required.
 6. **160 cli-jaw integration**
    - consume package dependency `jawcode`;
@@ -37,8 +38,9 @@ Embedding first proves cli-jaw can own the product goal. Packaging second proves
 3. jawcode: postinstall safe-mode.
 4. cli-jaw: consume package dependency behind explicit setting.
 5. cli-jaw: no-global-`jwc` smoke.
-6. both: visible JWC/Jawcode artifact/status transition.
+6. jawcode: macOS-only Computer Use/CUA default restore and package validation.
+7. both: visible JWC/Jawcode artifact/status transition.
 
 ## Active folder hygiene
 
-The active range for this strategy is `000` through `200`. Follow-up feature plans that are not part of distribution strategy belong in a separate plan folder or under `_legacy/` once implemented, so this folder remains a blocker-free release map.
+The active range for this strategy is `000` through `220`. `211` is intentionally active because MCP/Computer Use/CUA packaging is part of the 150 release surface. Follow-up feature plans that are not part of distribution strategy belong in a separate plan folder or under `_legacy/` once implemented, so this folder remains a blocker-free release map.

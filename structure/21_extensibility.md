@@ -88,7 +88,7 @@
 
 | 항목 | 현재 구조 | 근거 |
 |---|---|---|
-| 등록 | jwc user 스코프 `~/.jwc/agent/mcp.json`에 `computer-use` stdio 서버(node 절대경로 + `dist/index.js`). | `~/.jwc/agent/mcp.json` |
+| 등록 | `jwc setup defaults`가 user 스코프 `~/.jwc/agent/mcp.json`에 managed defaults를 복구한다. `context7`은 모든 플랫폼, `computer-use`와 `cua-driver`는 macOS에서만 managed default로 설치한다. 임의 사용자 서버는 보존하고 현재 플랫폼의 managed entry만 갱신한다. | `packages/coding-agent/src/defaults/jwc-defaults.ts`, `~/.jwc/agent/mcp.json` |
 | 서버 엔트리 | MCP stdio 서버(`@modelcontextprotocol/sdk`), 29 도구(mouse·keyboard·screenshot·scroll·app·clipboard·batch·utility·teach·inspect). | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/index.ts`, `~/developer/codex/23_computer_use/src/cu-mcp-server/src/tools/*.ts` |
 | 네이티브 제어 | `native.ts`가 `CU_NATIVE_PATH`(또는 `.build/release/cu-native`)의 Swift 바이너리를 `execFile`로 호출해 실제 마우스/키보드/스크린샷 수행. | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/native.ts:12` |
 | 결정론적 tier | `categoryToTier(getAppCategory(bundleId))`: 브라우저/trading=read, 터미널·IDE=click, media=차단, 그 외=full. `request_access` 부여 + 매 액션 `enforcePreAction`/`enforcePointUnderClick`로 서버에서 강제(모델 무관). | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/safety/tiers.ts:35`, `…/src/safety/enforcement.ts`, `…/src/tools/app.ts:96` |
@@ -96,8 +96,10 @@
 | full-tier 오버라이드 | `CU_TIER_OVERRIDE=full`이면 `isFullTierOverride()`가 모든 카테고리(미디어 포함)를 full로. jwc는 `mcp.json`의 `env`로 켬(개인 사용). 기본값은 안전 tier 유지 → cli-jaw 멀티-프로바이더는 safe-by-construction. 시스템 키콤보(⌘Q 등)는 별개로 차단. | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/safety/tiers.ts:25`, `…/src/safety/tiers.ts:36` |
 | 단일 세션 락 | 머신당 1세션 락 `~/.claude/computer-use.lock`. | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/safety/lock.ts` |
 | Anthropic 표면 추종 | cu-mcp는 **Claude Code 내장 computer-use(`computer_20250124`)의 도구 표면을 정본**으로 따른다. 도구명·파라미터 타입·description을 Anthropic 표면에 맞추고, cu-mcp 전용 확장(inspect/ax_press/teach)은 상위 호환으로 추가. 주요 맞춤: `switch_display` 모니터 **이름**(string) 기반 / `screenshot`·`zoom`에 `save_to_disk` 파라미터(`/tmp/cu-mcp-screenshots/`) / `coordinate` description Anthropic 원문 / screenshot 응답에 멀티모니터 이름 안내 / auto 모드에서 frontmost 앱 디스플레이 자동 감지. | Claude Code `/mcp` 도구 스키마 대조 기준 |
-| 통합 도구 모드 | `CU_MCP_MODE=consolidated`이면 29개 도구 대신 **1개 `computer_use` 도구(action discriminator)** 등록. hermes 패턴. 토큰 33K→~3K (91% 절감). `text`/`keys`/`modifiers` 분리, batch non-recursive 스키마, drag finally 가드. `--consolidated` 플래그로도 활성화. 기본값은 29도구 레거시 모드 유지. | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/tools/consolidated.ts`, `…/src/index.ts:41` |
-| cua-driver (Phase 2) | trycua/cua 프로젝트의 **오픈 Sky 재구현**. SkyLight SPI 기반 백그라운드 윈도우 제어, element_index 클릭, parent attestation 없음. `~/.local/bin/cua-driver mcp`(MCP stdio, 36도구). jwc에 **두 번째 MCP 서버**로 등록(`~/.jwc/agent/mcp.json`). cu-mcp(포그라운드/좌표)와 cua-driver(백그라운드/AX) 양립. | `~/.local/bin/cua-driver`, `~/.jwc/agent/mcp.json`, hermes 참조 `~/Developer/codex/hermes-agent/tools/computer_use/cua_backend.py` |
+| 통합 도구 모드 | macOS managed default의 `CU_MCP_MODE=consolidated`이면 29개 도구 대신 **1개 `computer_use` 도구(action discriminator)** 등록. jwc managed default는 이 모드를 기본으로 켜서 MCP tax를 줄인다. hermes 패턴. 토큰 33K→~3K (91% 절감). `text`/`keys`/`modifiers` 분리, batch non-recursive 스키마, drag finally 가드. `--consolidated` 플래그로도 활성화. | `packages/cu-mcp-server/src/tools/consolidated.ts`, `packages/cu-mcp-server/src/index.ts` |
+| cua-driver (Phase 2) | trycua/cua 프로젝트의 **오픈 Sky 재구현**. SkyLight SPI 기반 백그라운드 윈도우 제어, element_index 클릭, parent attestation 없음. macOS에서만 `cua-driver mcp`(MCP stdio, 36도구)를 두 번째 managed MCP 서버로 등록한다. `cua-driver`가 PATH에 없거나 권한이 없으면 해당 서버만 실패하고 다른 MCP 서버는 계속 동작한다. cu-mcp(포그라운드/좌표)와 cua-driver(백그라운드/AX) 양립. | `~/.local/bin/cua-driver`, `~/.jwc/agent/mcp.json`, hermes 참조 `~/Developer/codex/hermes-agent/tools/computer_use/cua_backend.py` |
+
+도구 과노출 방지는 MCP 등록이 아니라 discovery/BM25 선택 계층에서 담당한다. `computer-use`는 consolidated 1-tool 표면으로 등록되고, 런타임에서 필요한 도구 선택은 `search_tool_bm25` / MCP discovery selection state가 처리한다.
 
 ## D5와 현재 gap
 

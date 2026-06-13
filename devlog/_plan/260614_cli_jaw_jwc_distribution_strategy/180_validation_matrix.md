@@ -12,6 +12,10 @@
 | channel paths | Web + messaging channel smokes | cli-jaw |
 | fallback | settings rollback to legacy CLI | cli-jaw |
 | visible cleanup | rebrand inventory + CI artifact/status check | both |
+| default MCP restore | `bun test packages/coding-agent/test/default-mcp-config.test.ts` verifies managed `context7` plus macOS-only `computer-use` + `cua-driver` entries, non-mac skip behavior, unmanaged-entry preservation, and check-mode status aggregation | jawcode |
+| cu-mcp consolidated mode | default MCP test asserts `computer-use` uses `CU_MCP_MODE=consolidated`, `CU_NATIVE_PATH`, and the packaged `packages/cu-mcp-server/dist/index.js` entry | jawcode |
+| CUA driver optional path | default MCP test asserts `cua-driver` command is PATH-based (`cua-driver mcp`); live connection remains optional/non-fatal | jawcode |
+| MCP discovery/BM25 guard | `bun test packages/coding-agent/test/agent-session-mcp-discovery.test.ts packages/coding-agent/test/mcp-lifecycle-cleanup.test.ts` verifies MCP tools remain discovery/session-selected rather than always exposed | jawcode |
 
 ## Minimum proof before each phase
 
