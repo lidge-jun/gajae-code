@@ -7,9 +7,14 @@
  * implementations (file/sleep → 100.03, spawn → 100.04, data core → 100.05,
  * peripherals → 100.07).
  */
+import { createRequire } from "node:module";
+import path from "node:path";
+import { pathToFileURL } from "node:url";
 import JSON5 from "json5";
 import stripAnsi from "strip-ansi";
+import { BunArchive } from "./bun-archive";
 import { bunFile } from "./bun-file";
+import { bunServe } from "./bun-serve";
 import { bunHash, BunCryptoHasher, BunSHA256 } from "./bun-hash";
 import { bunJSONL } from "./bun-jsonl";
 import { bunSpawn, bunSpawnSync } from "./bun-spawn";
@@ -40,28 +45,60 @@ export function buildNodeBunShim(): BunShim {
 		SHA256: BunSHA256,
 		JSONL: bunJSONL,
 		JSON5: { parse: JSON5.parse, stringify: JSON5.stringify },
-		serve: stubFn("serve"),
+		serve: bunServe as BunShim["serve"],
 		stdin: bunStdin,
 		stdout: bunStdout,
 		stderr: bunStderr,
 		stripANSI: stripAnsi,
+		stringWidth: (text: string, _options?: unknown): number => {
+			// ANSI-aware terminal cell width: wide CJK/emoji count 2, combining
+			// marks 0 — mirrors Bun.stringWidth closely enough for layout code.
+			const stripped = stripAnsi(String(text));
+			let width = 0;
+			for (const ch of stripped) {
+				const code = ch.codePointAt(0) as number;
+				if (code === 0x200d || (code >= 0x0300 && code <= 0x036f) || code === 0xfe0f) continue;
+				const wide =
+					(code >= 0x1100 && code <= 0x115f) ||
+					(code >= 0x2e80 && code <= 0xa4cf) ||
+					(code >= 0xac00 && code <= 0xd7a3) ||
+					(code >= 0xf900 && code <= 0xfaff) ||
+					(code >= 0xfe30 && code <= 0xfe4f) ||
+					(code >= 0xff00 && code <= 0xff60) ||
+					(code >= 0xffe0 && code <= 0xffe6) ||
+					(code >= 0x1f300 && code <= 0x1faff) ||
+					(code >= 0x20000 && code <= 0x3fffd);
+				width += wide ? 2 : 1;
+			}
+			return width;
+		},
 		semver: {
 			order: stubFn("semver.order") as unknown as BunShim["semver"]["order"],
 			satisfies: stubFn("semver.satisfies") as unknown as BunShim["semver"]["satisfies"],
 		},
-		Archive: class {
-			constructor() {
-				notImplemented("Archive");
-			}
-		},
+		Archive: BunArchive,
 		gc: () => {
 			// no-op on Node by design (100 MOC mapping P)
+		},
+		plugin: () => {
+			// Bun runtime-loader plugin hook (legacy-pi specifier shim). There is
+			// no Node equivalent; plugin specifier rewriting is a Bun-CLI feature,
+			// so registration is a no-op in the dist-node bundle (100.07).
 		},
 		env: process.env,
 		argv: process.argv,
 		version: "0.0.0-jwc-node-shim",
 		main: process.argv[1] ?? "",
-		which: stubFn("which") as unknown as BunShim["which"],
+		resolveSync: (specifier: string, parent: string): string => {
+			const require_ = createRequire(pathToFileURL(path.join(parent, "__resolve__.js")));
+			return require_.resolve(specifier);
+		},
+		which: (command: string): string | null => {
+			const result = bunSpawnSync(["which", command]);
+			if (!result.success || !result.stdout) return null;
+			const text = new TextDecoder().decode(result.stdout).trim();
+			return text.length > 0 ? text : null;
+		},
 		randomUUIDv7: stubFn("randomUUIDv7") as unknown as BunShim["randomUUIDv7"],
 		nanoseconds: () => Number(process.hrtime.bigint()),
 	};

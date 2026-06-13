@@ -57,16 +57,25 @@ const result = await build({
 	platform: "node",
 	target: "node22",
 	format: "esm",
-	// Installs globalThis.Bun (Node only) before any upstream module body runs.
-	inject: ["src/shims/index.ts"],
+	// Installs globalThis.Bun (Node only) before any upstream module body runs,
+	// plus the import.meta.dir/path replacement identifiers.
+	inject: ["src/shims/index.ts", "src/shims/import-meta.ts"],
 	alias: {
 		// 100.05: bun:sqlite resolves to the better-sqlite3 adapter in the Node
 		// bundle; the Bun runtime keeps the native module.
 		"bun:sqlite": "./src/shims/bun-sqlite.ts",
+		// 100.07: the bun module ($/YAML/TOML/JSONC/Glob + defensive members)
+		// and the TUI-only bun:ffi (lazy-throw stubs; call sites catch).
+		bun: "./src/shims/bun-module.ts",
+		"bun:ffi": "./src/shims/bun-ffi.ts",
 	},
 	plugins: [textImportAttributes],
 	define: {
 		"Bun.env": "process.env",
+		// Bun-isms with no Node equivalent on a per-module basis; post-bundle
+		// they resolve to the bundle's own location (see shims/import-meta.ts).
+		"import.meta.dir": "JWC_IMPORT_META_DIR",
+		"import.meta.path": "JWC_IMPORT_META_PATH",
 	},
 	external: [
 		"better-sqlite3",
@@ -76,10 +85,6 @@ const result = await build({
 		"xxhash-wasm",
 		"@gajae-code/natives",
 		"markit-ai",
-		// Left unresolved on purpose until their shim aliases land —
-		// importing these from Node will fail at runtime, not at build time.
-		"bun",
-		"bun:ffi",
 	],
 	logLevel: "info",
 }).catch(error => {

@@ -3,6 +3,7 @@ import * as fs from "node:fs";
 import { createRequire } from "node:module";
 import * as os from "node:os";
 import * as path from "node:path";
+import { fileURLToPath } from "node:url";
 import packageJson from "../package.json" with { type: "json" };
 import { embeddedAddon } from "./embedded-addon.js";
 
@@ -345,7 +346,10 @@ function buildHelpMessage(ctx) {
 function initLoaderContext() {
 	const platformTag = `${process.platform}-${process.arch}`;
 	const packageVersion = packageJson.version;
-	const nativeDir = path.join(import.meta.dir, "..", "native");
+	// `import.meta.dir` is a Bun-ism (undefined on Node) — fall back to the
+	// portable URL form so the jwc dist-node bundle can load natives (100.07).
+	const moduleDir = import.meta.dir ?? path.dirname(fileURLToPath(import.meta.url));
+	const nativeDir = path.join(moduleDir, "..", "native");
 	const execDir = path.dirname(process.execPath);
 	const versionedDir = path.join(getNativesDir(), packageVersion);
 	const userDataDir =
