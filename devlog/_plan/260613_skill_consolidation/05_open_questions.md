@@ -42,10 +42,11 @@ cli-jaw: 에이전트가 자연어 + ` ```elicitation` 펜스 (light)
 
 ## 미결정 질문
 
-### Q1. 인터뷰 ask 포맷 — 🔍 추가 조사 필요
-jawcode의 ask tool JSON은 무거움 (에이전트가 full schema 구성).
-cli-jaw의 elicitation fence 방식이 더 자연스러움.
-→ 전환 여부는 별도 트랙으로 분리. 현재 플랜 범위 밖.
+### Q1. 인터뷰 ask 포맷 — ✅ 확정: ask tool + meta 유지
+meta가 3개 소비자 (TUI 렌더러, 무인 게이트 브로커, 인터뷰 상태머신)에 타입 안전한 데이터 전달.
+AskUserQuestion은 텍스트만 — round/ambiguity/topology/challenge_mode 운반 불가.
+meta 제거 시 영어 regex 파싱으로 후퇴 (언어 안전성 파괴).
+→ **현행 유지. 전환 불필요.**
 
 ## 확정된 질문
 
