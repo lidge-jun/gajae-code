@@ -19,52 +19,47 @@ export type { Observation, ObservationEntry } from "./browser/tab-protocol";
 const DEFAULT_TAB_NAME = "main";
 
 const appSchema = z.object({
-	path: z.string().describe("binary path to spawn").optional(),
-	cdp_url: z.string().describe("existing cdp endpoint").optional(),
-	args: z.array(z.string()).describe("extra cli args").optional(),
+	path: z.string().optional(),
+	cdp_url: z.string().optional(),
+	args: z.array(z.string()).optional(),
 	target: z.string().describe("substring to pick a window").optional(),
 });
 
 const actionStepSchema = z.object({
-	verb: z
-		.enum([
-			"navigate",
-			"click",
-			"type",
-			"fill",
-			"select",
-			"press",
-			"scroll",
-			"back",
-			"wait",
-			"observe",
-			"extract",
-			"screenshot",
-		])
-		.describe("structured action verb"),
-	id: z.number().describe("element id from a prior observe").optional(),
-	selector: z.string().describe("css/puppeteer selector").optional(),
-	text: z.string().describe("text to type").optional(),
-	value: z.string().describe("value for fill").optional(),
-	values: z.array(z.string()).describe("option value(s) for select").optional(),
-	url: z.string().describe("url for navigate").optional(),
-	key: z.string().describe("key for press, e.g. Enter").optional(),
-	dx: z.number().describe("horizontal scroll delta").optional(),
-	dy: z.number().describe("vertical scroll delta").optional(),
-	ms: z.number().describe("sleep ms for wait without selector").optional(),
-	format: z.enum(["markdown", "text", "html"]).describe("extract format").optional(),
-	wait_until: z
-		.enum(["load", "domcontentloaded", "networkidle0", "networkidle2"])
-		.describe("navigation wait condition for navigate")
-		.optional(),
-	viewport_only: z.boolean().describe("observe: only viewport elements").optional(),
-	include_all: z.boolean().describe("observe: include non-interactive elements").optional(),
+	verb: z.enum([
+		"navigate",
+		"click",
+		"type",
+		"fill",
+		"select",
+		"press",
+		"scroll",
+		"back",
+		"wait",
+		"observe",
+		"extract",
+		"screenshot",
+	]),
+	id: z.number().describe("element id from observe").optional(),
+	selector: z.string().optional(),
+	text: z.string().optional(),
+	value: z.string().optional(),
+	values: z.array(z.string()).optional(),
+	url: z.string().optional(),
+	key: z.string().optional(),
+	dx: z.number().optional(),
+	dy: z.number().optional(),
+	ms: z.number().describe("wait ms").optional(),
+	format: z.enum(["markdown", "text", "html"]).optional(),
+	wait_until: z.enum(["load", "domcontentloaded", "networkidle0", "networkidle2"]).optional(),
+	viewport_only: z.boolean().optional(),
+	include_all: z.boolean().optional(),
 });
 
 const browserSchema = z.object({
-	action: z.enum(["open", "close", "run", "act"] as const).describe("operation"),
+	action: z.enum(["open", "close", "run", "act"] as const),
 	name: z.string().describe("tab id (default 'main')").optional(),
-	url: z.string().describe("url to open").optional(),
+	url: z.string().optional(),
 	app: appSchema.optional(),
 	viewport: z
 		.object({
@@ -73,19 +68,13 @@ const browserSchema = z.object({
 			scale: z.number().optional(),
 		})
 		.optional(),
-	wait_until: z
-		.enum(["load", "domcontentloaded", "networkidle0", "networkidle2"] as const)
-		.describe("navigation wait condition")
-		.optional(),
-	dialogs: z
-		.enum(["accept", "dismiss"] as const)
-		.describe("auto-handle dialogs")
-		.optional(),
-	code: z.string().describe("js body to run in tab").optional(),
-	actions: z.array(actionStepSchema).describe("structured action steps for action 'act'").optional(),
-	timeout: z.number().default(30).describe("timeout in seconds (default 30, max 300)").optional(),
-	all: z.boolean().describe("close every tab").optional(),
-	kill: z.boolean().describe("also kill spawned-app browsers").optional(),
+	wait_until: z.enum(["load", "domcontentloaded", "networkidle0", "networkidle2"] as const).optional(),
+	dialogs: z.enum(["accept", "dismiss"] as const).optional(),
+	code: z.string().describe("js for run action").optional(),
+	actions: z.array(actionStepSchema).describe("steps for act action").optional(),
+	timeout: z.number().default(30).describe("seconds (default 30, max 300)").optional(),
+	all: z.boolean().optional(),
+	kill: z.boolean().optional(),
 });
 
 /** Input schema for the browser tool. */

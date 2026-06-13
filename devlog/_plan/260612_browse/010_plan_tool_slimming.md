@@ -9,14 +9,26 @@
 - Implementation MVP: prompt slimming, guidance relocation, token measurement, smoke verification.
 - Follow-up: compact schema, settings/routing defaults, cli-jaw/AGBrowse runtime features.
 
+## Runtime path decision — 260613
+
+Chosen path: **hidden bundled skill** (`hide: true` in SKILL.md frontmatter).
+
+- `browse` is registered in `DEFAULT_GJC_DEFINITIONS` alongside the 4 existing workflow skills.
+- `hide: true` excludes it from the `<skills>` system prompt listing → zero idle token cost.
+- The skill is still loaded into `session.skills` and reachable via `skill://browse` and the `skill` tool.
+- The slimmed `browser.md` references "the `browse` skill" so the model knows to invoke it when needed.
+- This does NOT create a public `/skill:browse` entrypoint — `hide` prevents listing.
+- This does NOT count as a fifth bundled workflow skill — it is a tool-help artifact that happens to use the skill infrastructure.
+
 ## Target files
 
 | 파일 | 변경 |
 |---|---|
-| `packages/coding-agent/src/prompts/tools/browser.md` | 긴 instruction/examples를 browse skill로 이동하고 10~20줄 affordance만 유지 |
-| `packages/coding-agent/src/tools/browser.ts` | schema `.describe()` 축약/삭제, description 유지 경로 확인 |
-| chosen non-workflow tool-help path (TBD before implementation) | 긴 browser 조작법 보관. Until chosen, source text remains `devlog/_plan/260612_browse/020_skill_definition/SKILL.md` |
-| `packages/coding-agent/src/config/settings-schema.ts` | MVP에서 제외. 필요 시 follow-up에서만 `browser.skillHint`/skill discovery 기본값 검토 |
+| `packages/coding-agent/src/prompts/tools/browser.md` | 긴 instruction/examples를 browse skill로 이동하고 ~12줄 affordance만 유지 |
+| `packages/coding-agent/src/tools/browser.ts` | schema `.describe()` 축약/삭제 |
+| `packages/coding-agent/src/defaults/jwc/skills/browse/SKILL.md` | 긴 browser 조작법 보관 (hidden bundled skill) |
+| `packages/coding-agent/src/defaults/jwc-defaults.ts` | browse skill 등록 |
+| `packages/coding-agent/src/config/settings-schema.ts` | MVP에서 제외. 필요 시 follow-up에서만 검토 |
 
 ## Implementation MVP
 
@@ -77,6 +89,17 @@ bun -e 'import { createTools } from "./packages/coding-agent/src/tools/index.ts"
 - Smoke: start a jwc session with browser enabled and run `open` on `https://example.com`, then `act` with `{ "verb": "observe" }`, then `close`; pass = no tool error and observe returns page state.
 - Skill scenario: with browse guidance injected, ask for an interactive page workflow; pass = model chooses observe-first, re-observes after navigation, and reserves raw `run` for conditional logic.
 - Doc-only MVP: project-wide gates are intentionally skipped because no product source is changed.
+
+## Implementation receipt — 260613
+
+### Changes made
+
+| 파일 | 변경 내용 |
+|---|---|
+| `browser.md` | 72줄 → 12줄. instruction/examples/output 제거, critical 축약, browse skill 참조 추가 |
+| `browser.ts` | `.describe()` 30개 중 18개 제거. 자명한 필드(url, text, value, selector 등) 제거, 비자명(tab id, element id, wait ms, code purpose) 유지 |
+| `defaults/jwc/skills/browse/SKILL.md` | 신규. hide:true. 기존 browser.md 전체 guidance + 020 draft 병합 |
+| `defaults/jwc-defaults.ts` | browse를 DEFAULT_GJC_DEFINITIONS에 등록 |
 
 ## Non-goals
 
