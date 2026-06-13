@@ -106,37 +106,77 @@ self (1) + Σ provider slots = 1 + Σ(best?1:0 + cheap?1:0)
 
 ## 현재 Gap 분석
 
-cli-jaw 기준 (260613 스냅샷):
+jawcode 기준 (260613 코드 스냅샷):
+
+### 배관 현황
 
 | 레이어 | model 필드 | 파일 | 상태 |
 |---|---|---|---|
-| `SpawnOpts` | `model?: string` | `spawn.ts:684` | ✅ 있음 |
-| Employee dispatch | `emp["model"]` DB→spawn 전달 | `distribute.ts:502` | ✅ 있음 |
-| **Task agent API** (executor/planner/architect/critic) | 없음 | — | ❌ gap |
+| `AgentDefinition` | `model?: string[]` | `task/types.ts:205` | ✅ frontmatter 고정값 |
+| `ExecutorOptions` | `modelOverride?: string \| string[]` | `task/executor.ts:118` | ✅ 있음 |
+| `resolveModelOverrideWithAuthFallback()` | patterns → Model | `config/model-resolver.ts` | ✅ auth fallback 포함 |
+| `createAgentSession({ model })` | resolved Model 객체 | `sdk.ts` | ✅ 있음 |
+| **TaskItem** (tool input schema) | 없음 | `task/types.ts:76-87` | ❌ **gap** |
+| **TaskParams** | 없음 | `task/types.ts:165-172` | ❌ **gap** |
 
-- 하위 레이어(`spawnAgent`)는 model을 받을 준비가 돼 있음
-- employee는 DB `employees.model` 컬럼에서 모델을 읽어 `spawnAgent({model})` 전달 → 작동
-- **task agent 4종은 모델 지정 인터페이스 자체가 없음** — 메인 세션 기본 모델로만 실행
-- jaw TUI에서 task dispatch 시 노출 필드: `agent`, `tasks`, `context`, `schema`, `spawnPlan`, `inheritContext` — **model 없음**
+### 데이터 흐름
 
-→ S3에서 task agent dispatch 경로에 `model` (또는 `modelHint: "cheap:anthropic"`) 파라미터를 추가하고, 프리셋 해석 → `spawnAgent({model})` 전달 배선이 핵심.
+```
+Task tool call: { agent: "executor", tasks: [{ id, assignment }] }
+    ↓
+AgentDefinition 로드 (prompts/agents/executor.md)
+    ↓ executor.md frontmatter에 model: 키 없음
+    ↓ → agent.model = undefined
+    ↓
+ExecutorOptions.modelOverride = agent.model ?? undefined
+    ↓ → modelPatterns = [] (빈 배열)
+    ↓
+resolveModelOverrideWithAuthFallback([], parentModel, ...)
+    ↓ → 부모 세션 모델로 fallback
+    ↓
+createAgentSession({ model: parentModel })
+    → 서브에이전트 = 부모와 동일 모델로 실행
+```
+
+### 핵심 gap
+
+- **TaskItem schema에 model 필드 없음** → LLM이 per-task 모델을 지정할 수 없음
+- **AgentDefinition.model은 frontmatter 고정** → 동적 할당 불가
+- **프리셋 해석 레이어 없음** → `"cheap:anthropic"` 같은 hint를 실제 model ID로 변환하는 함수가 없음
+- 하위 배관(ExecutorOptions → resolver → createAgentSession)은 **완비** — 연결만 하면 됨
+
+### 번들 에이전트 현황 (prompts/agents/*.md)
+
+| 에이전트 | frontmatter model | thinking | 비고 |
+|---|---|---|---|
+| executor | 없음 (부모 상속) | medium | 쓰기 가능, forkContext |
+| planner | 없음 (부모 상속) | medium | 읽기 전용 |
+| architect | 없음 (부모 상속) | high | 읽기 전용, blocking |
+| critic | 없음 (부모 상속) | high | 읽기 전용 |
+| reviewer | 없음 (부모 상속) | — | 코드리뷰 |
+| explore | 없음 (부모 상속) | — | 탐색 |
+
+→ 전부 부모 모델 상속. **"기본 파견"은 frontmatter model 추가, "동적 할당"은 TaskItem.model 추가.**
 
 ## 기존 인프라
 
-- `createAgentSession({ model })`: 이미 model 옵션 존재 (sdk.ts:225)
-- `authStorage.list()`: 로그인된 프로바이더 목록 반환
-- `discoverAuthStorage(agentDir)`: 프로바이더별 credential 탐색
-- 서브에이전트(task agent): `taskDepth` + `model` 조합으로 spawn, `taskDepth` 상한으로 재귀 제한
-- 99.30.04 `unlisted` 인프라: OAuth cutoff가 서브에이전트 모델 선택에도 자연 적용
+- `ExecutorOptions.modelOverride`: 이미 `string | string[]` 지원 (executor.ts:118)
+- `resolveModelOverrideWithAuthFallback()`: model pattern → auth 확인 → fallback (model-resolver.ts)
+- `ModelRegistry.refresh()` + `discoverAuthStorage()`: 프로바이더별 credential 탐색
+- `taskDepth` 상한: 재귀 서브에이전트 제한 (settings `task.maxRecursionDepth`)
+- 99.30.04 `unlisted` 인프라: OAuth cutoff가 ModelRegistry에 반영 → 서브에이전트에도 자연 적용
 
 ## 구현 슬라이스 (초안)
 
 | # | 내용 | 비고 |
 |---|---|---|
-| S1 | 프리셋 스키마 정의 + 기본값 내장 | `SubagentModelPreset` 타입, 위 표의 기본값 |
-| S2 | 설정 파일 로드/오버라이드 | config.yml 또는 settings.json 경로 결정 |
-| S3 | task agent dispatch에 `modelHint` 필드 추가 | `resolveSubagentModel(hint)` → `spawnAgent({model})` 배선 |
-| S4 | TUI 노출 | task dispatch 시 모델 선택 UI + 실행 중 어떤 모델인지 표시 |
+| S1 | 프리셋 스키마 + 기본값 내장 | `SubagentModelPreset` 타입, 프로바이더별 best/cheap 테이블 |
+| S2 | 설정 로드/오버라이드 | `~/.jwc/agent/config.yml` 또는 settings `task.modelPresets` |
+| S3a | **TaskItem schema에 `model` 필드 추가** | `z.string().optional()` — hint 문법: `self`, `cheap:anthropic`, `claude-sonnet-4-6` |
+| S3b | **resolveSubagentModel()** 구현 | hint → 프리셋 lookup → model pattern 반환 |
+| S3c | task/index.ts에서 TaskItem.model → ExecutorOptions.modelOverride 배선 | 기존 resolver 재사용 |
+| S4a | 번들 에이전트 frontmatter에 기본 model 추가 | executor: `cheap:self`, planner/critic: `cheap:self` 등 |
+| S4b | TUI 노출 | task dispatch 시 어떤 모델로 돌리는지 progress에 표시 |
 | S5 | e2e | 다른 프로바이더 서브에이전트 1턴 완주 |
 
 ## 미결정
