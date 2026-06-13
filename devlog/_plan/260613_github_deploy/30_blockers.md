@@ -1,8 +1,8 @@
-# 30 — Blockers 100-104: CI 선행 해소
+# 30 — Tasks 001-005: CI 블로커 해소
 
-> 5건 전부 해소해야 CI green. 실행 순서: 104(커밋) → 100(biome) → 102(tsc) → 103(zod) → 101(테스트)
+> 5건 전부 해소해야 CI green. 실행 순서: 001(커밋) → 002(biome) → 003(tsc) → 004(zod) → 005(테스트)
 
-## 100 — Biome 66 lint/format 에러
+## 002 — Biome 66 lint/format 에러
 
 **복잡도**: S (대부분 auto-fix)
 **차단**: lint CI check 완전 차단
@@ -19,7 +19,7 @@
 영향 파일: `jwc-defaults.ts`, `selector-controller.ts`, `settings-schema.ts`, `packages/ai/src/index.ts`,
 `packages/tui/src/tui.ts`, smoke-test scripts
 
-## 101 — 27 failing tests / 8591
+## 005 — 27 failing tests / 8591
 
 **복잡도**: M-L (mock fixture 갱신 필요)
 **차단**: test CI check 완전 차단
@@ -36,7 +36,7 @@
 
 **해결**: mock fixture 갱신 + 새 기능 로직 안정화
 
-## 102 — 2209 TS6305 stale .d.ts 에러
+## 003 — 2209 TS6305 stale .d.ts 에러
 
 **복잡도**: S
 **차단**: tsc CI check 완전 차단
@@ -46,7 +46,7 @@
 
 **해결**: CI에서 `tsc --noEmit` 전에 `bun run build` 선행. 또는 `--incremental false`.
 
-## 103 — cu-mcp-server zod 3 vs catalog zod 4
+## 004 — cu-mcp-server zod 3 vs catalog zod 4
 
 **복잡도**: M
 **차단**: latent build risk (현재 bun이 별도 해석하지만 크로스패키지 시 깨짐)
@@ -59,7 +59,7 @@ bun이 zod 3.x를 별도 해석하나 API가 다름 (zod 4는 `z.string()` → `
 
 **해결**: cu-mcp-server를 zod 4 + TS 6으로 업그레이드, 또는 workspace override로 격리 유지
 
-## 104 — dirty bun.lock + uncommitted files
+## 001 — dirty bun.lock + uncommitted files
 
 **복잡도**: S
 **차단**: `bun install --frozen-lockfile` 실패
@@ -71,9 +71,9 @@ bun이 zod 3.x를 별도 해석하나 API가 다름 (zod 4는 `z.string()` → `
 ## 실행 순서
 
 ```
-104 (S, 커밋 정리)
- → 100 (S, biome --write)
-   → 102 (S, CI에서 build 선행)
-     → 103 (M, zod 4 마이그레이션)
-       → 101 (M-L, 27 test fixture 갱신)
+001 (S, 커밋 정리)
+ → 002 (S, biome --write)
+   → 003 (S, CI에서 build 선행)
+     → 004 (M, zod 4 마이그레이션)
+       → 005 (M-L, 27 test fixture 갱신)
 ```
