@@ -16,6 +16,14 @@ import path from "node:path";
 
 process.env.GJC_BRAND_NAME = "jwc";
 
+// This smoke reads the real ~/.jwc/agent credential DB, so it is opt-in and
+// must never run unguarded in CI (audit W-5). Set JWC_SMOKE_REAL_PROVIDER=1
+// to run it locally.
+if (process.env.JWC_SMOKE_REAL_PROVIDER !== "1") {
+	console.log("[smoke 100.11] skipped — set JWC_SMOKE_REAL_PROVIDER=1 to run (reads real credentials)");
+	process.exit(0);
+}
+
 const sdk = await import("../dist-node/sdk.js");
 const authStorage = await sdk.discoverAuthStorage();
 

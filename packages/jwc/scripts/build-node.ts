@@ -83,7 +83,9 @@ const result = await build({
 		"import.meta.dir": "JWC_IMPORT_META_DIR",
 		"import.meta.path": "JWC_IMPORT_META_PATH",
 	},
-	external: ["better-sqlite3", "node-tar", "strip-ansi", "json5", "xxhash-wasm", "@gajae-code/natives", "markit-ai"],
+	// Runtime deps resolved from node_modules, not inlined. (node-tar/xxhash-wasm
+	// were dropped — no import site exists, audit W-1.)
+	external: ["better-sqlite3", "strip-ansi", "json5", "@gajae-code/natives", "markit-ai"],
 	logLevel: "info",
 }).catch(error => {
 	console.error("[build:node] failed:", error?.message ?? error);

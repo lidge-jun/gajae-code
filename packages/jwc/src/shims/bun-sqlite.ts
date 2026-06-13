@@ -73,7 +73,14 @@ export class Database {
 
 	constructor(filename: string = ":memory:", options: DatabaseOptions | number = {}) {
 		const opts = typeof options === "number" ? {} : options;
-		this.#db = new BetterSqlite3(filename, { readonly: opts.readonly === true });
+		// Bun's `create: false` throws SQLITE_CANTOPEN when the file is absent
+		// (write.ts/read.ts rely on this as a "DB not found" guard); the
+		// better-sqlite3 equivalent is fileMustExist. `strict` has no
+		// better-sqlite3 analogue and is silently dropped (audit W-2).
+		this.#db = new BetterSqlite3(filename, {
+			readonly: opts.readonly === true,
+			fileMustExist: opts.create === false,
+		});
 	}
 
 	prepare<T = unknown>(sql: string): Statement<T> {

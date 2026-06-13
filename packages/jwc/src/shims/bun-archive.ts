@@ -30,14 +30,32 @@ function readString(bytes: Uint8Array, offset: number, length: number): string {
 	return DECODER.decode(nul === -1 ? raw : raw.subarray(0, nul));
 }
 
-function parseTar(bytes: Uint8Array): Map<string, Uint8Array> {
-	const entries = new Map<string, Uint8Array>();
+interface TarEntry {
+	data: Uint8Array;
+	mtimeMs: number;
+}
+
+/**
+ * Strip leading-slash and `..`/`.` path components so a malicious archive
+ * cannot surface an escaping key (audit B-3). archive-reader normalizes again
+ * downstream, but the shim's own Map must never carry a traversal key.
+ */
+function sanitizeEntryName(name: string): string {
+	return name
+		.split("/")
+		.filter(segment => segment !== "" && segment !== "." && segment !== "..")
+		.join("/");
+}
+
+function parseTar(bytes: Uint8Array): Map<string, TarEntry> {
+	const entries = new Map<string, TarEntry>();
 	let offset = 0;
 	let pendingLongName: string | null = null;
 	while (offset + 512 <= bytes.length) {
 		const block = bytes.subarray(offset, offset + 512);
 		if (block.every(byte => byte === 0)) break;
 		const size = readOctal(bytes, offset + 124, 12);
+		const mtimeSec = readOctal(bytes, offset + 136, 12);
 		const typeflag = String.fromCharCode(bytes[offset + 156] ?? 0);
 		let name = readString(bytes, offset, 100);
 		const prefix = readString(bytes, offset + 345, 155);
@@ -53,7 +71,8 @@ function parseTar(bytes: Uint8Array): Map<string, Uint8Array> {
 				pendingLongName = null;
 			}
 			if (typeflag === "0" || typeflag === "\0" || typeflag === "") {
-				entries.set(name, data.slice());
+				const safe = sanitizeEntryName(name);
+				if (safe) entries.set(safe, { data: data.slice(), mtimeMs: mtimeSec * 1000 });
 			}
 			// Directories/symlinks/others are skipped — reader surfaces files only.
 		}
@@ -140,17 +159,21 @@ export class BunArchive {
 	}
 
 	async files(): Promise<Map<string, File>> {
-		let raw: Map<string, Uint8Array>;
+		const files = new Map<string, File>();
 		if (isZip(this.#bytes)) {
-			raw = new Map(Object.entries(unzipSync(this.#bytes)));
+			// fflate exposes no per-entry mtime; lastModified 0 makes
+			// archive-reader treat mtime as absent (its `> 0` guard) rather
+			// than polluting it with Date.now() (audit B-2).
+			for (const [name, data] of Object.entries(unzipSync(this.#bytes))) {
+				const safe = sanitizeEntryName(name);
+				if (!safe || name.endsWith("/")) continue;
+				files.set(safe, new File([data as BlobPart], safe, { lastModified: 0 }));
+			}
 		} else {
 			const tarBytes = isGzip(this.#bytes) ? new Uint8Array(gunzipSync(this.#bytes)) : this.#bytes;
-			raw = parseTar(tarBytes);
-		}
-		const files = new Map<string, File>();
-		for (const [name, data] of raw) {
-			if (name.endsWith("/")) continue;
-			files.set(name, new File([data as BlobPart], name));
+			for (const [name, entry] of parseTar(tarBytes)) {
+				files.set(name, new File([entry.data as BlobPart], name, { lastModified: entry.mtimeMs }));
+			}
 		}
 		return files;
 	}

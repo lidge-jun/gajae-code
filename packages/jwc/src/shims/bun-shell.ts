@@ -35,7 +35,6 @@ function escapeValue(value: unknown): string {
 	return `'${text.replaceAll("'", `'\\''`)}'`;
 }
 
-// biome-ignore lint/suspicious/noThenProperty: intentional thenable — Bun's `$` template is awaited directly.
 class ShellPromise implements PromiseLike<ShellOutput> {
 	#command: string;
 	#cwd?: string;
@@ -112,6 +111,7 @@ class ShellPromise implements PromiseLike<ShellOutput> {
 		return this.#run;
 	}
 
+	// biome-ignore lint/suspicious/noThenProperty: intentional thenable — Bun's `$` template is awaited directly.
 	then<TResult1 = ShellOutput, TResult2 = never>(
 		onfulfilled?: ((value: ShellOutput) => TResult1 | PromiseLike<TResult1>) | null,
 		onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
