@@ -4,6 +4,7 @@
 import {
 	type AssistantMessage,
 	type AssistantMessageEvent,
+	type Context,
 	type CursorExecHandlers,
 	type CursorToolResultHandler,
 	type Effort,
@@ -20,7 +21,8 @@ import {
 	type ToolChoice,
 	type ToolResultMessage,
 } from "@gajae-code/ai";
-import { agentLoop, agentLoopContinue } from "./agent-loop";
+import { prewarmOpenAICodexResponsesContent } from "@gajae-code/ai/providers/openai-codex-responses";
+import { agentLoop, agentLoopContinue, normalizeMessagesForProvider, normalizeTools } from "./agent-loop";
 import type { AppendOnlyContextManager } from "./append-only-context";
 import type { HarmonyAuditEvent } from "./harmony-leak";
 import type {
@@ -1088,6 +1090,54 @@ export class Agent {
 		}
 
 		await this.#runLoop(undefined);
+	}
+
+	/**
+	 * Content-bearing Codex prewarm (native parity: `response.create` with
+	 * `generate: false`). Builds the same LLM context the next real prompt
+	 * would send and asks the server to prefill it without sampling, so the
+	 * next user message rides the `previous_response_id` delta path (or at
+	 * minimum hits a warm prompt cache). Best-effort: returns "skipped" on any
+	 * mismatch/failure and never touches agent state.
+	 */
+	async prewarmCodexContent(): Promise<"refresh" | "cold" | "skipped"> {
+		const model = this.#state.model;
+		if (!model || model.api !== "openai-codex-responses") return "skipped";
+		// The append-only log must only advance through real turns; a prewarm
+		// build would mutate it out-of-band.
+		if (this.#appendOnlyContext) return "skipped";
+		if (this.#state.isStreaming) return "skipped";
+		try {
+			let messages = this.#state.messages.slice();
+			if (this.#transformContext) {
+				messages = await this.#transformContext(messages);
+			}
+			const llmMessages = await this.#convertToLlm(messages);
+			const normalizedMessages = normalizeMessagesForProvider(llmMessages, model);
+			const context: Context = {
+				systemPrompt: this.#state.systemPrompt,
+				messages: normalizedMessages,
+				tools: normalizeTools(this.#state.tools, this.#intentTracing),
+			};
+			const apiKey = (this.getApiKey ? await this.getApiKey(model.provider) : undefined) || undefined;
+			return await prewarmOpenAICodexResponsesContent(model as Model<"openai-codex-responses">, context, {
+				apiKey,
+				sessionId: this.#providerSessionId ?? this.#sessionId,
+				reasoning: this.#state.thinkingLevel,
+				serviceTier: this.#serviceTier,
+				temperature: this.#temperature,
+				topP: this.#topP,
+				topK: this.#topK,
+				minP: this.#minP,
+				presencePenalty: this.#presencePenalty,
+				repetitionPenalty: this.#repetitionPenalty,
+				toolChoice: this.#getToolChoice?.(),
+				preferWebsockets: this.#preferWebsockets,
+				providerSessionState: this.#providerSessionState,
+			});
+		} catch {
+			return "skipped";
+		}
 	}
 
 	/**

@@ -152,6 +152,8 @@ type CodexWebSocketSessionState = {
 	lastRequest?: RequestBody;
 	lastResponseId?: string;
 	lastResponseItems?: InputItem[];
+	/** In-flight content prewarm; real requests await it (it prefills the same context). */
+	activeContentPrewarm?: Promise<unknown>;
 	canAppend: boolean;
 	turnState?: string;
 	modelsEtag?: string;
@@ -698,6 +700,12 @@ async function openCodexWebSocketTransport(
 	requestBodyForState: RequestBody;
 	transport: CodexTransport;
 }> {
+	// A content prewarm may be mid-drain on this connection; wait for it both to
+	// avoid "request already in progress" and so its seeded append state (fresh
+	// previous_response_id) is visible to buildCodexWebSocketRequest below.
+	if (websocketState?.activeContentPrewarm) {
+		await websocketState.activeContentPrewarm.catch(() => {});
+	}
 	const websocketRequest = buildCodexWebSocketRequest(requestContext.transformedBody, websocketState);
 	const websocketHeaders = createCodexHeaders(
 		requestContext.requestHeaders,
@@ -1658,6 +1666,117 @@ export async function prewarmOpenAICodexResponses(
 		options?.signal,
 	);
 	state.prewarmed = true;
+}
+
+export type OpenAICodexContentPrewarmMode = "refresh" | "cold" | "skipped";
+
+/**
+ * Content-bearing prewarm (native codex parity: `response.create` with
+ * `generate: false` — the server prefills the prompt and persists response
+ * state without sampling, so the next real request rides `previous_response_id`
+ * as a small delta instead of paying a cold full-context prefill).
+ *
+ * Two modes:
+ * - `refresh`: a completed turn left `state.lastRequest` — resend it verbatim
+ *   (byte-exact by construction) to renew the server-side state before the WS
+ *   idle window closes between user messages.
+ * - `cold`: no prior request state (fresh process / `--resume`) — build the
+ *   body from the supplied context. Even when the eventual real request isn't
+ *   a byte-exact extension (so the delta path falls back to full context), the
+ *   server prompt cache is warmed with the same prefix, which removes most of
+ *   the prefill cost.
+ *
+ * Failures never disable the websocket transport — prewarm is best-effort.
+ */
+export async function prewarmOpenAICodexResponsesContent(
+	model: Model<"openai-codex-responses">,
+	context: Context | undefined,
+	options?: OpenAICodexResponsesOptions,
+): Promise<OpenAICodexContentPrewarmMode> {
+	const apiKey = options?.apiKey || getEnvApiKey(model.provider) || "";
+	if (!apiKey) return "skipped";
+	const accountId = getAccountId(apiKey);
+	const baseUrl = model.baseUrl || CODEX_BASE_URL;
+	const url = resolveCodexResponsesUrl(baseUrl);
+	const promptCacheKey = normalizeOpenAIResponsesPromptCacheKey(options?.sessionId);
+	const providerSessionState = getCodexProviderSessionState(options?.providerSessionState);
+	const sessionKey = getCodexWebSocketSessionKey(promptCacheKey, model, accountId, baseUrl);
+	const publicSessionKey = getCodexPublicSessionKey(promptCacheKey, model, baseUrl);
+	if (publicSessionKey && sessionKey) {
+		providerSessionState?.webSocketPublicToPrivate.set(publicSessionKey, sessionKey);
+	}
+	if (!sessionKey || !providerSessionState) return "skipped";
+	const state = getCodexWebSocketSessionState(sessionKey, providerSessionState);
+	if (!shouldUseCodexWebSocket(model, state, options?.preferWebsockets)) return "skipped";
+	if (state.activeContentPrewarm) return "skipped";
+
+	const mode: OpenAICodexContentPrewarmMode = state.canAppend && state.lastRequest ? "refresh" : "cold";
+	let body: RequestBody;
+	if (mode === "refresh" && state.lastRequest) {
+		body = structuredCloneJSON(state.lastRequest);
+	} else {
+		if (!context) return "skipped";
+		body = await buildTransformedCodexRequestBody(model, context, options);
+	}
+
+	const headers = createCodexHeaders(
+		{ ...(model.headers ?? {}), ...(options?.headers ?? {}) },
+		accountId,
+		apiKey,
+		promptCacheKey,
+		"websocket",
+		state,
+	);
+	// `generate` lives only on the wire request — the stored lastRequest must
+	// stay byte-identical to what a real request sends or append matching breaks.
+	const wsRequest: Record<string, unknown> = { type: "response.create", ...body, generate: false };
+
+	const drain = (async (): Promise<OpenAICodexContentPrewarmMode> => {
+		try {
+			const events = await openCodexWebSocketEventStream(
+				toWebSocketUrl(url),
+				headers,
+				wsRequest,
+				state,
+				options?.signal,
+				options,
+			);
+			let completedId: string | undefined;
+			for await (const event of events) {
+				const eventType = typeof event.type === "string" ? event.type : "";
+				if (eventType === "response.completed" || eventType === "response.done") {
+					const response = event.response as { id?: unknown } | undefined;
+					completedId = typeof response?.id === "string" ? response.id : undefined;
+					break;
+				}
+				if (eventType === "response.failed" || eventType === "response.incomplete" || eventType === "error") {
+					logCodexDebug("codex content prewarm rejected by server", { mode, eventType });
+					return "skipped";
+				}
+			}
+			if (completedId) {
+				state.lastRequest = structuredCloneJSON(body);
+				state.lastResponseId = completedId;
+				state.lastResponseItems = [];
+				state.canAppend = true;
+			}
+			state.prewarmed = true;
+			logCodexDebug("codex content prewarm completed", {
+				mode,
+				seededResponseId: Boolean(completedId),
+				inputItems: Array.isArray(body.input) ? body.input.length : 0,
+			});
+			return mode;
+		} catch (error) {
+			// Best-effort: never degrade the transport because a prewarm failed.
+			logCodexDebug("codex content prewarm failed", { mode, error: String(error) });
+			return "skipped";
+		} finally {
+			state.activeContentPrewarm = undefined;
+		}
+	})();
+	state.activeContentPrewarm = drain;
+	return drain;
 }
 
 function getCodexWebSocketSessionKey(

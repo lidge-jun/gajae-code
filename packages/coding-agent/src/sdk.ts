@@ -2019,6 +2019,18 @@ export async function createAgentSession(options: CreateAgentSessionOptions = {}
 							preferWebsockets: preferOpenAICodexWebsockets,
 							providerSessionState: session.providerSessionState,
 						});
+						// Content prewarm: prefill the system prompt + restored history
+						// server-side (generate:false) so the first user message rides
+						// the delta path / a warm prompt cache instead of paying a cold
+						// full-context prefill — the dominant TTFT cost on --resume.
+						const prewarmMode = await logger.time(
+							"prewarmCodexContent",
+							() => session.agent.prewarmCodexContent(),
+						);
+						logger.debug("Codex content prewarm finished", {
+							mode: prewarmMode,
+							model: codexModel.id,
+						});
 					} catch (error) {
 						const errorMessage = error instanceof Error ? error.message : String(error);
 						logger.debug("Codex websocket prewarm failed", {

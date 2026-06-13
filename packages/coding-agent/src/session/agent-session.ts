@@ -1651,6 +1651,53 @@ export class AgentSession {
 	}
 
 	#codexFallbackNoticed = false;
+	#codexPrewarmTimer: ReturnType<typeof setTimeout> | undefined;
+	#codexPrewarmRefreshesLeft = 0;
+
+	/**
+	 * Keep the Codex server-side response state warm between user messages.
+	 * The websocket idle window closes at ~5 minutes and the server-side
+	 * `previous_response_id` can expire with it; refreshing at 4 minutes
+	 * (re-sending the last request verbatim with `generate: false`) means the
+	 * next user message still rides the delta path instead of paying a cold
+	 * full-context prefill. Capped so an abandoned session stops refreshing.
+	 */
+	static readonly #CODEX_PREWARM_REFRESH_DELAY_MS = 240_000;
+	static readonly #CODEX_PREWARM_REFRESH_LIMIT = 6;
+
+	#scheduleCodexPrewarmRefresh(): void {
+		this.#cancelCodexPrewarmRefresh();
+		if (this.model?.api !== "openai-codex-responses") return;
+		this.#codexPrewarmRefreshesLeft = AgentSession.#CODEX_PREWARM_REFRESH_LIMIT;
+		this.#armCodexPrewarmTimer();
+	}
+
+	#armCodexPrewarmTimer(): void {
+		if (this.#codexPrewarmRefreshesLeft <= 0) return;
+		this.#codexPrewarmTimer = setTimeout(() => {
+			this.#codexPrewarmTimer = undefined;
+			this.#codexPrewarmRefreshesLeft -= 1;
+			void this.agent
+				.prewarmCodexContent()
+				.then(mode => {
+					if (this.#isDisposed || this.#codexPrewarmRefreshesLeft <= 0) return;
+					// Keep refreshing only while the warm state is actually being
+					// maintained; a skipped prewarm means there is nothing to keep alive.
+					if (mode !== "skipped") this.#armCodexPrewarmTimer();
+				})
+				.catch(() => {});
+		}, AgentSession.#CODEX_PREWARM_REFRESH_DELAY_MS);
+		// Don't hold the process open just to keep a cache warm.
+		this.#codexPrewarmTimer?.unref?.();
+	}
+
+	#cancelCodexPrewarmRefresh(): void {
+		if (this.#codexPrewarmTimer) {
+			clearTimeout(this.#codexPrewarmTimer);
+			this.#codexPrewarmTimer = undefined;
+		}
+		this.#codexPrewarmRefreshesLeft = 0;
+	}
 
 	/**
 	 * One-time notice when the codex websocket transport silently degrades to
@@ -1807,11 +1854,15 @@ export class AgentSession {
 			this.#resetStreamingEditState();
 			// TTSR: Reset buffer on turn start
 			this.#ttsrManager?.resetBuffer();
+			this.#cancelCodexPrewarmRefresh();
 		}
 
 		// TTSR: Increment message count on turn end (for repeat-after-gap tracking)
 		if (event.type === "turn_end" && this.#ttsrManager) {
 			this.#ttsrManager.incrementMessageCount();
+		}
+		if (event.type === "turn_end") {
+			this.#scheduleCodexPrewarmRefresh();
 		}
 		// Finalize the tool-choice queue's in-flight yield after tools have executed.
 		// This must happen at turn_end (not message_end) because onInvoked handlers
@@ -3196,6 +3247,7 @@ export class AgentSession {
 	 */
 	async dispose(): Promise<void> {
 		this.#isDisposed = true;
+		this.#cancelCodexPrewarmRefresh();
 		this.#pendingBackgroundExchanges = [];
 		this.yieldQueue.clear();
 		this.agent.setOnBeforeYield(undefined);
