@@ -39,7 +39,7 @@ Leave execution with a right-sized, evidence-grounded plan: scope, steps, accept
 - Acceptance criteria are specific and testable.
 - Codebase facts are backed by inspected files.
 - Risks and verification commands are concrete.
-- Handoff identifies when to use executor, architect, critic, team, or ultragoal.
+- Handoff identifies when to use executor, architect, critic, team, or goal.
 </success_criteria>
 
 <output_contract>
