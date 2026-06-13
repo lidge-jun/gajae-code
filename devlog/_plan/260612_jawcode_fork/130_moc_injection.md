@@ -26,7 +26,7 @@
 2. [확정] jwc 네이티브 디스커버리가 정본. cli-jaw `~/.cli-jaw/skills/`는 jwc `session.skills`로 직접 전달.
 3. **A1 조건부 축소** [확정]: jwc 모드 시 A1 시스템 프롬프트의 tool-specific 섹션(browser, search, web-ai) 제거. cli-jaw 고유 기능만 잔류 (dispatch, computer-use, vision-click).
 4. **browser 정본 = jwc browser tool** [확정]: `cli-jaw browser` CDP 커맨드는 jwc 모드에서 jwc browser tool로 라우팅. A1의 browser/desktop-control 섹션 제거, browse skill이 정본.
-5. **search/web-ai 포팅** [확정]: cli-jaw 측 search routing과 web-ai 스킬을 jwc hidden bundled skill로 포팅 (browse skill과 동일 패턴: `hide:true`). A1의 search 섹션 제거.
+5. **search/web-ai 포팅** ✅ 완료: search는 standalone hidden skill (`hide:true`), web-ai는 browse:web-ai fragment (`skill-fragment`, `parentSkillName: "browse"`). A1의 search 섹션 제거 대상.
 6. 충돌 주의: 020 jaw 아이덴티티 오버레이와 cli-jaw 시스템 프롬프트의 이중 적용 방지 — cli-jaw는 PABCD/identity 영역만 합성
 
 > [D10 이득, R14] M1에서 jwc 명령 표면이 cli-jaw와 통일되므로(orchestrate/goal/memory),
@@ -72,7 +72,7 @@
 - 자가 전이 단락 훅: 상주 환경에서 모델의 `jwc orchestrate <stage>` shell 호출을 in-process로 가로채는
   방식 (BashTool 인터셉트 vs 전용 도구 등록) — [111 §착수 전 실측 보강](./111_design_runtime_attach.md) 열린 질문 2 승계
 - D130-1 튜닝 항목 ①~④의 확정 시점 (130 착수 시 프로토타입으로 결정)
-- search skill 보강 범위: cli-jaw A1의 4단계 에스컬레이션(web-search → browser → ~~progrok~~ → web-ai) 중 jwc에 포팅할 라우팅 규칙 구체화
+- ~~search skill 보강 범위~~ → **130.2 §6 감사 결과 참조**: 커버리지 갭 9건 식별 (높음 3 / 중 4 / 낮 2). progrok/M1-M5/agbrowse research plan은 의도적 미포팅
 
 ## 세부 실행 문서 (260613 구체화)
 

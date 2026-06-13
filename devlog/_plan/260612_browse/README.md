@@ -20,7 +20,8 @@
 - 그래도 `browse`는 workflow skill이 아니라 **tool usage skill**로 취급한다.
 - 기본 context 절감이 1차 목표다. 런타임 통합(cli-jaw/AGBrowse backend)은 후속 트랙이다.
 - ~~현재 폴더의 MVP는 계획 문서 스캐폴딩~~ → **구현 완료** (260613). `browser.md` 72→14줄, `.describe()` 18개 제거, browse skill `hide:true` 등록, token 4,500→2,965 (34% 감소).
-- **후속 포팅 대상**: search skill 보강 + web-ai skill 포팅 (동일 `hide:true` 패턴). 130 Scope A 선행 작업.
+- **포팅 완료** (260613): search skill (`hide:true` standalone) + web-ai (`browse:web-ai` fragment). 130 Scope A 선행 작업 완수.
+- **커버리지 갭 감사** (260613): cli-jaw 대비 jwc 스킬 미보강 9건 식별 (130.2 §6 참조). 높음: snippet verification / tier escalation / role separation. 중: evidence status / question envelope / escalation ladder / Korean protocol.
 
 ## Subagent review — 260612
 

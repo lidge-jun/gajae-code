@@ -143,7 +143,7 @@ JawRuntime
 > | **0 (신규)** | jaw 모드 agentDir (e2e 발견: `~/.cli-jaw/jwc-agent` 빈 폴더라 인증 실패) | **A — `~/.jwc/agent` 재사용**. 기존 로그인/스킬/메모리 승계. Code 모드만 격리 유지 | 110 (jwc-runtime `jwcAgentDir()` 기본값) |
 > | **1** | PABCD 정본 충돌 | **A — cli-jaw `orc_state` DB 단일 정본**. jaw 모드일 때 jwc의 `.jwc/state/pabcd-state.json` 정본 경로 **단락**(호스트 DB에 양보) | 130 (+ jwc orchestrate-state 수정) |
 > | **2** | orchestrate 자가 전이 단락 | **A — orchestrate 전용 in-process 도구 등록**(shell `jwc orchestrate` 우회, 명시적) | 130 (+ 110 도구 등록) |
-> | **5** | discoverSkills 스텁 | **A — `sdk.ts`에서 `loadSkills` 재수출**(단일 import 경계 유지, 100.12 계약 일관) | 130 (+ jwc sdk 표면) |
+> | **5** | discoverSkills 스텁 | ~~A — `sdk.ts`에서 `loadSkills` 재수출~~ → **✅ 해소 (260613 검증)**: fork가 `createAgentSession` 내부에서 `loadSkills` 직접 호출로 대체 완료. `discoverSkills` 스텁은 미호출 상태이며 quarantine test(`utility-extensibility-quarantine.test.ts:76`)가 강제. 130.2 §0 실측과 일치, 별도 수정 불필요 | ~~130~~ (완료) |
 > | 3 | gateway busy 게이트 | ✅ 이미 해결 — `spawn.ts:319` or-체인 합류, 110 e2e에서 busy 정착 확인 | (완료) |
 > | 4 | `Bun.sleep` 잔존 | ✅ 이미 해결 — 100 셰임 적용 완료 | (완료) |
 >
