@@ -654,7 +654,7 @@ export class StatusLineComponent implements Component {
 			},
 			usage: this.#cachedUsage,
 			pabcd: this.#pabcdState,
-			ultragoal: (() => {
+			goal: (() => {
 				try {
 					const getCwd = this.session.sessionManager?.getCwd;
 					const cwd = typeof getCwd === "function" ? getCwd.call(this.session.sessionManager) : getProjectDir();

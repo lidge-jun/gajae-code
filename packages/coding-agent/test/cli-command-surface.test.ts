@@ -25,7 +25,7 @@ describe("GJC public CLI command surface", () => {
 			"harness",
 			"coordinator",
 			"team",
-			"ultragoal",
+			"goal",
 			"ralplan",
 			"config",
 			"mcp-serve",

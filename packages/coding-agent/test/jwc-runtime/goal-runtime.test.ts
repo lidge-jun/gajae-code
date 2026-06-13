@@ -147,7 +147,7 @@ describe("goal status readability (99.00.03 P1-2)", () => {
 		const status = await runNativeGoalCommand(["status"], cwd);
 		expect(status.stdout?.startsWith("Goal:    사용자 목표 헤드라인")).toBe(true);
 		expect(status.stdout).toContain("Status:  active");
-		expect(status.stdout).toContain("Mode:    ultragoal ledger");
+		expect(status.stdout).toContain("Mode:    ultragoal ledger (.jwc/ultragoal/)");
 		expect(status.stdout).toContain("ID:      G001");
 		expect(status.stdout).not.toContain("Complete the durable ultragoal plan");
 	});

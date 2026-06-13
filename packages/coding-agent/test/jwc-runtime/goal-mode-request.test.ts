@@ -28,7 +28,7 @@ afterEach(async () => {
 	await Promise.all(tempRoots.splice(0).map(dir => fs.rm(dir, { recursive: true, force: true })));
 });
 
-describe("GJC ultragoal goal mode request", () => {
+describe("GJC goal goal mode request", () => {
 	it("detects create-goals invocations without matching flags", () => {
 		expect(isGoalCreateGoalsInvocation(["create-goals", "--brief", "ship it"])).toBe(true);
 		expect(isGoalCreateGoalsInvocation(["create", "--brief", "ship it"])).toBe(true);
@@ -37,7 +37,7 @@ describe("GJC ultragoal goal mode request", () => {
 		expect(isGoalCreateGoalsInvocation(["status", "--filter", "create-goals"])).toBe(false);
 	});
 
-	it("reads jwcObjective from the generated ultragoal plan", async () => {
+	it("reads jwcObjective from the generated goal plan", async () => {
 		const root = await tempDir();
 		const goalsPath = path.join(root, ".jwc", "ultragoal", "goals.json");
 		await fs.mkdir(path.dirname(goalsPath), { recursive: true });
@@ -51,12 +51,12 @@ describe("GJC ultragoal goal mode request", () => {
 
 	it("writes and consumes a pending runtime goal mode request", async () => {
 		const root = await tempDir();
-		await writePendingGoalModeRequest({ cwd: root, objective: "Complete ultragoal", goalsPath: "goals.json" });
+		await writePendingGoalModeRequest({ cwd: root, objective: "Complete goal", goalsPath: "goals.json" });
 
 		const request = await consumePendingGoalModeRequest(root);
 		const consumedAgain = await consumePendingGoalModeRequest(root);
 
-		expect(request?.objective).toBe("Complete ultragoal");
+		expect(request?.objective).toBe("Complete goal");
 		expect(request?.source).toBe("ultragoal");
 		expect(consumedAgain).toBeNull();
 	});
@@ -65,7 +65,7 @@ describe("GJC ultragoal goal mode request", () => {
 		const root = await tempDir();
 		await writePendingGoalModeRequest({
 			cwd: root,
-			objective: "Complete ultragoal",
+			objective: "Complete goal",
 			goalsPath: "goals.json",
 			sessionId: "session-A",
 		});
@@ -76,7 +76,7 @@ describe("GJC ultragoal goal mode request", () => {
 
 		// The request is left intact for its rightful owner to consume.
 		const owned = await consumePendingGoalModeRequest(root, "session-A");
-		expect(owned?.objective).toBe("Complete ultragoal");
+		expect(owned?.objective).toBe("Complete goal");
 		expect(owned?.sessionId).toBe("session-A");
 
 		// Once consumed by the owner it is gone for everyone.
@@ -87,7 +87,7 @@ describe("GJC ultragoal goal mode request", () => {
 		const root = await tempDir();
 		await writePendingGoalModeRequest({
 			cwd: root,
-			objective: "Complete ultragoal",
+			objective: "Complete goal",
 			sessionId: "session-A",
 		});
 
@@ -97,11 +97,11 @@ describe("GJC ultragoal goal mode request", () => {
 
 	it("keeps consuming legacy unscoped requests from any session", async () => {
 		const root = await tempDir();
-		await writePendingGoalModeRequest({ cwd: root, objective: "Complete ultragoal" });
+		await writePendingGoalModeRequest({ cwd: root, objective: "Complete goal" });
 
 		// No sessionId stamped (legacy/CLI-only producer) → consumable by any session.
 		const request = await consumePendingGoalModeRequest(root, "session-X");
-		expect(request?.objective).toBe("Complete ultragoal");
+		expect(request?.objective).toBe("Complete goal");
 		expect(request?.sessionId).toBeUndefined();
 	});
 
@@ -118,7 +118,7 @@ describe("GJC ultragoal goal mode request", () => {
 					id: "user-1",
 					parentId: null,
 					timestamp,
-					message: { role: "user", content: [{ type: "text", text: "start ultragoal" }] },
+					message: { role: "user", content: [{ type: "text", text: "start goal" }] },
 				}),
 				"",
 			].join("\n"),
@@ -126,7 +126,7 @@ describe("GJC ultragoal goal mode request", () => {
 
 		const result = await writeCurrentSessionGoalModeState({
 			sessionFile,
-			objective: "Complete generated ultragoal plan",
+			objective: "Complete generated goal plan",
 		});
 		const entries = (await loadEntriesFromFile(sessionFile)).filter(
 			(entry): entry is SessionEntry => entry.type !== "session",
@@ -136,7 +136,7 @@ describe("GJC ultragoal goal mode request", () => {
 		expect(result.status).toBe("updated");
 		expect(context.mode).toBe("goal");
 		expect(context.modeData?.goal).toMatchObject({
-			objective: "Complete generated ultragoal plan",
+			objective: "Complete generated goal plan",
 			status: "active",
 			tokensUsed: 0,
 		});
@@ -174,7 +174,7 @@ describe("GJC ultragoal goal mode request", () => {
 		const before = await Bun.file(sessionFile).text();
 		const result = await writeCurrentSessionGoalModeState({
 			sessionFile,
-			objective: "New ultragoal objective",
+			objective: "New goal objective",
 		});
 		const after = await Bun.file(sessionFile).text();
 
@@ -214,7 +214,7 @@ describe("GJC ultragoal goal mode request", () => {
 
 		const result = await writeCurrentSessionGoalModeState({
 			sessionFile,
-			objective: "New ultragoal objective",
+			objective: "New goal objective",
 		});
 
 		expect(result.status).toBe("existing_goal");
@@ -284,7 +284,7 @@ describe("GJC ultragoal goal mode request", () => {
 		await expect(consumePendingGoalModeRequest(root)).rejects.toThrow(SyntaxError);
 	});
 
-	it("surfaces corrupt ultragoal goals json", async () => {
+	it("surfaces corrupt goal goals json", async () => {
 		const root = await tempDir();
 		const goalsPath = path.join(root, ".jwc", "ultragoal", "goals.json");
 		await fs.mkdir(path.dirname(goalsPath), { recursive: true });

@@ -48,6 +48,21 @@ interface CreateSelectorOptions {
 	thinkingLevel?: ThinkingLevel | null;
 	explicitThinkingLevel?: boolean;
 }
+function createCanonicalRecord(model: Model) {
+	return {
+		id: model.id,
+		name: model.name,
+		variants: [
+			{
+				canonicalId: model.id,
+				selector: `${model.provider}/${model.id}`,
+				model,
+				source: "fallback" as const,
+			},
+		],
+	};
+}
+
 
 function createSelector(
 	model: Model,
@@ -60,8 +75,8 @@ function createSelector(
 		({
 			getAll: () => [model],
 			getDiscoverableProviders: () => [],
-			getCanonicalModels: () => [],
-			resolveCanonicalModel: () => undefined,
+			getCanonicalModels: () => [createCanonicalRecord(model)],
+			resolveCanonicalModel: () => model,
 		} as unknown as ModelRegistry);
 	const ui = {
 		requestRender: vi.fn(),

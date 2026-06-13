@@ -18,12 +18,12 @@ interface GoalStateStub {
 	pauseAudit?: { actor: string; evidence: string; timestamp: string };
 }
 
-function ctx(ultragoal: SegmentContext["ultragoal"], goalState?: GoalStateStub): SegmentContext {
+function ctx(goal: SegmentContext["goal"], goalState?: GoalStateStub): SegmentContext {
 	return {
 		planMode: null,
 		goalMode: { enabled: true, paused: false },
 		pabcd: null,
-		ultragoal,
+		goal,
 		options: {},
 		session: {
 			getGoalModeState: () => goalState ?? { goal: { status: "active" } },

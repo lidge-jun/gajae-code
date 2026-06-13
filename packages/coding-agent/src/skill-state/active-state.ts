@@ -10,7 +10,7 @@ import type { WorkflowStateReceipt } from "./workflow-state-contract";
 
 export const SKILL_ACTIVE_STATE_FILE = "skill-active-state.json";
 
-export const CANONICAL_JWC_WORKFLOW_SKILLS = ["jaw-interview", "ralplan", "ultragoal", "team"] as const;
+export const CANONICAL_JWC_WORKFLOW_SKILLS = ["jaw-interview", "ralplan", "goal", "ultragoal", "team"] as const;
 
 export type CanonicalJwcWorkflowSkill = (typeof CANONICAL_JWC_WORKFLOW_SKILLS)[number];
 export type WorkflowHudSeverity = "info" | "warning" | "blocked" | "error" | "success";
@@ -519,7 +519,7 @@ function dedupeVisibleBySkill(entries: SkillActiveEntry[], sessionId?: string): 
  * jaw-interview mutation guard and handoff caller inference) must keep seeing
  * every genuinely-active skill rather than the single most-recent pipeline stage.
  */
-const PLANNING_PIPELINE_SKILLS = new Set<string>(["jaw-interview", "ralplan", "ultragoal"]);
+const PLANNING_PIPELINE_SKILLS = new Set<string>(["jaw-interview", "ralplan", "goal", "ultragoal"]);
 
 export function collapsePlanningPipeline(entries: readonly SkillActiveEntry[]): SkillActiveEntry[] {
 	const pipeline = entries.filter(entry => PLANNING_PIPELINE_SKILLS.has(entry.skill));

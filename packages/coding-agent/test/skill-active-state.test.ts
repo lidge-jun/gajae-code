@@ -250,10 +250,10 @@ describe("GJC skill-active state", () => {
 							active: false,
 							session_id: "sess1",
 							updated_at: "2026-01-01T00:02:00.000Z",
-							handoff_to: "ultragoal",
+							handoff_to: "goal",
 						},
 						{
-							skill: "ultragoal",
+							skill: "goal",
 							phase: "executing",
 							active: true,
 							session_id: "sess1",
@@ -264,13 +264,13 @@ describe("GJC skill-active state", () => {
 			);
 
 			const visible = await readVisibleSkillActiveState(cwd, "sess1");
-			expect(visible?.active_skills?.map(entry => entry.skill)).toEqual(["ultragoal"]);
+			expect(visible?.active_skills?.map(entry => entry.skill)).toEqual(["goal"]);
 		});
 	});
 
 	it("keeps every active pipeline skill at the read layer (HUD pipeline collapse is render-only)", async () => {
 		await withTempCwd(async cwd => {
-			// `jwc ralplan` then `jwc ultragoal` each activate their own row without
+			// `jwc ralplan` then `jwc goal` each activate their own row without
 			// demoting the other. The shared read keeps both so blocking consumers
 			// (jaw-interview mutation guard, handoff caller inference) still see the
 			// true active set; collapsing to the current stage is the HUD renderer's
@@ -285,15 +285,15 @@ describe("GJC skill-active state", () => {
 			});
 			await syncSkillActiveState({
 				cwd,
-				skill: "ultragoal",
+				skill: "goal",
 				phase: "executing",
 				active: true,
-				source: "gjc-ultragoal",
+				source: "gjc-goal",
 				nowIso: "2026-01-01T00:05:00.000Z",
 			});
 
 			const visible = await readVisibleSkillActiveState(cwd);
-			expect(visible?.active_skills?.map(entry => entry.skill).sort()).toEqual(["ralplan", "ultragoal"]);
+			expect(visible?.active_skills?.map(entry => entry.skill).sort()).toEqual(["ralplan", "goal"]);
 		});
 	});
 
@@ -379,6 +379,6 @@ describe("GJC skill-active state", () => {
 	});
 
 	it("keeps the canonical GJC workflow skill set intentionally small", () => {
-		expect(CANONICAL_JWC_WORKFLOW_SKILLS).toEqual(["jaw-interview", "ralplan", "ultragoal", "team"]);
+		expect(CANONICAL_JWC_WORKFLOW_SKILLS).toEqual(["jaw-interview", "ralplan", "goal", "ultragoal", "team"]);
 	});
 });

@@ -226,10 +226,10 @@ describe("GoalTool", () => {
 		expect(harness.getState()?.goal.status).toBe("complete");
 	});
 
-	it("blocks direct unified goal completion for active ultragoal objectives without verification receipt", async () => {
-		const root = await fs.mkdtemp(path.join(os.tmpdir(), "gjc-goal-ultragoal-"));
+	it("blocks direct unified goal completion for active goal objectives without verification receipt", async () => {
+		const root = await fs.mkdtemp(path.join(os.tmpdir(), "gjc-goal-goal-"));
 		try {
-			const plan = await createGoalPlan({ cwd: root, brief: "Ship verified ultragoal" });
+			const plan = await createGoalPlan({ cwd: root, brief: "Ship verified goal" });
 			await startNextGoal({ cwd: root });
 			const harness = createRuntimeHarness({
 				enabled: true,

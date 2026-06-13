@@ -19,7 +19,7 @@ function createCtx(thinkingLevel: ThinkingLevel): SegmentContext {
 		planMode: null,
 		goalMode: null,
 		pabcd: null,
-		ultragoal: null,
+		goal: null,
 		usageStats: {
 			input: 0,
 			output: 0,

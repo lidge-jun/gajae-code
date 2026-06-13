@@ -70,7 +70,7 @@ describe("jwc state write hardening", () => {
 
 	it.each([
 		["ralplan", "planner"],
-		["ultragoal", "active"],
+		["goal", "active"],
 		["team", "running"],
 	])("allows %s handoff writes without --force", async (mode, fromPhase) => {
 		const root = await tempDir();

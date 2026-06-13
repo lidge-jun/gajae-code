@@ -63,7 +63,7 @@ const ledgerCache = new Map<string, LedgerCacheEntry>();
  * cached so unchanged files skip the re-parse (1s-TTL poll rail calls this).
  */
 export function readGoalLedgerStats(cwd: string): GoalLedgerStats | null {
-	const ledgerPath = path.join(cwd, ".jwc", "ultragoal", "ledger.jsonl");
+	const ledgerPath = path.join(cwd, ".jwc", "goal", "ledger.jsonl");
 	try {
 		const stat = fs.statSync(ledgerPath);
 		const cached = ledgerCache.get(ledgerPath);

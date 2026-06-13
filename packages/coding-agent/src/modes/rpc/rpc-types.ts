@@ -403,7 +403,7 @@ export type RpcCommandType = RpcCommand["type"];
  * from this union. Gate construction rejects any other stage value.
  */
 /** "deep-interview" is the legacy wire value for "jaw-interview" (042 L3 dual-union read-compat). */
-export type RpcWorkflowStage = "jaw-interview" | "deep-interview" | "ralplan" | "ultragoal";
+export type RpcWorkflowStage = "jaw-interview" | "deep-interview" | "ralplan" | "ultragoal" | "goal";
 
 /** Reserved stage names that are explicitly not part of the v1 contract. */
 export const RESERVED_WORKFLOW_STAGES: readonly string[] = ["team"];

@@ -131,58 +131,58 @@ describe("skill HUD bar renderer", () => {
 	});
 
 	it("shows only the callee after an R->U handoff", () => {
-		const rendered = Bun.stripANSI(renderSkillHudBar([{ skill: "ultragoal", phase: "goal-planning" }], 80) ?? "");
-		expect(rendered).toContain("ultragoal:goal-planning");
+		const rendered = Bun.stripANSI(renderSkillHudBar([{ skill: "goal", phase: "goal-planning" }], 80) ?? "");
+		expect(rendered).toContain("goal:goal-planning");
 		expect(rendered).not.toContain("ralplan");
 	});
 
 	it("shows only the callee after a backward U->R handoff", () => {
 		const rendered = Bun.stripANSI(renderSkillHudBar([{ skill: "ralplan", phase: "planning" }], 80) ?? "");
 		expect(rendered).toContain("ralplan:planning");
-		expect(rendered).not.toContain("ultragoal");
+		expect(rendered).not.toContain("goal");
 	});
 
 	it("collapses the planning pipeline to the most-recently-activated stage", () => {
-		// `jwc ralplan` then `jwc ultragoal` activate their own rows without
+		// `jwc ralplan` then `jwc goal` activate their own rows without
 		// running the handoff verb, so both arrive at the HUD active. Only the
 		// current (newest) stage should render.
 		const rendered = Bun.stripANSI(
 			renderSkillHudBar(
 				[
 					{ skill: "ralplan", phase: "final", active: true, updated_at: "2026-01-01T00:00:00.000Z" },
-					{ skill: "ultragoal", phase: "executing", active: true, updated_at: "2026-01-01T00:05:00.000Z" },
+					{ skill: "goal", phase: "executing", active: true, updated_at: "2026-01-01T00:05:00.000Z" },
 				],
 				80,
 			) ?? "",
 		);
-		expect(rendered).toContain("ultragoal:executing");
+		expect(rendered).toContain("goal:executing");
 		expect(rendered).not.toContain("ralplan");
 	});
 
-	it("keeps team alongside ultragoal since team is not part of the planning pipeline", () => {
+	it("keeps team alongside goal since team is not part of the planning pipeline", () => {
 		const rendered = Bun.stripANSI(
 			renderSkillHudBar(
 				[
-					{ skill: "ultragoal", phase: "executing", active: true, updated_at: "2026-01-01T00:00:00.000Z" },
+					{ skill: "goal", phase: "executing", active: true, updated_at: "2026-01-01T00:00:00.000Z" },
 					{ skill: "team", phase: "running", active: true, updated_at: "2026-01-01T00:05:00.000Z" },
 				],
 				80,
 			) ?? "",
 		);
-		expect(rendered).toContain("ultragoal:executing");
+		expect(rendered).toContain("goal:executing");
 		expect(rendered).toContain("team:running");
 	});
 
 	it("collapses the pipeline NaN-safely: a valid timestamp wins over a missing one regardless of order", () => {
 		const entries = [
 			{ skill: "ralplan", phase: "final", active: true },
-			{ skill: "ultragoal", phase: "executing", active: true, updated_at: "2026-01-01T00:05:00.000Z" },
+			{ skill: "goal", phase: "executing", active: true, updated_at: "2026-01-01T00:05:00.000Z" },
 		];
 		const forward = Bun.stripANSI(renderSkillHudBar(entries, 80) ?? "");
 		const reversed = Bun.stripANSI(renderSkillHudBar([...entries].reverse(), 80) ?? "");
-		expect(forward).toContain("ultragoal:executing");
+		expect(forward).toContain("goal:executing");
 		expect(forward).not.toContain("ralplan");
-		expect(reversed).toContain("ultragoal:executing");
+		expect(reversed).toContain("goal:executing");
 		expect(reversed).not.toContain("ralplan");
 	});
 
@@ -191,13 +191,13 @@ describe("skill HUD bar renderer", () => {
 			renderSkillHudBar(
 				[
 					{ skill: "ralplan", phase: "final", active: true },
-					{ skill: "ultragoal", phase: "executing", active: true },
+					{ skill: "goal", phase: "executing", active: true },
 				],
 				80,
 			) ?? "",
 		);
 		// Exactly one planning-pipeline chip survives the collapse.
-		const chips = (rendered.split("hud")[1] ?? "").split("+").filter(part => /ralplan|ultragoal/.test(part));
+		const chips = (rendered.split("hud")[1] ?? "").split("+").filter(part => /ralplan|goal/.test(part));
 		expect(chips).toHaveLength(1);
 	});
 

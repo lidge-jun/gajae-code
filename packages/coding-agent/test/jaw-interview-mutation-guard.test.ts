@@ -115,7 +115,7 @@ describe("jaw-interview mutation guard", () => {
 				tool("write"),
 				{ path: ".jwc/state/sessions/session-a/skill-active-state.json", content: "{}" },
 			],
-			...(["jaw-interview", "ralplan", "ultragoal", "team"] as const).map(
+			...(["jaw-interview", "ralplan", "goal", "team"] as const).map(
 				skill =>
 					[
 						`write ${skill}`,

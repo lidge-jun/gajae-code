@@ -81,7 +81,7 @@ describe("WorkflowGateBroker", () => {
 
 	it("is idempotent on replay and detects conflicts", async () => {
 		const { broker, advanced } = makeBroker();
-		const gate = broker.openGate({ stage: "ultragoal", kind: "execution", schema: { type: "boolean" } });
+		const gate = broker.openGate({ stage: "goal", kind: "execution", schema: { type: "boolean" } });
 		const first = await broker.resolve({ gate_id: gate.gate_id, answer: true, idempotency_key: "k1" });
 		const replay = await broker.resolve({ gate_id: gate.gate_id, answer: true, idempotency_key: "k1" });
 		expect(replay).toEqual(first);

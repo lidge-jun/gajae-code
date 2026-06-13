@@ -29,7 +29,7 @@ beforeEach(() => {
 });
 
 async function tempDir(): Promise<string> {
-	const dir = await fs.mkdtemp(path.join(process.cwd(), ".tmp-ultragoal-runtime-"));
+	const dir = await fs.mkdtemp(path.join(process.cwd(), ".tmp-goal-runtime-"));
 	tempRoots.push(dir);
 	return dir;
 }
@@ -202,7 +202,7 @@ async function seedStaleUltragoalActiveEntry(root: string): Promise<void> {
 			chips: [{ label: "status", value: "goal-planning" }],
 		},
 	};
-	await Bun.write(path.join(stateDir, "active", "ultragoal.json"), JSON.stringify(entry, null, 2));
+	await Bun.write(path.join(stateDir, "active", "goal.json"), JSON.stringify(entry, null, 2));
 	await Bun.write(
 		path.join(stateDir, "skill-active-state.json"),
 		JSON.stringify(
@@ -271,7 +271,7 @@ function goalToolSnapshot(objective: string, status = "active", updatedAt: numbe
 	});
 }
 
-describe("native GJC ultragoal runtime", () => {
+describe("native GJC goal runtime", () => {
 	it("reports missing status from a fresh repo", async () => {
 		const root = await tempDir();
 
@@ -288,7 +288,7 @@ describe("native GJC ultragoal runtime", () => {
 	it("creates a durable aggregate plan and ledger", async () => {
 		const root = await tempDir();
 
-		const plan = await createGoalPlan({ cwd: root, brief: "Fix native ultragoal status" });
+		const plan = await createGoalPlan({ cwd: root, brief: "Fix native goal status" });
 		const goalsRaw = await Bun.file(path.join(root, ".jwc", "ultragoal", "goals.json")).text();
 		const ledgerRaw = await Bun.file(path.join(root, ".jwc", "ultragoal", "ledger.jsonl")).text();
 
@@ -296,7 +296,7 @@ describe("native GJC ultragoal runtime", () => {
 		expect(plan.jwcObjective).toContain(".jwc/ultragoal/goals.json");
 		expect(plan.goals).toHaveLength(1);
 		expect(plan.goals[0]).toMatchObject({ id: "G001", status: "pending" });
-		expect(goalsRaw).toContain("Fix native ultragoal status");
+		expect(goalsRaw).toContain("Fix native goal status");
 		expect(ledgerRaw).toContain("plan_created");
 	});
 
@@ -380,8 +380,8 @@ describe("native GJC ultragoal runtime", () => {
 		const result = await runNativeGoalEngineCommand(["checkpoint", "--help"], root);
 
 		expect(result.status).toBe(0);
-		// Brand-agnostic: the help banner prints `$ ${APP_NAME} ultragoal …` (3bdc7563 dynamic APP_NAME).
-		expect(result.stdout).toContain("ultragoal checkpoint --goal-id");
+		// Brand-agnostic: the help banner prints `$ ${APP_NAME} goal …` (3bdc7563 dynamic APP_NAME).
+		expect(result.stdout).toContain("goal checkpoint --goal-id");
 		expect(result.stdout).toContain("--quality-gate-json");
 		expect(result.stdout).toContain('goal({"op":"get"})');
 		expect(result.stdout).toContain("obligation");
@@ -541,7 +541,7 @@ describe("native GJC ultragoal runtime", () => {
 		expect(plan.goals[0]?.status).toBe("complete");
 		expect(plan.goals[0]?.completionVerification?.receiptKind).toBe("per-goal");
 	});
-	it("continues to next ultragoal goal after checkpointing G001 complete", async () => {
+	it("continues to next goal goal after checkpointing G001 complete", async () => {
 		const root = await tempDir();
 		const created = await createGoalPlan({ cwd: root, brief: "Ship the fix" });
 		await addGoalSubgoal({
@@ -573,7 +573,7 @@ describe("native GJC ultragoal runtime", () => {
 		const ledger = await readGoalLedger(root);
 
 		expect(result.status).toBe(0);
-		expect(result.stdout).toContain("Next ultragoal goal: G002");
+		expect(result.stdout).toContain("Next goal: G002");
 		expect(status.goals[0]).toMatchObject({ id: "G001", status: "complete" });
 		expect(status.goals[1]).toMatchObject({ id: "G002", status: "active" });
 		expect(status.status).toBe("active");
@@ -611,7 +611,7 @@ describe("native GJC ultragoal runtime", () => {
 		);
 		expect(result.status).toBe(0);
 		const plan = await readGoalPlan(root);
-		if (!plan) throw new Error("missing ultragoal plan");
+		if (!plan) throw new Error("missing goal plan");
 		const diagnostic = validateCompletionReceipt({
 			plan,
 			ledger: await readGoalLedger(root),
@@ -1386,7 +1386,7 @@ describe("native GJC ultragoal runtime", () => {
 	});
 });
 
-describe("ultragoal @goal decomposition", () => {
+describe("goal @goal decomposition", () => {
 	async function goalsFileExists(root: string): Promise<boolean> {
 		return await Bun.file(path.join(root, ".jwc", "ultragoal", "goals.json")).exists();
 	}
@@ -1754,7 +1754,7 @@ describe("ultragoal @goal decomposition", () => {
 	});
 });
 
-describe("ultragoal mode-state + HUD reconciliation (#342)", () => {
+describe("goal mode-state + HUD reconciliation (#342)", () => {
 	function modeStatePath(root: string, sessionId?: string): string {
 		if (sessionId) {
 			const encoded = encodeURIComponent(sessionId).replaceAll(".", "%2E");
@@ -1872,7 +1872,7 @@ describe("ultragoal mode-state + HUD reconciliation (#342)", () => {
 			// Drive the mode-state to "active" via the sanctioned reconciliation path.
 			await reconcileWorkflowSkillState({
 				cwd: root,
-				mode: "ultragoal",
+				mode: "goal",
 				sessionId: undefined,
 				active: true,
 				phase: "active",
@@ -1881,7 +1881,7 @@ describe("ultragoal mode-state + HUD reconciliation (#342)", () => {
 			// active -> pending has no manifest transition edge; reconciliation must still succeed.
 			const res = await reconcileWorkflowSkillState({
 				cwd: root,
-				mode: "ultragoal",
+				mode: "goal",
 				sessionId: undefined,
 				active: true,
 				phase: "pending",
@@ -1894,13 +1894,13 @@ describe("ultragoal mode-state + HUD reconciliation (#342)", () => {
 			await expect(
 				reconcileWorkflowSkillState({
 					cwd: root,
-					mode: "ultragoal",
+					mode: "goal",
 					sessionId: undefined,
 					active: true,
 					phase: "goal-execution",
 					payload: { skill: "ultragoal" },
 				}),
-			).rejects.toThrow(/unknown ultragoal phase/);
+			).rejects.toThrow(/unknown goal phase/);
 		});
 	});
 

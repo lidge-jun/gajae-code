@@ -5,11 +5,11 @@ import * as path from "node:path";
 
 const repoRoot = path.resolve(import.meta.dir, "..", "..", "..");
 const cliEntry = path.join(repoRoot, "packages", "coding-agent", "src", "cli.ts");
-const workflowSkills = ["jaw-interview", "ralplan", "ultragoal", "team"] as const;
+const workflowSkills = ["jaw-interview", "ralplan", "goal", "team"] as const;
 const initialPhases: Record<(typeof workflowSkills)[number], string> = {
 	"jaw-interview": "interviewing",
 	ralplan: "planner",
-	ultragoal: "goal-planning",
+	goal: "goal-planning",
 	team: "starting",
 };
 

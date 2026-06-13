@@ -284,7 +284,7 @@ describe("jwc state handoff", () => {
 		});
 	});
 
-	it("supports backward chain ultragoal -> ralplan", async () => {
+	it("supports backward chain goal -> ralplan", async () => {
 		await withTempCwd(async cwd => {
 			await writeJson(path.join(cwd, ".jwc/state/ultragoal-state.json"), {
 				skill: "ultragoal",
@@ -297,10 +297,10 @@ describe("jwc state handoff", () => {
 				cwd,
 			);
 			expect(result.status).toBe(0);
-			const ultragoal = await readJson(path.join(cwd, ".jwc/state/ultragoal-state.json"));
-			expect(ultragoal?.active).toBe(false);
-			expect(ultragoal?.current_phase).toBe("handoff");
-			expect(ultragoal?.handoff_to).toBe("ralplan");
+			const goal = await readJson(path.join(cwd, ".jwc/state/ultragoal-state.json"));
+			expect(goal?.active).toBe(false);
+			expect(goal?.current_phase).toBe("handoff");
+			expect(goal?.handoff_to).toBe("ralplan");
 			const ralplan = await readJson(path.join(cwd, ".jwc/state/ralplan-state.json"));
 			expect(ralplan?.active).toBe(true);
 			expect(ralplan?.handoff_from).toBe("ultragoal");

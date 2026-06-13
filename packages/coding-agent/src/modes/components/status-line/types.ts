@@ -37,8 +37,8 @@ export interface SegmentContext {
 		verificationStatus?: "pending" | "done" | "needs_fix";
 		aRound?: number;
 	} | null;
-	/** 99.04.04: ultragoal ledger summary (null when no ledger). */
-	ultragoal: { checkpointCount: number; lastEvidenceBlank: boolean } | null;
+	/** 99.04.04: goal ledger summary (null when no ledger). */
+	goal: { checkpointCount: number; lastEvidenceBlank: boolean } | null;
 	// Cached values for performance (computed once per render)
 	usageStats: {
 		input: number;

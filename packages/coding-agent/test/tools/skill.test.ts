@@ -133,11 +133,11 @@ describe("SkillTool", () => {
 	});
 
 	it("createIf returns null when session lacks sendCustomMessage", async () => {
-		const ultragoal = await makeSkill("ultragoal", "# Ultragoal\nBody");
+		const goal = await makeSkill("goal", "# Ultragoal\nBody");
 		const session: ToolSession = {
 			cwd: "/tmp",
 			hasUI: false,
-			skills: [ultragoal],
+			skills: [goal],
 			getSessionFile: () => null,
 			getSessionSpawns: () => "*",
 			settings: Settings.isolated(),
@@ -147,18 +147,18 @@ describe("SkillTool", () => {
 
 	it("dispatches the chained skill same-turn without deliverAs nextTurn", async () => {
 		const cwd = await makeTempCwd();
-		const ultragoal = await makeSkill("ultragoal", "---\nname: ultragoal\n---\n# Ultragoal\nTrack execution.");
+		const goal = await makeSkill("goal", "---\nname: goal\n---\n# Ultragoal\nTrack execution.");
 		const captured: CapturedSend[] = [];
-		const session = createSession(cwd, [ultragoal], captured);
+		const session = createSession(cwd, [goal], captured);
 		const tool = SkillTool.createIf(session);
 		expect(tool).not.toBeNull();
 
-		const result = await tool!.execute("call-1", { name: "ultragoal", args: "go" });
+		const result = await tool!.execute("call-1", { name: "goal", args: "go" });
 		const firstBlock = result.content[0];
 		expect(firstBlock?.type).toBe("text");
-		expect(firstBlock?.type === "text" ? firstBlock.text : "").toContain('"callee":"ultragoal"');
+		expect(firstBlock?.type === "text" ? firstBlock.text : "").toContain('"callee":"goal"');
 		expect(firstBlock?.type === "text" ? firstBlock.text : "").toContain('"args":"go"');
-		expect(result.details?.name).toBe("ultragoal");
+		expect(result.details?.name).toBe("goal");
 		expect(result.details?.args).toBe("go");
 
 		expect(captured).toHaveLength(1);
@@ -246,23 +246,23 @@ describe("SkillTool", () => {
 		expect(rp?.handoff_from).toBe("jaw-interview");
 	});
 
-	it("supports R->U handoff (ralplan in handoff phase chains to ultragoal)", async () => {
+	it("supports R->U handoff (ralplan in handoff phase chains to goal)", async () => {
 		const cwd = await makeTempCwd();
 		await writeCallerModeState(cwd, "ralplan", "handoff", "s1");
 		const ralplan = await makeSkill("ralplan", "---\nname: ralplan\n---\nPlan");
-		const ultragoal = await makeSkill("ultragoal", "---\nname: ultragoal\n---\nGo");
+		const goal = await makeSkill("goal", "---\nname: goal\n---\nGo");
 		const captured: CapturedSend[] = [];
-		const session = createSession(cwd, [ralplan, ultragoal], captured, {
+		const session = createSession(cwd, [ralplan, goal], captured, {
 			getActiveSkillState: () => ({ skill: "ralplan", session_id: "s1" }),
 			getActiveSkillPhase: () => "handoff",
 		});
 		const tool = SkillTool.createIf(session)!;
 
-		await tool.execute("call-1", { name: "ultragoal" });
+		await tool.execute("call-1", { name: "goal" });
 		const rp = await readModeState(cwd, "ralplan", "s1");
 		expect(rp?.active).toBe(false);
-		expect(rp?.handoff_to).toBe("ultragoal");
-		const ug = await readModeState(cwd, "ultragoal", "s1");
+		expect(rp?.handoff_to).toBe("goal");
+		const ug = await readModeState(cwd, "goal", "s1");
 		expect(ug?.active).toBe(true);
 		expect(ug?.handoff_from).toBe("ralplan");
 	});
@@ -272,7 +272,7 @@ describe("SkillTool", () => {
 		await writeCallerModeState(cwd, "jaw-interview", "handoff", "s1");
 		const jawInterview = await makeSkill("jaw-interview", "---\nname: jaw-interview\n---\nInterview");
 		const ralplan = await makeSkill("ralplan", "---\nname: ralplan\n---\nPlan");
-		const ultragoal = await makeSkill("ultragoal", "---\nname: ultragoal\n---\nGo");
+		const goal = await makeSkill("goal", "---\nname: goal\n---\nGo");
 		const explicitModel = createTestModel("gpt-5.5");
 		const staleDefaultModel = createTestModel("gpt-5.4");
 		const settings = Settings.isolated();
@@ -281,7 +281,7 @@ describe("SkillTool", () => {
 
 		let activeSkill = "jaw-interview";
 		const captured: CapturedSend[] = [];
-		const session = createSession(cwd, [jawInterview, ralplan, ultragoal], captured, {
+		const session = createSession(cwd, [jawInterview, ralplan, goal], captured, {
 			settings,
 			model: explicitModel,
 			getActiveModelString: () => `${explicitModel.provider}/${explicitModel.id}`,
@@ -293,7 +293,7 @@ describe("SkillTool", () => {
 		await tool.execute("call-1", { name: "ralplan" });
 		activeSkill = "ralplan";
 		await writeCallerModeState(cwd, "ralplan", "handoff", "s1");
-		await tool.execute("call-2", { name: "ultragoal" });
+		await tool.execute("call-2", { name: "goal" });
 
 		expect(session.model).toBe(explicitModel);
 		expect(session.getActiveModelString?.()).toBe("openai-codex/gpt-5.5");
@@ -302,29 +302,29 @@ describe("SkillTool", () => {
 		expect(captured).toHaveLength(2);
 		expect(captured.map(item => item.message.details)).toEqual([
 			expect.objectContaining({ name: "ralplan" }),
-			expect.objectContaining({ name: "ultragoal" }),
+			expect.objectContaining({ name: "goal" }),
 		]);
 	});
 
-	it("supports backward U->R chain (ultragoal in handoff phase chains to ralplan)", async () => {
+	it("supports backward U->R chain (goal in handoff phase chains to ralplan)", async () => {
 		const cwd = await makeTempCwd();
-		await writeCallerModeState(cwd, "ultragoal", "handoff", "s1");
+		await writeCallerModeState(cwd, "goal", "handoff", "s1");
 		const ralplan = await makeSkill("ralplan", "---\nname: ralplan\n---\nPlan");
-		const ultragoal = await makeSkill("ultragoal", "---\nname: ultragoal\n---\nGo");
+		const goal = await makeSkill("goal", "---\nname: goal\n---\nGo");
 		const captured: CapturedSend[] = [];
-		const session = createSession(cwd, [ralplan, ultragoal], captured, {
-			getActiveSkillState: () => ({ skill: "ultragoal", session_id: "s1" }),
+		const session = createSession(cwd, [ralplan, goal], captured, {
+			getActiveSkillState: () => ({ skill: "goal", session_id: "s1" }),
 			getActiveSkillPhase: () => "handoff",
 		});
 		const tool = SkillTool.createIf(session)!;
 
 		await tool.execute("call-1", { name: "ralplan" });
-		const ug = await readModeState(cwd, "ultragoal", "s1");
+		const ug = await readModeState(cwd, "goal", "s1");
 		expect(ug?.active).toBe(false);
 		expect(ug?.handoff_to).toBe("ralplan");
 		const rp = await readModeState(cwd, "ralplan", "s1");
 		expect(rp?.active).toBe(true);
-		expect(rp?.handoff_from).toBe("ultragoal");
+		expect(rp?.handoff_from).toBe("goal");
 	});
 
 	// Terminal-phase allow-list coverage (architect blocker, code lane).

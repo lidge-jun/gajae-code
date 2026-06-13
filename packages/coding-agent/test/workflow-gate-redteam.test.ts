@@ -100,7 +100,7 @@ describe("workflow gate red-team contract", () => {
 
 	it("replays the same idempotency key/body exactly once and rejects same-key different-body conflicts", async () => {
 		const { broker, advanced, audit } = makeBroker();
-		const gate = broker.openGate({ stage: "ultragoal", kind: "execution", schema: { type: "object" } });
+		const gate = broker.openGate({ stage: "goal", kind: "execution", schema: { type: "object" } });
 		const answer = { accepted: true };
 
 		const first = await broker.resolve({ gate_id: gate.gate_id, answer, idempotency_key: "idem-1" });
@@ -211,7 +211,7 @@ describe("workflow gate red-team contract", () => {
 
 	it("throws a typed already_resolved error for same body without replay key after acceptance", async () => {
 		const { broker } = makeBroker();
-		const gate = broker.openGate({ stage: "ultragoal", kind: "execution", schema: { type: "boolean" } });
+		const gate = broker.openGate({ stage: "goal", kind: "execution", schema: { type: "boolean" } });
 		await broker.resolve({ gate_id: gate.gate_id, answer: true, idempotency_key: "final-key" });
 
 		await expect(broker.resolve({ gate_id: gate.gate_id, answer: true })).rejects.toBeInstanceOf(

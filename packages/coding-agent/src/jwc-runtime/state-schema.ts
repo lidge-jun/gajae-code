@@ -14,7 +14,7 @@ import * as fs from "node:fs/promises";
 import { z } from "zod";
 import { WORKFLOW_STATE_VERSION } from "../skill-state/workflow-state-version";
 
-const CANONICAL_JWC_WORKFLOW_SKILLS = ["jaw-interview", "ralplan", "ultragoal", "team"] as const;
+const CANONICAL_JWC_WORKFLOW_SKILLS = ["jaw-interview", "ralplan", "goal", "ultragoal", "team"] as const;
 
 /**
  * Legacy slug read-compat (042 L2): persisted state/receipts written before the

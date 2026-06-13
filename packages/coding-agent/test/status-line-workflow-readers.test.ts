@@ -57,7 +57,7 @@ describe("workflow readers (99.04 C1)", () => {
 
 	it("ledger stats count checkpoints and flag blank last evidence", () => {
 		const cwd = tempCwd();
-		const dir = path.join(cwd, ".jwc", "ultragoal");
+		const dir = path.join(cwd, ".jwc", "goal");
 		mkdirSync(dir, { recursive: true });
 		const ledger = path.join(dir, "ledger.jsonl");
 		writeFileSync(
@@ -76,7 +76,7 @@ describe("workflow readers (99.04 C1)", () => {
 
 	it("ledger stats use the mtime+size cache for unchanged files", () => {
 		const cwd = tempCwd();
-		const dir = path.join(cwd, ".jwc", "ultragoal");
+		const dir = path.join(cwd, ".jwc", "goal");
 		mkdirSync(dir, { recursive: true });
 		const ledger = path.join(dir, "ledger.jsonl");
 		writeFileSync(ledger, JSON.stringify({ event: "goal_checkpointed", evidence: "e1" }));

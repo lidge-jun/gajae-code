@@ -162,7 +162,7 @@ describe("GJC native skill-state hooks", () => {
 		);
 		expect(context).toContain("Sanitized effective skill config");
 		expect(context).toContain("filesystem/custom skill discovery");
-		expect(context).toContain("jaw-interview, ralplan, ultragoal, team");
+		expect(context).toContain("jaw-interview, ralplan, goal, team");
 		const state = await readVisibleSkillActiveState(root, "session-1");
 		expect(state).toMatchObject({
 			active: true,
@@ -313,12 +313,12 @@ describe("GJC native skill-state hooks", () => {
 		}
 	});
 
-	it("UserPromptSubmit treats schema-invalid active ultragoal mode state as inactive and logs", async () => {
+	it("UserPromptSubmit treats schema-invalid active goal mode state as inactive and logs", async () => {
 		const root = await cwd();
 		const stateDir = path.join(root, "custom-state");
 		await fs.mkdir(stateDir, { recursive: true });
 		await fs.writeFile(
-			path.join(stateDir, "ultragoal-state.json"),
+			path.join(stateDir, "goal-state.json"),
 			JSON.stringify({ active: true, current_phase: 7, objective: "ship" }),
 		);
 		const warn = spyOn(console, "warn").mockImplementation(() => {});
@@ -742,12 +742,12 @@ disabledExtensions:
 		expect(allowed.outputJson).toBeNull();
 	});
 
-	it("UserPromptSubmit reminds active Ultragoal sessions to use ultragoal steer", async () => {
+	it("UserPromptSubmit reminds active Ultragoal sessions to use goal steer", async () => {
 		const root = await cwd();
 		await dispatchJwcNativeSkillHook(
 			{
 				hookEventName: "UserPromptSubmit",
-				userPrompt: "$ultragoal plan this",
+				userPrompt: "$goal plan this",
 				cwd: root,
 				sessionId: "session-ultra",
 				threadId: "thread-ultra",
@@ -769,24 +769,24 @@ disabledExtensions:
 				"",
 		);
 		expect(context).toContain("Ultragoal is active");
-		expect(context).toContain("jwc ultragoal steer");
+		expect(context).toContain("jwc goal steer");
 		expect(context).toContain("add or steer subgoals");
 	});
 
 	it("UserPromptSubmit blocks active Ultragoal completion bypass prompts without a receipt", async () => {
 		const root = await cwd();
-		const plan = await createGoalPlan({ cwd: root, brief: "Ship verified ultragoal" });
+		const plan = await createGoalPlan({ cwd: root, brief: "Ship verified goal" });
 		await dispatchJwcNativeSkillHook(
 			{
 				hookEventName: "UserPromptSubmit",
-				userPrompt: "$ultragoal plan this",
+				userPrompt: "$goal plan this",
 				cwd: root,
 				sessionId: "session-ultra-block",
 				threadId: "thread-ultra-block",
 			},
 			{ effectiveSkillConfig: testEffectiveSkillConfig },
 		);
-		const statePath = path.join(root, ".jwc", "state", "sessions", "session-ultra-block", "ultragoal-state.json");
+		const statePath = path.join(root, ".jwc", "state", "sessions", "session-ultra-block", "goal-state.json");
 		const state = await Bun.file(statePath).json();
 		await Bun.write(statePath, JSON.stringify({ ...state, objective: plan.goals[0]?.objective }, null, 2));
 
@@ -805,7 +805,7 @@ disabledExtensions:
 
 	it("UserPromptSubmit recovers active Ultragoal objective from session transcript", async () => {
 		const root = await cwd();
-		const plan = await createGoalPlan({ cwd: root, brief: "Ship verified ultragoal" });
+		const plan = await createGoalPlan({ cwd: root, brief: "Ship verified goal" });
 		const sessionFile = path.join(root, "session.jsonl");
 		await Bun.write(
 			sessionFile,
@@ -814,7 +814,7 @@ disabledExtensions:
 		await dispatchJwcNativeSkillHook(
 			{
 				hookEventName: "UserPromptSubmit",
-				userPrompt: "$ultragoal plan this",
+				userPrompt: "$goal plan this",
 				cwd: root,
 				sessionId: "session-ultra-transcript",
 			},
@@ -835,7 +835,7 @@ disabledExtensions:
 
 	it("Stop blocks verified Ultragoal stories while later required goals remain", async () => {
 		const root = await cwd();
-		const plan = await createGoalPlan({ cwd: root, brief: "Ship verified ultragoal" });
+		const plan = await createGoalPlan({ cwd: root, brief: "Ship verified goal" });
 		await addGoalSubgoal({
 			cwd: root,
 			title: "Second stage",
@@ -855,7 +855,7 @@ disabledExtensions:
 		await dispatchJwcNativeSkillHook(
 			{
 				hookEventName: "UserPromptSubmit",
-				userPrompt: "$ultragoal plan this",
+				userPrompt: "$goal plan this",
 				cwd: root,
 				sessionId: "session-ultra-stop-pending",
 				threadId: "thread-ultra-stop-pending",
@@ -868,7 +868,7 @@ disabledExtensions:
 			"state",
 			"sessions",
 			"session-ultra-stop-pending",
-			"ultragoal-state.json",
+			"goal-state.json",
 		);
 		const state = await Bun.file(statePath).json();
 		await Bun.write(statePath, JSON.stringify({ ...state, objective: plan.goals[0]?.objective }, null, 2));
@@ -887,7 +887,7 @@ disabledExtensions:
 
 	it("UserPromptSubmit blocks Ultragoal completion when later required goals remain", async () => {
 		const root = await cwd();
-		const plan = await createGoalPlan({ cwd: root, brief: "Ship verified ultragoal" });
+		const plan = await createGoalPlan({ cwd: root, brief: "Ship verified goal" });
 		await addGoalSubgoal({
 			cwd: root,
 			title: "Second stage",
@@ -907,7 +907,7 @@ disabledExtensions:
 		await dispatchJwcNativeSkillHook(
 			{
 				hookEventName: "UserPromptSubmit",
-				userPrompt: "$ultragoal plan this",
+				userPrompt: "$goal plan this",
 				cwd: root,
 				sessionId: "session-ultra-bypass-pending",
 				threadId: "thread-ultra-bypass-pending",
@@ -920,7 +920,7 @@ disabledExtensions:
 			"state",
 			"sessions",
 			"session-ultra-bypass-pending",
-			"ultragoal-state.json",
+			"goal-state.json",
 		);
 		const state = await Bun.file(statePath).json();
 		await Bun.write(statePath, JSON.stringify({ ...state, objective: plan.goals[0]?.objective }, null, 2));
@@ -942,7 +942,7 @@ disabledExtensions:
 		const result = await dispatchJwcNativeSkillHook(
 			{
 				hookEventName: "UserPromptSubmit",
-				userPrompt: "$ultragoal plan this",
+				userPrompt: "$goal plan this",
 				cwd: root,
 				sessionId: "session-ultra-start",
 				threadId: "thread-ultra-start",
@@ -954,7 +954,7 @@ disabledExtensions:
 				"",
 		);
 		expect(context).toContain("Ultragoal is active");
-		expect(context).toContain("jwc ultragoal steer");
+		expect(context).toContain("jwc goal steer");
 	});
 
 	it("merges managed Codex UserPromptSubmit/Stop hooks without dropping user hooks", () => {

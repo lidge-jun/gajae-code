@@ -317,7 +317,7 @@ export class ModelSelectorComponent extends Container {
 			if (currentQuery) {
 				this.#filterModels(currentQuery);
 			} else {
-				this.#updateList();
+				this.#applyTabFilter();
 			}
 			// Request re-render after models are loaded
 			this.#tui.requestRender();
@@ -638,11 +638,14 @@ export class ModelSelectorComponent extends Container {
 
 		// Unlisted models (not servable on the current auth path) hide by
 		// default; ctrl+o reveals them (99.30.04).
-		const unlistedInView = isCanonicalTab
-			? baseCanonicalModels.filter(item => item.model.unlisted === true).length
-			: baseModels.filter(item => item.model.unlisted === true).length;
-		this.#hiddenUnlistedCount = this.#showUnlisted ? 0 : unlistedInView;
-		if (!this.#showUnlisted) {
+		const shouldHideUnlisted = this.#scopedModels.length === 0 && !this.#showUnlisted;
+		const unlistedInView = shouldHideUnlisted
+			? isCanonicalTab
+				? baseCanonicalModels.filter(item => item.model.unlisted === true).length
+				: baseModels.filter(item => item.model.unlisted === true).length
+			: 0;
+		this.#hiddenUnlistedCount = unlistedInView;
+		if (shouldHideUnlisted) {
 			baseModels = baseModels.filter(item => item.model.unlisted !== true);
 			baseCanonicalModels = baseCanonicalModels.filter(item => item.model.unlisted !== true);
 		}

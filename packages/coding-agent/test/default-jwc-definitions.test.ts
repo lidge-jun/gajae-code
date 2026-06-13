@@ -51,7 +51,7 @@ afterEach(async () => {
 });
 
 describe("default GJC definitions", () => {
-	it("bundles exactly the four default workflow skills plus jaw-interview and ultragoal fragments as installable assets", () => {
+	it("bundles exactly the four default workflow skills plus jaw-interview and goal fragments as installable assets", () => {
 		const definitions = getDefaultJwcDefinitions();
 		const workflowDefinitions = definitions.filter(definition => definition.kind === "skill");
 		const fragmentDefinitions = definitions.filter(definition => definition.kind === "skill-fragment");
@@ -67,12 +67,12 @@ describe("default GJC definitions", () => {
 		expect(fragmentDefinitions.map(definition => definition.parentSkillName).sort()).toEqual([
 			"jaw-interview",
 			"jaw-interview",
-			"ultragoal",
+			"goal",
 		]);
 		expect(fragmentDefinitions.map(definition => definition.relativePath).sort()).toEqual([
 			"skill-fragments/jaw-interview/auto-answer-uncertain.md",
 			"skill-fragments/jaw-interview/auto-research-greenfield.md",
-			"skill-fragments/ultragoal/ai-slop-cleaner.md",
+			"skill-fragments/goal/ai-slop-cleaner.md",
 		]);
 	});
 
@@ -93,8 +93,8 @@ describe("default GJC definitions", () => {
 		expect(fragments.every(fragment => fragment.content.includes("read-only architect"))).toBe(true);
 	});
 
-	it("exposes the ultragoal ai-slop-cleaner fragment only through the parent-scoped fragment accessor", () => {
-		const fragments = getEmbeddedDefaultJwcSkillFragments("ultragoal");
+	it("exposes the goal ai-slop-cleaner fragment only through the parent-scoped fragment accessor", () => {
+		const fragments = getEmbeddedDefaultJwcSkillFragments("goal");
 
 		expect(
 			getEmbeddedDefaultJwcSkills()
@@ -104,14 +104,14 @@ describe("default GJC definitions", () => {
 		expect(fragments).toHaveLength(1);
 		expect(fragments.map(fragment => fragment.kind)).toEqual(["skill-fragment"]);
 		expect(fragments.map(fragment => fragment.relativePath)).toEqual([
-			"skill-fragments/ultragoal/ai-slop-cleaner.md",
+			"skill-fragments/goal/ai-slop-cleaner.md",
 		]);
 		expect(fragments[0]!.content).toContain("AI SLOP CLEANUP REPORT");
 		expect(fragments[0]!.content).toContain("read-only detector");
 	});
 
 	it("authors the ai-slop-cleaner fragment with the mandated report labels and full taxonomy", () => {
-		const fragment = getEmbeddedDefaultJwcSkillFragments("ultragoal")[0]!;
+		const fragment = getEmbeddedDefaultJwcSkillFragments("goal")[0]!;
 		const content = fragment.content;
 
 		for (const label of [
@@ -144,12 +144,12 @@ describe("default GJC definitions", () => {
 		}
 	});
 
-	it("wires the ai-slop-cleaner into the ultragoal completion gate before verification and red-team", () => {
-		const ultragoal = getDefaultJwcDefinitions().find(
-			definition => definition.kind === "skill" && definition.name === "ultragoal",
+	it("wires the ai-slop-cleaner into the goal completion gate before verification and red-team", () => {
+		const goal = getDefaultJwcDefinitions().find(
+			definition => definition.kind === "skill" && definition.name === "goal",
 		);
-		if (!ultragoal) throw new Error("missing bundled ultragoal skill");
-		const content = ultragoal.content;
+		if (!goal) throw new Error("missing bundled goal skill");
+		const content = goal.content;
 
 		const sectionStart = content.indexOf("## Mandatory completion cleanup and review gate");
 		expect(sectionStart).toBeGreaterThanOrEqual(0);
@@ -285,40 +285,40 @@ Project executor override body.
 		});
 	});
 
-	it("documents role-agent delegation in system and ultragoal prompts", async () => {
+	it("documents role-agent delegation in system and goal prompts", async () => {
 		const systemPrompt = await Bun.file(
 			path.join(repoRoot, "packages", "coding-agent", "src", "prompts", "system", "system-prompt.md"),
 		).text();
-		const ultragoal = await Bun.file(
-			path.join(repoRoot, "packages", "coding-agent", "src", "defaults", "jwc", "skills", "ultragoal", "SKILL.md"),
+		const goal = await Bun.file(
+			path.join(repoRoot, "packages", "coding-agent", "src", "defaults", "jwc", "skills", "goal", "SKILL.md"),
 		).text();
 
 		for (const name of roleAgentNames) {
 			expect(systemPrompt).toContain(name);
-			expect(ultragoal).toContain(name);
+			expect(goal).toContain(name);
 		}
 		expect(systemPrompt).toContain("delegate bounded slices to `executor`");
 		expect(systemPrompt).toContain("committed repo-visible `.jwc` defaults are not the source of truth");
-		expect(ultragoal).toContain("run the native orchestrate plan stage first");
-		expect(ultragoal).toContain("Role agents return implementation/review evidence");
-		expect(ultragoal).toContain("await timeout only limits the leader's wait");
-		expect(ultragoal).toContain("must not be used as a cancellation reason");
-		expect(ultragoal).toContain("the subagent has actually failed");
-		expect(ultragoal).toContain("gone off-track");
-		expect(ultragoal).toContain("become unrecoverably wrong");
+		expect(goal).toContain("run the native orchestrate plan stage first");
+		expect(goal).toContain("Role agents return implementation/review evidence");
+		expect(goal).toContain("await timeout only limits the leader's wait");
+		expect(goal).toContain("must not be used as a cancellation reason");
+		expect(goal).toContain("the subagent has actually failed");
+		expect(goal).toContain("gone off-track");
+		expect(goal).toContain("become unrecoverably wrong");
 	});
 
 	it("documents leader-owned Ultragoal checkpoints for Team bridge workers", async () => {
 		const team = await Bun.file(
 			path.join(repoRoot, "packages", "coding-agent", "src", "defaults", "jwc", "skills", "team", "SKILL.md"),
 		).text();
-		const ultragoal = await Bun.file(
-			path.join(repoRoot, "packages", "coding-agent", "src", "defaults", "jwc", "skills", "ultragoal", "SKILL.md"),
+		const goal = await Bun.file(
+			path.join(repoRoot, "packages", "coding-agent", "src", "defaults", "jwc", "skills", "goal", "SKILL.md"),
 		).text();
 
-		for (const content of [team, ultragoal]) {
+		for (const content of [team, goal]) {
 			expect(content).toContain('fresh `goal({"op":"get"})` snapshot');
-			expect(content).toContain("Workers must not run `jwc ultragoal checkpoint`");
+			expect(content).toContain("Workers must not run `jwc goal checkpoint`");
 			expect(content).toContain("checkpoint authority stays with the leader");
 			expect(content).toContain("Ultragoal does not auto-launch Team");
 			expect(content).toContain("performs no hidden goal mutation");
@@ -436,7 +436,7 @@ Project executor override body.
 		});
 	});
 
-	it("does not make the ultragoal ai-slop-cleaner fragment reachable as a skill-relative internal URL asset", async () => {
+	it("does not make the goal ai-slop-cleaner fragment reachable as a skill-relative internal URL asset", async () => {
 		await withTempHome(async () => {
 			const repoRoot = await makeTempRoot();
 			await installDefaultJwcDefinitions({ targetRoot: path.join(repoRoot, ".jwc") });
@@ -447,12 +447,12 @@ Project executor override body.
 				enablePiProject: true,
 				enablePiUser: false,
 			});
-			const ultragoal = skills.skills.find(skill => skill.name === "ultragoal" && skill.source === "native:project");
-			if (!ultragoal) throw new Error("missing installed ultragoal skill");
+			const goal = skills.skills.find(skill => skill.name === "goal" && skill.source === "native:project");
+			if (!goal) throw new Error("missing installed goal skill");
 
-			setActiveSkills([ultragoal]);
+			setActiveSkills([goal]);
 			await expect(
-				new SkillProtocolHandler().resolve(parseInternalUrl("skill://ultragoal/ai-slop-cleaner.md")),
+				new SkillProtocolHandler().resolve(parseInternalUrl("skill://goal/ai-slop-cleaner.md")),
 			).rejects.toThrow("File not found");
 			await expect(new SkillProtocolHandler().resolve(parseInternalUrl("skill://ai-slop-cleaner"))).rejects.toThrow(
 				"Unknown skill: ai-slop-cleaner",
@@ -470,7 +470,7 @@ describe("bundled skills CLI", () => {
 				path.join(repoRoot, "packages", "coding-agent", "src", "cli.ts"),
 				"skills",
 				"read",
-				"ultragoal",
+				"goal",
 				"--json",
 			],
 			{
@@ -493,7 +493,7 @@ describe("bundled skills CLI", () => {
 		expect(exitCode).toBe(0);
 		expect(stderr).toBe("");
 		const parsed = JSON.parse(stdout) as { name: string; path: string; source: string; content: string };
-		expect(parsed.name).toBe("ultragoal");
+		expect(parsed.name).toBe("goal");
 		expect(parsed.path).toBe("embedded:jwc/skills/ultragoal/SKILL.md");
 		expect(parsed.source).toBe("bundled:default");
 		expect(parsed.content).toContain("# Ultragoal");

@@ -78,7 +78,7 @@ function buildHarness() {
 }
 
 describe("#323 gate channel over the RPC dispatch transport", () => {
-	it("negotiates unattended + answers jaw-interview/ralplan/ultragoal gates through dispatchRpcCommand", async () => {
+	it("negotiates unattended + answers jaw-interview/ralplan/goal gates through dispatchRpcCommand", async () => {
 		const { broker, context, advanced, getController } = buildHarness();
 
 		// negotiate_unattended over RPC.
@@ -88,7 +88,7 @@ describe("#323 gate channel over the RPC dispatch transport", () => {
 		expect(negotiated.success).toBe(true);
 		expect(getController()?.actor).toBe("hermes");
 
-		// Drive a jaw-interview question, a ralplan approval, and an ultragoal
+		// Drive a jaw-interview question, a ralplan approval, and an goal
 		// execution gate — each answered through a workflow_gate_response COMMAND.
 		const gates: RpcWorkflowGate[] = [
 			broker.openGate(questionToGate({ id: "q", question: "auth?", options: [{ label: "JWT" }] })),

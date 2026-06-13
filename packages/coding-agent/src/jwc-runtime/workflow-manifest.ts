@@ -291,6 +291,9 @@ export const WORKFLOW_MANIFEST: Record<CanonicalJwcWorkflowSkill, SkillManifest>
 		hudFields: ["current_phase", "active_goal_id", "status", "counts", "ledger_path", "brief_path"],
 		graphLabel: "Goal",
 	}),
+	get goal() {
+		return WORKFLOW_MANIFEST.ultragoal;
+	},
 	team: manifest({
 		skill: "team",
 		states: ["starting", "running", "awaiting_integration", "complete", "failed", "cancelled", "handoff"],

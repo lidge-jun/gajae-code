@@ -39,7 +39,7 @@ describe("workflow HUD summary builders", () => {
 		expect(hud.chips?.[0]).toEqual({ label: "pending", value: "approval", priority: 5, severity: "warning" });
 	});
 
-	it("keeps ultragoal latest ledger event in details only", () => {
+	it("keeps goal latest ledger event in details only", () => {
 		const hud = buildGoalHudSummary({
 			status: "blocked",
 			currentGoal: { id: "G001", title: "Build HUD", status: "blocked" },

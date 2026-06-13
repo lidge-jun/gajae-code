@@ -24,13 +24,15 @@ describe("workflow surface — orchestrate discovery (99.03 M1)", () => {
 		expect(source).toContain("pabcd 진행해");
 	});
 
-	it("system-prompt IPABCD skill labels present", async () => {
+	it("system-prompt IPABCD surface labels present", async () => {
 		const source = await read();
 		expect(source).toContain("IPABCD I-stage engine.");
-		expect(source).toContain("IPABCD P-stage consensus engine.");
-		expect(source).toContain("Goal ledger.");
+		expect(source).toContain("- p (PLANNING): Plan authoring by the main session");
+		expect(source).toContain("Planning uses `jwc orchestrate p`");
+		expect(source).toContain("goal ledger uses `jwc goal`");
 		expect(source).toContain("IPABCD B-stage coordinated execution engine.");
 	});
+
 
 	it("system-prompt invariant sentences preserved", async () => {
 		const source = await read();
@@ -38,17 +40,14 @@ describe("workflow surface — orchestrate discovery (99.03 M1)", () => {
 		expect(source).toContain("committed repo-visible `.jwc` defaults are not the source of truth");
 	});
 
-	it("system-prompt skill attributes unchanged (re-facing only)", async () => {
+	it("system-prompt static workflow skill attributes match public surface", async () => {
 		const source = await read();
 		expect(source).toContain(
 			'<skill name="jaw-interview" user-entrypoint="/skill:jaw-interview" cli-runtime="native: jwc jaw-interview">',
 		);
-		expect(source).toContain(
-			'<skill name="ralplan" user-entrypoint="/skill:ralplan" cli-runtime="native: jwc ralplan">',
-		);
-		expect(source).toContain(
-			'<skill name="ultragoal" user-entrypoint="/skill:ultragoal" cli-runtime="native: jwc ultragoal">',
-		);
+		expect(source).not.toContain('<skill name="ralplan" user-entrypoint="/skill:ralplan"');
+		expect(source).not.toContain('<skill name="goal" user-entrypoint="/skill:goal"');
+		expect(source).not.toContain('<skill name="ultragoal" user-entrypoint="/skill:ultragoal"');
 		expect(source).toContain('<skill name="team" user-entrypoint="/skill:team" cli-runtime="native: jwc team">');
 	});
 

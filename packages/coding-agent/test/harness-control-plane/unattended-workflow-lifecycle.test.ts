@@ -1,6 +1,6 @@
 /**
  * #323 acceptance: a scripted external agent with canned memory drives
- * jaw-interview -> ralplan -> ultragoal end-to-end over the workflow-gate
+ * jaw-interview -> ralplan -> goal end-to-end over the workflow-gate
  * contract with ZERO human input, declaring budget + scope + action allowlist,
  * answering every gate via the broker, producing a valid spec + plan + execution
  * result with a complete audit trail bounded by the declared budget.
@@ -80,7 +80,7 @@ const DI_QUESTIONS: AskGateQuestion[] = [
 ];
 
 describe("#323 end-to-end unattended workflow lifecycle (zero human input)", () => {
-	it("drives jaw-interview -> ralplan -> ultragoal over the gate contract with a complete audit trail bounded by budget", async () => {
+	it("drives jaw-interview -> ralplan -> goal over the gate contract with a complete audit trail bounded by budget", async () => {
 		const dir = mkdtempSync(path.join(tmpdir(), "unattended-e2e-"));
 		const runId = "e2e-run-001";
 		const sessionId = "e2e-sess-001";
@@ -160,7 +160,7 @@ describe("#323 end-to-end unattended workflow lifecycle (zero human input)", () 
 		const planPath = path.join(dir, "plan.md");
 		writeFileSync(planPath, `# Plan\n\nApproved via gate ${approval.gate.gate_id}\n`);
 
-		// 5. ultragoal: execution sign-off, then "execute" under budget + scope.
+		// 5. goal: execution sign-off, then "execute" under budget + scope.
 		const execution = await driveGate(executionGate({ summary: "execute the approved plan" }));
 		expect(decodeExecution(execution.answer).approved).toBe(true);
 

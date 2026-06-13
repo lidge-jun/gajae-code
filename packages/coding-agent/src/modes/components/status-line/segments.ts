@@ -167,7 +167,7 @@ function renderGoalMode(ctx: SegmentContext, mode: { enabled: boolean; paused: b
 		parts.push(formatGoalUsage(goal.tokensUsed));
 	}
 	// 99.04.04 — ledger checkpoint count + evidence warning + agent-pause audit pending.
-	const ledger = ctx.ultragoal;
+	const ledger = ctx.goal;
 	if (ledger?.checkpointCount) parts.push(theme.fg("success", `\u2713${ledger.checkpointCount}`));
 	if (ledger?.lastEvidenceBlank) parts.push(theme.fg("warning", "!ev"));
 	const goalModeState = ctx.session.getGoalModeState();

@@ -33,7 +33,7 @@ function createCtx(branch: string): SegmentContext {
 		planMode: null,
 		goalMode: null,
 		pabcd: null,
-		ultragoal: null,
+		goal: null,
 		usageStats: {
 			input: 0,
 			output: 0,
