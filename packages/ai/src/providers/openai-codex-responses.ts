@@ -168,6 +168,10 @@ type CodexWebSocketSessionState = {
 	activeContentPrewarm?: Promise<unknown>;
 	/** Last in-stream `codex.rate_limits` push from the backend. */
 	rateLimits?: OpenAICodexRateLimitsSnapshot;
+	/** Service tier we asked for on the last request (e.g. "priority" for fast mode). */
+	requestedServiceTier?: ServiceTier | "default";
+	/** Service tier the server actually echoed back — may downgrade silently. */
+	realizedServiceTier?: ServiceTier | "default";
 	canAppend: boolean;
 	turnState?: string;
 	modelsEtag?: string;
@@ -1324,6 +1328,15 @@ function handleResponseCompleted(
 	}
 
 	const state = runtime.websocketState;
+	if (state) {
+		// Track requested vs server-realized service tier. On the ChatGPT
+		// subscription backend `service_tier: priority` (fast mode) is silently
+		// downgraded — the response echoes `default` — so the footer must not
+		// claim fast is active when the server ignored it.
+		const requestedTier = runtime.requestBodyForState.service_tier;
+		if (typeof requestedTier === "string") state.requestedServiceTier = requestedTier as ServiceTier | "default";
+		if (typeof response?.service_tier === "string") state.realizedServiceTier = response.service_tier;
+	}
 	if (runtime.transport === "websocket" && state) {
 		state.lastRequest = structuredCloneJSON(runtime.requestBodyForState);
 		if (typeof response?.id === "string" && response.id.length > 0) {
@@ -1926,6 +1939,8 @@ export interface OpenAICodexTransportDetails {
 	hasSessionState: boolean;
 	lastFallbackAt?: number;
 	rateLimits?: OpenAICodexRateLimitsSnapshot;
+	requestedServiceTier?: ServiceTier | "default";
+	realizedServiceTier?: ServiceTier | "default";
 }
 
 function getCodexWebSocketStateForPublicSession(
@@ -1985,6 +2000,8 @@ export function getOpenAICodexTransportDetails(
 		hasSessionState: state !== undefined,
 		lastFallbackAt: state?.lastFallbackAt,
 		rateLimits: state?.rateLimits,
+		requestedServiceTier: state?.requestedServiceTier,
+		realizedServiceTier: state?.realizedServiceTier,
 	};
 }
 

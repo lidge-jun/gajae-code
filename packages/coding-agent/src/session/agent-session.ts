@@ -1636,7 +1636,13 @@ export class AgentSession {
 	 * non-codex models or before the first request establishes a transport.
 	 */
 	getCodexTransportStatus():
-		| { transport: "websocket" | "sse"; fallback: boolean; primaryUsedPercent?: number }
+		| {
+				transport: "websocket" | "sse";
+				fallback: boolean;
+				primaryUsedPercent?: number;
+				/** "realized" = server granted priority; "ignored" = requested but echoed default; undefined = not requested/unknown. */
+				fastTier?: "realized" | "ignored";
+		  }
 		| undefined {
 		const model = this.model;
 		if (!model || model.api !== "openai-codex-responses") return undefined;
@@ -1646,10 +1652,15 @@ export class AgentSession {
 			providerSessionState: this.#providerSessionState,
 		});
 		if (!details.lastTransport) return undefined;
+		let fastTier: "realized" | "ignored" | undefined;
+		if (details.requestedServiceTier === "priority") {
+			fastTier = details.realizedServiceTier === "priority" ? "realized" : "ignored";
+		}
 		return {
 			transport: details.lastTransport,
 			fallback: details.websocketDisabled || details.fallbackCount > 0,
 			primaryUsedPercent: details.rateLimits?.primary?.usedPercent,
+			fastTier,
 		};
 	}
 

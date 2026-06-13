@@ -96,15 +96,25 @@ const modelSegment: StatusLineSegment = {
 
 		let content = withIcon(theme.icon.model, modelName);
 
+		const codexTransport = ctx.session.getCodexTransportStatus?.();
+
 		if (ctx.session.isFastModeActive() && theme.icon.fast) {
-			content += ` ${theme.icon.fast}`;
+			// The footer used to claim fast unconditionally. On the ChatGPT
+			// subscription backend `service_tier: priority` is silently ignored
+			// (the response echoes `default`), so once we've seen a realized
+			// tier, only show the icon when fast actually took effect — and mark
+			// `⚡?` when the server discarded the request.
+			if (codexTransport?.fastTier === "ignored") {
+				content += ` ${theme.fg("dim", `${theme.icon.fast}?`)}`;
+			} else {
+				content += ` ${theme.icon.fast}`;
+			}
 		}
 
 		// Codex transport marker: ws = websocket (delta rounds), sse = plain SSE,
 		// sse! = degraded after a websocket fallback (full-context rounds).
 		// A trailing percentage appears when the server-reported rate-limit
 		// window is ≥75% used (output throttling becomes likely near the cap).
-		const codexTransport = ctx.session.getCodexTransportStatus?.();
 		if (codexTransport) {
 			let marker = codexTransport.transport === "websocket" ? "ws" : codexTransport.fallback ? "sse!" : "sse";
 			if (codexTransport.primaryUsedPercent !== undefined && codexTransport.primaryUsedPercent >= 75) {
