@@ -12,7 +12,7 @@ export interface SkillDiscoverySettings {
 }
 
 export const DEFAULT_SKILL_DISCOVERY_SETTINGS: SkillDiscoverySettings = {
-	enabled: false,
+	enabled: true,
 	enableSkillCommands: true,
 	enableCodexUser: false,
 	enableClaudeUser: false,

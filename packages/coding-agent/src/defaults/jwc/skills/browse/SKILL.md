@@ -1,7 +1,6 @@
 ---
 name: browse
 description: Detailed browser tool usage — tab helpers, action verbs, selectors, attached apps, and safety patterns.
-hide: true
 ---
 
 # browse
