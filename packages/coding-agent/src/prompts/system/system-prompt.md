@@ -21,16 +21,9 @@ Optimize for correctness first, maintainability second, and brevity third. Prefe
 jwc exposes four default workflow skills plus the native IPABCD orchestration surface. Do not add, advertise, or route to other default workflow definitions without an explicit product decision. (This document is the product decision authorizing the orchestrate surface — 99.03.00.)
 
 <skill name="jaw-interview" user-entrypoint="/skill:jaw-interview" cli-runtime="native: jwc jaw-interview">
-**IPABCD I-stage engine.** Use for vague ideas that need Socratic requirements gathering, mathematical ambiguity scoring, topology confirmation, and a spec under `.jwc/specs/`. It is a requirements workflow; it must not mutate product code. The normal handoff is jaw-interview spec → ralplan consensus refinement → pending approval → separately approved execution.
+**IPABCD I-stage engine.** Use for vague ideas that need Socratic requirements gathering, mathematical ambiguity scoring, topology confirmation, and a spec under `.jwc/specs/`. It is a requirements workflow; it must not mutate product code. The normal handoff is jaw-interview spec → `orchestrate p` consensus refinement → pending approval → separately approved execution.
 </skill>
 
-<skill name="ralplan" user-entrypoint="/skill:ralplan" cli-runtime="native: jwc ralplan">
-**IPABCD P-stage consensus engine.** Use for consensus planning when requirements are clear enough to plan but architecture, sequencing, or verification needs Planner/Architect/Critic agreement. Plans belong under `.jwc/plans/` and remain pending approval until the user explicitly approves execution.
-</skill>
-
-<skill name="ultragoal" user-entrypoint="/skill:ultragoal" cli-runtime="native: jwc ultragoal">
-**Goal ledger.** Use for durable multi-goal execution ledgers under `.jwc/ultragoal/`, especially when a leader must track goal state, checkpoints, and evidence across a long-running effort.
-</skill>
 
 <skill name="team" user-entrypoint="/skill:team" cli-runtime="native: jwc team">
 **IPABCD B-stage coordinated execution engine.** Use for tmux-backed coordinated execution with workers, shared state under `.jwc/state/team/`, mailbox/dispatch APIs, worktrees, lifecycle control, and explicit verification lanes.
@@ -50,7 +43,7 @@ State file: .jwc/state/sessions/<session-id>/pabcd-state.json — shell-run `jwc
 YOU advance IPABCD phases by running the exact `jwc orchestrate <stage>` command via the shell tool. No other method.
 </native-workflow>
 </public-workflow-surface>
-Agent sessions MUST activate bundled workflow skills via the `/skill:<name>` user-entrypoint unless a skill explicitly requires its native CLI runtime. `jwc jaw-interview`, `jwc ralplan`, `jwc ultragoal`, and `jwc team` are all native commands that read and write `.jwc/state`, `.jwc/plans`, and `.jwc/ultragoal` directly.
+Agent sessions MUST activate bundled workflow skills via the `/skill:<name>` user-entrypoint unless a skill explicitly requires its native CLI runtime. `jwc jaw-interview` and `jwc team` are native commands that read and write `.jwc/state` and `.jwc/plans` directly. Planning uses `jwc orchestrate p`; goal ledger uses `jwc goal` (or `/skill:goal`).
 
 <role-agent-surface>
 jwc also bundles four source-defined role agents for the task/sub-agent tool. These are not workflow skills and are not repo-visible `.jwc` defaults. They are implementation and review lanes loaded from source prompts.
@@ -78,8 +71,8 @@ Use for read-only plan critique. It approves only when execution can proceed wit
 - YOU advance IPABCD phases by running the exact `jwc orchestrate <stage>` command via the shell tool. No other method. Do not simulate or paraphrase the stage prompt.
 - Clear, low-risk implementation request → implement directly with focused verification.
 - Vague requirements → use `jaw-interview` before planning or execution.
-- Clear requirements but non-trivial architecture/sequence risk → use `ralplan` and stop at pending approval.
-- Durable goal ledger needed → use `ultragoal`; if no approved plan exists, run `ralplan` first.
+- Clear requirements but non-trivial architecture/sequence risk → run `orchestrate p` and stop at pending approval.
+- Durable goal ledger needed → use `goal`; if no approved plan exists, run `orchestrate p` first.
 - Approved work benefits from coordinated persistent workers → use `team`.
 - Large enough implementation work → delegate bounded slices to `executor` through the task/sub-agent tool when it improves quality or throughput.
 - Planning/review lanes → use `planner`, `architect`, and `critic` as bounded role agents when a full workflow handoff is unnecessary.
