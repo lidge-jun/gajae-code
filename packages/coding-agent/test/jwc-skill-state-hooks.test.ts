@@ -162,7 +162,7 @@ describe("GJC native skill-state hooks", () => {
 		);
 		expect(context).toContain("Sanitized effective skill config");
 		expect(context).toContain("filesystem/custom skill discovery");
-		expect(context).toContain("jaw-interview, ralplan, goal, team");
+		expect(context).toContain("jaw-interview, ralplan, ultragoal, team");
 		const state = await readVisibleSkillActiveState(root, "session-1");
 		expect(state).toMatchObject({
 			active: true,
@@ -318,7 +318,7 @@ describe("GJC native skill-state hooks", () => {
 		const stateDir = path.join(root, "custom-state");
 		await fs.mkdir(stateDir, { recursive: true });
 		await fs.writeFile(
-			path.join(stateDir, "goal-state.json"),
+			path.join(stateDir, "ultragoal-state.json"),
 			JSON.stringify({ active: true, current_phase: 7, objective: "ship" }),
 		);
 		const warn = spyOn(console, "warn").mockImplementation(() => {});
@@ -768,8 +768,8 @@ disabledExtensions:
 			(result.outputJson?.hookSpecificOutput as { additionalContext?: unknown } | undefined)?.additionalContext ??
 				"",
 		);
-		expect(context).toContain("Ultragoal is active");
-		expect(context).toContain("jwc goal steer");
+		expect(context).toContain("Goal is active");
+		expect(context).toContain("jwc ultragoal steer");
 		expect(context).toContain("add or steer subgoals");
 	});
 
@@ -786,7 +786,7 @@ disabledExtensions:
 			},
 			{ effectiveSkillConfig: testEffectiveSkillConfig },
 		);
-		const statePath = path.join(root, ".jwc", "state", "sessions", "session-ultra-block", "goal-state.json");
+		const statePath = path.join(root, ".jwc", "state", "sessions", "session-ultra-block", "ultragoal-state.json");
 		const state = await Bun.file(statePath).json();
 		await Bun.write(statePath, JSON.stringify({ ...state, objective: plan.goals[0]?.objective }, null, 2));
 
@@ -868,21 +868,27 @@ disabledExtensions:
 			"state",
 			"sessions",
 			"session-ultra-stop-pending",
-			"goal-state.json",
+			"ultragoal-state.json",
 		);
 		const state = await Bun.file(statePath).json();
-		await Bun.write(statePath, JSON.stringify({ ...state, objective: plan.goals[0]?.objective }, null, 2));
+		await Bun.write(statePath, JSON.stringify({ ...state, objective: plan.jwcObjective }, null, 2));
+		const sessionFile = path.join(root, "session-ultra-stop-pending.jsonl");
+		await Bun.write(
+			sessionFile,
+			`${JSON.stringify({ type: "session", id: "session-ultra-stop-pending", timestamp: new Date().toISOString(), cwd: root })}\n${JSON.stringify({ type: "mode_change", id: "1", parentId: null, timestamp: new Date().toISOString(), mode: "goal", data: { goal: { objective: plan.jwcObjective, status: "active" } } })}\n`,
+		);
 
 		const blocked = await dispatchJwcNativeSkillHook({
 			hookEventName: "Stop",
 			cwd: root,
 			sessionId: "session-ultra-stop-pending",
 			threadId: "thread-ultra-stop-pending",
+			sessionFile,
 		});
 
 		expect(blocked.outputJson).toMatchObject({ decision: "block" });
-		expect(String(blocked.outputJson?.reason ?? "")).toContain("G002");
-		expect(String(blocked.outputJson?.reason ?? "")).toContain("complete-goals");
+		expect(String(blocked.outputJson?.reason ?? "")).toContain("fresh final aggregate receipt");
+		expect(String(blocked.outputJson?.reason ?? "")).toContain("strict checkpoint verification");
 	});
 
 	it("UserPromptSubmit blocks Ultragoal completion when later required goals remain", async () => {
@@ -920,7 +926,7 @@ disabledExtensions:
 			"state",
 			"sessions",
 			"session-ultra-bypass-pending",
-			"goal-state.json",
+			"ultragoal-state.json",
 		);
 		const state = await Bun.file(statePath).json();
 		await Bun.write(statePath, JSON.stringify({ ...state, objective: plan.goals[0]?.objective }, null, 2));
@@ -953,8 +959,8 @@ disabledExtensions:
 			(result.outputJson?.hookSpecificOutput as { additionalContext?: unknown } | undefined)?.additionalContext ??
 				"",
 		);
-		expect(context).toContain("Ultragoal is active");
-		expect(context).toContain("jwc goal steer");
+		expect(context).toContain("Goal is active");
+		expect(context).toContain("jwc ultragoal steer");
 	});
 
 	it("merges managed Codex UserPromptSubmit/Stop hooks without dropping user hooks", () => {

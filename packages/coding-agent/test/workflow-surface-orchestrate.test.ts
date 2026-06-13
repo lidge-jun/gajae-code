@@ -33,7 +33,6 @@ describe("workflow surface — orchestrate discovery (99.03 M1)", () => {
 		expect(source).toContain("IPABCD B-stage coordinated execution engine.");
 	});
 
-
 	it("system-prompt invariant sentences preserved", async () => {
 		const source = await read();
 		expect(source).toContain("delegate bounded slices to `executor`");

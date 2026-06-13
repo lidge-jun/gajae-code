@@ -250,10 +250,10 @@ describe("GJC skill-active state", () => {
 							active: false,
 							session_id: "sess1",
 							updated_at: "2026-01-01T00:02:00.000Z",
-							handoff_to: "goal",
+							handoff_to: "ultragoal",
 						},
 						{
-							skill: "goal",
+							skill: "ultragoal",
 							phase: "executing",
 							active: true,
 							session_id: "sess1",
@@ -264,7 +264,7 @@ describe("GJC skill-active state", () => {
 			);
 
 			const visible = await readVisibleSkillActiveState(cwd, "sess1");
-			expect(visible?.active_skills?.map(entry => entry.skill)).toEqual(["goal"]);
+			expect(visible?.active_skills?.map(entry => entry.skill)).toEqual(["ultragoal"]);
 		});
 	});
 
@@ -285,7 +285,7 @@ describe("GJC skill-active state", () => {
 			});
 			await syncSkillActiveState({
 				cwd,
-				skill: "goal",
+				skill: "ultragoal",
 				phase: "executing",
 				active: true,
 				source: "gjc-goal",
@@ -293,7 +293,7 @@ describe("GJC skill-active state", () => {
 			});
 
 			const visible = await readVisibleSkillActiveState(cwd);
-			expect(visible?.active_skills?.map(entry => entry.skill).sort()).toEqual(["ralplan", "goal"]);
+			expect(visible?.active_skills?.map(entry => entry.skill).sort()).toEqual(["ralplan", "ultragoal"]);
 		});
 	});
 

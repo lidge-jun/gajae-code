@@ -48,8 +48,9 @@ describe("SettingsSelectorComponent memory tab", () => {
 		expect(before).toContain("Memory Backend");
 		expect(before).not.toContain("Hindsight API URL");
 
-		// Memory Backend is the only visible row, so it's already selected at index 0.
-		// Enter opens the SelectSubmenu pre-positioned on "off"; navigate to "hindsight" (index 2) and confirm.
+		// Memory Backend follows search mode/model rows.
+		comp.handleInput("\x1b[B");
+		comp.handleInput("\x1b[B");
 		comp.handleInput("\n");
 		comp.handleInput("\x1b[B");
 		comp.handleInput("\x1b[B");
@@ -69,8 +70,9 @@ describe("SettingsSelectorComponent memory tab", () => {
 
 		expect(comp.render(120).join("\n")).toContain("Hindsight API URL");
 
-		// Open Memory Backend → SelectSubmenu pre-selects the current value
-		// ("hindsight" at index 2) → step up twice to reach "off" → Enter confirms.
+		// Select Memory Backend, then use the preselected "hindsight" option and step back to "off".
+		comp.handleInput("\x1b[B");
+		comp.handleInput("\x1b[B");
 		comp.handleInput("\n");
 		comp.handleInput("\x1b[A");
 		comp.handleInput("\x1b[A");

@@ -42,9 +42,9 @@ describe("approvalGate (ralplan #317)", () => {
 });
 
 describe("executionGate (goal #317)", () => {
-	it("emits an goal execution gate", () => {
+	it("emits an ultragoal execution gate", () => {
 		const gate = executionGate();
-		expect(gate.stage).toBe("goal");
+		expect(gate.stage).toBe("ultragoal");
 		expect(gate.kind).toBe("execution");
 		expect(gate.schema.properties?.decision?.enum).toEqual(["approve", "decline"]);
 	});

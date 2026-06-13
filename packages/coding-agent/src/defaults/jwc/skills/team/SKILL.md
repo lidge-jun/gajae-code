@@ -116,7 +116,7 @@ For simple read-only brownfield lookups during intake, follow active session gui
 
 ## Follow-up Staffing Contract
 
-When `$team` is used as a follow-up mode from ralplan, carry forward the approved plan's explicit **available-agent-types roster** and convert it into concrete staffing guidance before launch:
+When `$team` is used as a follow-up mode from the planning stage, carry forward the approved plan's explicit **available-agent-types roster** and convert it into concrete staffing guidance before launch:
 
 - keep worker-role choices inside the known roster
 - state that jwc team launches the requested worker count and role allocation
@@ -438,4 +438,4 @@ When the team task-set completes OR the user requests return to planning/persist
 jwc state team write --input '{"current_phase":"handoff"}' --json
 ```
 
-The skill tool then dispatches `/skill:ralplan`, `/skill:jaw-interview`, or `/skill:ultragoal` same-turn and runs `jwc state team handoff --to <ralplan|jaw-interview|ultragoal> --json` in-process to atomically demote team, promote the callee, and sync both `skill-active-state.json` files. You do not need to run the handoff verb yourself.
+The skill tool then dispatches `/orchestrate p`, `/skill:jaw-interview`, or `/skill:ultragoal` same-turn and runs `jwc state team handoff --to <ralplan|jaw-interview|ultragoal> --json` in-process to atomically demote team, promote the callee, and sync both `skill-active-state.json` files. You do not need to run the handoff verb yourself.

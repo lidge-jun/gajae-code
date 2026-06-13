@@ -155,7 +155,9 @@ function parseExplicitSkillInvocations(text: string): {
 	while (match !== null) {
 		sawExplicitLikeInvocation = true;
 		const token = match[1] ?? "";
-		const normalized = token.startsWith("gjc:") ? token.slice(4) : token;
+		const rawSkill = token.startsWith("gjc:") ? token.slice(4) : token;
+		const keywordDefinition = JWC_SKILL_KEYWORD_DEFINITIONS.find(definition => definition.keyword === `$${rawSkill}`);
+		const normalized = keywordDefinition?.skill ?? rawSkill;
 		if (isJwcWorkflowSkill(normalized) && !seenSkills.has(normalized)) {
 			seenSkills.add(normalized);
 			matches.push({

@@ -202,7 +202,7 @@ async function seedStaleUltragoalActiveEntry(root: string): Promise<void> {
 			chips: [{ label: "status", value: "goal-planning" }],
 		},
 	};
-	await Bun.write(path.join(stateDir, "active", "goal.json"), JSON.stringify(entry, null, 2));
+	await Bun.write(path.join(stateDir, "active", "ultragoal.json"), JSON.stringify(entry, null, 2));
 	await Bun.write(
 		path.join(stateDir, "skill-active-state.json"),
 		JSON.stringify(
@@ -1872,7 +1872,7 @@ describe("goal mode-state + HUD reconciliation (#342)", () => {
 			// Drive the mode-state to "active" via the sanctioned reconciliation path.
 			await reconcileWorkflowSkillState({
 				cwd: root,
-				mode: "goal",
+				mode: "ultragoal",
 				sessionId: undefined,
 				active: true,
 				phase: "active",
@@ -1881,7 +1881,7 @@ describe("goal mode-state + HUD reconciliation (#342)", () => {
 			// active -> pending has no manifest transition edge; reconciliation must still succeed.
 			const res = await reconcileWorkflowSkillState({
 				cwd: root,
-				mode: "goal",
+				mode: "ultragoal",
 				sessionId: undefined,
 				active: true,
 				phase: "pending",
@@ -1894,13 +1894,13 @@ describe("goal mode-state + HUD reconciliation (#342)", () => {
 			await expect(
 				reconcileWorkflowSkillState({
 					cwd: root,
-					mode: "goal",
+					mode: "ultragoal",
 					sessionId: undefined,
 					active: true,
 					phase: "goal-execution",
 					payload: { skill: "ultragoal" },
 				}),
-			).rejects.toThrow(/unknown goal phase/);
+			).rejects.toThrow(/unknown ultragoal phase/);
 		});
 	});
 

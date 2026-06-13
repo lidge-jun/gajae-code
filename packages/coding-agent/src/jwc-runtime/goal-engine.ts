@@ -371,7 +371,7 @@ function parseGoalStatus(value: unknown): GoalStatus {
 }
 
 function normalizePlan(raw: unknown): GoalPlan {
-	if (typeof raw !== "object" || raw === null) throw new Error("Invalid ultragoal plan: expected object");
+	if (typeof raw !== "object" || raw === null) throw new Error("Invalid goal plan: expected object");
 	const record = raw as JsonObject;
 	const brief = nonEmptyString(record.brief) ?? "";
 	const createdAt = nonEmptyString(record.createdAt) ?? new Date().toISOString();
@@ -538,7 +538,7 @@ export async function createGoalPlan(input: {
 	jwcGoalMode?: GoalJwcGoalMode;
 }): Promise<GoalPlan> {
 	const brief = input.brief.trim();
-	if (!brief) throw new Error("ultragoal brief is required");
+	if (!brief) throw new Error("goal brief is required");
 	const now = new Date().toISOString();
 	// Parse the untrimmed brief so the raw-line delimiter contract holds: a
 	// leading-indented `@goal` on the first line must stay objective text rather
@@ -583,7 +583,7 @@ export async function refineGoalObjective(input: { cwd: string; objective: strin
 	const objective = input.objective.trim();
 	if (!objective) throw new Error("goal refine requires a non-empty objective");
 	const plan = await readGoalPlan(input.cwd);
-	if (!plan) throw new Error("No ultragoal plan found. Run `jwc goal set <objective>` first.");
+	if (!plan) throw new Error("No goal plan found. Run `jwc goal set <objective>` first.");
 	const now = new Date().toISOString();
 	plan.jwcObjective = objective;
 	const target = plan.goals.find(goal => goal.status === "active") ?? plan.goals[0];
@@ -635,7 +635,7 @@ export async function startNextGoal(input: { cwd: string; retryFailed?: boolean 
 	allComplete: boolean;
 }> {
 	const plan = await readGoalPlan(input.cwd);
-	if (!plan) throw new Error("No ultragoal plan found. Run `jwc ultragoal create-goals --brief ...` first.");
+	if (!plan) throw new Error("No goal plan found. Run `jwc ultragoal create-goals --brief ...` first.");
 	const goal = chooseNextGoal(plan, input.retryFailed === true);
 	if (!goal) return { plan, allComplete: getGoalRunCompletionState(plan).allComplete };
 	if (goal.status !== "active") {
@@ -1152,9 +1152,9 @@ export async function checkpointGoal(input: {
 	qualityGateJson?: string;
 }): Promise<GoalPlan> {
 	const plan = await readGoalPlan(input.cwd);
-	if (!plan) throw new Error("No ultragoal plan found. Run `jwc ultragoal create-goals --brief ...` first.");
+	if (!plan) throw new Error("No goal plan found. Run `jwc ultragoal create-goals --brief ...` first.");
 	const goal = plan.goals.find(item => item.id === input.goalId);
-	if (!goal) throw new Error(`No ultragoal goal found for ${input.goalId}.`);
+	if (!goal) throw new Error(`No goal found for ${input.goalId}.`);
 	const evidence = input.evidence.trim();
 	if (!evidence) throw new Error("checkpoint evidence is required");
 	const qualityGateJson =
@@ -1251,7 +1251,7 @@ export async function checkpointAndContinueGoal(input: {
 }): Promise<GoalCheckpointContinuation> {
 	let plan = await checkpointGoal(input);
 	const checkpointedGoal = plan.goals.find(goal => goal.id === input.goalId);
-	if (!checkpointedGoal) throw new Error(`No ultragoal goal found for ${input.goalId}.`);
+	if (!checkpointedGoal) throw new Error(`No goal found for ${input.goalId}.`);
 	if (input.status === "complete" && input.advanceNext === true) {
 		const beforeAdvance = getGoalRunCompletionState(plan, { retryFailed: input.retryFailed });
 		if (beforeAdvance.nextGoal && beforeAdvance.nextGoal.status !== "active") {
@@ -1287,7 +1287,7 @@ export async function addGoalSubgoal(input: {
 	rationale: string;
 }): Promise<GoalPlan> {
 	const plan = await readGoalPlan(input.cwd);
-	if (!plan) throw new Error("No ultragoal plan found. Run `jwc ultragoal create-goals --brief ...` first.");
+	if (!plan) throw new Error("No goal plan found. Run `jwc ultragoal create-goals --brief ...` first.");
 	for (const [label, value] of [
 		["title", input.title],
 		["objective", input.objective],
@@ -1524,16 +1524,14 @@ function renderCheckpointContinuation(
 			lines.push(`GJC objective: ${result.plan.jwcObjective}`);
 			lines.push(
 				result.startedNext
-					? "The next ultragoal goal is active; continue the current aggregate GJC goal and checkpoint this story when verified."
-					: "Run `jwc goal complete-goals` to activate the next ultragoal story.",
+					? "The next goal is active; continue the current aggregate GJC goal and checkpoint this story when verified."
+					: "Run `jwc goal complete-goals` to activate the next goal story.",
 			);
 		}
 	} else if (status === "failed") {
 		lines.push("Resume failed goals with `jwc goal complete-goals --retry-failed` after the blocker is fixed.");
 	} else if (status === "blocked" || status === "review_blocked") {
-		lines.push(
-			"Blocked ultragoal work must be resolved with explicit blocker work or steering before final completion.",
-		);
+		lines.push("Blocked goal work must be resolved with explicit blocker work or steering before final completion.");
 	}
 	lines.push("");
 	return lines.join("\n");
@@ -1562,7 +1560,7 @@ async function dispatchGoalCommand(args: string[], cwd: string): Promise<GoalEng
 								goal_ids: plan.goals.map(goal => goal.id),
 								goals_path: getGoalPaths(cwd).goalsPath,
 							})
-						: `Created ultragoal plan with ${plan.goals.length} goal${plan.goals.length === 1 ? "" : "s"} at ${getGoalPaths(cwd).goalsPath}.\n`,
+						: `Created goal plan with ${plan.goals.length} goal${plan.goals.length === 1 ? "" : "s"} at ${getGoalPaths(cwd).goalsPath}.\n`,
 				};
 			}
 			case "complete-goals":
@@ -1651,7 +1649,7 @@ const RECONCILE_COMMANDS = new Set([
 ]);
 
 /**
- * Derive a workflow-state payload from the ultragoal plan/ledger and reconcile the
+ * Derive a workflow-state payload from the goal plan/ledger and reconcile the
  * ultragoal mode-state + active-state/HUD so `jwc state ultragoal read`, the
  * skill-tool chain guard, and the HUD chip mirror the plan/ledger. Session scope
  * follows `gjc state` (`GJC_SESSION_ID`). This is a derived repair: it never changes

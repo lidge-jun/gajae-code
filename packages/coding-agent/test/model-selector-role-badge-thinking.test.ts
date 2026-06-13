@@ -63,7 +63,6 @@ function createCanonicalRecord(model: Model) {
 	};
 }
 
-
 function createSelector(
 	model: Model,
 	settings: Settings,

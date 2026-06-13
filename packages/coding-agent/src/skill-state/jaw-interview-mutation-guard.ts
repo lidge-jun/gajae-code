@@ -5,7 +5,7 @@ import { LocalProtocolHandler, resolveLocalUrlToPath } from "../internal-urls/lo
 import { ModeStateSchema, normalizeWorkflowSkillSlug } from "../jwc-runtime/state-schema";
 import { resolveToCwd } from "../tools/path-utils";
 import { ToolError } from "../tools/tool-errors";
-import { listActiveSkills, readVisibleSkillActiveState, type SkillActiveEntry } from "./active-state";
+import { CANONICAL_JWC_WORKFLOW_SKILLS, listActiveSkills, readVisibleSkillActiveState, type SkillActiveEntry } from "./active-state";
 import {
 	type CanonicalJwcWorkflowSkill,
 	sanctionedWorkflowStateCommand,
@@ -358,7 +358,7 @@ function blockedWorkflowStateSkill(cwd: string, rawPath: string): CanonicalJwcWo
 	if (segments[1] === "specs" || segments[1] === "plans") return null;
 	if (segments[1] !== "state") return null;
 	const fileName = segments.at(-1) ?? "";
-	for (const skillName of ["jaw-interview", "ralplan", "ultragoal", "team"] as const) {
+	for (const skillName of CANONICAL_JWC_WORKFLOW_SKILLS) {
 		if (fileName === workflowModeStateFileName(skillName)) return skillName;
 	}
 	if (fileName === "skill-active-state.json") return "jaw-interview";

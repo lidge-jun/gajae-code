@@ -178,12 +178,12 @@ export async function runNativeGoalCommand(argv: readonly string[], cwd: string)
 				const active = plan.goals.find(goal => goal.status === "active");
 				const gate = await readPauseGate(cwd);
 				// 99.00.03 P1-2 — user objective first; the engine-level plan
-				// objective (ultragoal boilerplate) is detail, not the headline.
+				// objective (goal boilerplate) is detail, not the headline.
 				const userObjective = active?.objective ?? plan.brief.split("\n")[0];
 				const lines = [
 					`Goal:    ${userObjective}`,
 					`Status:  ${active ? active.status : "no active story"}${gate.paused ? " (paused)" : ""}`,
-					`Mode:    ultragoal ledger (.jwc/ultragoal/)`,
+					`Mode:    goal ledger (.jwc/ultragoal/)`,
 					`ID:      ${active?.id ?? "-"}`,
 					`Stories: ${plan.goals.map(goal => `${goal.id}:${goal.status}`).join(" ")}`,
 				];

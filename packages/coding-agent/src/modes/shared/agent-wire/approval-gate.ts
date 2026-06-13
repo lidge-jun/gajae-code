@@ -1,17 +1,17 @@
 /**
- * Ralplan approval + ultragoal execution gate mapping (#317).
+ * Plan approval + goal execution gate mapping (#317).
  *
  * Maps the two human-gated lifecycle decisions onto `workflow_gate` events:
- *  - ralplan `pending approval` -> `workflow_gate` { kind: "approval" } whose
+ *  - plan `pending approval` -> `workflow_gate` { kind: "approval" } whose
  *    answer is one of approve / request-changes / reject (+ optional comments);
- *  - ultragoal execution sign-off -> `workflow_gate` { kind: "execution" } whose
+ *  - goal execution sign-off -> `workflow_gate` { kind: "execution" } whose
  *    answer is approve / decline (+ optional reason).
  *
  * Gates remain mandatory; the external agent substitutes for the human at the
  * answer boundary only. Declining / requesting changes is honored and is NEVER
  * silently treated as approval.
  *
- * This is the pure mapping primitive; routing ralplan/ultragoal through it when
+ * This is the pure mapping primitive; routing plan/goal through it when
  * an unattended controller + gate broker are attached is wired with the transport
  * in #321 and exercised end-to-end by #323.
  */
@@ -56,7 +56,7 @@ export class ApprovalGateError extends Error {
 const APPROVAL_DECISIONS: ApprovalDecision[] = ["approve", "request-changes", "reject"];
 const EXECUTION_DECISIONS: ExecutionDecision[] = ["approve", "decline"];
 
-/** Build the ralplan `pending approval` -> `workflow_gate { kind: "approval" }` open-input. */
+/** Build the plan `pending approval` -> `workflow_gate { kind: "approval" }` open-input. */
 export function approvalGate(context: RpcWorkflowGateContext = {}): OpenGateInput {
 	const schema: RpcJsonSchema = {
 		type: "object",
@@ -76,7 +76,7 @@ export function approvalGate(context: RpcWorkflowGateContext = {}): OpenGateInpu
 	};
 }
 
-/** Build the ultragoal execution sign-off -> `workflow_gate { kind: "execution" }` open-input. */
+/** Build the goal execution sign-off -> `workflow_gate { kind: "execution" }` open-input. */
 export function executionGate(context: RpcWorkflowGateContext = {}): OpenGateInput {
 	const schema: RpcJsonSchema = {
 		type: "object",
@@ -108,7 +108,7 @@ function decisionField(answer: unknown): string {
 }
 
 /**
- * Decode a ralplan approval answer. `request-changes` requires comments and is
+ * Decode a plan approval answer. `request-changes` requires comments and is
  * NEVER treated as approval; only an explicit `approve` advances.
  */
 export function decodeApproval(answer: unknown): ApprovalGateResult {
@@ -131,7 +131,7 @@ export function decodeApproval(answer: unknown): ApprovalGateResult {
 }
 
 /**
- * Decode an ultragoal execution answer. Only an explicit `approve` advances;
+ * Decode a goal execution answer. Only an explicit `approve` advances;
  * `decline` is honored and never silently approved.
  */
 export function decodeExecution(answer: unknown): ExecutionGateResult {

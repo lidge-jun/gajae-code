@@ -10,7 +10,7 @@ import { migrateWorkflowState } from "./state-migrations";
 import { appendJsonl, readExistingStateForMutation, writeArtifact, writeWorkflowEnvelopeAtomic } from "./state-writer";
 
 /**
- * Native implementation of `jwc ralplan`.
+ * Native implementation of plan writer (jwc ralplan).
  *
  * Two invocation shapes are handled natively:
  *
@@ -356,14 +356,14 @@ async function applyPlannerStateUpdate(
 
 async function resolveArtifactArgs(args: readonly string[], cwd: string): Promise<ResolvedArtifactArgs> {
 	const stage = flagValue(args, "--stage");
-	if (!stage) throw new PlanWriterCommandError(2, "--stage is required for ralplan --write");
+	if (!stage) throw new PlanWriterCommandError(2, "--stage is required for plan --write");
 	assertKnownStage(stage);
 
 	const stageN = parseStageN(flagValue(args, "--stage_n"));
 
 	const rawArtifact = flagValue(args, "--artifact");
 	if (rawArtifact === undefined || rawArtifact === "") {
-		throw new PlanWriterCommandError(2, "--artifact is required for ralplan --write");
+		throw new PlanWriterCommandError(2, "--artifact is required for plan --write");
 	}
 
 	const sessionIdRaw = flagValue(args, "--session-id")?.trim();
@@ -496,7 +496,7 @@ async function handleArtifactWrite(args: readonly string[], cwd: string): Promis
 	if (plannerState) payload.planner_state = plannerStatePayload(plannerState);
 	const stdout = resolved.json
 		? `${JSON.stringify(payload, null, 2)}\n`
-		: `Persisted ralplan ${persisted.stage} stage ${persisted.stageN} at ${persisted.path}.\n`;
+		: `Persisted plan ${persisted.stage} stage ${persisted.stageN} at ${persisted.path}.\n`;
 	return { status: 0, stdout };
 }
 
@@ -526,7 +526,7 @@ function extractPositionalTask(args: readonly string[]): string {
 		}
 		if (arg === "--interactive" || arg === "--deliberate" || arg === "--write" || arg === "--json") continue;
 		if (arg.startsWith("-")) {
-			throw new PlanWriterCommandError(2, `unknown flag for gjc ralplan: ${arg}`);
+			throw new PlanWriterCommandError(2, `unknown flag for plan writer: ${arg}`);
 		}
 		parts.push(arg);
 	}
@@ -612,7 +612,7 @@ async function seedRalplanState(
 async function handleConsensusHandoff(args: readonly string[], cwd: string): Promise<RalplanCommandResult> {
 	const resolved = resolveConsensusArgs(args);
 	if (!resolved.task) {
-		throw new PlanWriterCommandError(2, 'gjc ralplan requires a task description, e.g. `jwc ralplan "<task>"`.');
+		throw new PlanWriterCommandError(2, 'plan writer requires a task description, e.g. `jwc ralplan "<task>"`.');
 	}
 	const { statePath, runId } = await seedRalplanState(cwd, resolved);
 	const mode = resolved.deliberate ? "deliberate" : "short";

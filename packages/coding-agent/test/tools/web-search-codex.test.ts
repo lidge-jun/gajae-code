@@ -267,7 +267,7 @@ describe("searchCodex model selection", () => {
 				);
 			}
 
-			expect(requestedModel).toBe("gpt-5-codex");
+			expect(requestedModel).toBe("gpt-5.4");
 			return new Response(makeSseResponse("gpt-5-codex"), {
 				status: 200,
 				headers: { "Content-Type": "text/event-stream" },

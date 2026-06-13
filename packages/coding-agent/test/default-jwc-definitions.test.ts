@@ -72,7 +72,7 @@ describe("default GJC definitions", () => {
 		expect(fragmentDefinitions.map(definition => definition.relativePath).sort()).toEqual([
 			"skill-fragments/jaw-interview/auto-answer-uncertain.md",
 			"skill-fragments/jaw-interview/auto-research-greenfield.md",
-			"skill-fragments/goal/ai-slop-cleaner.md",
+			"skill-fragments/ultragoal/ai-slop-cleaner.md",
 		]);
 	});
 
@@ -93,7 +93,7 @@ describe("default GJC definitions", () => {
 		expect(fragments.every(fragment => fragment.content.includes("read-only architect"))).toBe(true);
 	});
 
-	it("exposes the goal ai-slop-cleaner fragment only through the parent-scoped fragment accessor", () => {
+	it("exposes the ultragoal ai-slop-cleaner fragment only through the parent-scoped fragment accessor", () => {
 		const fragments = getEmbeddedDefaultJwcSkillFragments("goal");
 
 		expect(
@@ -104,7 +104,7 @@ describe("default GJC definitions", () => {
 		expect(fragments).toHaveLength(1);
 		expect(fragments.map(fragment => fragment.kind)).toEqual(["skill-fragment"]);
 		expect(fragments.map(fragment => fragment.relativePath)).toEqual([
-			"skill-fragments/goal/ai-slop-cleaner.md",
+			"skill-fragments/ultragoal/ai-slop-cleaner.md",
 		]);
 		expect(fragments[0]!.content).toContain("AI SLOP CLEANUP REPORT");
 		expect(fragments[0]!.content).toContain("read-only detector");
@@ -318,7 +318,7 @@ Project executor override body.
 
 		for (const content of [team, goal]) {
 			expect(content).toContain('fresh `goal({"op":"get"})` snapshot');
-			expect(content).toContain("Workers must not run `jwc goal checkpoint`");
+			expect(content).toContain("Workers must not run `jwc ultragoal checkpoint`");
 			expect(content).toContain("checkpoint authority stays with the leader");
 			expect(content).toContain("Ultragoal does not auto-launch Team");
 			expect(content).toContain("performs no hidden goal mutation");
@@ -436,7 +436,7 @@ Project executor override body.
 		});
 	});
 
-	it("does not make the goal ai-slop-cleaner fragment reachable as a skill-relative internal URL asset", async () => {
+	it("does not make the ultragoal ai-slop-cleaner fragment reachable as a skill-relative internal URL asset", async () => {
 		await withTempHome(async () => {
 			const repoRoot = await makeTempRoot();
 			await installDefaultJwcDefinitions({ targetRoot: path.join(repoRoot, ".jwc") });
@@ -452,7 +452,7 @@ Project executor override body.
 
 			setActiveSkills([goal]);
 			await expect(
-				new SkillProtocolHandler().resolve(parseInternalUrl("skill://goal/ai-slop-cleaner.md")),
+				new SkillProtocolHandler().resolve(parseInternalUrl("skill://ultragoal/ai-slop-cleaner.md")),
 			).rejects.toThrow("File not found");
 			await expect(new SkillProtocolHandler().resolve(parseInternalUrl("skill://ai-slop-cleaner"))).rejects.toThrow(
 				"Unknown skill: ai-slop-cleaner",

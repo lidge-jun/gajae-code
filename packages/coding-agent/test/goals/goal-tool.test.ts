@@ -245,7 +245,7 @@ describe("GoalTool", () => {
 			);
 
 			await expect(tool.execute("call-complete", { op: "complete" })).rejects.toThrow(
-				"Ultragoal aggregate completion requires a fresh final aggregate receipt",
+				"Goal aggregate completion requires a fresh final aggregate receipt",
 			);
 			expect(harness.getState()?.goal.status).toBe("active");
 		} finally {
