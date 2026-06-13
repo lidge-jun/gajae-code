@@ -5399,7 +5399,7 @@ export class AgentSession {
 				}
 				await this.#syncSkillPromptActiveStateSafely(appMessage, true);
 				try {
-					await this.#promptWithMessage(appMessage, typeof message.content === "string" ? message.content : "", {
+					await this.#promptWithMessage(appMessage, this.#getCustomMessageTextContent(message), {
 						skipPostPromptRecoveryWait: true,
 					});
 				} finally {
@@ -5425,7 +5425,7 @@ export class AgentSession {
 			}
 			await this.#syncSkillPromptActiveStateSafely(appMessage, true);
 			try {
-				await this.#promptWithMessage(appMessage, typeof message.content === "string" ? message.content : "", {
+				await this.#promptWithMessage(appMessage, this.#getCustomMessageTextContent(message), {
 					skipPostPromptRecoveryWait: true,
 				});
 			} finally {
