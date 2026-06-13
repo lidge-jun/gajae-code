@@ -60,6 +60,8 @@ Use this `AGENTS.md` as the first-stop document canon guide for the Jawcode tree
 5. `structure/` for maintained maps and status pages.
 6. `devlog/_plan/` for historical plan context.
 
+For the current package/deploy strategy, use `devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/000_moc_distribution_strategy.md` first. It records the `jawcode` npm package, `jwc` bin, `jawcode/sdk` embedding surface, managed Bun distribution contract, and cli-jaw package-dependency integration plan.
+
 Keep durable development-log notes in this file when they affect how future agents should navigate the repository, especially canonical-doc decisions, source-of-truth changes, or workflow-surface changes. Use `devlog/_plan/` for long-form implementation plans and `structure/` for maintained reference docs; do not duplicate the same rule in all three places unless the README needs a pointer.
 
 ### Jawdev documentation model

@@ -1,12 +1,13 @@
 # Jawcode (jwc)
 
-> cli-jaw의 네이티브 에이전트 런타임. upstream gajae-code 0.4.4 포크 위에 Jaw/jwc 표면을 얹은 빌드.
+> cli-jaw의 네이티브 에이전트 런타임. upstream gajae-code 0.4.4 포크 위에 Jawcode/JWC 표면을 얹은 빌드.
 
 ## 관계
 
-- **엔진**: gajae-code 0.4.4 포크 — **소스 하드 수정 원칙** (인터뷰 260612 02:04 확정): 프롬프트·번들 스킬에 Jaw/jwc 어휘 직접 기입, 가드는 jwc 기준. 업스트림 머지 시 프롬프트 충돌은 수용 비용. 기능 식별자(`.jwc/` 경로·`GJC_*` env·`@gajae-code/*` 스코프)는 보존
-- **jwc bin**: `packages/jwc/bin/jwc.js` — **단일 진입점** (legacy shell package는 제거됨; 필요 시 upstream npm `gajae-code` 별도 설치)
-- **임베딩 표면**: `jwc/sdk` (`packages/jwc/src/sdk.ts`) — cli-jaw가 import하는 단일 통로
+- **엔진**: gajae-code 0.4.4 포크 — **소스 하드 수정 원칙** (인터뷰 260612 02:04 확정): 프롬프트·번들 스킬에 Jawcode/JWC 어휘 직접 기입, 가드는 JWC 기준. 업스트림 머지 시 프롬프트 충돌은 수용 비용. 기능 식별자(`.jwc/` 경로·호환 env·`@gajae-code/*` 스코프)는 내부 호환 계층으로 보존 가능
+- **npm package**: `jawcode` — `npm install -g jawcode`
+- **jwc bin**: `packages/jwc/bin/jwc.js` — 설치 후 사용자 명령은 `jwc`
+- **임베딩 표면**: `jawcode/sdk` (`packages/jwc/src/sdk.ts`가 현 소스 위치) — cli-jaw가 import하는 단일 통로
 - 상태 경로(`.jwc/`)·패키지 스코프(`@gajae-code/*`)·릴리스 에셋명은 upstream engine 계보 그대로
 
 ## 실행

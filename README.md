@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://www.npmjs.com/package/jwc"><img alt="npm package" src="https://img.shields.io/npm/v/jwc?style=flat-square"></a>
+  <a href="https://www.npmjs.com/package/jawcode"><img alt="npm package" src="https://img.shields.io/npm/v/jawcode?style=flat-square"></a>
   <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/badge/license-MIT-green?style=flat-square"></a>
   <a href="https://discord.gg/sj4exxQ9v"><img alt="Discord" src="https://img.shields.io/badge/Discord-join-5865F2?style=flat-square&logo=discord&logoColor=white"></a>
 </p>
@@ -35,10 +35,11 @@ It is intentionally not a hidden plugin for Codex CLI, Claude Code, OpenCode, or
 ## Install
 
 ```sh
-bun install -g jwc
+npm install -g jawcode
 ```
 
 The engine packages still use the upstream `@gajae-code/*` workspace scope internally.
+Packaging and cli-jaw integration are tracked in [`devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/000_moc_distribution_strategy.md`](devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/000_moc_distribution_strategy.md).
 
 ## Quick start
 

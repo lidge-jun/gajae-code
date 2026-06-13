@@ -4,7 +4,7 @@
 
 | Gate | Requirement | Evidence target |
 |---|---|---|
-| G-110-1 | JWC embedding facade is stable | `jwc/sdk` export map or successor doc |
+| G-110-1 | JWC embedding facade is stable | `jawcode/sdk` export map or successor doc |
 | G-110-2 | JWC runtime can be imported without TUI-only Bun paths | focused Node/import smoke |
 | G-110-3 | cli-jaw does not need global `jwc` | PATH-negative smoke in cli-jaw |
 | G-110-4 | session ownership is explicit | jaw.db vs `.jwc` state map |
