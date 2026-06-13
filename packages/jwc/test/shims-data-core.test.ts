@@ -5,14 +5,16 @@
  * malformed lines, end-of-stream flush).
  */
 import { describe, expect, it } from "bun:test";
-import { bunHash, BunSHA256 } from "../src/shims/bun-hash";
+import { BunSHA256, bunHash } from "../src/shims/bun-hash";
 import { bunJSONL } from "../src/shims/bun-jsonl";
 
 const ENC = new TextEncoder();
 
 function compare(input: string | Uint8Array, start?: number, stop?: number) {
 	const native =
-		typeof input === "string" ? Bun.JSONL.parseChunk(input) : Bun.JSONL.parseChunk(input, start ?? 0, stop ?? input.length);
+		typeof input === "string"
+			? Bun.JSONL.parseChunk(input)
+			: Bun.JSONL.parseChunk(input, start ?? 0, stop ?? input.length);
 	const shim =
 		typeof input === "string"
 			? bunJSONL.parseChunk(input)

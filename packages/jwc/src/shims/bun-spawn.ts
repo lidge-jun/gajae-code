@@ -22,7 +22,10 @@ export interface BunSpawnOptions {
 	onExit?: (proc: unknown, exitCode: number | null, signalCode: string | null, error?: Error) => void;
 }
 
-function mapStdio(option: StdioOption, fallback: "pipe" | "inherit" | "ignore"): "pipe" | "inherit" | "ignore" | number {
+function mapStdio(
+	option: StdioOption,
+	fallback: "pipe" | "inherit" | "ignore",
+): "pipe" | "inherit" | "ignore" | number {
 	if (option === null || option === undefined) return fallback;
 	if (typeof option === "number") return option;
 	return option;

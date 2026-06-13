@@ -35,6 +35,7 @@ function escapeValue(value: unknown): string {
 	return `'${text.replaceAll("'", `'\\''`)}'`;
 }
 
+// biome-ignore lint/suspicious/noThenProperty: intentional thenable — Bun's `$` template is awaited directly.
 class ShellPromise implements PromiseLike<ShellOutput> {
 	#command: string;
 	#cwd?: string;
@@ -100,7 +101,9 @@ class ShellPromise implements PromiseLike<ShellOutput> {
 					json: () => JSON.parse(out.toString("utf8")),
 				};
 				if (exitCode !== 0 && !this.#nothrow) {
-					reject(new ShellError(`Command failed with exit code ${exitCode}: ${this.#command}`, exitCode, out, err));
+					reject(
+						new ShellError(`Command failed with exit code ${exitCode}: ${this.#command}`, exitCode, out, err),
+					);
 					return;
 				}
 				resolve(output);

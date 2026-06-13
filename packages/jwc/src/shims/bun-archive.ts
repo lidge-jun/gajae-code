@@ -18,7 +18,9 @@ const DECODER = new TextDecoder();
 // ── tar (ustar) ─────────────────────────────────────────────────────────────
 
 function readOctal(bytes: Uint8Array, offset: number, length: number): number {
-	const text = DECODER.decode(bytes.subarray(offset, offset + length)).replace(/\0/g, "").trim();
+	const text = DECODER.decode(bytes.subarray(offset, offset + length))
+		.replace(/\0/g, "")
+		.trim();
 	return text.length === 0 ? 0 : Number.parseInt(text, 8);
 }
 
