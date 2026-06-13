@@ -4914,6 +4914,10 @@ export class AgentSession {
 				await this.#checkCompaction(lastAssistant, false);
 			}
 
+			// Pre-prompt context maintenance: estimate whether the prompt will overflow
+			// and run compaction proactively before sending (upstream #542).
+			await this.#checkEstimatedContextBeforePrompt();
+
 			// Build messages array (session context, eager todo prelude, then active prompt message)
 			const messages: AgentMessage[] = [];
 			const planReferenceMessage = await this.#buildPlanReferenceMessage?.();
@@ -6716,6 +6720,32 @@ export class AgentSession {
 			}
 		}
 	}
+
+	async #checkEstimatedContextBeforePrompt(): Promise<void> {
+		const compactionSettings = this.settings.getGroup("compaction");
+		if (!compactionSettings.enabled || compactionSettings.strategy === "off") return;
+
+		const model = this.model;
+		if (!model) return;
+		const contextWindow = model.contextWindow ?? 0;
+		const maxOutputTokens = model.maxTokens ?? 0;
+		if (contextWindow <= 0) return;
+
+		let contextTokens = this.#estimateContextTokens().tokens;
+		if (!shouldCompact(contextTokens, contextWindow, compactionSettings, maxOutputTokens)) return;
+
+		logger.info("Pre-prompt context maintenance triggered", {
+			contextTokens,
+			contextWindow,
+			maxOutputTokens,
+		});
+
+		await this.#runAutoCompaction("threshold", false, false, {
+			continueAfterMaintenance: false,
+			deferHandoffMaintenance: false,
+		});
+	}
+
 	#assistantEndedWithSuccessfulYield(assistantMessage: AssistantMessage): boolean {
 		const toolCallId = this.#lastSuccessfulYieldToolCallId;
 		if (!toolCallId) return false;
@@ -7448,12 +7478,19 @@ export class AgentSession {
 		reason: "overflow" | "threshold" | "idle",
 		willRetry: boolean,
 		deferred = false,
+		options?: { continueAfterMaintenance?: boolean; deferHandoffMaintenance?: boolean },
 	): Promise<void> {
 		const compactionSettings = this.settings.getGroup("compaction");
 		if (compactionSettings.strategy === "off") return;
 		if (reason !== "idle" && !compactionSettings.enabled) return;
 		const generation = this.#promptGeneration;
-		if (!deferred && reason !== "overflow" && reason !== "idle" && compactionSettings.strategy === "handoff") {
+		if (
+			options?.deferHandoffMaintenance !== false &&
+			!deferred &&
+			reason !== "overflow" &&
+			reason !== "idle" &&
+			compactionSettings.strategy === "handoff"
+		) {
 			this.#schedulePostPromptTask(
 				async signal => {
 					await Promise.resolve();
@@ -7464,6 +7501,8 @@ export class AgentSession {
 			);
 			return;
 		}
+
+		const continueAfterMaintenance = options?.continueAfterMaintenance !== false;
 
 		let action: "context-full" | "handoff" =
 			compactionSettings.strategy === "handoff" && reason !== "overflow" ? "handoff" : "context-full";
@@ -7506,7 +7545,12 @@ export class AgentSession {
 						aborted: false,
 						willRetry: false,
 					});
-					if (!autoCompactionSignal.aborted && reason !== "idle" && compactionSettings.autoContinue !== false) {
+					if (
+						continueAfterMaintenance &&
+						!autoCompactionSignal.aborted &&
+						reason !== "idle" &&
+						compactionSettings.autoContinue !== false
+					) {
 						this.#scheduleAutoContinuePrompt(generation);
 					}
 					return;
@@ -7568,7 +7612,7 @@ export class AgentSession {
 							stopReason: tail?.stopReason,
 						});
 					}
-				} else if (reason !== "idle" && this.agent.hasQueuedMessages()) {
+				} else if (continueAfterMaintenance && reason !== "idle" && this.agent.hasQueuedMessages()) {
 					this.#scheduleAgentContinue({
 						delayMs: 100,
 						generation,
@@ -7576,7 +7620,7 @@ export class AgentSession {
 						onSkip: skipReason => this.#logCompactionContinuationSkipped("queued_continue", skipReason),
 						onError: error => this.#logCompactionContinuationError("queued_continue", error),
 					});
-				} else if (reason !== "idle" && compactionSettings.autoContinue !== false) {
+				} else if (continueAfterMaintenance && reason !== "idle" && compactionSettings.autoContinue !== false) {
 					this.#scheduleAutoContinuePrompt(generation);
 				}
 				return;
@@ -7797,7 +7841,7 @@ export class AgentSession {
 						onError: error => this.#logCompactionContinuationError("overflow_retry", error),
 					});
 				}
-			} else if (reason !== "idle" && this.agent.hasQueuedMessages()) {
+			} else if (continueAfterMaintenance && reason !== "idle" && this.agent.hasQueuedMessages()) {
 				// Auto-compaction can complete while follow-up/steering/custom messages are waiting.
 				// Kick the loop so queued messages are actually delivered.
 				this.#scheduleAgentContinue({
@@ -7807,7 +7851,7 @@ export class AgentSession {
 					onSkip: reason => this.#logCompactionContinuationSkipped("queued_continue", reason),
 					onError: error => this.#logCompactionContinuationError("queued_continue", error),
 				});
-			} else if (reason !== "idle" && compactionSettings.autoContinue !== false) {
+			} else if (continueAfterMaintenance && reason !== "idle" && compactionSettings.autoContinue !== false) {
 				this.#scheduleAutoContinuePrompt(generation);
 			}
 		} catch (error) {

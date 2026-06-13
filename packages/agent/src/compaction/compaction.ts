@@ -515,6 +515,8 @@ export function findCutPoint(
 	let accumulatedTokens = 0;
 	let cutIndex = cutPoints[0]; // Default: keep from first message (not header)
 
+	let exceededBudget = false;
+	let foundCutPoint = false;
 	for (let i = endIndex - 1; i >= startIndex; i--) {
 		const entry = entries[i];
 		if (entry.type !== "message") continue;
@@ -525,15 +527,20 @@ export function findCutPoint(
 
 		// Check if we've exceeded the budget
 		if (accumulatedTokens >= keepRecentTokens) {
+			exceededBudget = true;
 			// Find the closest valid cut point at or after this entry
 			for (let c = 0; c < cutPoints.length; c++) {
 				if (cutPoints[c] >= i) {
 					cutIndex = cutPoints[c];
+					foundCutPoint = true;
 					break;
 				}
 			}
 			break;
 		}
+	}
+	if (exceededBudget && !foundCutPoint && cutPoints.length > 0) {
+		cutIndex = cutPoints[cutPoints.length - 1];
 	}
 
 	// Scan backwards from cutIndex to include any non-message entries (bash, settings, etc.)
