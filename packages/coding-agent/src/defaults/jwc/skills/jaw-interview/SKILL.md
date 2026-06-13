@@ -285,6 +285,7 @@ Put the round metadata in the `ask` tool's structured `meta` field instead of en
     "id": "{dimension}-r{n}",
     "question": "{plain question text only}",
     "options": [{ "label": "...", "description": "optional one-line tradeoff" }],
+    "multi": true,
     "meta": {
       "kind": "round",
       "round": {n},
@@ -301,6 +302,8 @@ Put the round metadata in the `ask` tool's structured `meta` field instead of en
 Do NOT prepend a `Round N | Component: ... | Ambiguity: ...` text header to the question -- that legacy text protocol is replaced by `meta`.
 
 Options should include contextually relevant choices plus free-text, translated/localized according to `language.instruction` when present.
+
+Set `"multi": true` when the question naturally allows selecting multiple options (e.g. "which features do you want?", "which platforms?"). Default to `multi: true` for topology confirmation and feature selection rounds. Use `multi: false` only for mutually exclusive choices (e.g. "monorepo or polyrepo?").
 
 ### Step 2b′: Auto-Answer Opted-Out Questions
 
