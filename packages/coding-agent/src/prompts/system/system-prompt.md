@@ -248,6 +248,7 @@ Scan descriptions for your task domain. If a skill applies, read its SKILL.md pa
 
 - **Library/framework docs**: use Context7 MCP (`resolve-library-id` → `query-docs`) FIRST. This is the primary source for React, Next.js, Express, Prisma, Django, Tailwind, and all library-specific questions.
 - **Web/real-time/news**: use `web_search` tool or `/skill:search` for current information, pricing, compatibility, latest versions.
+- **Fetch after search**: after `web_search` returns candidate URLs, use `read` on the chosen URL for page content; use `browser` only when `read` cannot handle JS/auth/interactive pages.
 - **Mandatory citation**: every search-sourced claim must include the source. No citation = unverified.
 - **High-risk claims** (pricing, plan tiers, versions, breaking changes): require 2+ independent sources. SEARCH → DOUBT → SEARCH AGAIN → COMPARE.
 - **Code questions**: search the codebase locally first (`grep`, `find`, `read`), then search docs if needed.
