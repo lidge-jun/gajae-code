@@ -708,6 +708,9 @@ async function openCodexWebSocketTransport(
 		websocketState,
 	);
 	const requestBodyForState = structuredCloneJSON(requestContext.transformedBody);
+	const requestInputItems = Array.isArray(websocketRequest.input) ? websocketRequest.input.length : 0;
+	const isDeltaRequest =
+		typeof websocketRequest.previous_response_id === "string" && websocketRequest.previous_response_id.length > 0;
 	logCodexDebug("codex websocket request", {
 		url: toWebSocketUrl(requestContext.url),
 		model: requestContext.transformedBody.model,
@@ -716,6 +719,8 @@ async function openCodexWebSocketTransport(
 		sentTurnStateHeader: websocketHeaders.has(X_CODEX_TURN_STATE_HEADER),
 		sentModelsEtagHeader: websocketHeaders.has(X_MODELS_ETAG_HEADER),
 		requestType: websocketRequest.type,
+		requestMode: isDeltaRequest ? "delta" : "full",
+		inputItems: requestInputItems,
 		retry,
 		retryBudget: getCodexWebSocketRetryBudget(options),
 	});

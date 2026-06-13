@@ -100,6 +100,15 @@ const modelSegment: StatusLineSegment = {
 			content += ` ${theme.icon.fast}`;
 		}
 
+		// Codex transport marker: ws = websocket (delta rounds), sse = plain SSE,
+		// sse! = degraded after a websocket fallback (full-context rounds).
+		const codexTransport = ctx.session.getCodexTransportStatus?.();
+		if (codexTransport) {
+			const marker =
+				codexTransport.transport === "websocket" ? "ws" : codexTransport.fallback ? "sse!" : "sse";
+			content += `${theme.sep.dot}${marker}`;
+		}
+
 		// Add thinking level with dot separator
 		if (opts.showThinkingLevel !== false && state.model?.thinking) {
 			const level = state.thinkingLevel ?? ThinkingLevel.Off;

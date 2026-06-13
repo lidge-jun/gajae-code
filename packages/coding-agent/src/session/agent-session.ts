@@ -70,6 +70,7 @@ import {
 	calculateRateLimitBackoffMs,
 	clearAnthropicFastModeFallback,
 	effectiveMaxOutputTokens,
+	getOpenAICodexTransportDetails,
 	getSupportedEfforts,
 	isContextOverflow,
 	isUsageLimitError,
@@ -1630,6 +1631,45 @@ export class AgentSession {
 		this.#emit({ type: "notice", level, message, source });
 	}
 
+	/**
+	 * Codex transport snapshot for footer/notice surfaces. Returns undefined for
+	 * non-codex models or before the first request establishes a transport.
+	 */
+	getCodexTransportStatus(): { transport: "websocket" | "sse"; fallback: boolean } | undefined {
+		const model = this.model;
+		if (!model || model.api !== "openai-codex-responses") return undefined;
+		const details = getOpenAICodexTransportDetails(model as Model<"openai-codex-responses">, {
+			sessionId: this.agent.providerSessionId,
+			baseUrl: model.baseUrl,
+			providerSessionState: this.#providerSessionState,
+		});
+		if (!details.lastTransport) return undefined;
+		return {
+			transport: details.lastTransport,
+			fallback: details.websocketDisabled || details.fallbackCount > 0,
+		};
+	}
+
+	#codexFallbackNoticed = false;
+
+	/**
+	 * One-time notice when the codex websocket transport silently degrades to
+	 * SSE — every subsequent tool round then resends the full context, which is
+	 * the dominant latency mode. Without this the degradation is invisible
+	 * outside PI_CODEX_DEBUG logs.
+	 */
+	#maybeNoticeCodexTransportFallback(): void {
+		if (this.#codexFallbackNoticed) return;
+		const status = this.getCodexTransportStatus();
+		if (!status || status.transport !== "sse" || !status.fallback) return;
+		this.#codexFallbackNoticed = true;
+		this.emitNotice(
+			"warning",
+			"Codex websocket fell back to SSE — tool rounds now resend the full context (slower). A new session retries websocket.",
+			"codex-transport",
+		);
+	}
+
 	#queuedExtensionEvents: Promise<void> = Promise.resolve();
 
 	#queueExtensionEvent(event: AgentSessionEvent): Promise<void> {
@@ -1801,6 +1841,9 @@ export class AgentSession {
 			const report = this.#pendingRewindReport;
 			this.#pendingRewindReport = undefined;
 			await this.#applyRewind(report);
+		}
+		if (event.type === "turn_end") {
+			this.#maybeNoticeCodexTransportFallback();
 		}
 
 		// TTSR: Check for pattern matches on assistant text/thinking and tool argument deltas
