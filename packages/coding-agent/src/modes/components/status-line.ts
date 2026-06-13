@@ -451,7 +451,11 @@ export class StatusLineComponent implements Component {
 		this.#pabcdInFlight = true;
 		void readPabcdSegmentState(cwd, sessionId)
 			.then(state => {
-				this.#pabcdState = state;
+				if (state && sessionId && state.stateSessionId !== sessionId) {
+					this.#pabcdState = null;
+				} else {
+					this.#pabcdState = state;
+				}
 			})
 			.catch(() => {
 				this.#pabcdState = null;
@@ -465,7 +469,7 @@ export class StatusLineComponent implements Component {
 	get activePabcdStage(): string | null {
 		if (!this.#pabcdState?.active) return null;
 		const currentSessionId = this.session.sessionManager?.getSessionId?.();
-		if (currentSessionId && this.#pabcdState.stateSessionId && this.#pabcdState.stateSessionId !== currentSessionId) {
+		if (currentSessionId && this.#pabcdState.stateSessionId !== currentSessionId) {
 			return null;
 		}
 		return this.#pabcdState.stage;
