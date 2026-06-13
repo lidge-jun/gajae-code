@@ -463,7 +463,12 @@ export class StatusLineComponent implements Component {
 	}
 
 	get activePabcdStage(): string | null {
-		return this.#pabcdState?.active ? this.#pabcdState.stage : null;
+		if (!this.#pabcdState?.active) return null;
+		const currentSessionId = this.session.sessionManager?.getSessionId?.();
+		if (currentSessionId && this.#pabcdState.stateSessionId && this.#pabcdState.stateSessionId !== currentSessionId) {
+			return null;
+		}
+		return this.#pabcdState.stage;
 	}
 
 	#refreshSkillHudInBackground(): void {

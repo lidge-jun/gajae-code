@@ -19,6 +19,7 @@ export function truncateObjective(text: string, max: number): string {
 export interface PabcdSegmentState {
 	stage: string;
 	active: boolean;
+	stateSessionId?: string;
 	auditStatus?: "pending" | "pass" | "fail";
 	verificationStatus?: "pending" | "done" | "needs_fix";
 	aRound?: number;
@@ -35,6 +36,7 @@ export async function readPabcdSegmentState(cwd: string, sessionId?: string): Pr
 		return {
 			stage,
 			active: true,
+			stateSessionId: envelope.session_id,
 			auditStatus: envelope.ctx?.audit_status,
 			verificationStatus: envelope.ctx?.verification_status,
 			aRound: envelope.ctx?.a_round,
