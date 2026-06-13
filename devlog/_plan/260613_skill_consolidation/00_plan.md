@@ -118,7 +118,33 @@ ultragoal SKILL.md의 핵심 가이드를 goal tool의 description에 통합:
 | M2 | system-prompt.md에서 ralplan/ultragoal 하드코딩 제거 | 낮음 (동적 렌더로 대체) |
 | M3 | ultragoal SKILL.md 가이드 → goal tool description 이전 | 중간 (가이드 손실 주의) |
 | M4 | ultragoal 스킬 제거 + defaults 정리 | 낮음 (엔진 유지) |
-| M5 | 테스트 — goal 워크플로우 정상, ralplan 레거시 아티팩트 읽기 가능 | — |
+| M5 | HUD 통합 — ultragoal HUD → goal + PABCD phase 표시 | 중간 |
+| M6 | 테스트 — goal 워크플로우 정상, ralplan 레거시 아티팩트 읽기 가능 | — |
+
+### M5: HUD 통합 상세
+
+현재 (ultragoal 별도):
+```
+◆ hud ultragoal:goal-planning goals=0/0 current=goal-planning status=goal-planning receipt=fresh
+```
+
+변경 후 (goal + PABCD phase 통합):
+```
+◆ hud goal:P goals=1/3 current=G001 phase=P status=planning receipt=fresh
+◆ hud goal:B goals=1/3 current=G001 phase=B status=building receipt=wip
+◆ hud goal:C goals=1/3 current=G001 phase=C status=checking receipt=wip
+◆ hud goal:D goals=2/3 current=G002 phase=D status=done receipt=complete
+```
+
+- `ultragoal:*` 네임스페이스 → `goal:*`로 단일화
+- PABCD phase가 HUD에 직접 노출 — 현재 어떤 단계인지 한눈에 파악
+- goals=N/M 카운터 + current story ID 유지
+- orchestrate 상태와 goal 상태가 하나의 HUD 라인으로 통합
+
+영향 파일:
+- HUD 렌더러 (상태바에 ultragoal 표시하는 코드)
+- goal-runtime.ts (HUD 상태 발행)
+- ultragoal-runtime.ts (HUD 이벤트 포맷)
 
 ## 미결정
 
