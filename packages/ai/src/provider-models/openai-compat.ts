@@ -1815,6 +1815,22 @@ export interface AnthropicModelManagerConfig {
 	baseUrl?: string;
 }
 
+/**
+ * Models listed on the Anthropic OAuth (Claude Code subscription) path.
+ * Pro/Max plan context: base models default to 200K; [1m] suffix enables 1M
+ * (extra-usage or Max plan). fable-5 is 1M by default. haiku-4-5 stays 200K
+ * (no 1M variant). Older models (opus-4-5, sonnet-4-5, 3.x, pinned dates)
+ * remain in the bundle as metadata donors but hide from the picker.
+ */
+const ANTHROPIC_OAUTH_LISTED_MODELS = new Set([
+	"claude-fable-5",
+	"claude-opus-4-8",
+	"claude-opus-4-7",
+	"claude-opus-4-6",
+	"claude-sonnet-4-6",
+	"claude-haiku-4-5",
+]);
+
 export function anthropicModelManagerOptions(
 	config?: AnthropicModelManagerConfig,
 ): ModelManagerOptions<"anthropic-messages"> {
@@ -1849,10 +1865,13 @@ export function anthropicModelManagerOptions(
 						): Model<"anthropic-messages"> => {
 							const discoveredName = typeof entry.display_name === "string" ? entry.display_name : defaults.name;
 							const reference = references.get(defaults.id);
+							const unlisted =
+								isAnthropicOAuthToken(apiKey) && !ANTHROPIC_OAUTH_LISTED_MODELS.has(defaults.id);
 							if (!reference) {
 								return {
 									...defaults,
 									name: discoveredName,
+									...(unlisted ? { unlisted: true } : {}),
 								};
 							}
 							return {
@@ -1862,6 +1881,7 @@ export function anthropicModelManagerOptions(
 								api: "anthropic-messages",
 								provider: "anthropic",
 								baseUrl,
+								...(unlisted ? { unlisted: true } : {}),
 							};
 						},
 					}) ?? null
