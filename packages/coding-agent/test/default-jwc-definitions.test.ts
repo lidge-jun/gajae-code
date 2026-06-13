@@ -365,7 +365,7 @@ Project executor override body.
 
 	it("keeps bundled ralplan stage artifacts on CLI write path", () => {
 		const ralplan = getDefaultJwcDefinitions().find(
-			definition => definition.kind === "skill" && definition.name === "ralplan",
+			definition => definition.kind === "skill" && definition.name === "plan",
 		);
 		expect(ralplan).toBeDefined();
 		const content = ralplan?.content ?? "";

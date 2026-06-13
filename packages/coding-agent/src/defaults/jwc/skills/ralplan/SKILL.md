@@ -1,5 +1,5 @@
 ---
-name: ralplan
+name: plan
 description: "SUPERSEDED by the native orchestrate plan stage (jwc orchestrate p) — legacy consensus planning loop, kept for compatibility only"
 argument-hint: "[--interactive] [--deliberate] [--architect openai-code] [--critic openai-code] <task description>"
 level: 4

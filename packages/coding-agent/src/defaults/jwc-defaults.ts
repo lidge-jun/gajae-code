@@ -10,7 +10,7 @@ import teamSkill from "./jwc/skills/team/SKILL.md" with { type: "text" };
 import aiSlopCleanerFragment from "./jwc/skills/ultragoal/ai-slop-cleaner.md" with { type: "text" };
 import ultragoalSkill from "./jwc/skills/ultragoal/SKILL.md" with { type: "text" };
 
-export const DEFAULT_JWC_DEFINITION_NAMES = ["jaw-interview", "ralplan", "team", "goal"] as const;
+export const DEFAULT_JWC_DEFINITION_NAMES = ["jaw-interview", "plan", "team", "goal"] as const;
 export type DefaultJwcDefinitionName = (typeof DEFAULT_JWC_DEFINITION_NAMES)[number];
 export type DefaultJwcDefinitionKind = "skill" | "skill-fragment";
 export type EmbeddedDefaultJwcSkill = {
@@ -78,7 +78,7 @@ const DEFAULT_GJC_DEFINITIONS: readonly DefaultJwcDefinition[] = [
 		relativePath: "skills/jaw-interview/SKILL.md",
 		content: jawInterviewSkill,
 	},
-	{ kind: "skill", name: "ralplan", relativePath: "skills/ralplan/SKILL.md", content: ralplanSkill },
+	{ kind: "skill", name: "plan", relativePath: "skills/ralplan/SKILL.md", content: ralplanSkill },
 	{ kind: "skill", name: "team", relativePath: "skills/team/SKILL.md", content: teamSkill },
 	{ kind: "skill", name: "goal", relativePath: "skills/ultragoal/SKILL.md", content: ultragoalSkill },
 	{
