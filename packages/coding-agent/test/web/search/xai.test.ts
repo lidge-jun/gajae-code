@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "bun:test";
 import type { AuthStorage } from "@gajae-code/ai";
 import { hookFetch } from "@gajae-code/utils";
-import { XaiProvider, hasXaiSearch, parseXaiResponse } from "../../../src/web/search/providers/xai";
+import { hasXaiSearch, parseXaiResponse, XaiProvider } from "../../../src/web/search/providers/xai";
 
 function authStub(opts: { oauth?: boolean; auth?: boolean; oauthToken?: string; apiKey?: string }): AuthStorage {
 	return {
@@ -147,8 +147,8 @@ describe("xai search request shape (integration)", () => {
 
 	it("throws a 401 SearchProviderError when no credential resolves", async () => {
 		const provider = new XaiProvider();
-		await expect(
-			provider.search({ query: "q", systemPrompt: "", authStorage: authStub({}) } as any),
-		).rejects.toThrow(/xAI credential/);
+		await expect(provider.search({ query: "q", systemPrompt: "", authStorage: authStub({}) } as any)).rejects.toThrow(
+			/xAI credential/,
+		);
 	});
 });

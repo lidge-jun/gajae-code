@@ -1,7 +1,7 @@
 import { describe, expect, it, spyOn } from "bun:test";
 import { BUILTIN_SLASH_COMMANDS_INTERNAL } from "../../src/slash-commands/builtin-registry";
-import * as searchProviderModule from "../../src/web/search/provider";
 import type { SlashCommandRuntime } from "../../src/slash-commands/types";
+import * as searchProviderModule from "../../src/web/search/provider";
 
 function findSearchEngineCommand() {
 	const command = BUILTIN_SLASH_COMMANDS_INTERNAL.find(entry => entry.name === "searchengine");
@@ -201,7 +201,11 @@ describe("searchengine slash command", () => {
 			createRuntime({ outputs, settingsLog, withAuthStorage: true, authKeys: ["anthropic"] }),
 		);
 
-		const activatedLine = outputs.join("\n").split("\n").find(l => l.startsWith("Activated:")) ?? "";
+		const activatedLine =
+			outputs
+				.join("\n")
+				.split("\n")
+				.find(l => l.startsWith("Activated:")) ?? "";
 		expect(activatedLine).toContain("anthropic");
 	});
 
