@@ -46,7 +46,7 @@
 - [082_input](./jwc_patched/082_input/) — 01_overview · 02_code_facts · 03_devlog_refs
 - [083_output](./jwc_patched/083_output/) — 01_overview · 02_code_facts · 03_devlog_refs
 - [090_auth](./jwc_patched/090_auth/) — 01_overview · 02_code_facts · 03_devlog_refs
-- [099_stabilization](./jwc_patched/099_stabilization/) — 01 · **02_logic_changes** · MLB 50→62→68 ([status](../structure/status.md)) — 99 밴드 안정화: 99.01·99.02·99.09 랜딩 + 99.00.03(UX 감사)·99.07(orchestrate reset)·99.20(frontend) 진행 (`ff0003db6ac0`)
+- [099_stabilization](./jwc_patched/099_stabilization/) — 01 · **02_logic_changes** · MLB 50→62→68 ([status](../structure/50_status.md)) — 99 밴드 안정화: 99.01·99.02·99.09 랜딩 + 99.00.03(UX 감사)·99.07(orchestrate reset)·99.20(frontend) 진행 (`ff0003db6ac0`)
 - [100_node](./jwc_patched/100_node/) — 01_overview · 02_code_facts · 03_devlog_refs
 ## omp_origin
 
@@ -82,10 +82,10 @@ bun struct_har/_scripts/struct-har-regenerate-omp.ts
 
 | 용어 | 의미 |
 |------|------|
-| **SoT** | [structure/](../structure/INDEX.md) = patched 단일 정본 |
+| **SoT** | [structure/](../structure/00_INDEX.md) = patched 단일 정본 |
 | **struct_har** | `gjc_origin` ↔ `jwc_patched` 병렬 스냅샷 (+ `omp_origin` 참조축) |
 | **chase** | 갭·`10_*`/`20_*` 플랜 — [chase/README](./chase/README.md) |
 | **MOC** | 밴드 스코프·완료기준 — devlog `99.00.00` 등 |
 | **D5 / D10** | 글로벌 스킬 `~/.cli-jaw/skills` · cli-jaw 명령 어휘 |
-| **99 M1** | [status](../structure/status.md) · [status](../structure/status.md) |
-| 갱신 규칙 | jwc_patched 선행 → gjc_origin/omp_origin HEAD + chase MOC reviewed-through marker 동시 갱신 — [conventions §2.2](../structure/conventions.md) |
+| **99 M1** | [status](../structure/50_status.md) · [status](../structure/50_status.md) |
+| 갱신 규칙 | jwc_patched 선행 → gjc_origin/omp_origin HEAD + chase MOC reviewed-through marker 동시 갱신 — [conventions §2.2](../structure/11_conventions.md) |

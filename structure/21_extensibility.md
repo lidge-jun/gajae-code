@@ -32,7 +32,7 @@
 | file slash command shape | `name`, `description`, `content`, `source`, `_source`. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/slash-commands.ts:119` |
 | capability load | file commands는 `loadCapability(slashCommandCapability.id, {cwd})`로 로드된다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/slash-commands.ts:158`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/slash-commands.ts:162` |
 | native scan | builtin provider는 config dirs의 `commands/*.md`를 scan한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/discovery/builtin.ts:325`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/discovery/builtin.ts:330` |
-| active commands | builtin slash names include `settings`, `theme`, `goal`, `model`, `memory`, `provider`, `login`, `searchengine`, etc. `searchengine`는 [search.md](./providers.md) 참조. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/slash-commands/builtin-registry.ts:212`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/slash-commands/builtin-registry.ts:228`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/slash-commands/builtin-registry.ts:910` |
+| active commands | builtin slash names include `settings`, `theme`, `goal`, `model`, `memory`, `provider`, `login`, `searchengine`, etc. `searchengine`는 [search.md](./30_providers.md) 참조. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/slash-commands/builtin-registry.ts:212`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/slash-commands/builtin-registry.ts:228`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/slash-commands/builtin-registry.ts:910` |
 | `/help` 도킹 2-페인 카탈로그 (99.20.08) | 모델-셀렉터 문법의 docked 2-pane 선택기: builtin/skill/custom 탭 분할, enter로 커맨드 삽입. ACP는 plain 카탈로그 핸들. | `8e17a1ce` (99.20.08), `src/slash-commands/builtin-registry.ts` |
 | 세션 슬래시 표면 (99.07.01) | `/fork [msg]`·`/branch`·`/resume <id>`·`/sessions`·`/switch`(alias). `AgentSession.fork()`는 큐 메시지 클리어. | `7fa8a9d0` (99.07.01) |
 | `/model` 2-페인 키보드 (99.30.04 S7.1) | 화살표로 리스트 순환, space로 provider/model 페인 전환 복원. | `04132930` (99.30.04 S7.1) |
@@ -100,14 +100,14 @@
 | **매 턴 단계 헤더** | `pabcd-stage-context` custom message | ✅ **99.03 M2** 완료 (`8a7ea342`) |
 | dev-pabcd 스킬 | 글로벌 스킬 | jaw에서 **의도 차단** — native 표면으로 대체 |
 
-레디니스: [status.md](./status.md) · 마감 맵: [status.md](./status.md).
+레디니스: [status.md](./50_status.md) · 마감 맵: [status.md](./50_status.md).
 
 ### Bundled workflow skills (4종)
 
 | Workflow skill | 목적 | bundled source | 근거 |
 |---|---|---|---|
 | `jaw-interview` | IPABCD **I** — Socratic interview → `.jwc/specs/`; **99.30.02부터 핸드오프가 `jwc orchestrate p --spec-ref`로 재배선** | `defaults/gjc/skills/jaw-interview/SKILL.md` | `gjc-defaults.ts:13`, `8e17a1ce` |
-| `ralplan` | ⚠️ **99.30.02 supersession** — ralplan SKILL은 superseded(스텁), 플래닝은 `jwc orchestrate p`(네이티브)로 이전. autocomplete 상단 핀도 `/orchestrate`·`/goal`로 교체, ralplan 핀 강등 | `ralplan/SKILL.md`(스텁) | `8e17a1ce` (99.30.02 ralplan 이별), [fork-delta.md](./fork-delta.md) |
+| `ralplan` | ⚠️ **99.30.02 supersession** — ralplan SKILL은 superseded(스텁), 플래닝은 `jwc orchestrate p`(네이티브)로 이전. autocomplete 상단 핀도 `/orchestrate`·`/goal`로 교체, ralplan 핀 강등 | `ralplan/SKILL.md`(스텁) | `8e17a1ce` (99.30.02 ralplan 이별), [fork-delta.md](./40_fork-delta.md) |
 | `ultragoal` | Goal ledger (ultragoal 엔진) → `.jwc/ultragoal/`; **99.30.02부터 플래닝 전제(prerequisite)가 네이티브화** | `ultragoal/SKILL.md` | 060 + 99, `8e17a1ce` |
 | `team` | IPABCD **B** — tmux workers → `.jwc/state/team/` | `team/SKILL.md` | |
 
@@ -117,7 +117,7 @@
   objective를 병기 — 단계 컨텍스트와 목표가 한 헤더에 같이 주입된다.
 - **99.08-B** (`a771f492`): `jwc orchestrate` 전이가 일어날 때마다 goal 체크포인트를 자동 기록 —
   수동 `/goal` 호출 없이 단계 진행이 ledger에 남는다.
-- 근거: [prompt_flow.md](./prompt_flow.md) 99.03/99.08 표.
+- 근거: [prompt_flow.md](./20_prompt_flow.md) 99.03/99.08 표.
 
 ### Upstream baseline vs jwc runtime
 

@@ -11,7 +11,7 @@
 | 3 | `packages/coding-agent/src/prompts/jaw/orchestrate-d.md` | present |
 | 4 | `structure/051_design_command_port.md` | missing (verify path) |
 
-## 2. fork-delta (structure/fork-delta.md)
+## 2. fork-delta (structure/40_fork-delta.md)
 
 - orchestrate-runtime NEW
 - prompts/jaw/orchestrate-* NEW

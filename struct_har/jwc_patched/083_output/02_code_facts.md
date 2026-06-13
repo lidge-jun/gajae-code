@@ -9,7 +9,7 @@
 | 1 | `packages/coding-agent/src/tools/renderers/` | missing (verify path) |
 | 2 | `packages/coding-agent/src/modes/components/` | present |
 
-## 2. fork-delta (structure/fork-delta.md)
+## 2. fork-delta (structure/40_fork-delta.md)
 
 - 083.1 tool collapse ✅
 - 083.3 reasoning interleave ✅

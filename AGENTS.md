@@ -139,7 +139,7 @@ Every worker entry must also be listed as an extra compile entrypoint in `packag
 The TUI's visual identity (gradient welcome banner, intro sweep animation, shine effects, composer styling, scroll behavior) was hand-tuned by the user. It is a product feature, not incidental decoration. Multiple parallel agent sessions have repeatedly reverted it to a plain look; this is a hard violation.
 
 - **NEVER** simplify, flatten, remove, or "clean up" the welcome banner or its animation in `packages/coding-agent/src/modes/components/welcome.ts` (gradient logo, INTRO_SWEEPS, shine band, multi-stop palettes). If your change accidentally touches it, restore it from git before committing.
-- **NEVER** rewrite the viewport scroll model in `packages/tui/src/tui.ts` (B2-lite fill + sticky gap, `compactViewportFill()`). The canonical spec is `structure/scroll.md` — read it before touching any scroll/fill/gap code.
+- **NEVER** rewrite the viewport scroll model in `packages/tui/src/tui.ts` (B2-lite fill + sticky gap, `compactViewportFill()`). The canonical spec is `structure/31_scroll.md` — read it before touching any scroll/fill/gap code.
 - **NEVER** change commit-time tool folding defaults (`tool.renderMode`, live-zone vs chat append) without an explicit user instruction in your own session.
 - Visual changes to any file above require the user explicitly asking for that visual change **in the current session**. "It looks simpler/cleaner" is not a reason. A failing test is not a license to delete the feature — fix the test's expectation against the canonical behavior.
 - If you find these files in a state that conflicts with this rule (e.g. banner already plain), do not "fix" further — report it and leave it to the user's session.

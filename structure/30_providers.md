@@ -14,8 +14,8 @@
 
 > OpenAI Codex(ChatGPT 백엔드 Responses) 전송로의 jwc 전용 안정화·가시성 레이어 정본.
 > 콜드스타트(프로덕션 2m15s 측정)·끊김·과부하를 줄이고 운영자에게 전송 상태를 노출한다.
-> 모델 카탈로그/노출 패치는 [providers.md](./providers.md), 일반 검색은
-> [search.md](./providers.md) 참조. 구현·진단 경위는 [devlog/_fin/000000_reformation](../devlog/_fin/000000_reformation/00_moc_toolcall_loop_reformation.md)
+> 모델 카탈로그/노출 패치는 [providers.md](./30_providers.md), 일반 검색은
+> [search.md](./30_providers.md) 참조. 구현·진단 경위는 [devlog/_fin/000000_reformation](../devlog/_fin/000000_reformation/00_moc_toolcall_loop_reformation.md)
 > (T1/T4/D5 + 측정 기반 진단).
 
 Codex는 다른 OpenAI-compat 프로바이더와 달리 **WebSocket 우선, SSE 폴백**의 자체 전송로를
@@ -62,7 +62,7 @@ Codex는 다른 OpenAI-compat 프로바이더와 달리 **WebSocket 우선, SSE 
 
 > 참고 — fast/service_tier 표시(`bf4feb28` ⚡? → `7315a7a6` revert): `/fast`의 `service_tier:priority`가
 > 백엔드에서 조용히 `default`로 강등되는지 보이려 했으나, **`service_tier` 에코는 fast-실현 신호가
-> 아님**이 판명돼 ⚡? 마커는 되돌렸다. `/fast` 설정 영속화 자체는 [fork-delta.md](./fork-delta.md) 참조.
+> 아님**이 판명돼 ⚡? 마커는 되돌렸다. `/fast` 설정 영속화 자체는 [fork-delta.md](./40_fork-delta.md) 참조.
 
 ---
 

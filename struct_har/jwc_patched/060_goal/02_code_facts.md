@@ -11,7 +11,7 @@
 | 3 | `packages/coding-agent/src/gjc-runtime/ultragoal-runtime.ts` | present |
 | 4 | `packages/coding-agent/src/commands/goal.ts` | present |
 
-## 2. fork-delta (structure/fork-delta.md)
+## 2. fork-delta (structure/40_fork-delta.md)
 
 - goal-runtime.ts NEW
 - commands/goal.ts NEW

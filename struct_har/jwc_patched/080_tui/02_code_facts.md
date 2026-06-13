@@ -10,7 +10,7 @@
 | 2 | `packages/coding-agent/src/modes/` | present |
 | 3 | `packages/coding-agent/src/status-line/` | missing (verify path) |
 
-## 2. fork-delta (structure/fork-delta.md)
+## 2. fork-delta (structure/40_fork-delta.md)
 
 - TUI jaw branding WIP
 - status-line segments 085

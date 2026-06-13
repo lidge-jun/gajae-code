@@ -264,4 +264,4 @@ tmux 친화. alt-screen 전환은 99.20 장기 메모로만 존재.
 - devlog: `083.6`(출렁임 기전) · `083.7`(핀 §1~§11) · `083.8`(viewportRepaint 정책·S2 compact
   이동·S3 기본화) · `083.9`(커밋 레인 P1/P2 — insert-history·commitLines·history-region) ·
   `99.20.03`(압축 트리거 맵) · `99.20.04`(커밋 폴딩 설계·구현·핫픽스)
-- 주입/프롬프트와의 경계: [prompt_flow.md](./prompt_flow.md) — 스크롤은 표시층, 주입은 컨텍스트층.
+- 주입/프롬프트와의 경계: [prompt_flow.md](./20_prompt_flow.md) — 스크롤은 표시층, 주입은 컨텍스트층.

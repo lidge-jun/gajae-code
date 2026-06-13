@@ -1,6 +1,6 @@
 # architecture — 01 overview (omp_origin)
 
-> omp 모노레포 토폴로지 요약. jaw SoT: [structure/architecture.md](../../../structure/architecture.md).
+> omp 모노레포 토폴로지 요약. jaw SoT: [structure/10_architecture.md](../../../structure/10_architecture.md).
 
 ## 패키지 방향
 

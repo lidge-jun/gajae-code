@@ -9,7 +9,7 @@
 | 1 | `packages/ai/src/providers/cursor.ts` | present |
 | 2 | `packages/coding-agent/src/cursor.ts` | present |
 
-## 2. fork-delta (structure/fork-delta.md)
+## 2. fork-delta (structure/40_fork-delta.md)
 
 - 081 hotfixes ✅ (e2e)
 

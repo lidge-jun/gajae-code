@@ -9,7 +9,7 @@
 | 1 | `packages/tui/src/` | present |
 | 2 | `packages/coding-agent/src/modes/interactive/` | missing (verify path) |
 
-## 2. fork-delta (structure/fork-delta.md)
+## 2. fork-delta (structure/40_fork-delta.md)
 
 - 082.1 Ctrl/ESC
 - 082.2 caret jump ✅

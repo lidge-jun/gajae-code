@@ -1,6 +1,6 @@
 # struct_har/ — gjc_origin ↔ jwc_patched 계층 대조
 
-> **스냅샷 (2026-06-13)**: 전수 재생성 + 로직 보강 + **99 레디니스** (`structure/status.md`, [99.03.01](../devlog/_plan/260612_jawcode_fork/phase1/99.03.01_impl_workflow_surface.md) PASS v2).
+> **스냅샷 (2026-06-13)**: 전수 재생성 + 로직 보강 + **99 레디니스** (`structure/50_status.md`, [99.03.01](../devlog/_plan/260612_jawcode_fork/phase1/99.03.01_impl_workflow_surface.md) PASS v2).
 
 > **목적**: 업스트림 gajae-code(`gjc_origin`)과 jawcode 포크(`jwc_patched`)의 **현재 형태**를 devlog MOC 밴드별로 병렬 기록한다.
 > `structure/`가 patched 단일 SoT라면, `struct_har/`는 **양쪽 스냅샷 대조용**이다.
@@ -42,7 +42,7 @@ struct_har/
 - **밴드 폴더명** = devlog `NNN_moc_*` 접두와 정렬 (`010_shell` … `100_node`, `architecture`).
 - **파일명** = `01_overview` → `02_code_facts` → **`02_logic_changes`** → `03_devlog_refs`
 - **갱신 규칙**: 포크 밴드 완료 시 `jwc_patched` 먼저; upstream fetch 후 `gjc_origin`/`omp_origin` HEAD, chase MOC reviewed-through 행, `002_gap_inventory`, `INDEX.md`, 본 README 기준선을 함께 갱신.
-- **로직 정본**: [structure/fork-delta.md](../structure/fork-delta.md)
+- **로직 정본**: [structure/40_fork-delta.md](../structure/40_fork-delta.md)
 - **재생성**: `struct-har-regenerate.ts` · `struct-har-regenerate-logic.ts` · `struct-har-regenerate-architecture.ts` · `struct-har-regenerate-overviews.ts` · **`struct-har-regenerate-omp.ts`**
 
 ## upstream 클론 사용법
@@ -74,10 +74,10 @@ diff -u devlog/_upstream_gjc/packages/coding-agent/src/cli.ts packages/coding-ag
 |---|---|
 | [`devlog/_upstream_gjc/`](../devlog/_upstream_gjc/) | **업스트림 코드 정본** (gjc_origin 근거) |
 | [structure/](../structure/) | jawcode patched 단일 SoT |
-| [structure/fork-delta.md](../structure/fork-delta.md) | fork 동작 (git) |
-| [structure/status.md](../structure/status.md) | MLB 50→62→68 |
-| [structure/status.md](../structure/status.md) | 99 결정·착수 순서 |
-| [structure/status.md](../structure/status.md) | beta v0.1 문서·OSS 마감 |
+| [structure/40_fork-delta.md](../structure/40_fork-delta.md) | fork 동작 (git) |
+| [structure/50_status.md](../structure/50_status.md) | MLB 50→62→68 |
+| [structure/50_status.md](../structure/50_status.md) | 99 결정·착수 순서 |
+| [structure/50_status.md](../structure/50_status.md) | beta v0.1 문서·OSS 마감 |
 | [devlog/_plan/260612_jawcode_fork/](../devlog/_plan/260612_jawcode_fork/) | MOC·플랜·이슈 원본 |
 | [AGENTS.md](../AGENTS.md) | upstream 운영 계약 (수정 금지) |
 | [chase/](./chase/README.md) | gjc/omp **뒤쳐짐** · 참조 방안 |
@@ -98,7 +98,7 @@ diff -u devlog/_upstream_gjc/packages/coding-agent/src/cli.ts packages/coding-ag
 ## evidence 규칙
 
 - gjc_origin: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_upstream_gjc/<repo-relative-path>:<line>`
-- jwc_patched: `/Users/jun/Developer/new/700_projects/jawcode/<path>:<line>` (structure/conventions.md 동형)
+- jwc_patched: `/Users/jun/Developer/new/700_projects/jawcode/<path>:<line>` (structure/11_conventions.md 동형)
 - devlog MOC는 스코프·결정 정본; **코드 형태는 클론/worktree가 우선**
 
 ## 밴드 ↔ upstream 경로 (요약)

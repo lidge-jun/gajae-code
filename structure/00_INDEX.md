@@ -19,29 +19,29 @@ cite: gjc_origin=`devlog/_upstream_gjc/<path>:<line>` · jwc_patched=`700_projec
 
 | Tier | 문서 | 범위 (통합 포함) |
 |:--:|---|---|
-| **1 기반** | [architecture.md](./architecture.md) | 모노레포 형태·cli-jaw 시임 + **packages/crates 지도** + **SDK 표면**(`createAgentSession`) |
-| | [conventions.md](./conventions.md) | 포크·리베이스·jawdev·MOC 규약 + **git 구조·리베이스 가드** |
-| **2 코어** | [prompt_flow.md](./prompt_flow.md) | 시스템 프롬프트 조립(`system-prompt.md`·append·skills) |
-| | [extensibility.md](./extensibility.md) | skills/slash/custom-tools/hooks/plugins + **번들 워크플로 4종**(jaw-interview·ralplan·ultragoal·team) |
-| | [session_storage.md](./session_storage.md) | SQLite·auth·history + **memory pipeline** + **todo pipeline(99.30)** |
-| **3 서브시스템** | [providers.md](./providers.md) | **Codex 전송·프리웜·워치독·fast 진단** + **모델 패치 4층** + **검색 프로바이더** |
-| | [scroll.md](./scroll.md) | TUI 스크롤/뷰포트/커밋폴딩/렌더 정책 |
-| **4 포크 추적** | [fork-delta.md](./fork-delta.md) | 이탈 파일 인덱스(HARD-EDIT/NEW/REMOVED, 체리픽) + **동작·런타임 changelog** + **계보(omp→gjc→jwc)** |
-| **5 상태** | [status.md](./status.md) | M1/M2 마감 · 99 밴드 · readiness(MLB) · 착수 순서 |
+| **1 기반** | [architecture.md](./10_architecture.md) | 모노레포 형태·cli-jaw 시임 + **packages/crates 지도** + **SDK 표면**(`createAgentSession`) |
+| | [conventions.md](./11_conventions.md) | 포크·리베이스·jawdev·MOC 규약 + **git 구조·리베이스 가드** |
+| **2 코어** | [prompt_flow.md](./20_prompt_flow.md) | 시스템 프롬프트 조립(`system-prompt.md`·append·skills) |
+| | [extensibility.md](./21_extensibility.md) | skills/slash/custom-tools/hooks/plugins + **번들 워크플로 4종**(jaw-interview·ralplan·ultragoal·team) |
+| | [session_storage.md](./22_session_storage.md) | SQLite·auth·history + **memory pipeline** + **todo pipeline(99.30)** |
+| **3 서브시스템** | [providers.md](./30_providers.md) | **Codex 전송·프리웜·워치독·fast 진단** + **모델 패치 4층** + **검색 프로바이더** |
+| | [scroll.md](./31_scroll.md) | TUI 스크롤/뷰포트/커밋폴딩/렌더 정책 |
+| **4 포크 추적** | [fork-delta.md](./40_fork-delta.md) | 이탈 파일 인덱스(HARD-EDIT/NEW/REMOVED, 체리픽) + **동작·런타임 changelog** + **계보(omp→gjc→jwc)** |
+| **5 상태** | [status.md](./50_status.md) | M1/M2 마감 · 99 밴드 · readiness(MLB) · 착수 순서 |
 
 ## 최신 결정 연결
 
 | 결정 | 요약 | 반영 |
 |---|---|---|
-| D1 | jwc 런타임 코어 분리 → cli-jaw 임베딩 | [architecture.md](./architecture.md) |
-| D4 | 공개 표면 `jwc`/`.jwc/`; 내부 `@gajae-code/*` 보존 | [conventions.md](./conventions.md) |
-| D5 | 스킬 정본 `~/.cli-jaw/skills` 우선 | [extensibility.md](./extensibility.md) |
-| D6 | TUI/Web 세션 비공유, 스킬+OAuth 공유 | [session_storage.md](./session_storage.md) |
-| D8 | M2 = Node 포팅 상주 | [architecture.md](./architecture.md) |
-| 99.03 | pabcd discovery + re-facing M1/M2/M3 | [status.md](./status.md), [prompt_flow.md](./prompt_flow.md) |
-| 99 착수 | 99.01→…→99.07 (62 임계 = 99.02+99.03) | [status.md](./status.md) |
+| D1 | jwc 런타임 코어 분리 → cli-jaw 임베딩 | [architecture.md](./10_architecture.md) |
+| D4 | 공개 표면 `jwc`/`.jwc/`; 내부 `@gajae-code/*` 보존 | [conventions.md](./11_conventions.md) |
+| D5 | 스킬 정본 `~/.cli-jaw/skills` 우선 | [extensibility.md](./21_extensibility.md) |
+| D6 | TUI/Web 세션 비공유, 스킬+OAuth 공유 | [session_storage.md](./22_session_storage.md) |
+| D8 | M2 = Node 포팅 상주 | [architecture.md](./10_architecture.md) |
+| 99.03 | pabcd discovery + re-facing M1/M2/M3 | [status.md](./50_status.md), [prompt_flow.md](./20_prompt_flow.md) |
+| 99 착수 | 99.01→…→99.07 (62 임계 = 99.02+99.03) | [status.md](./50_status.md) |
 
-**포크 델타 인덱스**: [fork-delta.md](./fork-delta.md) — 이탈 파일 전수·체리픽(커밋 동행 갱신 필수).
+**포크 델타 인덱스**: [fork-delta.md](./40_fork-delta.md) — 이탈 파일 전수·체리픽(커밋 동행 갱신 필수).
 
 ## 동기화 규칙
 
@@ -72,7 +72,7 @@ bun struct_har/_scripts/struct-har-regenerate-overviews.ts
 bun struct_har/_scripts/struct-har-regenerate-omp.ts
 ```
 
-그다음 `struct_har/README.md`·`INDEX.md`·`structure/conventions.md`에 HEAD 기록.
+그다음 `struct_har/README.md`·`INDEX.md`·`structure/11_conventions.md`에 HEAD 기록.
 
 *마지막 갱신: 2026-06-13. 24→10 통합: packages_overview·sdk_surface→architecture / gitstructure→conventions /
 workflows→extensibility / memory_pipeline·todo_pipeline→session_storage / codex_transport·model_patches·

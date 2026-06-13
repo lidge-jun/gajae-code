@@ -7,7 +7,7 @@ import * as path from "node:path";
 
 const ROOT = path.resolve(import.meta.dir, "../..");
 const STRUCT = path.join(ROOT, "struct_har");
-const CHANGELOG = path.join(ROOT, "structure/fork_logic_changelog.md");
+const CHANGELOG = path.join(ROOT, "structure/40_fork-delta.md");
 
 const FORK_HEAD = "dc4f22672581";
 const GJC_HEAD = "75d103f45145";
@@ -183,7 +183,7 @@ const BANDS: BandLogic[] = [
 		gjcBaseline: `- Bun 런타임 (gjc·jwc 공통 M1). Node 포팅은 M2.`,
 		jwcSection: `## 상태 (260612)
 
-- M2 **미착수** — Bun 1.3.14; M1 마감은 **99 밴드** ([jwc_readiness](../../../structure/jwc_readiness.md)).
+- M2 **미착수** — Bun 1.3.14; M1 마감은 **99 밴드** ([jwc_readiness](../../../structure/50_status.md)).
 - [100_moc_node_porting.md](../../../devlog/_plan/260612_jawcode_fork/100_moc_node_porting.md) — 셰임·esbuild·sqlite.
 - [111_design_runtime_attach.md](../../../devlog/_plan/260612_jawcode_fork/111_design_runtime_attach.md) — cli-jaw \`jwc/sdk\` 부착; 100→110→120→130.
 - 100/111 **실측 보강** 조사 진행 (M2 진입 준비).`,
@@ -196,7 +196,7 @@ function writeLogic(side: "gjc_origin" | "jwc_patched", band: BandLogic): void {
 	const isGjc = side === "gjc_origin";
 	const intro = isGjc
 		? `> gjc_origin: upstream **기준 동작** (변경 전). 클론 @ \`${GJC_HEAD}\`.\n`
-		: `> jwc_patched: fork **실제 로직**. git \`upstream/main..HEAD\` + [fork_logic_changelog.md](../../../structure/fork_logic_changelog.md).\n> worktree @ \`${FORK_HEAD}\`.\n`;
+		: `> jwc_patched: fork **실제 로직**. git \`upstream/main..HEAD\` + [fork_logic_changelog.md](../../../structure/40_fork-delta.md).\n> worktree @ \`${FORK_HEAD}\`.\n`;
 
 	const main = isGjc
 		? `## upstream 기준 동작
@@ -219,8 +219,8 @@ ${intro}
 ${main}
 ## 정본
 
-- 횡단: [structure/fork_logic_changelog.md](../../../structure/fork_logic_changelog.md)
-- 파일 단위: [structure/fork-delta.md](../../../structure/fork-delta.md)
+- 횡단: [structure/40_fork-delta.md](../../../structure/40_fork-delta.md)
+- 파일 단위: [structure/40_fork-delta.md](../../../structure/40_fork-delta.md)
 - 앵커 경로: [02_code_facts.md](./02_code_facts.md)
 `;
 
@@ -239,14 +239,14 @@ const stab = `# 099_stabilization — 02 logic changes (jwc_patched)
 
 ## 횡단 로직 (fork 이후)
 
-- 시스템 프롬프트: 매 턴 주입 레일 7종 (\`structure/prompt_flow.md\`)
+- 시스템 프롬프트: 매 턴 주입 레일 7종 (\`structure/20_prompt_flow.md\`)
 - PABCD: cli-jaw 4층 push vs jwc pull 스킬 (\`099_stabilization/01_overview.md\`)
 - Memory: jwc 검색 없음 → 99.01 local-query 예정
 - Workflow 명칭: ralplan hard rename 대신 **IPABCD 우산** re-facing
 
 ## 정본
 
-[fork_logic_changelog.md](../../../structure/fork_logic_changelog.md)
+[fork_logic_changelog.md](../../../structure/40_fork-delta.md)
 `;
 fs.writeFileSync(path.join(STRUCT, "jwc_patched", "099_stabilization", "02_logic_changes.md"), `${stab}\n`, "utf8");
 

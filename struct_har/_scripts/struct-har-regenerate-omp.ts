@@ -250,7 +250,7 @@ ${b.jwcContrast}
 | [02_logic_changes.md](./02_logic_changes.md) | omp 동작 요약 (fork 아님) |
 | [03_devlog_refs.md](./03_devlog_refs.md) | 플랜 링크 |
 
-횡단: [../README.md](../README.md) · [../architecture/](../architecture/) · [structure/upstream_lineage.md](../../../structure/upstream_lineage.md)
+횡단: [../README.md](../README.md) · [../architecture/](../architecture/) · [structure/40_fork-delta.md](../../../structure/40_fork-delta.md)
 `,
 		"utf8",
 	);
@@ -288,7 +288,7 @@ diff -u devlog/_upstream_omp/${b.anchors[0] ?? "packages/coding-agent"} devlog/_
 		`# ${b.id} — 02 logic changes (omp_origin)
 
 > **omp 자체 런타임** (gjc/jwc fork changelog 아님).
-> fork 로직: [structure/fork_logic_changelog.md](../../../structure/fork_logic_changelog.md) · jaw 갭: [structure/m1_closeout.md](../../../structure/m1_closeout.md)
+> fork 로직: [structure/40_fork-delta.md](../../../structure/40_fork-delta.md) · jaw 갭: [structure/50_status.md](../../../structure/50_status.md)
 
 ## 동작 (omp)
 
@@ -333,7 +333,7 @@ ${refs}
 
 - [000_roadmap.md](../../../devlog/_plan/260612_jawcode_fork/000_roadmap.md)
 - [05_interview_conclusions.md](../../../devlog/_plan/260612_jawcode_fork/05_interview_conclusions.md)
-- [structure/upstream_lineage.md](../../../structure/upstream_lineage.md)
+- [structure/40_fork-delta.md](../../../structure/40_fork-delta.md)
 `,
 		"utf8",
 	);
@@ -348,7 +348,7 @@ fs.writeFileSync(
 	path.join(archDir, "01_overview.md"),
 	`# architecture — 01 overview (omp_origin)
 
-> omp 모노레포 토폴로지 요약. jaw SoT: [structure/architecture.md](../../../structure/architecture.md).
+> omp 모노레포 토폴로지 요약. jaw SoT: [structure/10_architecture.md](../../../structure/10_architecture.md).
 
 ## 패키지 방향
 

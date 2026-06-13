@@ -18,7 +18,7 @@
 
 ## 정본
 
-- 횡단: [structure/fork-delta.md](../../../structure/fork-delta.md)
-- 파일 단위: [structure/fork-delta.md](../../../structure/fork-delta.md)
+- 횡단: [structure/40_fork-delta.md](../../../structure/40_fork-delta.md)
+- 파일 단위: [structure/40_fork-delta.md](../../../structure/40_fork-delta.md)
 - 앵커 경로: [02_code_facts.md](./02_code_facts.md)
 

@@ -10,7 +10,7 @@
 | 2 | `packages/ai/src/utils/oauth/local-token-detect.ts` | present |
 | 3 | `packages/ai/src/providers/kiro.ts` | present |
 
-## 2. fork-delta (structure/fork-delta.md)
+## 2. fork-delta (structure/40_fork-delta.md)
 
 - local-token-detect NEW
 - kiro NEW (091)

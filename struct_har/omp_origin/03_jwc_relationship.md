@@ -1,6 +1,6 @@
 # omp_origin — 03 relationship to gjc and jawcode (jwc)
 
-> 결정·스코프 정본: `structure/fork-delta.md`, `devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md`.
+> 결정·스코프 정본: `structure/40_fork-delta.md`, `devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md`.
 
 ## 계보
 

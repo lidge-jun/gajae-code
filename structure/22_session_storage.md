@@ -57,9 +57,9 @@
 | phase1 | session threads 수집, stage1 jobs claim, model call, `stage1_outputs` 저장. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:214`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:229`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:250`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:311` |
 | phase2 | cwd별 global job claim, stage1 outputs sync, consolidation model, artifacts apply. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:346`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:361`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:373`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:430` |
 | **local-query / memory-fts** | `memories/local-query.ts` — LIKE+kind/recency 검색(`searchLocalMemories`), manual save(`saveLocalMemoryManual`), `buildLocalTaskSnapshot`; `memories/memory-fts.ts` — FTS5/LIKE 하이브리드 + synonym expansion. 99.01 완료 (260613). | `memories/local-query.ts`, `memories/memory-fts.ts` |
-| **manual save** | `thread_id = "manual:<file>"`, `source_kind="manual"` — stage1 자동 추론 우회, phase2 cwd 조인으로 합류. 계약: [session_storage.md](./session_storage.md) §쓰기 경로. | `memories/local-query.ts` `saveLocalMemoryManual` |
+| **manual save** | `thread_id = "manual:<file>"`, `source_kind="manual"` — stage1 자동 추론 우회, phase2 cwd 조인으로 합류. 계약: [session_storage.md](./22_session_storage.md) §쓰기 경로. | `memories/local-query.ts` `saveLocalMemoryManual` |
 
-> 메모리 서브시스템 전체 쓰기/읽기/CLI 표면 정본: [session_storage.md](./session_storage.md).
+> 메모리 서브시스템 전체 쓰기/읽기/CLI 표면 정본: [session_storage.md](./22_session_storage.md).
 
 ## Memory DB Schema
 
@@ -155,7 +155,7 @@ SQLite 3.38+ 필요. recency 부스트는 파일명 `YYYY-MM-DD` 규약 의존 �
 ### 관련 문서
 
 - 설계/스키마: `devlog/_plan/260612_jawcode_fork/phase1/99.01.01_design_memory_merge.md`, `99.01.02_schema_cli_jaw_memory.md`
-- 주입 레일 전반: [prompt_flow.md](./prompt_flow.md) §매 턴 주입 레일
+- 주입 레일 전반: [prompt_flow.md](./20_prompt_flow.md) §매 턴 주입 레일
 
 
 ---
@@ -303,7 +303,7 @@ getLatestTodoPhasesFromEntries(branch)  ← 재개 시 completed/abandoned 보�
 | 문서 | 내용 |
 |------|------|
 | `struct_har/jwc_patched/080_tui/02_code_facts.md` | todo 관련 path 행 |
-| `structure/fork-delta.md` §TUI | `interactive-mode.ts` HARD-EDIT (083.7); 99.30은 동일 파일 추가 편집 예정 |
+| `structure/40_fork-delta.md` §TUI | `interactive-mode.ts` HARD-EDIT (083.7); 99.30은 동일 파일 추가 편집 예정 |
 | `080_moc_tui.md` | TUI 밴드; todo UX는 99.30으로 추적 |
 
 구현 후: `fork-delta.md` 한 줄 + `struct-har-regenerate` 080 앵커에 `todo-write.ts` 선택 반영.

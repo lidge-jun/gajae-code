@@ -29,8 +29,8 @@ bun struct_har/_scripts/struct-har-regenerate-omp.ts
 
 ## 관련
 
-- [structure/fork-delta.md](../../structure/fork-delta.md)
-- [structure/INDEX.md](../../structure/INDEX.md)
+- [structure/40_fork-delta.md](../../structure/40_fork-delta.md)
+- [structure/00_INDEX.md](../../structure/00_INDEX.md)
 - 대조: [../gjc_origin/](../gjc_origin/) · [../jwc_patched/](../jwc_patched/)
 
 ## changelog

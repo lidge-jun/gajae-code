@@ -11,7 +11,7 @@
 | 3 | `packages/jwc/src/sdk.ts` | present |
 | 4 | `scripts/rebrand-inventory.ts` | present |
 
-## 2. fork-delta (structure/fork-delta.md)
+## 2. fork-delta (structure/40_fork-delta.md)
 
 - packages/jwc/** NEW
 - gjc bin REMOVED (085.5-M7)

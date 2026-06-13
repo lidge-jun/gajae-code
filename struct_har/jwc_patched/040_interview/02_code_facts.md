@@ -10,7 +10,7 @@
 | 2 | `packages/coding-agent/src/defaults/gjc-defaults.ts` | present |
 | 3 | `packages/coding-agent/src/skill-state/jaw-interview-mutation-guard.ts` | present |
 
-## 2. fork-delta (structure/fork-delta.md)
+## 2. fork-delta (structure/40_fork-delta.md)
 
 - deep-interview → jaw-interview HARD-EDIT
 - mutation-guard INVERTED-GUARD

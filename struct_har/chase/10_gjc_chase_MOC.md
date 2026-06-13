@@ -18,7 +18,7 @@
 | 갭 | [002_gap_inventory.md](./002_gap_inventory.md) |
 | 참조 | [003_reference_from_gjc.md](./003_reference_from_gjc.md) |
 | bands | [bands/](./bands/) |
-| 델타 | [structure/fork-delta.md](../../structure/fork-delta.md) |
+| 델타 | [structure/40_fork-delta.md](../../structure/40_fork-delta.md) |
 
 ## Reviewed through
 

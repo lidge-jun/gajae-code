@@ -11,7 +11,7 @@
 | **62** | 99.02 + 99.03 후 — **데일리 드라이버 임계점** |
 | **68** | 99.01~07 마감 후 |
 
-요약 SoT: [status.md](../../../structure/status.md) · [status.md](../../../structure/status.md) · [status.md](../../../structure/status.md)
+요약 SoT: [status.md](../../../structure/50_status.md) · [status.md](../../../structure/50_status.md) · [status.md](../../../structure/50_status.md)
 
 ## 99 패키지 현황 (MOC 도장, 260612 저녁 — 260612 번호 재정렬: lexicographic=착수 순서)
 
@@ -32,7 +32,7 @@
 
 | # | 주제 | 결론 |
 |---|---|---|
-| 1 | 시스템 프롬프트 | 매 턴 주입 레일 7종 — [prompt_flow.md](../../../structure/prompt_flow.md) |
+| 1 | 시스템 프롬프트 | 매 턴 주입 레일 7종 — [prompt_flow.md](../../../structure/20_prompt_flow.md) |
 | 2 | cli-jaw PABCD | 4층 push vs jwc pull 스킬 |
 | 3 | jwc memory | `local-query`·CLI 🟡 → **99.01** 마감·증거 |
 | 4 | cli-jaw memory | FTS/BM25/RRF — 99.01 패리티 목표 |

@@ -9,7 +9,7 @@
 | 1 | `packages/coding-agent/src/cli.ts` | present |
 | 2 | `devlog/_plan/260612_jawcode_fork/100_moc_node_porting.md` | present |
 
-## 2. fork-delta (structure/fork-delta.md)
+## 2. fork-delta (structure/40_fork-delta.md)
 
 - M2 Bun→Node porting — not started in M1
 

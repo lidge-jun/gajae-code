@@ -7,10 +7,10 @@
 | # | path | status |
 |---:|---|---|
 | 1 | `packages/coding-agent/src/memories/` | present |
-| 2 | `structure/session_storage.md` | present |
+| 2 | `structure/22_session_storage.md` | present |
 | 3 | `devlog/_plan/260612_jawcode_fork/phase1/99.01.00_moc_memory.md` | present |
 
-## 2. fork-delta (structure/fork-delta.md)
+## 2. fork-delta (structure/40_fork-delta.md)
 
 - 99.01 local-query (planned)
 - session_storage.md NEW

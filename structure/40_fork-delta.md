@@ -1,7 +1,7 @@
 # fork-delta — @bitkyc08/jawcode 포크 델타 인덱스 (체리픽 정본)
 
 > upstream: `Yeachan-Heo/gajae-code` · fork: `bitkyc08/jawcode`. 본 문서는 포크가 업스트림에서 이탈한 파일의 **단일 카노니컬 인덱스**다 — 리베이스/체리픽 전 충돌 예상 분석의 첫 진입점. 설계 정본: `devlog/_plan/260612_jawcode_fork/phase1/067.1_plan_structure_fork_delta.md`.
-> 갱신 규칙: HARD-EDIT·INVERTED-GUARD·REMOVED·NEW 파일이 포함된 커밋은 본 문서를 **동행 갱신**한다 (SOFT-EDIT는 밴드 일괄 허용). 커밋 트레일러 `Fork-Delta: <종류> <경로>` 규약은 `structure/conventions.md` 참조.
+> 갱신 규칙: HARD-EDIT·INVERTED-GUARD·REMOVED·NEW 파일이 포함된 커밋은 본 문서를 **동행 갱신**한다 (SOFT-EDIT는 밴드 일괄 허용). 커밋 트레일러 `Fork-Delta: <종류> <경로>` 규약은 `structure/11_conventions.md` 참조.
 
 ## 종류 정의
 
@@ -135,11 +135,11 @@
 | `packages/coding-agent/src/modes/controllers/event-controller.ts`·`input-controller.ts` | HARD-EDIT | 99.20.04 + 99.20.03 | MANUAL-REVIEW | 커밋 폴딩(라이브 존 라우팅·커밋점 2곳·agent_end 잔여) + 압축 트리거(슬래시·ctrl+o/t) |
 | `packages/coding-agent/src/config/settings-schema.ts` | HARD-EDIT | 083.7/99.20.04 | AUTO | `tui.composerPin`·`tool.renderMode` (브랜드 기본) |
 | `packages/coding-agent/src/modes/components/settings-selector.ts`·`packages/tui/src/components/settings-list.ts` | HARD-EDIT | 99.20.04 핫픽스 (260613) | AUTO | undefined currentValue 가드 ("default" 표기) — truncateToWidth 크래시 회귀 방지 |
-| `packages/coding-agent/src/modes/interactive-mode.ts` | HARD-EDIT (예정) | 99.30.01 | MANUAL-REVIEW | `#renderTodoList` 전부 `completed` 시 1줄 접힘 — [session_storage.md](./session_storage.md) |
+| `packages/coding-agent/src/modes/interactive-mode.ts` | HARD-EDIT (예정) | 99.30.01 | MANUAL-REVIEW | `#renderTodoList` 전부 `completed` 시 1줄 접힘 — [session_storage.md](./22_session_storage.md) |
 
 ## 리베이스/체리픽 절차 (요약 — 상세: 067.1 §5)
 
-- 리베이스 전: `grep "CONFLICT-EXPECTED" structure/fork-delta.md` ↔ `git diff upstream/main --name-only` 대조
+- 리베이스 전: `grep "CONFLICT-EXPECTED" structure/40_fork-delta.md` ↔ `git diff upstream/main --name-only` 대조
 - upstream→fork 체리픽: 대상 커밋이 HARD-EDIT 경로를 건드리면 보존 경계 열 기준 수동 병합
 - fork→upstream 기여: `upstream PR 후보` ✅ 항목만
 
@@ -153,8 +153,8 @@
 
 ## Fork logic changelog (jawcode vs gajae-code upstream)
 
-> **정본**: upstream `67427c6` 대비 worktree `81bcea96`의 **동작·계약·런타임** 변경. 파일 목록은 [fork-delta.md](./fork-delta.md), 밴드 스냅샷은 [struct_har/](../struct_har/README.md).  
-> **미구현 갭(99)**: pabcd discovery·memory CLI·CI 등은 [status.md](./status.md) · [099_stabilization](../struct_har/jwc_patched/099_stabilization/01_overview.md).
+> **정본**: upstream `67427c6` 대비 worktree `81bcea96`의 **동작·계약·런타임** 변경. 파일 목록은 [fork-delta.md](./40_fork-delta.md), 밴드 스냅샷은 [struct_har/](../struct_har/README.md).  
+> **미구현 갭(99)**: pabcd discovery·memory CLI·CI 등은 [status.md](./50_status.md) · [099_stabilization](../struct_har/jwc_patched/099_stabilization/01_overview.md).
 > 생성: git `log upstream/main..HEAD` + 주요 커밋 메시지·diff 경로 교차 (2026-06-13).
 
 ### 요약 축
@@ -220,7 +220,7 @@
 - `ralplan` SKILL: jwc CLI 예시; pending-approval; handoff ultragoal.
 - 테스트: `orchestrate-state.test.ts`, `cli-command-surface` brand 분기.
 - 커밋: `595350bf` B1, `975302db` B3, `0d38fe05` B4, `09c76c23` B2, `5f1d442a` B2 surface.
-- **모델 discovery**: orchestrate 표면은 **99.03** (런타임만 ✅) — [status.md](./status.md)
+- **모델 discovery**: orchestrate 표면은 **99.03** (런타임만 ✅) — [status.md](./50_status.md)
 
 ### 060 — Goal / ultragoal
 
@@ -233,8 +233,8 @@
 ### 070 — Memory
 
 - jwc: memories startup stage1→phase2; 주입 `memory_summary.md` + (local) Task Snapshot·`local-query`/`memory-fts` (**99.01** 마감·테스트·문서 동기화 중).
-- cli-jaw 패리티: BM25/RRF/trigram 일부 후속 — [session_storage.md](./session_storage.md).
-- structure: [session_storage.md](./session_storage.md).
+- cli-jaw 패리티: BM25/RRF/trigram 일부 후속 — [session_storage.md](./22_session_storage.md).
+- structure: [session_storage.md](./22_session_storage.md).
 
 ### 080–086 — TUI·HUD·브랜딩
 
@@ -301,33 +301,33 @@
 
 | GG | 갭 | structure |
 |---|---|---|
-| 99.03 | discovery M1/M2/M3 + re-facing [확정] | [status.md](./status.md) |
-| 99.01 | memory CLI + local-query/FTS | [session_storage.md](./session_storage.md) |
-| 99.02 | CI schemas·biome | [status.md](./status.md) |
+| 99.03 | discovery M1/M2/M3 + re-facing [확정] | [status.md](./50_status.md) |
+| 99.01 | memory CLI + local-query/FTS | [session_storage.md](./22_session_storage.md) |
+| 99.02 | CI schemas·biome | [status.md](./50_status.md) |
 
 ### 99.20 / 99.30 밴드 + gjc→jwc 플립 (260613)
 
 - **gjc→jwc 소스 플립** (`8e17a1ce`, F1–F5): 디렉터리(jwc-runtime/jwc-plugins/defaults/jwc 등)·심볼
   (Gjc→Jwc 88파일, GajaeCode→Jawcode)·receipt owner(jwc-* write, gjc-* read-both)·goals.json 필드
   (jwc* + 레거시 폴백)·ACP `_jwc/` 별칭(+`_gjc/` 유지)·기본 커맨드 `jwc`·테스트/픽스처 리네임. 내부
-  패키지 스코프 `@gajae-code/*`는 보존(D4). 상세: [_fin/260613_gjc_flip](../devlog/_fin/260613_gjc_flip/00_moc_flip.md), 인덱스 [fork-delta.md](./fork-delta.md).
+  패키지 스코프 `@gajae-code/*`는 보존(D4). 상세: [_fin/260613_gjc_flip](../devlog/_fin/260613_gjc_flip/00_moc_flip.md), 인덱스 [fork-delta.md](./40_fork-delta.md).
 - **99.20.08 `/help` 도킹 2-페인 카탈로그**: 모델-셀렉터 문법, builtin/skill/custom 탭 분할, enter로
-  커맨드 삽입 — [extensibility.md](./extensibility.md).
+  커맨드 삽입 — [extensibility.md](./21_extensibility.md).
 - **99.20.07 TUI 레이아웃 정규화 (P1–P4)**: OAuth 로그인 플로우→`LoginDialogComponent` 도킹
   (`7aeee91c`), read-once 리포트→`ScrollablePanel`(신규 컴포넌트, `8203b611`), 1줄 성공 알림→상태
   표면(`a1a8db42`), MCP 연결 대기→상태 표면의 stock `Loader`(`1f7cbd58`). 트랜스크립트 오염 제거.
 - **99.10 thinking 셀 포커스 링**: thinking 보유 assistant 셀이 ctrl+↑ 포커스 링(083.1 패턴-B)에
   도구 셀과 함께 합류, alt+t 트랜스크립트 오버레이는 `FocusableCell` 유니온으로 확장 (`4cd64e1b`).
 - **99.30.02 ralplan 이별**: jaw-interview 핸드오프를 `jwc orchestrate p --spec-ref`로 재배선,
-  ralplan SKILL superseded(스텁), ultragoal 플래닝 전제 네이티브화 — [extensibility.md](./extensibility.md).
+  ralplan SKILL superseded(스텁), ultragoal 플래닝 전제 네이티브화 — [extensibility.md](./21_extensibility.md).
 - **`/model` allowArgs**: `/model <id>`가 채팅으로 폴스루하던 버그 수리(`492913de`) + TUI handleTui
-  인자형 위임(`bc732ce7`). cmd_audit P1 종결 — [search.md](./providers.md) §4.
+  인자형 위임(`bc732ce7`). cmd_audit P1 종결 — [search.md](./30_providers.md) §4.
 
 ### fast / service_tier · Codex 전송 (관측성)
 
-- `/fast` 설정 영속화(`serviceTier`)는 [fork-delta.md](./fork-delta.md). 실현-vs-요청 표시 시도
+- `/fast` 설정 영속화(`serviceTier`)는 [fork-delta.md](./40_fork-delta.md). 실현-vs-요청 표시 시도
   (`bf4feb28`, ⚡? 푸터)는 **되돌림**(`7315a7a6`): `service_tier` 에코는 fast-실현 신호 아님.
-- Codex WS/SSE 전송·프리워밍·워치독·레이트리밋 텔레메트리 = [providers.md](./providers.md)
+- Codex WS/SSE 전송·프리워밍·워치독·레이트리밋 텔레메트리 = [providers.md](./30_providers.md)
   (`76176ce3`·`93b7b66e`·`36738838`·`cd41e54d`·`bad0a8e1`).
 
 ### 리베이스 시 주의
@@ -352,7 +352,7 @@
 - gajae-code는 omp 계열 포크. jawcode 리베이스 1차 대상 = **gajae-code**; omp는 기능/아키텍처
   선행 참고. 스냅샷: [struct_har/omp_origin/](../struct_har/omp_origin/README.md).
 - 보존(리베이스 비용): `@gajae-code/*` 워크스페이스, `packages/coding-agent/` 코어(HARD-EDIT는
-  [fork-delta.md](./fork-delta.md) 추적), upstream baseline(`devlog/_upstream_gjc/`·`struct_har/gjc_origin/`).
+  [fork-delta.md](./40_fork-delta.md) 추적), upstream baseline(`devlog/_upstream_gjc/`·`struct_har/gjc_origin/`).
 - 표면(jwc): bin·브랜딩·번들 스킬 slug(`jaw-interview`)·시스템 프롬프트 Jaw 아이덴티티·cli-jaw 정렬.
 - 동기화: `git fetch upstream`+rebase→`conventions.md`·`struct_har/gjc_origin/**`;
   `_upstream_omp` fetch→`struct_har/omp_origin/**`+regenerate-omp 스크립트.

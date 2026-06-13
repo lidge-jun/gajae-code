@@ -1,6 +1,6 @@
 # architecture / prompt_flow.md (jwc_patched)
 
-> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/prompt_flow.md`](../../../structure/prompt_flow.md).
+> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/20_prompt_flow.md`](../../../structure/20_prompt_flow.md).
 > fork `dc4f22672581` · gjc clone `75d103f45145`.
 
 ## structure/ 발췌 (첫 12줄)

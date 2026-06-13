@@ -1,6 +1,6 @@
 # architecture / extensibility.md (jwc_patched)
 
-> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/extensibility.md`](../../../structure/extensibility.md).
+> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/21_extensibility.md`](../../../structure/21_extensibility.md).
 > fork `dc4f22672581` · gjc clone `75d103f45145`.
 
 ## structure/ 발췌 (첫 12줄)

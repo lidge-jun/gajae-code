@@ -1,12 +1,12 @@
 # Contributing to Jawcode (jwc)
 
 > **upstream gajae-code** 기여는 [Yeachan-Heo/gajae-code](https://github.com/Yeachan-Heo/gajae-code) 정책을 따른다.
-> 본 문서는 **jawcode 포크**(jwc M1 · cli-jaw M2)용 최소 안내다. beta v0.1: [structure/status.md](structure/status.md).
+> 본 문서는 **jawcode 포크**(jwc M1 · cli-jaw M2)용 최소 안내다. beta v0.1: [structure/50_status.md](structure/50_status.md).
 
 ## Before you change code
 
 1. Read [AGENTS.md](AGENTS.md) — coding-agent 계약과 jwc 기준 문서 정본 가이드.
-2. Read [structure/conventions.md](structure/conventions.md) — rebase, `.jwc/`, cite, struct_har 갱신.
+2. Read [structure/11_conventions.md](structure/11_conventions.md) — rebase, `.jwc/`, cite, struct_har 갱신.
 3. Primary product surface: `packages/coding-agent/`. Public bin: `packages/jwc` → `jwc`.
 
 ## Workflow surface (fork)
@@ -30,11 +30,11 @@ Use `bun check` / package tests for focused changes — do not run raw `tsc` ([A
 
 ## Documentation
 
-- Patched SoT: [structure/](structure/INDEX.md) · map: [structure/INDEX.md](structure/INDEX.md).
+- Patched SoT: [structure/](structure/00_INDEX.md) · map: [structure/00_INDEX.md](structure/00_INDEX.md).
 - Fork diff snapshots: [struct_har/](struct_har/README.md). Gaps: [struct_har/chase/](struct_har/chase/README.md).
 - 99 band work: [devlog/_plan/260612_jawcode_fork/99.00.00_moc_stabilization.md](devlog/_plan/260612_jawcode_fork/99.00.00_moc_stabilization.md).
 
-When you change HARD-EDIT/NEW fork files, update [structure/fork-delta.md](structure/fork-delta.md) in the same change set.
+When you change HARD-EDIT/NEW fork files, update [structure/40_fork-delta.md](structure/40_fork-delta.md) in the same change set.
 
 ### Jawdev documentation model
 
@@ -47,7 +47,7 @@ When you change HARD-EDIT/NEW fork files, update [structure/fork-delta.md](struc
 ## Commits & upstream
 
 - Do **not** commit unless explicitly asked.
-- Upstream mirror: `devlog/_upstream_gjc/` (gitignored). Rebase: [structure/conventions.md](structure/conventions.md).
+- Upstream mirror: `devlog/_upstream_gjc/` (gitignored). Rebase: [structure/11_conventions.md](structure/11_conventions.md).
 
 ## Questions
 

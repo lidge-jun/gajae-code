@@ -1,7 +1,7 @@
 # Jawcode 아키텍처 (현재 형태)
 
 > 2026-06-13 기준. gajae-code 0.4.4 fork, worktree HEAD `81bcea96`.
-> **현재 코드 형태** 기록. 로드맵·밴드: `devlog/_plan/260612_jawcode_fork/`. 계보: [fork-delta.md](./fork-delta.md).
+> **현재 코드 형태** 기록. 로드맵·밴드: `devlog/_plan/260612_jawcode_fork/`. 계보: [fork-delta.md](./40_fork-delta.md).
 
 ## 1. 정체
 
@@ -27,7 +27,7 @@ packages/
   jwc/             jwc                     — jaw 표면 (bin: jwc, export: ./sdk)
 ```
 
-전체 package/crate 표는 [architecture.md](./architecture.md)가 정본이다.
+전체 package/crate 표는 [architecture.md](./10_architecture.md)가 정본이다.
 
 | 핵심 패키지 | 현재 역할 | 근거 |
 |---|---|---|
@@ -73,16 +73,16 @@ packages/
 - `src/extensibility/custom-tools/` — 커스텀 도구 주입
 - `src/tools/` — read/bash/edit/write/grep/browser/ast-edit 등 내장 도구
 - 기본 워크플로 스킬 4종: jaw-interview / ralplan / ultragoal / team (jwc runtime 표준)
-- `src/gjc-runtime/memory-runtime.ts` + `src/commands/memory.ts`·`chat.ts` — `jwc memory`/`jwc chat` CLI verbs 네이티브 구현 (99.01 완료, 260613); local-query/memory-fts 배관 포함. 세부: [session_storage.md](./session_storage.md).
+- `src/gjc-runtime/memory-runtime.ts` + `src/commands/memory.ts`·`chat.ts` — `jwc memory`/`jwc chat` CLI verbs 네이티브 구현 (99.01 완료, 260613); local-query/memory-fts 배관 포함. 세부: [session_storage.md](./22_session_storage.md).
 
-세부 표는 [extensibility.md](./extensibility.md)와 [extensibility.md](./extensibility.md)가 정본이다.
+세부 표는 [extensibility.md](./21_extensibility.md)와 [extensibility.md](./21_extensibility.md)가 정본이다.
 
 ### 3.5 세션/상태
 
 - `src/session/` — 세션 영속화 (agent db)
 - `.jwc/` — 런타임 상태, 플랜, 스펙, 원장 (jwc 런타임 표준 경로)
 
-세부 storage 표는 [session_storage.md](./session_storage.md)가 정본이다.
+세부 storage 표는 [session_storage.md](./22_session_storage.md)가 정본이다.
 
 ## 4. cli-jaw 쪽 대응 시임 (참조)
 
@@ -155,7 +155,7 @@ jwc CLI/package
 | `packages/utils` | 경로, config dir, logger, prompt/render helper 등 공용 유틸. | `src/index.ts` | `natives`, handlebars, winston | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/package.json:3`, `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/package.json:23`, `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/package.json:33` |
 | `packages/stats` | local observability dashboard. | `src/index.ts`, `gjc-stats` legacy package bin | `ai`, `utils`, React/Tailwind/Chart deps | `/Users/jun/Developer/new/700_projects/jawcode/packages/stats/package.json:3`, `/Users/jun/Developer/new/700_projects/jawcode/packages/stats/package.json:27`, `/Users/jun/Developer/new/700_projects/jawcode/packages/stats/package.json:39` |
 | `packages/bridge-client` | jwc backend bridge protocol TypeScript client SDK. | `src/index.ts` | 독립 TS SDK | `/Users/jun/Developer/new/700_projects/jawcode/packages/bridge-client/package.json:3`, `/Users/jun/Developer/new/700_projects/jawcode/packages/bridge-client/package.json:22`, `/Users/jun/Developer/new/700_projects/jawcode/packages/bridge-client/package.json:41` |
-| `packages/gajae-code` | REMOVED legacy shell wrapper. repo 내 공개 진입은 `packages/jwc` 하나다. | — | — | `structure/fork-delta.md:28` |
+| `packages/gajae-code` | REMOVED legacy shell wrapper. repo 내 공개 진입은 `packages/jwc` 하나다. | — | — | `structure/40_fork-delta.md:28` |
 | `packages/orchestration-token-benchmark` | orchestration token efficiency internal benchmark. live model call 없는 deterministic benchmark가 기본이다. | `src/index.ts`, `src/live-runner.ts` | private package | `/Users/jun/Developer/new/700_projects/jawcode/packages/orchestration-token-benchmark/package.json:3`, `/Users/jun/Developer/new/700_projects/jawcode/packages/orchestration-token-benchmark/package.json:6`, `/Users/jun/Developer/new/700_projects/jawcode/packages/orchestration-token-benchmark/package.json:22` |
 | `packages/typescript-edit-benchmark` | TypeScript edit mutation benchmark. | `src/index.ts`, `typescript-edit-benchmark` bin | `coding-agent`, `agent-core`, `ai`, `tui`, AST deps | `/Users/jun/Developer/new/700_projects/jawcode/packages/typescript-edit-benchmark/package.json:3`, `/Users/jun/Developer/new/700_projects/jawcode/packages/typescript-edit-benchmark/package.json:15`, `/Users/jun/Developer/new/700_projects/jawcode/packages/typescript-edit-benchmark/package.json:28` |
 

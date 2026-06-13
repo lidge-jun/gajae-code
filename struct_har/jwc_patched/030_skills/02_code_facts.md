@@ -10,7 +10,7 @@
 | 2 | `packages/coding-agent/src/extensibility/skills.ts` | present |
 | 3 | `packages/coding-agent/src/gjc-runtime/cli-jaw-vocab.ts` | present |
 
-## 2. fork-delta (structure/fork-delta.md)
+## 2. fork-delta (structure/40_fork-delta.md)
 
 - jaw-interview slug
 - cli-jaw-vocab.ts NEW (057)

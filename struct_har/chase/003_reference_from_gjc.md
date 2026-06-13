@@ -2,7 +2,7 @@
 
 > **플랜 정본**: [10_gjc_chase_MOC](./10_gjc_chase_MOC.md) · `10.001`–`10.008` (+ `10.009`…) · 완료 [_legacy/10](./_legacy/10/README.md)
 > **정본 클론**: `devlog/_upstream_gjc/` · remote `Yeachan-Heo/gajae-code` · branch `dev` · reviewed through `2b4d407b471b`
-> **jaw SoT**: worktree `packages/` — 병합 시 [structure/fork-delta.md](../../structure/fork-delta.md) **CONFLICT-EXPECTED** 열 필수.
+> **jaw SoT**: worktree `packages/` — 병합 시 [structure/40_fork-delta.md](../../structure/40_fork-delta.md) **CONFLICT-EXPECTED** 열 필수.
 
 ## 원칙 (jaw = upstream OSS)
 
@@ -22,7 +22,7 @@
 git -C devlog/_upstream_gjc fetch origin
 GJC=$(git -C devlog/_upstream_gjc rev-parse --short HEAD)
 JWC=$(git -C /Users/jun/Developer/new/700_projects/jawcode rev-parse --short HEAD)
-grep CONFLICT-EXPECTED structure/fork-delta.md
+grep CONFLICT-EXPECTED structure/40_fork-delta.md
 diff -u devlog/_upstream_gjc/packages/coding-agent/src/cli.ts packages/coding-agent/src/cli.ts | head
 ```
 
@@ -94,7 +94,7 @@ upstream **호스트 model pin**·tool-call 수정 — jaw 고유 수정과 **3-
 
 ## fork-delta “upstream PR 후보” (역기여 선택)
 
-jaw에서 gjc로 돌려보낼 만한 범용 수정 — [fork-delta.md](../../structure/fork-delta.md) 090 표 ✅:
+jaw에서 gjc로 돌려보낼 만한 범용 수정 — [fork-delta.md](../../structure/40_fork-delta.md) 090 표 ✅:
 
 - `local-token-detect.ts`
 - oauth 보강 (anthropic, openai-codex, xai)

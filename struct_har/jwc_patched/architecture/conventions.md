@@ -1,6 +1,6 @@
 # architecture / conventions.md (jwc_patched)
 
-> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/conventions.md`](../../../structure/conventions.md).
+> **스냅샷 (2026-06-13)**: patched SoT는 [`structure/11_conventions.md`](../../../structure/11_conventions.md).
 > fork `dc4f22672581` · gjc clone `75d103f45145`.
 
 ## structure/ 발췌 (첫 12줄)

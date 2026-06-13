@@ -58,7 +58,7 @@ for (const band of BANDS) {
 | [02_logic_changes.md](./02_logic_changes.md) | **동작·런타임 변경** (git 히스토리 기반) |
 | [03_devlog_refs.md](./03_devlog_refs.md) | 플랜 링크 |
 
-횡단 정본: [structure/fork_logic_changelog.md](../../../structure/fork_logic_changelog.md)
+횡단 정본: [structure/40_fork-delta.md](../../../structure/40_fork-delta.md)
 
 ## 부록
 
@@ -82,8 +82,8 @@ ${refLines}
 ## 공통
 
 - [000_roadmap.md](../../../devlog/_plan/260612_jawcode_fork/000_roadmap.md)
-- [fork_logic_changelog.md](../../../structure/fork_logic_changelog.md)
-- [fork-delta.md](../../../structure/fork-delta.md)
+- [fork_logic_changelog.md](../../../structure/40_fork-delta.md)
+- [fork-delta.md](../../../structure/40_fork-delta.md)
 `,
 			"utf8",
 		);

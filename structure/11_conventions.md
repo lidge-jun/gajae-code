@@ -60,7 +60,7 @@ git fetch upstream && git rebase upstream/main    # worktree — 변경 정리 �
 - upstream baseline: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_upstream_gjc/<repo-relative-path>:<line>`
 - fork patched: `/Users/jun/Developer/new/700_projects/jawcode/<path>:<line>`
 
-클론 HEAD 갱신 후: `struct_har/gjc_origin/**/02_code_facts.md`, `struct_har/README.md`, `structure/conventions.md`; omp fetch 시 `struct_har/omp_origin/**` 동기화.
+클론 HEAD 갱신 후: `struct_har/gjc_origin/**/02_code_facts.md`, `struct_har/README.md`, `structure/11_conventions.md`; omp fetch 시 `struct_har/omp_origin/**` 동기화.
 `bun struct_har/_scripts/struct-har-regenerate.ts` (+ architecture, overviews)로 밴드 스냅샷 일괄 갱신 가능 (2026-06-13).
 
 ## 3. 코드 컨벤션
@@ -101,7 +101,7 @@ git fetch upstream && git rebase upstream/main    # worktree — 변경 정리 �
 | 구조 문서의 사실 주장은 실제 파일 경로와 라인 번호를 단다. | `structure/*.md` |
 | 실행 결과 근거는 명령과 관찰값을 같이 쓴다. | `conventions.md`의 remote/status/HEAD |
 | 계획/결정과 코드 사실을 분리한다. | `[확정]`, `[기본값]`, `[제안]` 표기 |
-| `structure/INDEX.md`는 문서 추가/삭제/범위 변경 때 같이 갱신한다. | `/Users/jun/Developer/new/700_projects/jawcode/structure/INDEX.md:1` |
+| `structure/00_INDEX.md`는 문서 추가/삭제/범위 변경 때 같이 갱신한다. | `/Users/jun/Developer/new/700_projects/jawcode/structure/00_INDEX.md:1` |
 
 ## 5. str_func
 
@@ -139,18 +139,18 @@ git fetch upstream && git rebase upstream/main    # worktree — 변경 정리 �
 | 내부 실행 | 현재 `jwc` bin은 `@gajae-code/coding-agent/cli`를 import한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/bin/jwc.js:1` |
 | SDK 표면 | `jwc/sdk`는 coding-agent SDK를 재수출한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:15`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/src/sdk.ts:1` |
 | default workflow slug | jwc runtime은 `jaw-interview`를 표준으로 쓴다. legacy `deep-interview`는 upstream baseline/read-compat 문맥에만 둔다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/defaults/gjc-defaults.ts:13`, `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:11` |
-| package namespace | upstream `@gajae-code/*` 유지, jawcode 신규 패키지만 별도 namespace 가능. | `/Users/jun/Developer/new/700_projects/jawcode/structure/conventions.md:24` |
+| package namespace | upstream `@gajae-code/*` 유지, jawcode 신규 패키지만 별도 namespace 가능. | `/Users/jun/Developer/new/700_projects/jawcode/structure/11_conventions.md:24` |
 | state path | 런타임 `.jwc/` (`CONFIG_DIR_NAME`, `~/.jwc`) — repo 문서·마이그레이션은 Phase β 기준 | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:219` |
 | D4 결정 | bin `jwc`, 브랜딩/문서/스킬명은 jwc 기준; 내부 `@gajae-code/*` 스코프는 보존. | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md:13` |
 
 ### 리베이스 가드
 
-> 충돌 예상 파일 사전 점검: `grep "CONFLICT-EXPECTED" structure/fork-delta.md` ↔ `git diff upstream/main --name-only` 대조 ([fork-delta.md](./fork-delta.md) 정본).
+> 충돌 예상 파일 사전 점검: `grep "CONFLICT-EXPECTED" structure/40_fork-delta.md` ↔ `git diff upstream/main --name-only` 대조 ([fork-delta.md](./40_fork-delta.md) 정본).
 
 | Guard | 적용 | 근거 |
 |---|---|---|
-| upstream 파일 수정 최소화 | jaw 전용 context는 `structure/`, `devlog/`, 신규 패키지에 둔다. | `/Users/jun/Developer/new/700_projects/jawcode/structure/conventions.md:7` |
-| public docs stay jwc-first | `AGENTS.md`, `README*.md`, `structure/`는 jwc 기준 정본으로 유지한다. | `/Users/jun/Developer/new/700_projects/jawcode/structure/conventions.md:10`, `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:1` |
+| upstream 파일 수정 최소화 | jaw 전용 context는 `structure/`, `devlog/`, 신규 패키지에 둔다. | `/Users/jun/Developer/new/700_projects/jawcode/structure/11_conventions.md:7` |
+| public docs stay jwc-first | `AGENTS.md`, `README*.md`, `structure/`는 jwc 기준 정본으로 유지한다. | `/Users/jun/Developer/new/700_projects/jawcode/structure/11_conventions.md:10`, `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:1` |
 | model catalog 직접 수정 금지 | `packages/ai/src/models.json`은 generator/descriptors/resolvers로 바꾸고 regenerate한다. | `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:73` |
 | workflow default surface gate | default workflow skill 변경 후 required gates가 있다. | `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:128` |
 | no push/reset/clean | task context와 repo AGENTS 모두 destructive git 회피를 요구한다. | `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:125` |

@@ -49,7 +49,7 @@ const BANDS: BandDef[] = [
 			"packages/coding-agent/src/system-prompt.ts",
 			"packages/coding-agent/src/prompts/system/system-prompt.md",
 			"packages/coding-agent/src/gjc-runtime/agent-identity.ts",
-			"structure/prompt_flow.md",
+			"structure/20_prompt_flow.md",
 		],
 		forkDelta: ["system-prompt.md HARD-EDIT", "prompts/tools/*.md HARD-EDIT", "agent-identity.ts NEW"],
 	},
@@ -117,7 +117,7 @@ const BANDS: BandDef[] = [
 		gjcAnchors: ["packages/coding-agent/src/memories/", "packages/utils/src/dirs.ts"],
 		jwcAnchors: [
 			"packages/coding-agent/src/memories/",
-			"structure/memory_pipeline.md",
+			"structure/22_session_storage.md",
 			"devlog/_plan/260612_jawcode_fork/99.01.00_moc_memory.md",
 		],
 		forkDelta: ["99.01 local-query (planned)", "memory_pipeline.md NEW"],
@@ -193,7 +193,7 @@ ${rows.join("\n")}
 
 function forkSection(notes: string[] | undefined): string {
 	if (!notes?.length) return "";
-	return `## 2. fork-delta (structure/fork-delta.md)
+	return `## 2. fork-delta (structure/40_fork-delta.md)
 
 ${notes.map(n => `- ${n}`).join("\n")}
 `;
@@ -258,7 +258,7 @@ fs.writeFileSync(
 	`# 099_stabilization — code facts (jwc_patched)
 
 > worktree @ \`${FORK_HEAD}\` · 정본 overview: \`01_overview.md\`
-> structure: \`structure/prompt_flow.md\`, \`structure/memory_pipeline.md\`
+> structure: \`structure/20_prompt_flow.md\`, \`structure/22_session_storage.md\`
 
 ## 1. 앵커
 

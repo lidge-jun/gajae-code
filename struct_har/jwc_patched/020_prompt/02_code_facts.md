@@ -9,9 +9,9 @@
 | 1 | `packages/coding-agent/src/system-prompt.ts` | present |
 | 2 | `packages/coding-agent/src/prompts/system/system-prompt.md` | present |
 | 3 | `packages/coding-agent/src/gjc-runtime/agent-identity.ts` | present |
-| 4 | `structure/prompt_flow.md` | present |
+| 4 | `structure/20_prompt_flow.md` | present |
 
-## 2. fork-delta (structure/fork-delta.md)
+## 2. fork-delta (structure/40_fork-delta.md)
 
 - system-prompt.md HARD-EDIT
 - prompts/tools/*.md HARD-EDIT

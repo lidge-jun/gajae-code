@@ -18,4 +18,4 @@ jwc: host model pin, tool-call execute fix (081 fork).
 | [02_logic_changes.md](./02_logic_changes.md) | omp 동작 요약 (fork 아님) |
 | [03_devlog_refs.md](./03_devlog_refs.md) | 플랜 링크 |
 
-횡단: [../README.md](../README.md) · [../architecture/](../architecture/) · [structure/fork-delta.md](../../../structure/fork-delta.md)
+횡단: [../README.md](../README.md) · [../architecture/](../architecture/) · [structure/40_fork-delta.md](../../../structure/40_fork-delta.md)
