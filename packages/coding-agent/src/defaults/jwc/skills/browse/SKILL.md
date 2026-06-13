@@ -104,6 +104,10 @@ CSS as well as puppeteer query handlers: `aria/Sign in`, `text/Continue`, `xpath
 - Tabs survive across `run`/`act` calls and across in-process subagents.
 - Prefer bounded extraction over dumping huge DOM/HTML.
 
+## Fragments
+
+- **web-ai**: Drive AI provider websites (ChatGPT, Gemini, Grok) via `agbrowse` — model aliases, provider matrix, file/context upload, copy-markdown fallback.
+
 ## Output
 
 Per call: any `display(value)` outputs (text/images) followed by the JSON-stringified return value of the `code` function. `run` always produces at least a status line.

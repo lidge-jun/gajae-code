@@ -11,9 +11,9 @@ import aiSlopCleanerFragment from "./jwc/skills/ultragoal/ai-slop-cleaner.md" wi
 import browseSkill from "./jwc/skills/browse/SKILL.md" with { type: "text" };
 import searchSkill from "./jwc/skills/search/SKILL.md" with { type: "text" };
 import ultragoalSkill from "./jwc/skills/ultragoal/SKILL.md" with { type: "text" };
-import webAiSkill from "./jwc/skills/web-ai/SKILL.md" with { type: "text" };
+import webAiFragment from "./jwc/skill-fragments/browse/web-ai.md" with { type: "text" };
 
-export const DEFAULT_JWC_DEFINITION_NAMES = ["browse", "jaw-interview", "ralplan", "search", "team", "ultragoal", "web-ai"] as const;
+export const DEFAULT_JWC_DEFINITION_NAMES = ["browse", "jaw-interview", "ralplan", "search", "team", "ultragoal"] as const;
 export type DefaultJwcDefinitionName = (typeof DEFAULT_JWC_DEFINITION_NAMES)[number];
 export type DefaultJwcDefinitionKind = "skill" | "skill-fragment";
 export type EmbeddedDefaultJwcSkill = {
@@ -86,7 +86,6 @@ const DEFAULT_GJC_DEFINITIONS: readonly DefaultJwcDefinition[] = [
 	{ kind: "skill", name: "search", relativePath: "skills/search/SKILL.md", content: searchSkill },
 	{ kind: "skill", name: "team", relativePath: "skills/team/SKILL.md", content: teamSkill },
 	{ kind: "skill", name: "ultragoal", relativePath: "skills/ultragoal/SKILL.md", content: ultragoalSkill },
-	{ kind: "skill", name: "web-ai", relativePath: "skills/web-ai/SKILL.md", content: webAiSkill },
 	{
 		kind: "skill-fragment",
 		parentSkillName: "jaw-interview",
@@ -104,6 +103,12 @@ const DEFAULT_GJC_DEFINITIONS: readonly DefaultJwcDefinition[] = [
 		parentSkillName: "ultragoal",
 		relativePath: "skill-fragments/ultragoal/ai-slop-cleaner.md",
 		content: aiSlopCleanerFragment,
+	},
+	{
+		kind: "skill-fragment",
+		parentSkillName: "browse",
+		relativePath: "skill-fragments/browse/web-ai.md",
+		content: webAiFragment,
 	},
 ];
 
