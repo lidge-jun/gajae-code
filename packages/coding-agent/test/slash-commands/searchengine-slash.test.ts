@@ -68,9 +68,10 @@ describe("searchengine slash command", () => {
 		expect(command?.allowArgs).toBe(true);
 	});
 
-	it("registers the uppercase /SEARCHENGINE alias (lookup is case-sensitive)", () => {
+	it("uses a lowercase-only name (parser lowercases the verb, so an uppercase alias was dead)", () => {
 		const command = findSearchEngineCommand();
-		expect(command?.aliases).toContain("SEARCHENGINE");
+		expect(command?.name).toBe("searchengine");
+		expect(command?.aliases ?? []).not.toContain("SEARCHENGINE");
 	});
 
 	it("prints current provider and candidates on bare invocation", async () => {

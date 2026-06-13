@@ -29,8 +29,8 @@ import { classifyProviderHttpError, withHardTimeout } from "./utils";
 
 const XAI_BASE_URL = "https://api.x.ai/v1";
 const XAI_RESPONSES_PATH = "/responses";
-/** Fast default keeps the search round-trip low-latency (cli-jaw 32). */
-const DEFAULT_XAI_SEARCH_MODEL = "grok-4-fast";
+/** grok-4.3 = current flagship (Apr 2026, 1M ctx, live search). grok-4-fast is legacy/retired. */
+const DEFAULT_XAI_SEARCH_MODEL = "grok-4.3";
 /** Both tools so Grok unifies general web + X live index per query. */
 const XAI_SEARCH_TOOLS = [{ type: "web_search" }, { type: "x_search" }] as const;
 
@@ -114,8 +114,10 @@ async function searchXai(params: SearchParams): Promise<SearchResponse> {
 		throw new SearchProviderError("xai", "No xAI credential — run grok login or set XAI_API_KEY", 401);
 	}
 
+	// Deep tier (075): grok-4.20-multi-agent for complex multi-hop (bench 072: 12src + X depth).
+	const deepModel = params.depth === "deep" ? "grok-4.20-multi-agent" : undefined;
 	const body: Record<string, unknown> = {
-		model: DEFAULT_XAI_SEARCH_MODEL,
+		model: $env.XAI_SEARCH_MODEL?.trim() || deepModel || DEFAULT_XAI_SEARCH_MODEL,
 		store: false,
 		input: [{ role: "user", content: params.query }],
 		tools: XAI_SEARCH_TOOLS,
@@ -128,7 +130,7 @@ async function searchXai(params: SearchParams): Promise<SearchResponse> {
 			"Content-Type": "application/json",
 		},
 		body: JSON.stringify(body),
-		signal: withHardTimeout(params.signal),
+		signal: withHardTimeout(params.signal, params.timeoutMs),
 	});
 
 	if (!response.ok) {

@@ -50,6 +50,37 @@ export interface SearchParams {
 	 * caller's agent session when available; otherwise omit.
 	 */
 	sessionId?: string;
+
+	// ── Session-model parity + deep tier (074/075) ──────────────────────
+
+	/**
+	 * Active session model id (e.g. "gpt-5.3-codex-spark", "claude-sonnet-4-6").
+	 * When the session's provider matches the search provider, the provider
+	 * SHOULD use this model instead of its default pin (session-model parity).
+	 * Cross-provider callers leave this undefined → provider uses its pin.
+	 */
+	sessionModel?: string | undefined;
+
+	/** Provider id of the active session model (e.g. "openai-codex", "anthropic"). */
+	sessionModelProvider?: string | undefined;
+
+	/**
+	 * Search depth tier. `"fast"` (default) = synchronous 60s, `"deep"` = async
+	 * 180s with heavier models. The caller (WebSearchTool) handles the async job
+	 * wrapper; providers just see an extended timeout + possibly a different model.
+	 */
+	depth?: "fast" | "deep" | undefined;
+
+	/** Override the hard timeout (ms). Deep tier passes 180_000; fast uses the
+	 *  provider default (SEARCH_HARD_TIMEOUT_MS = 60_000). */
+	timeoutMs?: number | undefined;
+
+	/** Reasoning effort from settings (080). Providers apply floor logic per tier
+	 *  (e.g. codex deep = max(this, "high")). "none" = non-thinking. */
+	reasoningEffort?: "none" | "low" | "medium" | "high" | undefined;
+
+	/** Search context size (codex-specific, others ignore). */
+	searchContextSize?: "low" | "medium" | "high" | undefined;
 }
 
 /** Base class for web search providers. */

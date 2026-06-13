@@ -26,7 +26,9 @@ const DEFAULT_ENDPOINT = "https://cloudcode-pa.googleapis.com";
 const ANTIGRAVITY_DAILY_ENDPOINT = "https://daily-cloudcode-pa.googleapis.com";
 const ANTIGRAVITY_SANDBOX_ENDPOINT = "https://daily-cloudcode-pa.sandbox.googleapis.com";
 const ANTIGRAVITY_ENDPOINT_FALLBACKS = [ANTIGRAVITY_DAILY_ENDPOINT, ANTIGRAVITY_SANDBOX_ENDPOINT] as const;
-const DEFAULT_MODEL = "gemini-2.5-flash";
+// gemini-3.5-flash = current grounding default (gemini-2.5-flash superseded by gemini-3 family;
+// 2.0-flash retired 2026-06-01). Fixed pin — no session-model parity (096 research decision).
+const DEFAULT_MODEL = "gemini-3.5-flash";
 const MAX_RETRIES = 3;
 const BASE_DELAY_MS = 1000;
 const RATE_LIMIT_BUDGET_MS = 5 * 60 * 1000;
@@ -51,6 +53,8 @@ export interface GeminiSearchParams extends GeminiToolParams {
 	signal?: AbortSignal;
 	authStorage: AuthStorage;
 	sessionId?: string;
+	/** Deep tier timeout override (ms). */
+	timeoutMs?: number;
 }
 
 export function buildGeminiRequestTools(params: GeminiToolParams): Array<Record<string, Record<string, unknown>>> {
@@ -157,6 +161,7 @@ async function callGeminiSearch(
 	temperature: number | undefined,
 	toolParams: GeminiToolParams,
 	signal: AbortSignal | undefined,
+	timeoutMs?: number,
 ): Promise<{
 	answer: string;
 	sources: SearchSource[];
@@ -230,7 +235,7 @@ async function callGeminiSearch(
 			...headers,
 		},
 		body: JSON.stringify(requestBody),
-		signal: withHardTimeout(signal),
+		signal: withHardTimeout(signal, timeoutMs),
 	});
 	const urlFor = (attempt: number) =>
 		`${endpoints[Math.min(attempt, endpoints.length - 1)]}/v1internal:streamGenerateContent?alt=sse`;
@@ -406,6 +411,7 @@ export async function searchGemini(params: GeminiSearchParams): Promise<SearchRe
 			url_context: params.url_context,
 		},
 		params.signal,
+		params.timeoutMs,
 	);
 
 	let sources = result.sources;
@@ -450,6 +456,7 @@ export class GeminiProvider extends SearchProvider {
 			signal: params.signal,
 			authStorage: params.authStorage,
 			sessionId: params.sessionId,
+			timeoutMs: params.timeoutMs,
 		});
 	}
 }

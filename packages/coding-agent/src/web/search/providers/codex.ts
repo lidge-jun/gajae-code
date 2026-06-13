@@ -19,8 +19,13 @@ import { classifyProviderHttpError, withHardTimeout } from "./utils";
 
 const CODEX_BASE_URL = "https://chatgpt.com/backend-api";
 const CODEX_RESPONSES_PATH = "/codex/responses";
-const FALLBACK_MODEL = "gpt-5.4";
+const DEEP_CODEX_MODEL = "gpt-5.5";
+const DEEP_REASONING_EFFORT = "high";
+const FALLBACK_MODEL = "gpt-5.4-mini";
+// 5.4-mini non-thinking = fast search champion (096.1 bench: 5/5 완주, spark/5.4/5.5 못 깬
+// kev-subsidy 28.3s·kfilm-multi 30.9s 유일 완주, 평균 out-tok 1/3).
 const DEFAULT_MODEL_PREFERENCES = [
+	"gpt-5.4-mini",
 	"gpt-5.4",
 	"gpt-5-codex",
 	"gpt-5",
@@ -295,6 +300,8 @@ async function callCodexSearch(
 		systemPrompt?: string;
 		searchContextSize?: "low" | "medium" | "high";
 		modelId: string;
+		timeoutMs?: number;
+		reasoningEffort?: string;
 	},
 ): Promise<{
 	answer: string;
@@ -329,11 +336,23 @@ async function callCodexSearch(
 		instructions: options.systemPrompt ?? DEFAULT_INSTRUCTIONS,
 	};
 
+	// Reasoning: only inject when an explicit effort level is requested (deep tier = "high",
+	// or operator env override). Fast tier deliberately omits the reasoning block entirely
+	// so reasoning-capable models (like 5.4-mini) run NON-THINKING — faster, cheaper, and
+	// higher completion rate (096.1 bench). "none" is NOT a valid Responses API effort value,
+	// so we skip rather than send it (sonnet audit: potential 400).
+	const modelMeta = getBundledModels("openai-codex").find(m => m.id === requestedModel);
+	const effort = options.reasoningEffort ?? $env.PI_CODEX_WEB_SEARCH_EFFORT?.trim();
+	if (modelMeta?.reasoning && effort && effort !== "none") {
+		body.reasoning = { effort, summary: "auto" };
+		body.include = ["reasoning.encrypted_content"];
+	}
+
 	const response = await fetch(url, {
 		method: "POST",
 		headers,
 		body: JSON.stringify(body),
-		signal: withHardTimeout(options.signal),
+		signal: withHardTimeout(options.signal, options.timeoutMs),
 	});
 
 	if (!response.ok) {
@@ -469,7 +488,27 @@ export async function searchCodex(params: SearchParams): Promise<SearchResponse>
 	}
 
 	const configuredModel = getConfiguredModel();
-	const modelCandidates = configuredModel ? [configuredModel] : getDefaultModelCandidates();
+	// Session-model parity (074 §4): when the active session is a codex model,
+	// search with that model (e.g. codex-spark) instead of the default pin.
+	// Env override > parity > default pin. Retry-on-unsupported still works as fallback.
+	const sessionParity =
+		!configuredModel &&
+		params.sessionModel &&
+		params.sessionModelProvider &&
+		["openai", "openai-codex", "openai-responses"].includes(params.sessionModelProvider)
+			? params.sessionModel
+			: undefined;
+	// Deep tier (075): override to gpt-5.5 + high reasoning for complex multi-hop.
+	const isDeep = params.depth === "deep";
+	const deepModel = isDeep ? DEEP_CODEX_MODEL : undefined;
+	const deepReasoningEffort = isDeep ? DEEP_REASONING_EFFORT : undefined;
+	const modelCandidates = configuredModel
+		? [configuredModel]
+		: deepModel
+			? [deepModel, ...getDefaultModelCandidates().filter(m => m !== deepModel)]
+			: sessionParity
+				? [sessionParity, ...getDefaultModelCandidates().filter(m => m !== sessionParity)]
+				: getDefaultModelCandidates();
 
 	let result:
 		| {
@@ -490,8 +529,11 @@ export async function searchCodex(params: SearchParams): Promise<SearchResponse>
 			result = await callCodexSearch(auth, params.query, {
 				signal: params.signal,
 				systemPrompt: params.systemPrompt,
-				searchContextSize: "high",
+				searchContextSize: params.searchContextSize ?? "high",
 				modelId,
+				timeoutMs: params.timeoutMs,
+				// Priority: deep override > settings > env > none.
+				reasoningEffort: deepReasoningEffort ?? params.reasoningEffort ?? undefined,
 			});
 			break;
 		} catch (error) {

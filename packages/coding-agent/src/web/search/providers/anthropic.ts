@@ -41,14 +41,6 @@ export interface AnthropicSearchParams {
 }
 
 /**
- * Gets the model to use for web search from environment or default.
- * @returns Model identifier string
- */
-function getModel(): string {
-	return $env.ANTHROPIC_SEARCH_MODEL ?? DEFAULT_MODEL;
-}
-
-/**
  * Builds system instruction blocks for the Anthropic API request.
  * @param auth - Authentication configuration
  * @param model - Model identifier (affects whether Anthropic Code instruction is included)
@@ -79,15 +71,21 @@ function buildSystemBlocks(
  * @returns Raw API response from Anthropic
  * @throws {SearchProviderError} If the API request fails
  */
+interface CallSearchOptions {
+	systemPrompt?: string;
+	maxTokens?: number;
+	temperature?: number;
+	signal?: AbortSignal;
+	timeoutMs?: number;
+}
+
 async function callSearch(
 	auth: AnthropicAuthConfig,
 	model: string,
 	query: string,
-	systemPrompt?: string,
-	maxTokens?: number,
-	temperature?: number,
-	signal?: AbortSignal,
+	options: CallSearchOptions = {},
 ): Promise<AnthropicApiResponse> {
+	const { systemPrompt, maxTokens, temperature, signal, timeoutMs } = options;
 	const url = buildAnthropicUrl(auth);
 	const headers = buildAnthropicSearchHeaders(auth);
 
@@ -117,7 +115,7 @@ async function callSearch(
 		method: "POST",
 		headers,
 		body: JSON.stringify(body),
-		signal: withHardTimeout(signal),
+		signal: withHardTimeout(signal, timeoutMs),
 	});
 
 	if (!response.ok) {
@@ -264,18 +262,30 @@ export async function searchAnthropic(
 		);
 	}
 
-	const model = getModel();
+	// Session-model parity (074 §4): when session is a Claude model, use it
+	// instead of the default haiku pin. Env override > parity > default.
+	const envModel = $env.ANTHROPIC_SEARCH_MODEL;
+	const parityModel =
+		!envModel &&
+		"sessionModel" in params &&
+		params.sessionModel &&
+		"sessionModelProvider" in params &&
+		params.sessionModelProvider === "anthropic"
+			? params.sessionModel
+			: undefined;
+	// Deep tier (075): opus-4-6 for complex multi-hop (bench 073: opus times out on fast
+	// but has room on deep 180s). Only when explicitly requested via depth, not parity.
+	const deepModel = "authStorage" in params && params.depth === "deep" ? "claude-opus-4-6" : undefined;
+	const model = envModel ?? deepModel ?? parityModel ?? DEFAULT_MODEL;
 	const systemPrompt = "authStorage" in params ? params.systemPrompt : params.system_prompt;
 	const maxTokens = "authStorage" in params ? params.maxOutputTokens : params.max_tokens;
-	const response = await callSearch(
-		auth,
-		model,
-		params.query,
+	const response = await callSearch(auth, model, params.query, {
 		systemPrompt,
 		maxTokens,
-		params.temperature,
-		params.signal,
-	);
+		temperature: params.temperature,
+		signal: params.signal,
+		timeoutMs: "authStorage" in params ? params.timeoutMs : undefined,
+	});
 
 	const result = parseResponse(response);
 

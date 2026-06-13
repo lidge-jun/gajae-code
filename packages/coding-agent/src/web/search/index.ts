@@ -8,6 +8,7 @@ import type { AgentTool, AgentToolContext, AgentToolResult, AgentToolUpdateCallb
 import type { AuthStorage } from "@gajae-code/ai";
 import { prompt } from "@gajae-code/utils";
 import * as z from "zod/v4";
+import { AsyncJobManager } from "../../async";
 import { parseModelString } from "../../config/model-resolver";
 import type { CustomTool, CustomToolContext, RenderResultOptions } from "../../extensibility/custom-tools/types";
 import type { Theme } from "../../modes/theme/theme";
@@ -30,7 +31,16 @@ export const webSearchSchema = z.object({
 	max_tokens: z.number().describe("max output tokens").optional(),
 	temperature: z.number().describe("sampling temperature").optional(),
 	num_search_results: z.number().describe("number of search results").optional(),
+	depth: z
+		.enum(["fast", "deep"])
+		.describe(
+			"Search depth tier. fast (default) = synchronous 60s, quick results. deep = async 180s with heavier reasoning models for complex multi-hop research queries.",
+		)
+		.optional(),
 });
+
+/** Deep tier hard timeout — 3× the standard 60s (075 design: AsyncJob + heavier models need room). */
+export const DEEP_SEARCH_TIMEOUT_MS = 180_000;
 
 export type SearchToolParams = z.infer<typeof webSearchSchema>;
 
@@ -131,6 +141,18 @@ interface ExecuteSearchOptions {
 	sessionId?: string;
 	signal?: AbortSignal;
 	activeModelProvider?: string;
+	/** Session model id for parity (e.g. "gpt-5.3-codex-spark"). */
+	sessionModel?: string;
+	/** Session model provider (e.g. "openai-codex"). */
+	sessionModelProvider?: string;
+	/** "deep" = 180s async; "fast" (default) = 60s sync. */
+	depth?: "fast" | "deep" | undefined;
+	/** Timeout override for providers (deep = 180_000, fast = default 60_000). */
+	timeoutMs?: number | undefined;
+	/** Reasoning effort from settings (080). */
+	reasoningEffort?: string | undefined;
+	/** Search context size from settings (080, codex only). */
+	searchContextSize?: string | undefined;
 }
 
 /** Execute web search */
@@ -139,7 +161,7 @@ async function executeSearch(
 	params: SearchQueryParams,
 	options: ExecuteSearchOptions,
 ): Promise<{ content: Array<{ type: "text"; text: string }>; details: SearchRenderDetails }> {
-	const { authStorage, sessionId, signal, activeModelProvider } = options;
+	const { authStorage, sessionId, signal, activeModelProvider, sessionModel, sessionModelProvider } = options;
 	// Pass `params.provider` straight through: when omitted (the normal model-facing
 	// path) it is `undefined`, so `resolveProviderChain` applies the settings-configured
 	// preferred provider. Coalescing to "auto" here would silently bypass that preference.
@@ -161,6 +183,14 @@ async function executeSearch(
 				signal,
 				authStorage,
 				sessionId,
+				// Session-model parity (074): providers use this when session's
+				// provider matches theirs (e.g. codex-spark → codex, claude → anthropic).
+				sessionModel,
+				sessionModelProvider,
+				depth: options.depth,
+				timeoutMs: options.timeoutMs,
+				reasoningEffort: options.reasoningEffort as "none" | "low" | "medium" | "high" | undefined,
+				searchContextSize: options.searchContextSize as "low" | "medium" | "high" | undefined,
 			});
 
 			const text = formatForLLM(response);
@@ -255,7 +285,72 @@ export class WebSearchTool implements AgentTool<typeof webSearchSchema, SearchRe
 			this.#session.model?.provider,
 			this.#session.getActiveModelString?.(),
 		);
-		return executeSearch(_toolCallId, params, { authStorage, sessionId, signal, activeModelProvider });
+		const sessionModel = this.#session.model?.id;
+
+		// Settings-driven defaults (080): LLM params > settings > hardcoded defaults.
+		const settingsDepth = this.#session.settings?.get("web_search.depth") as "fast" | "deep" | undefined;
+		const depth = params.depth ?? settingsDepth ?? "fast";
+		const timeoutMs = depth === "deep" ? DEEP_SEARCH_TIMEOUT_MS : undefined;
+
+		// Reasoning effort: settings value + deep floor (080 §7).
+		const EFFORT_ORDER = ["none", "low", "medium", "high"] as const;
+		const settingsEffort = (this.#session.settings?.get("web_search.reasoningEffort") as string) ?? "none";
+		const effectiveEffort = depth === "deep"
+			? EFFORT_ORDER.indexOf(settingsEffort as typeof EFFORT_ORDER[number]) >= EFFORT_ORDER.indexOf("high")
+				? settingsEffort
+				: "high"
+			: settingsEffort;
+		const settingsContextSize = (this.#session.settings?.get("web_search.contextSize") as string) ?? "high";
+
+		// Deep tier (075 S4): register as async job — returns immediately with a
+		// handle text; the actual result is delivered later via AsyncJobManager.
+		if (depth === "deep") {
+			try {
+				const manager = AsyncJobManager.instance();
+				if (!manager) throw new Error("no_job_manager");
+				const query = params.query.slice(0, 80);
+				const jobId = manager.register("task", `deep-search: ${query}`, async ctx => {
+					const result = await executeSearch(_toolCallId, params, {
+						authStorage,
+						sessionId,
+						signal: ctx.signal,
+						activeModelProvider,
+						sessionModel,
+						sessionModelProvider: activeModelProvider,
+						depth,
+						timeoutMs,
+						reasoningEffort: effectiveEffort,
+						searchContextSize: settingsContextSize,
+					});
+					const text = result.content.map(c => c.text).join("\n");
+					await ctx.reportProgress(`Deep search complete: ${text.slice(0, 200)}…`);
+					return text;
+				});
+				return {
+					content: [
+						{
+							type: "text" as const,
+							text: `🔍 Deep search started (job ${jobId}). Results will be delivered when ready. Use the \`job\` tool to check status.`,
+						},
+					],
+				};
+			} catch {
+				// Capacity exceeded or manager unavailable → fall back to fast sync.
+			}
+		}
+
+		return executeSearch(_toolCallId, params, {
+			authStorage,
+			sessionId,
+			signal,
+			activeModelProvider,
+			sessionModel,
+			sessionModelProvider: activeModelProvider,
+			depth,
+			timeoutMs,
+			reasoningEffort: effectiveEffort,
+			searchContextSize: settingsContextSize,
+		});
 	}
 }
 
@@ -275,11 +370,27 @@ export const webSearchCustomTool: CustomTool<typeof webSearchSchema, SearchRende
 	) {
 		const authStorage = ctx.modelRegistry?.authStorage ?? (await discoverAuthStorage());
 		const sessionId = ctx.sessionManager.getSessionId();
+		// Settings-driven defaults (080) — mirror the AgentTool path.
+		const settingsDepth = ctx.settings?.get("web_search.depth") as "fast" | "deep" | undefined;
+		const depth = params.depth ?? settingsDepth ?? "fast";
+		const timeoutMs = depth === "deep" ? DEEP_SEARCH_TIMEOUT_MS : undefined;
+		const EFFORT_ORDER = ["none", "low", "medium", "high"] as const;
+		const sEffort = (ctx.settings?.get("web_search.reasoningEffort") as string) ?? "none";
+		const effectiveEffort = depth === "deep"
+			? EFFORT_ORDER.indexOf(sEffort as typeof EFFORT_ORDER[number]) >= EFFORT_ORDER.indexOf("high") ? sEffort : "high"
+			: sEffort;
+		const sCtxSize = (ctx.settings?.get("web_search.contextSize") as string) ?? "high";
 		return executeSearch(toolCallId, params, {
 			authStorage,
 			sessionId,
 			signal,
 			activeModelProvider: ctx.model?.provider,
+			sessionModel: ctx.model?.id,
+			sessionModelProvider: ctx.model?.provider,
+			depth,
+			timeoutMs,
+			reasoningEffort: effectiveEffort,
+			searchContextSize: sCtxSize,
 		});
 	},
 
