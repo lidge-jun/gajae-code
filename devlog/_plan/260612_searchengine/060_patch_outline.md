@@ -82,3 +82,26 @@ For dispatch coverage, use `executeBuiltinSlashCommand("/searchengine chatgpt", 
 - No credential probing on status by default.
 - No Exa removal.
 - No `web_search` parameter schema changes.
+
+---
+
+## 구현 완료 기록 (260613)
+
+블로커 리서치(Sonnet) 확인 사항과 실제 랜딩 형태:
+
+- **`SETTING_HOOKS`에 `providers.webSearch` 훅 없음** (`settings.ts:889-923`) — `settings.set`이
+  런타임 setter를 자동 호출하지 않으므로 **이중 기록(dual-write)이 필수** (스케치대로 랜딩).
+  settings 셀렉터 UI 경로(`selector-controller.ts:655-658`)와 동일 패턴.
+- **시작 시 1회 초기화** (`sdk.ts:861-863`) — 세션 중 변경의 유일한 반영 수단이 슬래시 핸들러의
+  setter 호출임을 확인. `resolveProviderChain`의 기본 인자는 호출 시 평가라 캐싱 게이트 없음.
+- **케이스 민감 확정**: `parseSlashCommand`·lookup 모두 exact-match. MOC 결정대로 대문자
+  `SEARCHENGINE`을 명시 alias로 등재 (혼합 케이스는 비지원 — 060 optional polish 그대로 연기).
+- **TUI 디스패처가 `handleTui`를 무조건 우선**하는 것을 발견 — `/model`의 P1 수리(`allowArgs`)만으로는
+  TUI 인자형이 셀렉터로 빠져 인자가 버려졌다. 후속 처리: 디스패처의 어댑터를
+  `adaptTuiSlashRuntime()`으로 추출하고 `/model handleTui`가 인자 존재 시 `handle`로 위임.
+  `/searchengine`은 handle-only라 어댑터 자동 적용.
+- status 표시용으로 `nativeSearchProviderFor()` getter를 `provider.ts`에 신설 (모듈 내부
+  `MODEL_PROVIDER_TO_SEARCH` 비수출 유지).
+- 테스트: `test/slash-commands/searchengine-slash.test.ts` 7케이스 (allowArgs 회귀 · 대문자 alias ·
+  status 무변이 · chatgpt→codex 정규화+notify · 정식 id 직통 · auto 복원 · 무효 인자 무변이).
+  슬래시 스위트 48 pass · tsc 0.

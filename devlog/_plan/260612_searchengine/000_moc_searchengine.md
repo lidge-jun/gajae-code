@@ -1,6 +1,8 @@
 # 000 MOC — searchengine provider switching
 
-> 상태: 스캐폴딩 ✅
+> 상태: ✅ 구현 완료 (260613) — Sonnet 블로커 리서치 2건 반영(030 검증 v2 · 060 구현 기록),
+> `/searchengine` + `/SEARCHENGINE` alias 랜딩, 테스트 7케이스 + 슬래시 스위트 48 pass · tsc 0.
+> 부수 수확: TUI 디스패처 handleTui-우선 발견 → /model 인자형 위임으로 cmd_audit P1 완전 종결.
 > 입력: 사용자 지시 “exa가 개판이라 ChatGPT native search나 활성 프로바이더로 갈아끼우는 방안 + /SEARCHENGINE” (260612)
 > 소유: `web_search` unified provider layer + slash command surface
 
