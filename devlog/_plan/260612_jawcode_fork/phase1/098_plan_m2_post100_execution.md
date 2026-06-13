@@ -276,15 +276,18 @@ followUp(text)   → session.prompt(text, { streamingBehavior: "followUp" })
 
 ---
 
-## 11. 다음에 쪼갤 diff 플랜 (100+ 전용)
+## 11. 다음에 쪼갤 diff 플랜 (100+ 전용) — ✅ 260613 전부 선행 작성 완료 (소넷 6기 병렬 실사 기반)
 
 | 문서 | 시점 | 내용 |
 |------|------|------|
-| `110_plan_jawruntime_impl.md` | 100 직후 | spawn 삽입 라인·JawRuntime API·테스트 목록 |
-| `110_agent_event_bus_map.md` | 110.2 | 이벤트 1:1 표 |
-| `120_plan_jawdb_adapter.md` | 110 done | 스키마·resume API 실사 결과 |
-| `130_plan_injection_compose.md` | 120 mid | 프롬프트·스킬·auth 합성 |
-| `150_parity_gap_matrix.md` | 130 done | 벤더 기능 vs jwc |
+| [110.3_plan_jawruntime_impl.md](../110.3_plan_jawruntime_impl.md) ✅ | 100 직후 착수 | spawn.ts:1047 삽입·JawRuntime API·테스트 목록 (구 `110_plan_jawruntime_impl`) |
+| [110.4_map_agent_event_bus.md](../110.4_map_agent_event_bus.md) ✅ | 110.2 PR | 이벤트 1:1 고정 표 (구 `110_agent_event_bus_map`) |
+| [120.1_plan_session_persistence_adapter.md](../120.1_plan_session_persistence_adapter.md) ✅ | 110 done 착수 | **이중 정본 분리 — §3 "메시지 정본 = jaw.db" 표현을 본 문서가 정정** (구 `120_plan_jawdb_adapter`) |
+| [130.2_plan_injection_compose.md](../130.2_plan_injection_compose.md) ✅ | 120 mid 착수 | 프롬프트·스킬·auth 합성 + M2 done 게이트 (구 `130_plan_injection_compose`) |
+| [150.1_parity_gap_matrix.md](../150.1_parity_gap_matrix.md) ✅ | 갭 표 채움은 130 done | 벤더 기능 vs jwc 35도구 (구 `150_parity_gap_matrix`) |
+| [112.3_plan_code_mode_impl.md](../112.3_plan_code_mode_impl.md) ✅ (추가) | **즉시 착수 가능** | Code 모드 S1~S4 (§5 표의 112.0~112.3 단계 흡수) |
+| [113.2_contract_stream_idempotency.md](../113.2_contract_stream_idempotency.md) ✅ (추가) | 계약 확정 | 스트림 멱등성 5조항 (트랙 C) |
+| [140.1_plan_chat_federation_adapter.md](../140.1_plan_chat_federation_adapter.md) ✅ (추가) | 130 done 이후 | §6 federation 구체화 |
 
 ---
 

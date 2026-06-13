@@ -186,3 +186,7 @@ jwc 세션 파일·상태 파일에는 260613 플립 이전에 `gjc-*` 소유자
 3. **히스토리 길이 한계와 로드 페이징**: `SessionManager.continueRecent`는 전체 JSONL을 메모리에 올림 — 긴 세션 페이징 정책 미결
 4. **`jaw.db orc_state`와의 명칭 혼동 방지**: cli-jaw `jaw.db`는 PABCD boss 상태 정본이고, jwc 세션 파일은 별도. 팀 문서 전수 수정 필요 여부
 5. **`Bun.sleep` 및 `bun:sqlite` 셰임 완료 시점**: 100 포팅 밴드가 완료되어야 120 착수 가능 — 100 타임라인 확인
+
+## 세부 실행 문서 (260613 구체화)
+
+- [120.1_plan_session_persistence_adapter.md](./120.1_plan_session_persistence_adapter.md) — **이중 정본 분리**(엔진 JSONL / UI jaw.db), SessionManager 주입(안 A), resume guard·steer 라우팅 (098 120.1~120.5 매핑)

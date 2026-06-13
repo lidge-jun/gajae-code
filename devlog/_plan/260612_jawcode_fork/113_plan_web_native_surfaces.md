@@ -65,3 +65,7 @@ Code 모드 팝업 = 그 세션 한정(일회용). 영속은 인스턴스, 세�
 2. rev 발급 단위 — 세션별 단조 카운터 vs 엔진 글로벌 (기본값 제안: 세션별).
 3. 설정 쓰기의 브랜드/인스턴스 경계 — 웹에서 바꾼 설정이 TUI 세션에 즉시 반영되는 항목과
    재시작 필요 항목의 구분 표시 (settings-schema에 `requiresRestart` 메타 후보).
+
+## 세부 실행 문서 (260613 구체화)
+
+- [113.2_contract_stream_idempotency.md](./113.2_contract_stream_idempotency.md) — cli-jaw 260613 실증 패턴 5종 계약 조항 (113.1 증보, 트랙 C 산출물)

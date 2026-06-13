@@ -32,7 +32,7 @@
 
 ### A-2. /plan·/team 표면 설계
 - **무엇**: 커맨드는 등록돼 있으나 표면(UI) 설계 부재로 이월.
-- **작업**: `99.20.xx_design_plan_team_surfaces.md` 신설 (다음 빈 NN). `260613_cmd_audit/00` 의 슬래시 커맨드 논리 감사 결과를 선행 입력으로 — 표면 설계 전에 P1 1줄 수리(즉시 승격 권고분) 먼저 랜딩.
+- **작업**: `99.20.xx_design_plan_team_surfaces.md` 신설 (다음 빈 NN). `_fin/260613_cmd_audit/00`의 슬래시 커맨드 논리 감사 결과를 선행 입력으로 — P1 1줄 수리는 260613 랜딩 완료(v2 재감사 절 참조).
 - **검증**: 표면 mockup + 디스패처 게이트(TUI `:1382`·ACP) 양쪽 경로 명세.
 
 ### A-3. quota-panel → ScrollablePanel 통합

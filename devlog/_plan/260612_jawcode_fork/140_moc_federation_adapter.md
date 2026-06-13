@@ -43,3 +43,7 @@
 
 - jwc 세션 db가 여러 프로젝트에 흩어질 때(워크트리별 `.jwc/`) 수집 범위 — [기본값] 홈 레벨만 1차
 - 양방향(메모리 federation까지)은 후속 — 070 포맷 호환이 전제 ([phase1/070_moc_memory.md](./phase1/070_moc_memory.md))
+
+## 세부 실행 문서 (260613 구체화)
+
+- [140.1_plan_chat_federation_adapter.md](./140.1_plan_chat_federation_adapter.md) — history_fts 실측 기반 FA-1~3 (probeSchema 확장·Hit 매핑·p95)

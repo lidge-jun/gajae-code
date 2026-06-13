@@ -128,3 +128,11 @@ spawnAgent 어댑터 삽입 지점:
 1. **isJwcRuntimeBusy() 훅 위치**: `isAgentBusy()`(spawn.ts:314)는 ChildProcess 기반 — jwc in-process 경로는 `activeProcess=null`이므로 busy 감지 미동작. `spawn.ts:314` 내 or-조건 추가 vs. gateway.ts 별도 플래그 중 어느 구조?
 2. **도구 실행 샌드박스/권한 게이트**: jwc `AgentSession`의 bash 허용 범위를 cli-jaw `permissions` 설정과 어떻게 합칠지 (gwc tools 권한 모델 실사 필요)
 3. **멀티 인스턴스 `.cli-jaw-34xx` 격리**: 인스턴스별 서버 프로세스 = 인스턴스별 JawRuntime — 자연 격리 방침 유효성 검토
+
+## 세부 실행 문서 (260613 구체화 — 소넷 병렬 실사 기반)
+
+| 문서 | 내용 |
+|---|---|
+| [110.3_plan_jawruntime_impl.md](./110.3_plan_jawruntime_impl.md) | JawRuntime API·spawn.ts:1047 삽입·busy 통합·에러 격리 (098 110.1~110.5 매핑) |
+| [110.4_map_agent_event_bus.md](./110.4_map_agent_event_bus.md) | AgentSessionEvent → bus 1:1 고정 표 + traceRun 어댑터 |
+- [110.2_audit_global_cwd.md](./110.2_audit_global_cwd.md) — 전역 cwd 가정 감사 (B2, 부류 A/B/C 분류 — CLI 진입점 보존)

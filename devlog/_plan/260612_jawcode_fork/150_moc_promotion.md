@@ -43,3 +43,8 @@
 - 벤더 CLI fallback의 유지 기한 (영구 공존 vs 단계적 제거)
 - heartbeat/goal/orchestrate 등 모든 서버 경로의 jwc 라우팅 전수 검사 범위
 - P6의 CI artifact 전환 시점: 승격 릴리스 동시 vs 선행 릴리스에서 이중 artifact (gjc+jwc 병행 배포)
+
+## 세부 실행 문서 (260613 구체화)
+
+- [150.1_parity_gap_matrix.md](./150.1_parity_gap_matrix.md) — 도구 35종·커맨드 20종 전수 기반 갭 표 골격 + P-2 전환·P-3 deferred 처리
+- [150.2_plan_namespace_rename.md](./150.2_plan_namespace_rename.md) — @gajae-code→@jawcode + gjc 흔적 제거 (063.1 전략-A 연기분 실행, 명시 위치 포함)

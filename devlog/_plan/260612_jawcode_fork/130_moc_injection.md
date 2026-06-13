@@ -18,11 +18,16 @@
 > 세션(소비자). 스킬·메모리는 **하향 주입만**, 세션의 자체 축적(consolidation)은 임베디드에서 격하/비활성
 > [확정 260612: **비활성 — 주입만**, 격하안 기각] — [112_moc_gui.md](./112_moc_gui.md) §인스턴스 vs 세션.
 
-1. [기본값] 1차는 프롬프트 합성 경로: cli-jaw `src/prompt/builder.ts` 산출(스킬 목록 포함)을
-   `createAgentSession()` 시스템 프롬프트로 주입 — 최소 작업, 기존 Web UI와 표면 동일
-2. 2차(개선): 030의 디스커버리 3계층을 임베디드 런타임에도 활성 — SKILL.md 본문을 도구로 직접 읽는
-   jwc 네이티브 방식과 cli-jaw "읽어라" 지시 방식의 중복 제거
-3. 충돌 주의: 020 jaw 아이덴티티 오버레이와 cli-jaw 시스템 프롬프트의 이중 적용 방지 — 합성 규칙 1개로 통일
+> **260613 결정 [확정]: 네이티브 우선 — 프롬프트 합성 경로(구 1차) 건너뜀.**
+> browse skill (260612_browse 트랙) 구현으로 jwc가 tool guidance를 자체 처리함이 입증됨.
+> cli-jaw는 PABCD/boss/identity/memory만 주입, tool-specific guidance는 jwc 네이티브에 위임.
+
+1. ~~[기본값] 1차는 프롬프트 합성 경로~~ → **폐기**. jwc가 tool description + hidden skill로 자체 처리.
+2. [확정] jwc 네이티브 디스커버리가 정본. cli-jaw `~/.cli-jaw/skills/`는 jwc `session.skills`로 직접 전달.
+3. **A1 조건부 축소** [확정]: jwc 모드 시 A1 시스템 프롬프트의 tool-specific 섹션(browser, search, web-ai) 제거. cli-jaw 고유 기능만 잔류 (dispatch, computer-use, vision-click).
+4. **browser 정본 = jwc browser tool** [확정]: `cli-jaw browser` CDP 커맨드는 jwc 모드에서 jwc browser tool로 라우팅. A1의 browser/desktop-control 섹션 제거, browse skill이 정본.
+5. **search/web-ai 포팅** [확정]: cli-jaw 측 search routing과 web-ai 스킬을 jwc hidden bundled skill로 포팅 (browse skill과 동일 패턴: `hide:true`). A1의 search 섹션 제거.
+6. 충돌 주의: 020 jaw 아이덴티티 오버레이와 cli-jaw 시스템 프롬프트의 이중 적용 방지 — cli-jaw는 PABCD/identity 영역만 합성
 
 > [D10 이득, R14] M1에서 jwc 명령 표면이 cli-jaw와 통일되므로(orchestrate/goal/memory),
 > 임베딩 시 프롬프트·스킬·사용자 학습의 어휘 충돌이 원천 제거 — 130의 단일화 작업이 "표면 정합"이 아니라
@@ -67,3 +72,7 @@
 - 자가 전이 단락 훅: 상주 환경에서 모델의 `jwc orchestrate <stage>` shell 호출을 in-process로 가로채는
   방식 (BashTool 인터셉트 vs 전용 도구 등록) — [111 §착수 전 실측 보강](./111_design_runtime_attach.md) 열린 질문 2 승계
 - D130-1 튜닝 항목 ①~④의 확정 시점 (130 착수 시 프로토타입으로 결정)
+
+## 세부 실행 문서 (260613 구체화)
+
+- [130.2_plan_injection_compose.md](./130.2_plan_injection_compose.md) — 4스코프 합성 (3개 기구현 확인), M2 done 게이트, consolidation 비활성 분기 (098 130.1~130.3 매핑)

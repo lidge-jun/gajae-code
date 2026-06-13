@@ -194,3 +194,8 @@ cli-jaw devlog(`_plan/260613_jwc_code_mode/`)는 **사후 구현 기록 전용**
 3. ~~Claude Desktop 보조 트랙(`.mcpb`+MCP Apps)~~ → **[드랍 확정 260612 — 사용자]** "Code 모드가 그것" —
    cli-jaw electron 앱이 이미 데스크톱 표면이고 Code 모드가 그 역할을 수행. Desktop 트랙은 백로그에서도 제외
    (§Claude Desktop 절은 조사 기록으로만 보존).
+
+## 세부 실행 문서 (260613 구체화)
+
+- [112.3_plan_code_mode_impl.md](./112.3_plan_code_mode_impl.md) — S1~S4 슬라이스, B1~B4/C1/C2 흡수, **S1 즉시 착수 가능 (100 비의존)**
+- [112.4_design_code_mode_ui.md](./112.4_design_code_mode_ui.md) — UI 시안 + [112.4_preview.html](./112.4_preview.html) 목업 (jaw|Code 토글 = 사이드바 로고 하단)
