@@ -11,6 +11,11 @@
      - `isSearchProviderPreference`, `type SearchProviderId` from `../web/search/types`
    - add `normalizeSearchEngineArg()` helper
    - add `searchengine` builtin command; case-insensitive builtin lookup is optional polish, not MVP
+   - **spec MUST declare `allowArgs: true`** — without it the TUI dispatcher gate
+     (`:1382`) refuses the args form and `/searchengine chatgpt` silently falls
+     through to LLM chat ([cmd_audit P1](../../_fin/260613_cmd_audit/00_audit_slash_command_logic.md)
+     — the exact `/model` bug repaired in `492913de`). Regression test must
+     assert `command.allowArgs === true` like model-onboarding-guidance does.
 2. `packages/coding-agent/test/slash-commands/searchengine-slash.test.ts` or existing slash surface test
    - command status
    - lowercase command dispatch
