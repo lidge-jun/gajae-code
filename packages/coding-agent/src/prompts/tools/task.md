@@ -23,6 +23,7 @@ Subagents have no conversation history. Every fact, file path, and direction the
  - `.description`: UI label only — subagent never sees it
  - `.assignment`: complete self-contained instructions; one-liners and missing acceptance criteria are PROHIBITED
 {{#if contextEnabled}}- `context`: shared background prepended to every assignment; session-specific only{{/if}}
+- `.model` (optional): model hint for this task. `"self"` or omitted = parent model. `"cheap:<provider>"` or `"best:<provider>"` = preset lookup (e.g. `"cheap:anthropic"` → sonnet). Direct model ID also accepted (e.g. `"claude-sonnet-4-6"`). Use cheap for exploratory/parsing tasks, best for quality-critical work.
 {{#if contextEnabled}}
 - `.inheritContext` (optional): fork-context mode for seeding the subagent with sanitized parent conversation. Omit it or set `"none"` for no copied context. `"receipt"` copies a minimal receipt-sized snapshot, `"last-turn"` copies only the latest exchange, `"bounded"` copies the bounded default snapshot, and `"full"` copies a larger snapshot up to the configured/model token cap. Non-`none` modes work only when global `task.forkContext.enabled` is true and the target agent declares `forkContext: allowed`; otherwise the call is rejected. Bundled agents that support it: `executor`, `architect`. Use inherited context only when the subagent's value depends on parent context; cloned tokens are billed to the child as fresh input and surfaced in task receipts as fork-context cloned-token accounting.
 {{/if}}

@@ -84,6 +84,12 @@ const createTaskItemSchema = (_contextEnabled: boolean) =>
 			.describe(
 				"fork-context mode: none/omitted copies no parent context; receipt copies a minimal receipt-sized snapshot; last-turn copies only the latest exchange; bounded copies the bounded default snapshot; full copies a larger sanitized snapshot up to the configured/model token cap",
 			),
+		model: z
+			.string()
+			.optional()
+			.describe(
+				"model hint for this task: self (parent model), cheap:<provider> or best:<provider> (preset lookup), or a direct model ID",
+			),
 	});
 
 /** Single task item for parallel execution (default shape with context enabled). */

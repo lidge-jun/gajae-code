@@ -47,6 +47,7 @@ import { generateCommitMessage } from "../utils/commit-message-generator";
 import * as git from "../utils/git";
 import { discoverAgents, filterVisibleAgents, getAgent } from "./discovery";
 import { runSubprocess } from "./executor";
+import { resolveModelHint } from "./model-presets";
 import { getTaskIdValidationError, validateAllocatedTaskId } from "./id";
 import { AgentOutputManager } from "./output-manager";
 import { mapWithConcurrencyLimit, Semaphore } from "./parallel";
@@ -1294,6 +1295,11 @@ export class TaskTool implements AgentTool<TaskToolSchemaInstance, TaskToolDetai
 					? { mode: task.inheritContext, clonedTokens: forkContextSeed?.metadata.approximateTokens ?? 0 }
 					: undefined;
 				const taskSessionFile = overrides?.sessionFile ?? executionOverrides?.sessionFiles?.get(task.id) ?? null;
+				const userPresets = this.session.settings.get("task.modelPresets") as
+					| Record<string, { best?: string; cheap?: string }>
+					| undefined;
+				const perTaskModel = resolveModelHint(task.model, userPresets);
+				const effectiveModelOverride = perTaskModel ?? modelOverride;
 				if (!isIsolated) {
 					const result = await runSubprocess({
 						cwd: this.session.cwd,
@@ -1308,7 +1314,7 @@ export class TaskTool implements AgentTool<TaskToolSchemaInstance, TaskToolDetai
 						resumeMessage: overrides?.resumeMessage ?? executionOverrides?.resumeMessage,
 						subagentId: task.id,
 						taskDepth,
-						modelOverride,
+						modelOverride: effectiveModelOverride,
 						parentActiveModelPattern,
 						parentSessionId: this.session.getSessionId?.() ?? undefined,
 						thinkingLevel: thinkingLevelOverride,
@@ -1369,7 +1375,7 @@ export class TaskTool implements AgentTool<TaskToolSchemaInstance, TaskToolDetai
 						resumeMessage: overrides?.resumeMessage ?? executionOverrides?.resumeMessage,
 						subagentId: task.id,
 						taskDepth,
-						modelOverride,
+						modelOverride: effectiveModelOverride,
 						parentActiveModelPattern,
 						parentSessionId: this.session.getSessionId?.() ?? undefined,
 						thinkingLevel: thinkingLevelOverride,

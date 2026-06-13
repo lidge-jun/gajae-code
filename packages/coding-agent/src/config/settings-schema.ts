@@ -2214,6 +2214,24 @@ export const SETTINGS_SCHEMA = {
 		default: true,
 		ui: { tab: "tools", label: "Web Search", description: "Enable the web_search tool for web searching" },
 	},
+	"web_search.depth": {
+		type: "string",
+		default: "fast",
+		enum: ["fast", "deep"],
+		ui: { tab: "tools", label: "Search Depth", description: "fast = 60s sync, deep = 180s async with heavier models" },
+	},
+	"web_search.reasoningEffort": {
+		type: "string",
+		default: "none",
+		enum: ["none", "low", "medium", "high"],
+		ui: { tab: "tools", label: "Search Reasoning", description: "Reasoning effort for web search (deep tier floors to high)" },
+	},
+	"web_search.contextSize": {
+		type: "string",
+		default: "high",
+		enum: ["low", "medium", "high"],
+		ui: { tab: "tools", label: "Search Context Size", description: "How much web content to include (codex provider)" },
+	},
 
 	"browser.enabled": {
 		type: "boolean",
@@ -2640,6 +2658,11 @@ export const SETTINGS_SCHEMA = {
 	"task.agentModelOverrides": {
 		type: "record",
 		default: {} as Record<string, string>,
+	},
+
+	"task.modelPresets": {
+		type: "record",
+		default: {} as Record<string, { best?: string; cheap?: string }>,
 	},
 
 	"tasks.todoClearDelay": {
