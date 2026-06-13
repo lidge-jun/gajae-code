@@ -439,6 +439,7 @@ export class StatusLineComponent implements Component {
 	#pabcdState: PabcdSegmentState | null = null;
 	#pabcdInFlight = false;
 	#pabcdLastFetch = 0;
+	#onPabcdStageChange?: () => void;
 
 	/** 99.04: 1s-TTL background poll for the pabcd envelope (skill-HUD rail twin). */
 	#refreshPabcdInBackground(): void {
@@ -449,6 +450,7 @@ export class StatusLineComponent implements Component {
 		const cwd = typeof getCwd === "function" ? getCwd.call(this.session.sessionManager) : getProjectDir();
 		const sessionId = typeof getSessionId === "function" ? getSessionId.call(this.session.sessionManager) : undefined;
 		this.#pabcdInFlight = true;
+		const prevStage = this.#pabcdState?.stage ?? null;
 		void readPabcdSegmentState(cwd, sessionId)
 			.then(state => {
 				if (state && sessionId && state.stateSessionId !== sessionId) {
@@ -463,7 +465,13 @@ export class StatusLineComponent implements Component {
 			.finally(() => {
 				this.#pabcdLastFetch = Date.now();
 				this.#pabcdInFlight = false;
+				const newStage = this.#pabcdState?.stage ?? null;
+				if (newStage !== prevStage) this.#onPabcdStageChange?.();
 			});
+	}
+
+	onPabcdStageChange(cb: () => void): void {
+		this.#onPabcdStageChange = cb;
 	}
 
 	get activePabcdStage(): string | null {

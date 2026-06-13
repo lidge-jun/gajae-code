@@ -432,6 +432,7 @@ export class InteractiveMode implements InteractiveModeContext {
 		this.editorContainer.addChild(this.editor);
 		this.statusLine = new StatusLineComponent(session);
 		this.statusLine.setAutoCompactEnabled(session.autoCompactionEnabled);
+		this.statusLine.onPabcdStageChange(() => this.updateEditorChrome());
 		this.composerFooter = new ComposerFooter(() => this.ui.requestRender());
 
 		this.hideThinkingBlock = settings.get("hideThinkingBlock");
