@@ -1,7 +1,11 @@
 # 000 MOC — searchengine provider switching
 
-> 상태: ✅ 구현 완료 (260613) — Sonnet 블로커 리서치 2건 반영(030 검증 v2 · 060 구현 기록),
-> `/searchengine` + `/SEARCHENGINE` alias 랜딩, 테스트 7케이스 + 슬래시 스위트 48 pass · tsc 0.
+> 상태: 🟡 구현 완료·**실 스모크 대기** (260613) — `_plan` 유지(실제 라이브 검색 왕복 검증 전까지
+> `_fin` 이동 금지, 사용자 지시). 구현분: `/searchengine`+`/SEARCHENGINE` 슬래시, OAuth/키 가용성
+> 게이팅(OAuth 가능 도구는 OAuth로 해금·나머지는 키 보유 시만 활성 — 모델 레이어 패턴), **xAI Grok
+> x_search 프로바이더 신설(cli-jaw 260530 포팅)**. 검증: 슬래시+검색 스위트 72 pass · tsc 0 +
+> 실 authStorage 스모크. 미완: api.x.ai 라이브 x_search 왕복(xAI OAuth 보유 환경 필요).
+> Sonnet 병렬 5기 활용(블로커 2 + 적대검증 1 + OAuth게이팅 검증 1 + perf감사 1).
 > 부수 수확: TUI 디스패처 handleTui-우선 발견 → /model 인자형 위임으로 cmd_audit P1 완전 종결.
 > 입력: 사용자 지시 “exa가 개판이라 ChatGPT native search나 활성 프로바이더로 갈아끼우는 방안 + /SEARCHENGINE” (260612)
 > 소유: `web_search` unified provider layer + slash command surface
