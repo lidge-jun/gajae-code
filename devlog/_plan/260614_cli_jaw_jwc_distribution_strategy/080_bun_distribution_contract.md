@@ -31,11 +31,15 @@ jwc --help
 
 ## P0 managed Bun strategy
 
-1. Add a safe postinstall path that resolves a pinned Bun version.
-2. In CI/safe mode, do not mutate the machine; instead assert that the package can skip provisioning cleanly.
-3. On local install, install or reuse a package-managed Bun runtime under a deterministic cache directory.
+1. Depend on npm package `bun@1.3.14`; npm installs the matching platform
+   package through `bun` optional dependencies.
+2. Add a safe postinstall path that checks/skips cleanly and never blocks
+   install. Runtime verification belongs to the launcher.
+3. On local install, reuse package-local `node_modules/bun/bin/bun.exe` when
+   available; do not download or mutate outside npm.
 4. `bin/jwc.js` resolves runtime in this order:
-   - package-managed Bun;
+   - `JWC_BUN_PATH`;
+   - package-local `bun` dependency;
    - system Bun if compatible;
    - clear remediation error.
 5. The `jawcode` package must include all scripts needed by postinstall in `files`.
@@ -44,11 +48,10 @@ jwc --help
 
 | File | Change |
 |---|---|
-| `packages/jwc/package.json` | rename package to `jawcode`; keep `bin.jwc`; include `dist-node` and `scripts` in `files`; add `postinstall` guard |
+| `packages/jwc/package.json` | rename package to `jawcode`; keep `bin.jwc`; include `dist-node` and `scripts` in `files`; add `bun@1.3.14`; add `postinstall` guard |
 | `packages/jwc/bin/jwc.js` | replace Bun shebang assumption with Node launcher that resolves package-managed Bun, compatible system Bun, then errors clearly |
-| `packages/jwc/scripts/postinstall-guard.cjs` | CommonJS entry used by npm; exits cleanly in CI/safe mode; calls provisioning script otherwise |
-| `packages/jwc/scripts/provision-bun.cjs` | download/reuse pinned Bun runtime under deterministic cache; non-fatal optional setup errors |
-| `packages/jwc/scripts/verify-managed-bun.cjs` | local/CI smoke that proves resolver behavior without invoking network in safe mode |
+| `packages/jwc/scripts/resolve-bun-runtime.cjs` | CommonJS resolver used by the launcher; checks env override, package-local Bun dependency, then system PATH |
+| `packages/jwc/scripts/verify-runtime.cjs` | local/CI/postinstall smoke that proves resolver behavior without invoking network |
 
 ## Environment contract
 
@@ -57,13 +60,14 @@ jwc --help
 | `CI=true` | never download or prompt; verify skip path only |
 | `JWC_SAFE=1` | same safe-mode behavior for local/package tests |
 | `JWC_BUN_PATH=/abs/path/to/bun` | explicit override for development and CI fixtures |
-| `JWC_SKIP_BUN_INSTALL=1` | skip provisioning and require system/override runtime |
+| `JWC_SKIP_BUN_INSTALL=1` | skip postinstall checks; launcher still requires package/system/override runtime |
 
 Pinned version source: start from `packages/jwc/package.json` `engines.bun` (`>=1.3.14`). Implementation may pin an exact version in package metadata, but it must not drift from the documented minimum without updating this file.
 
 ## Verification
 
 - `npm pack --dry-run` includes `bin`, `dist`, `dist-node`, and provisioning scripts.
-- temp global install smoke can run `jwc --version` without preinstalled Bun.
+- temp global install smoke can run `jwc --version` through package-local or
+  compatible system Bun.
 - CI safe-mode install does not download or prompt.
 - cli-jaw package dependency smoke imports `jawcode/sdk` under Node.

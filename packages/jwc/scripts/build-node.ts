@@ -6,7 +6,7 @@
  * guaranteed success: Bun runtime references are expected until the 100.02+
  * shims land.
  */
-import { readFile } from "node:fs/promises";
+import { readFile, rm } from "node:fs/promises";
 import path from "node:path";
 import { build, type Plugin } from "esbuild";
 
@@ -20,6 +20,8 @@ import { build, type Plugin } from "esbuild";
 // .md 137 · .txt 15 · .py 3 · .lark 2 · .html 1). `.py` files are prelude
 // payloads, never modules — text loading them here is intentional.
 const TEXT_EMBED_FILTER = /\.(md|html|txt|py|lark)$/;
+
+await rm("dist-node", { recursive: true, force: true });
 
 const textImportAttributes: Plugin = {
 	name: "text-import-attributes",
