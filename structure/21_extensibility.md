@@ -195,7 +195,7 @@
 
 | 밴드 | 병합 대상 | 상태 | 근거 |
 |---|---|---|---|
-| 040 | `jaw-interview` (구 `deep-interview` + jaw Interview) | `[확정]` 구현 완료 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/042_diff_jaw_interview.md:3` |
+| 040 | `jaw-interview` (구 `deep-interview` + jaw Interview) | `[확정]` 구현 완료 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/042_diff_jaw_interview.md:3` |
 | 050 | `ralplan` + PABCD + orchestrate | 런타임 ✅ · discovery **99.03** | `status`, `050_plan/02_code_facts` |
 | 060 | `ultragoal` + `jwc goal` | 런타임 ✅ | `060_goal` |
-| 030/050 | `team` + dispatch/PABCD | 대기 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md:12` |
+| 030/050 | `team` + dispatch/PABCD | 대기 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/05_interview_conclusions.md:12` |

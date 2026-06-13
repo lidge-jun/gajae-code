@@ -1,6 +1,6 @@
 # fork-delta — @bitkyc08/jawcode 포크 델타 인덱스 (체리픽 정본)
 
-> upstream: `Yeachan-Heo/gajae-code` · fork: `bitkyc08/jawcode`. 본 문서는 포크가 업스트림에서 이탈한 파일의 **단일 카노니컬 인덱스**다 — 리베이스/체리픽 전 충돌 예상 분석의 첫 진입점. 설계 정본: `devlog/_plan/260612_jawcode_fork/phase1/067.1_plan_structure_fork_delta.md`.
+> upstream: `Yeachan-Heo/gajae-code` · fork: `bitkyc08/jawcode`. 본 문서는 포크가 업스트림에서 이탈한 파일의 **단일 카노니컬 인덱스**다 — 리베이스/체리픽 전 충돌 예상 분석의 첫 진입점. 설계 정본: `devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/067.1_plan_structure_fork_delta.md`.
 > 갱신 규칙: HARD-EDIT·INVERTED-GUARD·REMOVED·NEW 파일이 포함된 커밋은 본 문서를 **동행 갱신**한다 (SOFT-EDIT는 밴드 일괄 허용). 커밋 트레일러 `Fork-Delta: <종류> <경로>` 규약은 `structure/11_conventions.md` 참조.
 
 ## 종류 정의

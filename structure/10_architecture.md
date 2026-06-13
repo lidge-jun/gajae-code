@@ -1,7 +1,7 @@
 # Jawcode 아키텍처 (현재 형태)
 
 > 2026-06-13 기준. gajae-code 0.4.4 fork, worktree HEAD `81bcea96`.
-> **현재 코드 형태** 기록. 로드맵·밴드: `devlog/_plan/260612_jawcode_fork/`. 계보: [fork-delta.md](./40_fork-delta.md).
+> **현재 코드 형태** 기록. 로드맵·밴드: `devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/`. 계보: [fork-delta.md](./40_fork-delta.md).
 
 ## 1. 정체
 
@@ -105,11 +105,11 @@ packages/
 
 | 마일스톤 | 코드상 접점 | 근거 |
 |---|---|---|
-| M1 010–019 jwc 셸 + 공개 표면 | `packages/jwc/bin/jwc.js`, `packages/jwc/package.json` | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:13`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/bin/jwc.js:1` |
-| M1 020–029 프롬프팅 개편 | `packages/coding-agent/src/system-prompt.ts`, `prompts/system/system-prompt.md` | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:14`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/system-prompt.ts:372` |
-| M1 030–039 스킬 디스커버리 3계층 | `extensibility/skills.ts`, `discovery/builtin.ts` | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:15`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:105` |
-| M2 110–119 JawRuntime 상주 서비스 | `createAgentSession()` + event bus + session manager | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:25`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:796` |
-| M2 120–129 jaw.db 영속화 | `SessionManager` override와 cli-jaw adapter | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:26`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:311` |
+| M1 010–019 jwc 셸 + 공개 표면 | `packages/jwc/bin/jwc.js`, `packages/jwc/package.json` | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/000_roadmap.md:13`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/bin/jwc.js:1` |
+| M1 020–029 프롬프팅 개편 | `packages/coding-agent/src/system-prompt.ts`, `prompts/system/system-prompt.md` | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/000_roadmap.md:14`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/system-prompt.ts:372` |
+| M1 030–039 스킬 디스커버리 3계층 | `extensibility/skills.ts`, `discovery/builtin.ts` | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/000_roadmap.md:15`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:105` |
+| M2 110–119 JawRuntime 상주 서비스 | `createAgentSession()` + event bus + session manager | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/000_roadmap.md:25`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:796` |
+| M2 120–129 jaw.db 영속화 | `SessionManager` override와 cli-jaw adapter | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/000_roadmap.md:26`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:311` |
 
 
 ---
@@ -174,9 +174,9 @@ jwc CLI/package
 
 | 구분 | 현재 상태 | 개발 판단 | 근거 |
 |---|---|---|---|
-| M1 `jwc` 표면 | `packages/jwc`는 wrapper만 있고, bin은 coding-agent CLI import 1줄이다. | 공개 표면은 `packages/jwc`와 coding-agent CLI help/branding에서 jwc 기준으로 유지한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/bin/jwc.js:1`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:12` |
+| M1 `jwc` 표면 | `packages/jwc`는 wrapper만 있고, bin은 coding-agent CLI import 1줄이다. | 공개 표면은 `packages/jwc`와 coding-agent CLI help/branding에서 jwc 기준으로 유지한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/bin/jwc.js:1`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/000_roadmap.md:12` |
 | M2 임베딩 | `packages/jwc/src/sdk.ts`가 `@gajae-code/coding-agent/sdk`를 재수출한다. | cli-jaw는 내부 `@gajae-code/*`가 아니라 `jwc/sdk`를 import해야 리베이스 흡수 지점이 생긴다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/src/sdk.ts:1`, `/Users/jun/Developer/new/700_projects/jawcode/packages/jwc/package.json:15` |
-| Node 포팅 위험 | package engines는 Bun `>=1.3.14`가 기본이다. | M2 Node 포팅은 `bun:sqlite`, Bun imports, Bun APIs를 별도 밴드에서 다뤄야 한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/package.json:77`, `/Users/jun/Developer/new/700_projects/jawcode/packages/agent/package.json:48`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md:17` |
+| Node 포팅 위험 | package engines는 Bun `>=1.3.14`가 기본이다. | M2 Node 포팅은 `bun:sqlite`, Bun imports, Bun APIs를 별도 밴드에서 다뤄야 한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/package.json:77`, `/Users/jun/Developer/new/700_projects/jawcode/packages/agent/package.json:48`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/05_interview_conclusions.md:17` |
 | **M2 Node 포팅 — 100밴드 완료 (260613)** | `packages/jwc/dist-node/`(esbuild 번들) + `packages/jwc/src/shims/`: global Bun shim, file/write/sleep/stdio, `Bun.spawn`/`spawnSync` Node 어댑터, data-core(`bun:sqlite`/hash/JSONL/JSON5/stripANSI), peripheral shims. Node 22 SDK import·`createAgentSession`·스트리밍 green, 적대 감사 라운드 1-5 통과(보안: path traversal·archive mtime·serve TLS/disconnect·PK-tar misroute 포함, `0debe38b`·`40a4a2f0`). | "문서만"에서 **구현 완료**로 전환 — Bun API가 dist-node 셰임으로 대체됨. | `packages/jwc/scripts/build-node.ts`, `packages/jwc/src/shims/`, devlog 100밴드 (`2e9efc59`…`fba5cd56`, closeout `fdb8d41d`) |
 
 
@@ -205,7 +205,7 @@ jwc CLI/package
 |---|---|---|---|
 | `cwd?: string` | project-local discovery 기준 작업 디렉토리. | cli-jaw Project root를 반드시 명시 주입해야 한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:217` |
 | `agentDir?: string` | 기본 global config dir는 `~/.jwc/agent`. | M2에서 `.cli-jaw` 기반 agentDir 또는 bridge 정책을 결정해야 한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:220`, `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:216` |
-| `authStorage?: AuthStorage` | credential store 직접 주입. | D7 로컬 토큰 시딩/OAuth 공유의 주입 지점. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:225`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md:16` |
+| `authStorage?: AuthStorage` | credential store 직접 주입. | D7 로컬 토큰 시딩/OAuth 공유의 주입 지점. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:225`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/05_interview_conclusions.md:16` |
 | `modelRegistry?: ModelRegistry` | authStorage를 가진 model registry. | `authStorage`와 다른 인스턴스면 startup에서 error. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:227`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:807` |
 | `model?: Model`, `modelPattern?: string`, `thinkingLevel?: ThinkingLevel` | model selection / deferred model pattern / thinking selector. | cli-jaw settings의 per-runtime model 선택을 이 레이어로 매핑한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:230`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:232`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:235` |
 | `systemPrompt?: string[] \| fn` | default prompt를 array로 대체하거나 function으로 변환. | cli-jaw PABCD/skills/global prompt를 끼우는 가장 직접적인 hook. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:240`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:1613` |

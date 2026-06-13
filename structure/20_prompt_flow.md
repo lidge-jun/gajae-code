@@ -73,9 +73,9 @@ createAgentSession()
 
 | 대상 | 현재 기본값 | jawcode 결정/로드맵 |
 |---|---|---|
-| identity | 템플릿 첫 줄은 Jaw/jwc identity다. | 020 밴드에서 jaw identity/prompt preset으로 개편한다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/prompts/system/system-prompt.md:1`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:14` |
-| skill 정본 | 현재 native `.jwc` skills + customDirectories + bundled defaults. | D5는 `~/.cli-jaw/skills` 우선 3계층을 목표로 한다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:122`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md:14` |
-| PABCD | 현재 기본 prompt에는 jaw-interview/ralplan/ultragoal/team routing이 있다. | 050 밴드에서 PABCD 범용 진입 커맨드와 ralplan/P/A 병합을 다룬다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/prompts/system/system-prompt.md:61`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:17` |
+| identity | 템플릿 첫 줄은 Jaw/jwc identity다. | 020 밴드에서 jaw identity/prompt preset으로 개편한다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/prompts/system/system-prompt.md:1`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/000_roadmap.md:14` |
+| skill 정본 | 현재 native `.jwc` skills + customDirectories + bundled defaults. | D5는 `~/.cli-jaw/skills` 우선 3계층을 목표로 한다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/skills.ts:122`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/05_interview_conclusions.md:14` |
+| PABCD | 현재 기본 prompt에는 jaw-interview/ralplan/ultragoal/team routing이 있다. | 050 밴드에서 PABCD 범용 진입 커맨드와 ralplan/P/A 병합을 다룬다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/prompts/system/system-prompt.md:61`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/000_roadmap.md:17` |
 
 ## 매 턴 주입 레일 (per-turn injection rails — 260612 실측)
 
@@ -113,13 +113,13 @@ cli-jaw(IPABCD 원본)는 4층 push로 워크플로 컨텍스트를 유지한다
 스테이지 프롬프트 포맷: `STATE_PROMPTS['B']` 첫 줄 = `[PABCD — B: BUILD]` (`state-machine.ts:434-475`).
 I/P 진입 첫 턴만 `getStatePrompt()`로 프롬프트 전체 치환, A/B/C/D는 CLI stdout pull.
 
-> 상세 설계·결정: `devlog/_plan/260612_jawcode_fork/phase1/99.03.00_plan_workflow_surface_revision.md`
+> 상세 설계·결정: `devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/99.03.00_plan_workflow_surface_revision.md`
 
 ## 99.03 구현 상태 (결정 반영)
 
 | 모듈 | 레일 | 상태 | 정본 |
 |---|---|---|---|
-| M1 discovery | `system-prompt.md` `<native-workflow orchestrate>` + routing | ✅ 완료 (`45cba4e2`) | [99.03.01](../devlog/_plan/260612_jawcode_fork/phase1/99.03.01_impl_workflow_surface.md) **PASS v2** |
+| M1 discovery | `system-prompt.md` `<native-workflow orchestrate>` + routing | ✅ 완료 (`45cba4e2`) | [99.03.01](../devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/99.03.01_impl_workflow_surface.md) **PASS v2** |
 | M2 지속성 | 레일 #8 `pabcd-stage-context` (plan/goal 동형) | ✅ 완료 (`8a7ea342`) | `agent-session.ts` + `readPabcdState` |
 | M2b plan 본문 | `plan_ref` prepend | 후속 99.03.02 | — |
 | M3 자가 전이 | `orchestrate-*.md` 말미 | ✅ 완료 (`90ef5223`) | 99.03.01 §M3 |

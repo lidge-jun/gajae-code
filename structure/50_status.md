@@ -2,15 +2,15 @@
 
 > 통합본(260613): 구 `beta_v0.1_closeout.md` + `m1_closeout.md` + `jwc_readiness.md`를 하나로 합침.
 > 질문별 진입: **§1 지금 쓸 수 있나**(readiness) · **§2 무엇을 언제 고쳤나**(99 결정) · **§3 문서 마감**.
-> 패키지 상세: [99.00.00 MOC](../devlog/_plan/260612_jawcode_fork/phase1/99.00.00_moc_stabilization.md).
+> 패키지 상세: [99.00.00 MOC](../devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/99.00.00_moc_stabilization.md).
 > worktree HEAD는 갱신 시 [conventions.md](./11_conventions.md)에 따라 cite.
 
 ## 로드맵 축 (확정 260612)
 
 | 구간 | 의미 | 정본 |
 |---|---|---|
-| **000–099** | jwc 만들기 (M1) | [000_roadmap](../devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md) |
-| **100~** | cli-jaw 런타임 이식 (M2) | [100_moc](../devlog/_plan/260612_jawcode_fork/100_moc_node_porting.md) · [111_design](../devlog/_plan/260612_jawcode_fork/111_design_runtime_attach.md) |
+| **000–099** | jwc 만들기 (M1) | [000_roadmap](../devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/000_roadmap.md) |
+| **100~** | cli-jaw 런타임 이식 (M2) | [100_moc](../devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/100_moc_node_porting.md) · [111_design](../devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/111_design_runtime_attach.md) |
 
 M1 done = 090–099 release gate. **실질 드라이버 임계점 = 99.02 + 99.03** (CI green + pabcd discovery).
 
@@ -53,8 +53,8 @@ M1 done = 090–099 release gate. **실질 드라이버 임계점 = 99.02 + 99.0
 - **100 Node 포팅 ✅**: `dist-node/` esbuild 번들 + `src/shims/`(Bun→Node), Node22 SDK import·
   createAgentSession·스트리밍 green, 적대 감사 1–5 통과(path traversal·archive mtime·serve TLS·
   PK-tar 포함, `0debe38b`·`40a4a2f0`). 커밋 `2e9efc59`…`fba5cd56`, closeout `fdb8d41d`.
-  [architecture.md](./10_architecture.md) · [100_moc](../devlog/_plan/260612_jawcode_fork/100_moc_node_porting.md)
-- 110–130 JawRuntime·jaw.db·주입: 설계만 ([111](../devlog/_plan/260612_jawcode_fork/111_design_runtime_attach.md))
+  [architecture.md](./10_architecture.md) · [100_moc](../devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/100_moc_node_porting.md)
+- 110–130 JawRuntime·jaw.db·주입: 설계만 ([111](../devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/111_design_runtime_attach.md))
 
 ## 4. 문서/OSS 마감 (beta v0.1, 260612)
 

@@ -32,7 +32,7 @@
 |---|---|---|
 | 구현 위치 | credential storage types와 `AuthStorage`는 `@gajae-code/ai`에서 재수출된다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/session/auth-storage.ts:1`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/session/auth-storage.ts:17` |
 | SDK discovery | broker config가 있으면 `RemoteAuthCredentialStore`, 아니면 local SQLite `AuthStorage.create(dbPath)`를 사용한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:409`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:415`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:425` |
-| D7 연결 | 기존 로컬 로그인 토큰을 jwc AuthStorage에 시딩하는 결정. | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md:16` |
+| D7 연결 | 기존 로컬 로그인 토큰을 jwc AuthStorage에 시딩하는 결정. | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/05_interview_conclusions.md:16` |
 
 ## `history-storage.ts` (`history.db`)
 
@@ -76,9 +76,9 @@
 
 | 결정 | 현재 코드 상태 | M2 판단 |
 |---|---|---|
-| TUI/Web 세션 비공유 | jwc has own sessions/history under `~/.jwc/agent`; D6은 cli-jaw Web 세션 정본을 jaw.db로 둔다. | session adapter는 search federation만 후순위로 붙인다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md:15`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md:18` |
+| TUI/Web 세션 비공유 | jwc has own sessions/history under `~/.jwc/agent`; D6은 cli-jaw Web 세션 정본을 jaw.db로 둔다. | session adapter는 search federation만 후순위로 붙인다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/05_interview_conclusions.md:15`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/05_interview_conclusions.md:18` |
 | OAuth 공유 | `AuthStorage` 주입이 SDK에 있다. | local token seeding bridge는 `discoverAuthStorage()` 또는 host-created `AuthStorage`로 들어간다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:225`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:409` |
-| memory 통합 | current memory root는 `~/.jwc/agent/memories/<encoded-cwd>`. | 070 밴드에서 jwc memory 폴더 규약을 확정한다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:1111`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:19` |
+| memory 통합 | current memory root는 `~/.jwc/agent/memories/<encoded-cwd>`. | 070 밴드에서 jwc memory 폴더 규약을 확정한다. 근거: `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/memories/index.ts:1111`, `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/000_roadmap.md:19` |
 
 
 ---
@@ -91,7 +91,7 @@
 ## Memory Pipeline
 
 > jwc 메모리 서브시스템의 쓰기/읽기 경로와, 99.01 밴드(`jwc memory` 동사 표면)가 얹힐 접합점.
-> cli-jaw 원본 메모리의 대조 요약 포함. 실측: 260612 병렬 조사 (devlog [99.01.00](../devlog/_plan/260612_jawcode_fork/phase1/99.01.00_moc_memory.md) 밴드 근거).
+> cli-jaw 원본 메모리의 대조 요약 포함. 실측: 260612 병렬 조사 (devlog [99.01.00](../devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/99.01.00_moc_memory.md) 밴드 근거).
 
 ### 쓰기 경로 (자동 — startup 트리거 단일)
 
@@ -154,7 +154,7 @@ SQLite 3.38+ 필요. recency 부스트는 파일명 `YYYY-MM-DD` 규약 의존 �
 
 ### 관련 문서
 
-- 설계/스키마: `devlog/_plan/260612_jawcode_fork/phase1/99.01.01_design_memory_merge.md`, `99.01.02_schema_cli_jaw_memory.md`
+- 설계/스키마: `devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/99.01.01_design_memory_merge.md`, `99.01.02_schema_cli_jaw_memory.md`
 - 주입 레일 전반: [prompt_flow.md](./20_prompt_flow.md) §매 턴 주입 레일
 
 
@@ -168,7 +168,7 @@ SQLite 3.38+ 필요. recency 부스트는 파일명 `YYYY-MM-DD` 규약 의존 �
 ## Todo pipeline (`todo_write` · 세션 · TUI)
 
 > `todo_write` 도구 → `AgentSession.#todoPhases` → composer 클러스터 `todoContainer` 렌더.  
-> 활성 개선: [99.30.01](../devlog/_plan/260612_jawcode_fork/phase1/99.30.01_plan_todo_done_collapse.md) (전부 `completed` 시 패널 접힘 + stop 리마인더 `done` ops).
+> 활성 개선: [99.30.01](../devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/99.30.01_plan_todo_done_collapse.md) (전부 `completed` 시 패널 접힘 + stop 리마인더 `done` ops).
 
 ### 소유 경계
 
@@ -268,7 +268,7 @@ getLatestTodoPhasesFromEntries(branch)  ← 재개 시 completed/abandoned 보�
 | `#getActivePhase` | pending/in_progress 페이즈 → 없으면 **마지막 페이즈** |
 | `toggleTodoExpansion` | 키바인드 → `todoExpanded` flip |
 
-**99.30.01 M2 ✅ 완료 (`a7543582`)**: 세션 상태가 **전부 `completed`**(또는 terminal `abandoned`만)일 때 **hermes식 1줄 영수증 접힘** — [99.30.01 M2 플랜](../devlog/_plan/260612_jawcode_fork/phase1/99.30.01_plan_todo_done_collapse.md).
+**99.30.01 M2 ✅ 완료 (`a7543582`)**: 세션 상태가 **전부 `completed`**(또는 terminal `abandoned`만)일 때 **hermes식 1줄 영수증 접힘** — [99.30.01 M2 플랜](../devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/99.30.01_plan_todo_done_collapse.md).
 
 참조 UI: `~/Developer/codex/hermes-agent/ui-tui/src/components/todoPanel.tsx` (`▸ Todo (done/total)`, `!effectiveCollapsed`일 때만 본문).
 

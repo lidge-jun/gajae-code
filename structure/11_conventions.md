@@ -90,9 +90,9 @@ git fetch upstream && git rebase upstream/main    # worktree — 변경 정리 �
 
 | 표기 | 의미 | 사용 위치 | 근거 |
 |---|---|---|---|
-| `[확정]` | 인터뷰에서 확정된 결정. 구현은 이 결정을 기준으로 한다. | MOC/roadmap/structure 문서 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:34` |
-| `[기본값]` | repo(upstream gajae-code)의 실제 동작. 별도 결정이 없으면 이대로 간다. | 코드 실사 결과, default behavior | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:34` |
-| `[제안]` | repo 기본값에서 벗어나는 변경안. 채택은 인터뷰 결정 필요. | 설계 옵션, 향후 개선안 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/000_roadmap.md:34` |
+| `[확정]` | 인터뷰에서 확정된 결정. 구현은 이 결정을 기준으로 한다. | MOC/roadmap/structure 문서 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/000_roadmap.md:34` |
+| `[기본값]` | repo(upstream gajae-code)의 실제 동작. 별도 결정이 없으면 이대로 간다. | 코드 실사 결과, default behavior | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/000_roadmap.md:34` |
+| `[제안]` | repo 기본값에서 벗어나는 변경안. 채택은 인터뷰 결정 필요. | 설계 옵션, 향후 개선안 | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/000_roadmap.md:34` |
 
 ## 4.2 문서 근거 규칙
 
@@ -128,7 +128,7 @@ git fetch upstream && git rebase upstream/main    # worktree — 변경 정리 �
 | HEAD | `81bcea96` | `git -C /Users/jun/Developer/new/700_projects/jawcode rev-parse --short HEAD` |
 | upstream fetch/push | `https://github.com/Yeachan-Heo/gajae-code` | `git -C /Users/jun/Developer/new/700_projects/jawcode remote -v` 실행 결과 |
 | origin | 없음 | `git -C /Users/jun/Developer/new/700_projects/jawcode remote -v` 실행 결과에 upstream만 있음 |
-| 기존 worktree 변경 | `packages/ai/*` (kiro provider WIP), `devlog/_plan/260612_jawcode_fork/*` | `git -C /Users/jun/Developer/new/700_projects/jawcode status --short` 실행 결과 |
+| 기존 worktree 변경 | `packages/ai/*` (kiro provider WIP), `devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/*` | `git -C /Users/jun/Developer/new/700_projects/jawcode status --short` 실행 결과 |
 | structure/ | modified 8 files (jaw-interview sync, HEAD/path/meta 갱신) | `git -C /Users/jun/Developer/new/700_projects/jawcode status --short structure/` 실행 결과 |
 
 ### JWC 표면 정책
@@ -141,7 +141,7 @@ git fetch upstream && git rebase upstream/main    # worktree — 변경 정리 �
 | default workflow slug | jwc runtime은 `jaw-interview`를 표준으로 쓴다. legacy `deep-interview`는 upstream baseline/read-compat 문맥에만 둔다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/defaults/gjc-defaults.ts:13`, `/Users/jun/Developer/new/700_projects/jawcode/AGENTS.md:11` |
 | package namespace | upstream `@gajae-code/*` 유지, jawcode 신규 패키지만 별도 namespace 가능. | `/Users/jun/Developer/new/700_projects/jawcode/structure/11_conventions.md:24` |
 | state path | 런타임 `.jwc/` (`CONFIG_DIR_NAME`, `~/.jwc`) — repo 문서·마이그레이션은 Phase β 기준 | `/Users/jun/Developer/new/700_projects/jawcode/packages/utils/src/dirs.ts:219` |
-| D4 결정 | bin `jwc`, 브랜딩/문서/스킬명은 jwc 기준; 내부 `@gajae-code/*` 스코프는 보존. | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md:13` |
+| D4 결정 | bin `jwc`, 브랜딩/문서/스킬명은 jwc 기준; 내부 `@gajae-code/*` 스코프는 보존. | `/Users/jun/Developer/new/700_projects/jawcode/devlog/_plan/260614_cli_jaw_jwc_distribution_strategy/_legacy/260612_jawcode_fork/phase1/05_interview_conclusions.md:13` |
 
 ### 리베이스 가드
 
