@@ -26,6 +26,11 @@ cua-driver(`~/.local/bin/cua-driver`)도 외부 바이너리. GitHub에 배포�
 - [x] jawcode 소스 내 `/Users/jun` → 0건 (Sonnet 감사 확인)
 - [x] cli-jaw 소스 내 → 0건 (Sonnet 감사 확인)
 - [x] 2차 전수조사 ([20](./20_audit_round2.md)): 외부 바이너리 11종 목록화, 설정 하드코딩 전부 해소, 런타임 외부 레포 참조 0건
+- [ ] **자동 설치 스크립트** — `bun install` → postinstall에서:
+  - platform=darwin 감지 → `brew install tmux` (없으면) + cua-driver 설치 스크립트 + cu-mcp tsc 빌드
+  - `--safeinstall` 플래그로 선택적 (cli-jaw 패턴: `ensure:native` + `postinstall-guard.cjs`)
+  - cu-native prebuilt binary는 `bin/`에 동봉 → 빌드 불필요
+  - 참조: `cli-jaw/scripts/ensure-native-modules.cjs`, `cli-jaw/scripts/postinstall-guard.cjs`
 
 ## 문서
 
