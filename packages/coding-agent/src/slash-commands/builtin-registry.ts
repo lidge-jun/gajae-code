@@ -348,6 +348,9 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 		acpDescription: "Show current model selection",
 		inlineHint: "[target] <model>",
 		acpInputHint: "[target] <model>",
+		// Without allowArgs the TUI dispatcher refuses "/model sonnet" and the
+		// input silently falls through to the LLM as chat (cmd_audit P1).
+		allowArgs: true,
 		handle: async (command, runtime) => {
 			if (command.args) {
 				const parsedArgs = parseModelCommandArgs(command.args);

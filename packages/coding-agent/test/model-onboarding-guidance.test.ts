@@ -93,6 +93,13 @@ describe("model onboarding guidance", () => {
 		}
 	});
 
+	it("declares allowArgs so '/model <id>' dispatches instead of falling through to chat", () => {
+		// cmd_audit P1: without allowArgs the TUI dispatcher refuses the args
+		// form and the input is silently sent to the LLM as a chat prompt.
+		const command = BUILTIN_SLASH_COMMANDS_INTERNAL.find(entry => entry.name === "model");
+		expect(command?.allowArgs).toBe(true);
+	});
+
 	it("updates /model status output with provider setup and login routes", async () => {
 		const command = BUILTIN_SLASH_COMMANDS_INTERNAL.find(entry => entry.name === "model");
 		expect(command?.handle).toBeTruthy();
