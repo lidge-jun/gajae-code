@@ -23,4 +23,6 @@ Closing:
 - If significant issues surfaced: suggest "Improve the spec: `orchestrate i`".
 - Otherwise: state completion plainly. The orchestration returns to idle (stage `complete`).
 
-When done → run `jwc orchestrate d --complete` yourself via the shell tool to close the orchestration. To start a new cycle: run `jwc orchestrate i`.
+When done → run `jwc orchestrate d --complete` yourself via the shell tool to close the orchestration.
+
+**Goal-mode continuation**: After closing, if a `jwc goal` is active, check whether the goal objective is fully achieved. If work remains, re-enter planning with `jwc orchestrate p` for the next piece — do not treat IDLE as the end. If the goal is complete, run `jwc goal done`. If the goal is truly impossible or needs a direction change, pause and ask the user.
