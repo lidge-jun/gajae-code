@@ -48,3 +48,4 @@
 
 - [150.1_parity_gap_matrix.md](./150.1_parity_gap_matrix.md) — 도구 35종·커맨드 20종 전수 기반 갭 표 골격 + P-2 전환·P-3 deferred 처리
 - [150.2_plan_namespace_rename.md](./150.2_plan_namespace_rename.md) — @gajae-code→@jawcode + gjc 흔적 제거 (063.1 전략-A 연기분 실행, 명시 위치 포함)
+- [../260614_deploy_fork_packaging_bridge/README.md](../260614_deploy_fork_packaging_bridge/README.md) — GitHub deploy · fork promotion · packaging 교차 블로커 분석. 특히 npm package target, postinstall, `gjc-state-gates`/artifact naming을 승격 전제와 연결.

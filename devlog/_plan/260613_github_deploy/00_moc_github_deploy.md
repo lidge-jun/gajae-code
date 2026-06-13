@@ -52,6 +52,7 @@
 | [20](./20_tasks_ci_postinstall.md) | 040-069 | CI·postinstall 작업 |
 | [30](./30_blockers.md) | 001-009 | CI 블로커 5건 해소 작업 |
 | [40](./40_findings.md) | 100+ | 발견 기록 (구조 취약점·기술 부채·dev 스킬 위반) |
+| bridge | [260614 deploy/fork/packaging bridge](../260614_deploy_fork_packaging_bridge/README.md) | GitHub deploy · jawcode fork promotion · packaging 교차 블로커 분석 |
 
 ## CI 블로커 요약 (001-009)
 

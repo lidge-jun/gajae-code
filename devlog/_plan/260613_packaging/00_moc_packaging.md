@@ -39,3 +39,4 @@ cua-driver(`~/.local/bin/cua-driver`)도 외부 바이너리. GitHub에 배포�
 | 00 | 본 MOC | 감사 범위·작업 항목 |
 | [10](./10_audit_results.md) | 1차 전수조사 | jawcode·cli-jaw·cu-mcp 감사 (Sonnet 3건) |
 | (추가 예정) | 2차 전수조사 | 외부 바이너리·설정 하드코딩·외부 레포 참조 (Sonnet 3건) |
+| bridge | [260614 deploy/fork/packaging bridge](../260614_deploy_fork_packaging_bridge/README.md) | packaging postinstall을 GitHub deploy G004와 fork promotion P6에 연결 |
