@@ -19,7 +19,7 @@ PABCD 모드 활성 시 채팅 입력 테두리에 phase별 색상 띠 + breathi
 
 ### Breathing Pulse
 
-- saturation 80% 고정, lightness를 40%↔70% 사이에서 sinusoidal 순환
+- saturation 80% 고정, lightness를 35%↔65% 사이에서 sinusoidal 순환
 - 주기: ~2초 (부드러운 호흡 효과)
 - 프레임: 10fps (100ms interval) — 터미널 부하 최소
 - 메모리: < 0.01MB (ANSI 문자열 1줄 재생성)
