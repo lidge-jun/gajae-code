@@ -1,6 +1,8 @@
 # 100 MOC — Node 포팅 베이스라인 (M2 진입)
 
-> 상태: ⬜. 결정 근거: D8 [확정] — 상주 네이티브의 유일한 길. 구 03 §결정 1의 치환 매핑 승계.
+> 상태: ✅ **완료 (260613)** — 100.01~100.12 전부 구현. Node 24에서 dist-node/sdk.js가
+> createAgentSession을 로드하고 실 provider(openai-codex/gpt-5.5) 스트리밍 1턴 완주.
+> 결정 근거: D8 [확정] — 상주 네이티브의 유일한 길. 구 03 §결정 1의 치환 매핑 승계.
 > **260613 플립 기준 재구체화 (gjc→jwc flip 반영)** — 모든 코드 앵커를 플립 후 실측값으로 갱신.
 
 ---
@@ -175,20 +177,46 @@ Node 22 러너(vitest 또는 `node:test`)로 업스트림 핵심 테스트 통�
 
 **게이트 (Phase D 완료 후):** Node 22 통과 테스트 목록을 본 문서 §완료 기준에 append
 
+### 세부 실행 문서 순서
+
+| 단계 | 문서 | 목적 |
+|------|------|------|
+| 100.00 | [100.00_prep_gate_cleanup.md](./100.00_prep_gate_cleanup.md) | Phase A 준비 게이트 정리 완료 |
+| 100.01 | [100.01_plan_node_porting_entrypoint.md](./100.01_plan_node_porting_entrypoint.md) | `packages/jwc/dist-node/sdk.js` 빌드 계약 고정 |
+| 100.02 | [100.02_plan_bun_global_shim_injection.md](./100.02_plan_bun_global_shim_injection.md) | `globalThis.Bun` 셰임 주입 골격 |
+| 100.03 | [100.03_plan_file_sleep_env_shims.md](./100.03_plan_file_sleep_env_shims.md) | file/write/sleep/stdio/env 고빈도 API |
+| 100.04 | [100.04_plan_spawn_process_shim.md](./100.04_plan_spawn_process_shim.md) | subprocess / `Bun.spawn` 호환 |
+| 100.05 | [100.05_plan_data_core_adapters.md](./100.05_plan_data_core_adapters.md) | sqlite/hash/jsonl/json5/ansi 핵심 데이터 API |
+| 100.06 | [100.06_plan_text_embed_bundle_validation.md](./100.06_plan_text_embed_bundle_validation.md) | `.md`/`.html` 텍스트 임베드 번들 검증 |
+| 100.07 | [100.07_plan_peripheral_runtime_apis.md](./100.07_plan_peripheral_runtime_apis.md) | serve/archive/gc/semver 주변 API |
+| 100.08 | [100.08_plan_node_sdk_import_smoke.md](./100.08_plan_node_sdk_import_smoke.md) | Node 22 SDK import + `createAgentSession` export 확인 |
+| 100.09 | [100.09_plan_create_agent_session_smoke.md](./100.09_plan_create_agent_session_smoke.md) | Node 22 세션 생성/cleanup smoke |
+| 100.10 | [100.10_plan_mock_streaming_loop.md](./100.10_plan_mock_streaming_loop.md) | mock provider 스트리밍 루프 |
+| 100.11 | [100.11_plan_real_provider_hello_world.md](./100.11_plan_real_provider_hello_world.md) | 실 provider 스트리밍 hello world |
+| 100.12 | [100.12_plan_node_porting_closeout.md](./100.12_plan_node_porting_closeout.md) | 100 밴드 완료 판정 + 110 handoff |
+
 ---
 
 ## 완료 기준
 
-- `node packages/jwc/dist-node/sdk.js`에서 `createAgentSession()` 로드 및 실 프로바이더 1개 스트리밍 완주
-- 아래 Node 22 통과 테스트 목록 (구현 완료 시 여기에 append):
+- ✅ `node packages/jwc/dist-node/sdk.js`에서 `createAgentSession()` 로드 및 실 프로바이더 1개 스트리밍 완주
+- Node 24.14 통과 검증 (260613):
 
-  | 테스트 파일 | 통과 수 | 날짜 | 실행 커밋 |
-  |-------------|--------|------|----------|
-  | (Phase D 완료 시 기록) | | | |
+  | 검증 | 결과 | 재현 | 커밋 |
+  |------|------|------|------|
+  | 데이터코어 셰임 동등성 (JSONL/hash/SHA256) | 9 pass (bun:test, 네이티브 직대조) | `bun test packages/jwc/test/shims-data-core.test.ts` | d7b7099d |
+  | bun:sqlite 어댑터 표면 (better-sqlite3) | OK | `node scripts/test-node-shims.mjs` | d7b7099d |
+  | SDK import (100.08) | 25 exports·createAgentSession | `node scripts/smoke-node-sdk.mjs` | 8fa5ee46 |
+  | 세션 생성+dispose (100.09) | OK | (동상) | 8fa5ee46 |
+  | mock 스트리밍 1턴 (100.10) | 7-event 라이프사이클·텍스트 왕복 | `node scripts/smoke-node-streaming.mjs` | e08284c2 |
+  | **실 provider 스트리밍 (100.11)** | **openai-codex/gpt-5.5, 4 deltas, "Hello!", exit 0** | `node scripts/smoke-node-real-provider.mjs` | e08284c2 |
 
-- **Bun 경로 무회귀**: `bun test` 기존 통과 유지 (Phase B 게이트 포함)
-- `check:jwc-ui` green (브랜드 어휘 리그레션 없음)
-- `packages/jwc/dist-node/` 디렉터리 존재 + `sdk.js` 포함
+- ✅ **Bun 경로 무회귀**: `check:jwc-ui` green, jwc 데이터코어 셰임 bun:test green, shims/index는
+  `!globalThis.Bun`일 때만 설치(네이티브 Bun 무손상), 빌드 alias/define은 build-node.ts에만 존재.
+- ✅ `check:jwc-ui` green (브랜드 어휘 리그레션 0 — dist-node 스캐너 제외 처리)
+- ✅ `packages/jwc/dist-node/sdk.js` 생성 (23.7MB ESM, gitignored)
+- ⚠ `check:ts` 전역은 **다른 세션의 미커밋 변경**(sdk.ts·builtin-registry.ts 등 13 biome 포맷)으로
+  red — 100 밴드 산출물(packages/jwc, natives 패치)은 biome·tsc 클린. 해당 포맷은 소유 세션이 정리.
 
 ---
 
@@ -229,6 +257,9 @@ Node 22 러너(vitest 또는 `node:test`)로 업스트림 핵심 테스트 통�
 | 문서 | 역할 |
 |------|------|
 | [phase1/000_roadmap.md](./phase1/000_roadmap.md) | 밴드 위치, M2 착수 전 99 선반영 체크리스트 |
+| [100.00_prep_gate_cleanup.md](./100.00_prep_gate_cleanup.md) | Phase A 준비 게이트 정리 완료 기록 |
+| [100.01_plan_node_porting_entrypoint.md](./100.01_plan_node_porting_entrypoint.md) | 다음 착수점: `packages/jwc/dist-node/` 빌드 스켈레톤 |
+| [100.02_plan_bun_global_shim_injection.md](./100.02_plan_bun_global_shim_injection.md) ~ [100.12_plan_node_porting_closeout.md](./100.12_plan_node_porting_closeout.md) | Node 포팅 세부 실행 문서 전체 |
 | [phase1/100.1_plan_bun_shim_inventory.md](./phase1/100.1_plan_bun_shim_inventory.md) | Bun API 전수 인벤토리 정본 (실측값, 파일:라인 앵커 포함) |
 | [phase1/098_plan_m2_post100_execution.md](./phase1/098_plan_m2_post100_execution.md) | 100 완료 후 110→150 실행 계획, 100 산출물 전제 체크리스트 |
 | [111_design_runtime_attach.md](./111_design_runtime_attach.md) | M1→M2 드리프트 6항목, JawRuntime 설계 |
