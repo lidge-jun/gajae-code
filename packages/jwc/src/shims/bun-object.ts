@@ -8,6 +8,7 @@
  * peripherals → 100.07).
  */
 import { bunFile } from "./bun-file";
+import { bunSpawn, bunSpawnSync } from "./bun-spawn";
 import { bunSleep, bunSleepSync } from "./bun-sleep";
 import { bunStderr, bunStdin, bunStdout } from "./bun-stdio";
 import { bunWrite } from "./bun-write";
@@ -28,8 +29,8 @@ export function buildNodeBunShim(): BunShim {
 		write: bunWrite as BunShim["write"],
 		sleep: bunSleep as BunShim["sleep"],
 		sleepSync: bunSleepSync,
-		spawn: stubFn("spawn"),
-		spawnSync: stubFn("spawnSync"),
+		spawn: bunSpawn as BunShim["spawn"],
+		spawnSync: bunSpawnSync as BunShim["spawnSync"],
 		hash: stubFn("hash") as unknown as BunShim["hash"],
 		CryptoHasher: class {
 			constructor() {
