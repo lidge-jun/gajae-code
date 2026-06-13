@@ -174,6 +174,16 @@ export function setPreferredSearchProvider(provider: SearchProviderId | "auto"):
 }
 
 /**
+ * The native search provider `auto` mode would pick for an active model
+ * provider, or undefined when the model has no native search mapping
+ * (status/display use — the actual chain resolution stays in
+ * `resolveProviderChain`).
+ */
+export function nativeSearchProviderFor(modelProvider: string | undefined): SearchProviderId | undefined {
+	return modelProvider ? MODEL_PROVIDER_TO_SEARCH[modelProvider] : undefined;
+}
+
+/**
  * Resolve the ordered provider chain for a search request.
  *
  * Resolution is active-model-gated, never credential-scanning:

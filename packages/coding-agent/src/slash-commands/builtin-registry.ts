@@ -22,6 +22,8 @@ import {
 	parseProviderCompatibility,
 } from "../setup/provider-onboarding";
 import { parseThinkingLevel } from "../thinking";
+import { nativeSearchProviderFor, setPreferredSearchProvider } from "../web/search/provider";
+import { isSearchProviderPreference, type SearchProviderId } from "../web/search/types";
 
 /**
  * 083.4: parse a /effort argument, accepting Codex ReasoningEffort vocabulary
@@ -195,6 +197,58 @@ function resolveModelCommandSelection(
 		selector: persistedSelector,
 		thinkingLevel: resolved.explicitThinkingLevel ? resolved.thinkingLevel : undefined,
 	};
+}
+
+/**
+ * Operator-facing aliases for /searchengine. Canonical ids pass through via
+ * `isSearchProviderPreference`; only convenience names live here.
+ */
+const SEARCH_ENGINE_ALIASES: Record<string, SearchProviderId | "auto"> = {
+	active: "auto",
+	native: "auto",
+	default: "auto",
+	chatgpt: "codex",
+	openai: "codex",
+	claude: "anthropic",
+	google: "gemini",
+	ddg: "duckduckgo",
+	duck: "duckduckgo",
+};
+
+function normalizeSearchEngineArg(raw: string): SearchProviderId | "auto" | undefined {
+	const value = raw.trim().toLowerCase();
+	if (!value) return undefined;
+	const alias = SEARCH_ENGINE_ALIASES[value];
+	if (alias) return alias;
+	return isSearchProviderPreference(value) ? value : undefined;
+}
+
+function describeAutoSearchTarget(activeModelProvider: string | undefined): string {
+	const native = nativeSearchProviderFor(activeModelProvider);
+	return native
+		? `active model native search: ${native}`
+		: "active model has no native search; DuckDuckGo";
+}
+
+function formatSearchEngineCandidates(): string {
+	return [
+		"Providers: auto, duckduckgo, exa, brave, jina, kimi, zai, perplexity, anthropic, gemini, codex, tavily, parallel, kagi, synthetic, searxng",
+		"Aliases: chatgpt/openai → codex, claude → anthropic, google → gemini, ddg/duck → duckduckgo, active/native/default → auto",
+	].join("\n");
+}
+
+function formatSearchEngineStatus(
+	current: SearchProviderId | "auto",
+	activeModelProvider: string | undefined,
+): string {
+	const lines = [
+		current === "auto"
+			? `Search engine: auto (${describeAutoSearchTarget(activeModelProvider)})`
+			: `Search engine: ${current}`,
+		"Fallback: duckduckgo (always appended)",
+		formatSearchEngineCandidates(),
+	];
+	return lines.join("\n");
 }
 
 function modelSelectionUsage(runtime: SlashCommandRuntime, currentModelLine?: string): string {
@@ -419,9 +473,66 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 			);
 			return commandConsumed();
 		},
-		handleTui: (_command, runtime) => {
+		handleTui: async (command, runtime) => {
+			// Args form runs the same parsing path as ACP (cmd_audit P1): the
+			// selector is the bare-invocation UX only.
+			if (command.args.trim()) {
+				const handle = lookupBuiltinSlashCommand("model")?.handle;
+				if (handle) {
+					const result = await handle(command, adaptTuiSlashRuntime(runtime.ctx));
+					runtime.ctx.editor.setText("");
+					return result && typeof result === "object" && "prompt" in result ? result : undefined;
+				}
+			}
 			runtime.ctx.showModelSelector();
 			runtime.ctx.editor.setText("");
+		},
+	},
+	{
+		name: "searchengine",
+		aliases: ["SEARCHENGINE"],
+		description: "Select web search engine provider",
+		acpDescription: "Select web search engine provider",
+		inlineHint: "[provider|status]",
+		acpInputHint: "[provider|status]",
+		// Args form must dispatch ("/searchengine chatgpt") instead of falling
+		// through to LLM chat — same trap as /model (cmd_audit P1).
+		allowArgs: true,
+		subcommands: [
+			{ name: "status", description: "Show current search engine" },
+			{ name: "auto", description: "Active model's native search, DuckDuckGo fallback" },
+			{ name: "chatgpt", description: "ChatGPT/OpenAI native search (codex)" },
+			{ name: "claude", description: "Anthropic native search" },
+			{ name: "gemini", description: "Google Gemini native search" },
+			{ name: "duckduckgo", description: "Keyless DuckDuckGo (always available)" },
+			{ name: "perplexity", description: "Perplexity search" },
+			{ name: "exa", description: "Exa keyed search API" },
+			{ name: "brave", description: "Brave keyed search API" },
+			{ name: "tavily", description: "Tavily keyed search API" },
+		],
+		handle: async (command, runtime) => {
+			const current = runtime.settings.get("providers.webSearch");
+			const raw = command.args.trim();
+			if (!raw || raw.toLowerCase() === "status") {
+				await runtime.output(formatSearchEngineStatus(current, runtime.session.model?.provider));
+				return commandConsumed();
+			}
+			const next = normalizeSearchEngineArg(raw);
+			if (!next) {
+				return usage(
+					`Unknown search engine: ${raw}\n${formatSearchEngineCandidates()}`,
+					runtime,
+				);
+			}
+			runtime.settings.set("providers.webSearch", next);
+			setPreferredSearchProvider(next);
+			await runtime.notifyConfigChanged?.();
+			await runtime.output(
+				next === "auto"
+					? `Search engine set to auto (${describeAutoSearchTarget(runtime.session.model?.provider)}). Fallback remains DuckDuckGo.`
+					: `Search engine set to ${next}. Fallback remains DuckDuckGo.`,
+			);
+			return commandConsumed();
 		},
 	},
 	{
@@ -1392,34 +1503,41 @@ export async function executeBuiltinSlashCommand(
 	}
 	if (command.handle) {
 		// No TUI-specific override → adapt the ACP/text-mode `handle` to the
-		// TUI by routing `runtime.output` through `ctx.showStatus`, clearing
-		// the editor after the call, and reusing the active session's plugin
-		// reload pipeline. Spec authors get a single body usable from either
-		// dispatcher without forcing every TUI test to construct the full
+		// TUI. Spec authors get a single body usable from either dispatcher
+		// without forcing every TUI test to construct the full
 		// `SlashCommandRuntime` shape.
 		const ctx = runtime.ctx;
-		const adapted: SlashCommandRuntime = {
-			session: ctx.session,
-			sessionManager: ctx.sessionManager,
-			settings: ctx.settings,
-			cwd: ctx.sessionManager.getCwd(),
-			output: (text: string) => {
-				ctx.showStatus(text);
-			},
-			refreshCommands: () => ctx.refreshSlashCommandState(),
-			reloadPlugins: async () => {
-				const projectPath = await resolveActiveProjectRegistryPath(ctx.sessionManager.getCwd());
-				clearPluginRootsAndCaches(projectPath ? [projectPath] : undefined);
-				await ctx.refreshSlashCommandState();
-				await ctx.session.refreshSshTool({ activateIfAvailable: true });
-			},
-		};
-		const result = await command.handle(parsed, adapted);
+		const result = await command.handle(parsed, adaptTuiSlashRuntime(ctx));
 		ctx.editor.setText("");
 		if (result && typeof result === "object" && "prompt" in result) return result.prompt;
 		return true;
 	}
 	return false;
+}
+
+/**
+ * Adapt an interactive-mode context to the text/ACP `SlashCommandRuntime`
+ * shape: `output` routes through `ctx.showStatus` and plugin reload reuses the
+ * active session's pipeline. Shared by the TUI dispatcher's `handle` adapter
+ * and by `handleTui` bodies that delegate their args form to `handle`.
+ */
+function adaptTuiSlashRuntime(ctx: InteractiveModeContext): SlashCommandRuntime {
+	return {
+		session: ctx.session,
+		sessionManager: ctx.sessionManager,
+		settings: ctx.settings,
+		cwd: ctx.sessionManager.getCwd(),
+		output: (text: string) => {
+			ctx.showStatus(text);
+		},
+		refreshCommands: () => ctx.refreshSlashCommandState(),
+		reloadPlugins: async () => {
+			const projectPath = await resolveActiveProjectRegistryPath(ctx.sessionManager.getCwd());
+			clearPluginRootsAndCaches(projectPath ? [projectPath] : undefined);
+			await ctx.refreshSlashCommandState();
+			await ctx.session.refreshSshTool({ activateIfAvailable: true });
+		},
+	};
 }
 
 /** Look up a unified spec by name or alias. Used by the ACP dispatcher. */
