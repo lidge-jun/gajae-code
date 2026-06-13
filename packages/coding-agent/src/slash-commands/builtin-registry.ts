@@ -451,14 +451,13 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 		handle: async (command, runtime) => {
 			const args = (command.args ?? "").trim();
 			const argv = args.length > 0 ? args.split(/\s+/) : [];
-			// Session cwd, not process.cwd(): resident ACP/in-process hosts run N sessions
-			// with distinct workspaces in one process (112.2 B1).
 			const result = await runNativeOrchestrateCommand(argv, runtime.session.sessionManager.getCwd());
 			if (result.stderr) await runtime.output(result.stderr.trimEnd());
 			const sub = argv[0]?.toLowerCase();
 			const stageEntered = result.status === 0 && !!sub && sub !== "status" && sub !== "verdict";
 			if (stageEntered && result.stdout) {
 				await runtime.output(result.stdout.trimEnd());
+				await runtime.session.sendPabcdStageContext({ deliverAs: "nextTurn" });
 			} else if (result.stdout) {
 				await runtime.output(result.stdout.trimEnd());
 			}
@@ -476,7 +475,12 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 			const argv = ["i", ...(args ? [args] : [])];
 			const result = await runNativeOrchestrateCommand(argv, runtime.session.sessionManager.getCwd());
 			if (result.stderr) await runtime.output(result.stderr.trimEnd());
-			if (result.stdout) {
+			const sub = argv[0]?.toLowerCase();
+			const entered = result.status === 0 && !!sub && sub !== "status";
+			if (entered && result.stdout) {
+				await runtime.output(result.stdout.trimEnd());
+				await runtime.session.sendPabcdStageContext({ deliverAs: "nextTurn" });
+			} else if (result.stdout) {
 				await runtime.output(result.stdout.trimEnd());
 			}
 			return commandConsumed();
