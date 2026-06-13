@@ -3,7 +3,7 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as url from "node:url";
 import { runNativeJawInterviewCommand } from "@gajae-code/coding-agent/jwc-runtime/jaw-interview-runtime";
-import { runNativeRalplanCommand } from "@gajae-code/coding-agent/jwc-runtime/plan-writer";
+import { runNativePlanWriterCommand } from "@gajae-code/coding-agent/jwc-runtime/plan-writer";
 
 import { getConfigRootDir, setAgentDir } from "@gajae-code/utils";
 import { resetSettingsForTest } from "../../src/config/settings";
@@ -185,7 +185,7 @@ describe("native gjc jaw-interview runtime", () => {
 		const deepPayload = JSON.parse(deepResult.stdout ?? "{}");
 		expect(deepPayload.path).toContain(path.join(".jwc", "specs", "jaw-interview-separate.md"));
 
-		const ralplanResult = await runNativeRalplanCommand(
+		const ralplanResult = await runNativePlanWriterCommand(
 			["--write", "--stage", "final", "--stage_n", "1", "--artifact", "# Plan", "--run-id", "separate", "--json"],
 			root,
 		);

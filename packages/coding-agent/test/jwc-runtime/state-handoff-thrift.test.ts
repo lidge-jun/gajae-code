@@ -4,10 +4,10 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { Settings } from "@gajae-code/coding-agent/config/settings";
 import type { Skill } from "@gajae-code/coding-agent/extensibility/skills";
+import { createGoalPlan, runNativeGoalEngineCommand } from "@gajae-code/coding-agent/jwc-runtime/goal-engine";
 import { runNativeJawInterviewCommand } from "@gajae-code/coding-agent/jwc-runtime/jaw-interview-runtime";
-import { runNativeRalplanCommand } from "@gajae-code/coding-agent/jwc-runtime/plan-writer";
+import { runNativePlanWriterCommand } from "@gajae-code/coding-agent/jwc-runtime/plan-writer";
 import { runNativeStateCommand } from "@gajae-code/coding-agent/jwc-runtime/state-runtime";
-import { createUltragoalPlan, runNativeUltragoalCommand } from "@gajae-code/coding-agent/jwc-runtime/goal-engine";
 import { SKILL_PROMPT_MESSAGE_TYPE } from "@gajae-code/coding-agent/session/messages";
 import type { ToolSession } from "@gajae-code/coding-agent/tools";
 import { SkillTool } from "@gajae-code/coding-agent/tools/skill";
@@ -87,7 +87,7 @@ describe("CONSUMER/KEY-FIELD MATRIX for compact handoff payloads", () => {
 		delete process.env.GJC_SESSION_ID;
 		const root = await tempDir();
 
-		const ralplanReceipt = await runNativeRalplanCommand(
+		const ralplanReceipt = await runNativePlanWriterCommand(
 			["--write", "--stage", "final", "--stage_n", "2", "--artifact", "# Final", "--run-id", "run-b", "--json"],
 			root,
 		);
@@ -115,7 +115,7 @@ describe("CONSUMER/KEY-FIELD MATRIX for compact handoff payloads", () => {
 			"
 			`);
 
-		const ralplanSeed = await runNativeRalplanCommand(["--json", "scope the work"], root);
+		const ralplanSeed = await runNativePlanWriterCommand(["--json", "scope the work"], root);
 		expect(ralplanSeed.status).toBe(0);
 		expect(scrub(ralplanSeed.stdout ?? "")).toMatchInlineSnapshot(`
 			"{"ok":true,"skill":"ralplan","mode":"short","state_path":"/tmp/SCRUBBED","run_id":"run-b","handoff":"/skill:ralplan"}
@@ -172,8 +172,8 @@ describe("CONSUMER/KEY-FIELD MATRIX for compact handoff payloads", () => {
 			"
 			`);
 
-		await createUltragoalPlan({ cwd: root, brief: "Ship the compact output" });
-		const ultragoalHandoff = await runNativeUltragoalCommand(["complete-goals"], root);
+		await createGoalPlan({ cwd: root, brief: "Ship the compact output" });
+		const ultragoalHandoff = await runNativeGoalEngineCommand(["complete-goals"], root);
 		expect(ultragoalHandoff.status).toBe(0);
 		expect(ultragoalHandoff.stdout).toContain("objective=");
 		expect(ultragoalHandoff.stdout).toContain("next-action=execute-goal");
@@ -184,7 +184,7 @@ describe("CONSUMER/KEY-FIELD MATRIX for compact handoff payloads", () => {
 			checkpoint requires=architectReview:CLEAR+APPROVE,executorQa:passed
 			"
 			`);
-		const checkpoint = await runNativeUltragoalCommand(
+		const checkpoint = await runNativeGoalEngineCommand(
 			[
 				"checkpoint",
 				"--goal-id",

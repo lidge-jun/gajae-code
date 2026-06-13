@@ -3,7 +3,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { GOAL_PLAN_PENDING_BRIEF, runNativeGoalCommand } from "../../src/jwc-runtime/goal-cli";
-import { readUltragoalLedger, readUltragoalPlan } from "../../src/jwc-runtime/goal-engine";
+import { readGoalLedger, readGoalPlan } from "../../src/jwc-runtime/goal-engine";
 
 const QUALITY_GATE = JSON.stringify({
 	architectReview: { verdict: "approved", evidence: "review notes attached" },
@@ -30,11 +30,11 @@ describe("jwc goal adapter (060/061)", () => {
 			cwd,
 		);
 		expect(update.status).toBe(0);
-		const ledger = await readUltragoalLedger(cwd);
+		const ledger = await readGoalLedger(cwd);
 		const checkpoint = ledger.find(event => event.event === "goal_checkpointed");
 		expect(checkpoint).toBeDefined();
 		expect(checkpoint?.evidence).toBe("parser done; bun test parser 12 pass");
-		const plan = await readUltragoalPlan(cwd);
+		const plan = await readGoalPlan(cwd);
 		expect(plan?.goals[0]?.status).toBe("active");
 	});
 
@@ -43,14 +43,14 @@ describe("jwc goal adapter (060/061)", () => {
 		const result = await runNativeGoalCommand(["update", "no proof"], cwd);
 		expect(result.status).toBe(1);
 		expect(result.stderr).toContain("--evidence");
-		const ledger = await readUltragoalLedger(cwd);
+		const ledger = await readGoalLedger(cwd);
 		expect(ledger.some(event => event.event === "goal_checkpointed")).toBe(false);
 	});
 
 	it("joins multiple --evidence paths with '; '", async () => {
 		await runNativeGoalCommand(["set", "objective"], cwd);
 		await runNativeGoalCommand(["update", "s", "--evidence", "a", "--evidence", "b", "--evidence", "c"], cwd);
-		const ledger = await readUltragoalLedger(cwd);
+		const ledger = await readGoalLedger(cwd);
 		const checkpoint = ledger.find(event => event.event === "goal_checkpointed");
 		expect(checkpoint?.evidence).toBe("s; a; b; c");
 	});
@@ -70,7 +70,7 @@ describe("jwc goal adapter (060/061)", () => {
 		expect(done.status).toBe(1);
 		expect(done.stderr).toContain("architect review");
 		expect(done.stderr).not.toContain("evidence-bearing checkpoint");
-		const plan = await readUltragoalPlan(cwd);
+		const plan = await readGoalPlan(cwd);
 		expect(plan?.goals[0]?.status).toBe("active");
 	});
 
@@ -83,7 +83,7 @@ describe("jwc goal adapter (060/061)", () => {
 		const second = await runNativeGoalCommand(["pause", "--agent", "--audit", "no viable path remains"], cwd);
 		expect(second.status).toBe(0);
 		expect(second.stdout).toContain("audited");
-		const ledger = await readUltragoalLedger(cwd);
+		const ledger = await readGoalLedger(cwd);
 		const audited = ledger.find(event => event.event === "goal_pause_audited");
 		expect(audited?.actor).toBe("agent");
 		expect(audited?.evidence).toBe("no viable path remains");
@@ -104,19 +104,19 @@ describe("jwc goal adapter (060/061)", () => {
 
 		const drop = await runNativeGoalCommand(["drop", "scope changed"], cwd);
 		expect(drop.status).toBe(0);
-		const plan = await readUltragoalPlan(cwd);
+		const plan = await readGoalPlan(cwd);
 		expect(plan?.goals[0]?.status).toBe("superseded");
 	});
 
 	it("plan → refine switches the pending sentinel to a direct objective", async () => {
 		const planResult = await runNativeGoalCommand(["plan", "improve onboarding"], cwd);
 		expect(planResult.status).toBe(0);
-		let plan = await readUltragoalPlan(cwd);
+		let plan = await readGoalPlan(cwd);
 		expect(plan?.brief).toContain(GOAL_PLAN_PENDING_BRIEF);
 
 		const refine = await runNativeGoalCommand(["refine", "ship the onboarding wizard v2"], cwd);
 		expect(refine.status).toBe(0);
-		plan = await readUltragoalPlan(cwd);
+		plan = await readGoalPlan(cwd);
 		expect(plan?.jwcObjective).toBe("ship the onboarding wizard v2");
 		expect(plan?.goals[0]?.objective).toBe("ship the onboarding wizard v2");
 	});

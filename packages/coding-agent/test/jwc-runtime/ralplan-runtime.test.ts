@@ -1,7 +1,7 @@
 import { afterEach, describe, expect, it } from "bun:test";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { runNativeRalplanCommand } from "@gajae-code/coding-agent/jwc-runtime/plan-writer";
+import { runNativePlanWriterCommand } from "@gajae-code/coding-agent/jwc-runtime/plan-writer";
 import { GJC_RESTRICTED_ROLE_AGENT_BASH_ENV } from "@gajae-code/coding-agent/jwc-runtime/restricted-role-agent-bash";
 
 const tempRoots: string[] = [];
@@ -19,7 +19,7 @@ afterEach(async () => {
 describe("native gjc ralplan runtime — consensus handoff", () => {
 	it("accepts the documented flag surface without rejecting --interactive/--deliberate", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(["--interactive", "--deliberate", "make state native"], root);
+		const result = await runNativePlanWriterCommand(["--interactive", "--deliberate", "make state native"], root);
 		expect(result.status).toBe(0);
 		expect(result.stdout).toContain("ralplan seed run_id=");
 		const state = JSON.parse(await fs.readFile(path.join(root, ".jwc", "state", "ralplan-state.json"), "utf-8"));
@@ -30,7 +30,7 @@ describe("native gjc ralplan runtime — consensus handoff", () => {
 
 	it("emits receipt-only json for consensus handoff", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(["--json", "--deliberate", "make state native"], root);
+		const result = await runNativePlanWriterCommand(["--json", "--deliberate", "make state native"], root);
 		expect(result.status).toBe(0);
 		const payload = JSON.parse(result.stdout ?? "{}");
 		expect(payload).toMatchObject({
@@ -50,7 +50,7 @@ describe("native gjc ralplan runtime — consensus handoff", () => {
 		await fs.mkdir(path.dirname(statePath), { recursive: true });
 		await fs.writeFile(statePath, "{broken json", "utf-8");
 
-		const result = await runNativeRalplanCommand(["--json", "make state native"], root);
+		const result = await runNativePlanWriterCommand(["--json", "make state native"], root);
 
 		expect(result.status).toBe(2);
 		expect(result.stderr).toContain("existing ralplan state is corrupt or tampered");
@@ -67,7 +67,7 @@ describe("native gjc ralplan runtime — consensus handoff", () => {
 			"utf-8",
 		);
 
-		const result = await runNativeRalplanCommand(["--json", "continue existing"], root);
+		const result = await runNativePlanWriterCommand(["--json", "continue existing"], root);
 
 		expect(result.status).toBe(0);
 		const payload = JSON.parse(result.stdout ?? "{}") as { run_id: string };
@@ -79,7 +79,7 @@ describe("native gjc ralplan runtime — consensus handoff", () => {
 
 	it("--architect openai-code seeds the kind into state", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			["--architect", "openai-code", "--critic", "openai-code", "scope a refactor"],
 			root,
 		);
@@ -91,7 +91,7 @@ describe("native gjc ralplan runtime — consensus handoff", () => {
 
 	it("syncs ralplan HUD chips for the active run", async () => {
 		const root = await tempDir();
-		await runNativeRalplanCommand(["--deliberate", "task"], root);
+		await runNativePlanWriterCommand(["--deliberate", "task"], root);
 		const active = JSON.parse(
 			await fs.readFile(path.join(root, ".jwc", "state", "skill-active-state.json"), "utf-8"),
 		);
@@ -111,21 +111,21 @@ describe("native gjc ralplan runtime — consensus handoff", () => {
 
 	it("rejects unknown --architect kinds with exit 2", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(["--architect", "nope", "task"], root);
+		const result = await runNativePlanWriterCommand(["--architect", "nope", "task"], root);
 		expect(result.status).toBe(2);
 		expect(result.stderr).toContain("unknown --architect kind");
 	});
 
 	it("rejects missing task description with exit 2", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(["--deliberate"], root);
+		const result = await runNativePlanWriterCommand(["--deliberate"], root);
 		expect(result.status).toBe(2);
 		expect(result.stderr).toContain("requires a task description");
 	});
 
 	it("rejects unknown free-form flags with exit 2", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(["--no-such-flag", "task"], root);
+		const result = await runNativePlanWriterCommand(["--no-such-flag", "task"], root);
 		expect(result.status).toBe(2);
 		expect(result.stderr).toContain("unknown flag");
 	});
@@ -134,7 +134,7 @@ describe("native gjc ralplan runtime — consensus handoff", () => {
 describe("native gjc ralplan runtime — --write artifact path", () => {
 	it("persists an inline artifact under .jwc/plans/ralplan/<run-id>/", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			[
 				"--write",
 				"--stage",
@@ -168,7 +168,7 @@ describe("native gjc ralplan runtime — --write artifact path", () => {
 		const root = await tempDir();
 		const artifactPath = path.join(root, "draft.md");
 		await fs.writeFile(artifactPath, "# Draft\nbody\n");
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			["--write", "--stage", "architect", "--stage_n", "2", "--artifact", artifactPath, "--run-id", "file-run"],
 			root,
 		);
@@ -187,7 +187,7 @@ describe("native gjc ralplan runtime — --write artifact path", () => {
 		const previous = process.env[GJC_RESTRICTED_ROLE_AGENT_BASH_ENV];
 		process.env[GJC_RESTRICTED_ROLE_AGENT_BASH_ENV] = "1";
 		try {
-			const result = await runNativeRalplanCommand(
+			const result = await runNativePlanWriterCommand(
 				[
 					"--write",
 					"--stage",
@@ -218,7 +218,7 @@ describe("native gjc ralplan runtime — --write artifact path", () => {
 
 	it("final stage emits pending-approval.md alongside the stage artifact", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			[
 				"--write",
 				"--stage",
@@ -245,7 +245,7 @@ describe("native gjc ralplan runtime — --write artifact path", () => {
 
 	it("rejects unknown --stage with exit 2", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			["--write", "--stage", "nope", "--stage_n", "1", "--artifact", "x"],
 			root,
 		);
@@ -255,7 +255,7 @@ describe("native gjc ralplan runtime — --write artifact path", () => {
 
 	it("rejects out-of-range --stage_n with exit 2", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			["--write", "--stage", "planner", "--stage_n", "1000", "--artifact", "x"],
 			root,
 		);
@@ -266,7 +266,7 @@ describe("native gjc ralplan runtime — --write artifact path", () => {
 	it("rejects malformed non-integer --stage_n like '1.5' or '1abc' with exit 2", async () => {
 		const root = await tempDir();
 		for (const bad of ["1.5", "1abc", "0", "-1", "abc"]) {
-			const result = await runNativeRalplanCommand(
+			const result = await runNativePlanWriterCommand(
 				["--write", "--stage", "planner", "--stage_n", bad, "--artifact", "x"],
 				root,
 			);
@@ -277,7 +277,7 @@ describe("native gjc ralplan runtime — --write artifact path", () => {
 
 	it("rejects --run-id with traversal characters with exit 2", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			["--write", "--stage", "planner", "--stage_n", "1", "--artifact", "x", "--run-id", "../escape"],
 			root,
 		);
@@ -287,11 +287,11 @@ describe("native gjc ralplan runtime — --write artifact path", () => {
 
 	it("appends index.jsonl entries instead of overwriting", async () => {
 		const root = await tempDir();
-		await runNativeRalplanCommand(
+		await runNativePlanWriterCommand(
 			["--write", "--stage", "planner", "--stage_n", "1", "--artifact", "p1", "--run-id", "multi"],
 			root,
 		);
-		await runNativeRalplanCommand(
+		await runNativePlanWriterCommand(
 			["--write", "--stage", "architect", "--stage_n", "2", "--artifact", "a2", "--run-id", "multi"],
 			root,
 		);
@@ -307,14 +307,14 @@ describe("native gjc ralplan runtime — --write artifact path", () => {
 
 	it("keeps multiple --write calls in the same run when no --run-id is supplied", async () => {
 		const root = await tempDir();
-		const first = await runNativeRalplanCommand(
+		const first = await runNativePlanWriterCommand(
 			["--write", "--stage", "planner", "--stage_n", "1", "--artifact", "p1", "--json"],
 			root,
 		);
 		expect(first.status).toBe(0);
 		const firstPayload = JSON.parse(first.stdout ?? "{}") as { run_id: string };
 
-		const second = await runNativeRalplanCommand(
+		const second = await runNativePlanWriterCommand(
 			["--write", "--stage", "architect", "--stage_n", "2", "--artifact", "a2", "--json"],
 			root,
 		);
@@ -336,12 +336,12 @@ describe("native gjc ralplan runtime — --write artifact path", () => {
 
 	it("ralplan consensus handoff seeds run_id that subsequent --write calls reuse", async () => {
 		const root = await tempDir();
-		const handoff = await runNativeRalplanCommand(["--deliberate", "--json", "task"], root);
+		const handoff = await runNativePlanWriterCommand(["--deliberate", "--json", "task"], root);
 		expect(handoff.status).toBe(0);
 		const handoffPayload = JSON.parse(handoff.stdout ?? "{}") as { run_id: string };
 		expect(typeof handoffPayload.run_id).toBe("string");
 
-		const write = await runNativeRalplanCommand(
+		const write = await runNativePlanWriterCommand(
 			["--write", "--stage", "planner", "--stage_n", "1", "--artifact", "# Plan", "--json"],
 			root,
 		);
@@ -361,7 +361,7 @@ describe("native gjc ralplan runtime — persisted Planner state", () => {
 
 	it("records planner id + resumable into run state and echoes planner_state", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			[
 				"--write",
 				"--stage",
@@ -394,7 +394,7 @@ describe("native gjc ralplan runtime — persisted Planner state", () => {
 
 	it("accepts --planner-resumable false", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			[
 				"--write",
 				"--stage",
@@ -418,7 +418,7 @@ describe("native gjc ralplan runtime — persisted Planner state", () => {
 
 	it("omits planner fields when no planner flags are supplied (existing writes unaffected)", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			["--write", "--stage", "planner", "--stage_n", "1", "--artifact", "# Plan", "--run-id", "plain", "--json"],
 			root,
 		);
@@ -435,7 +435,7 @@ describe("native gjc ralplan runtime — persisted Planner state", () => {
 		await fs.mkdir(path.dirname(statePath(root)), { recursive: true });
 		await fs.writeFile(statePath(root), "{broken json", "utf-8");
 
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			["--write", "--stage", "planner", "--stage_n", "1", "--artifact", "# Plan", "--run-id", "corrupt", "--json"],
 			root,
 		);
@@ -450,7 +450,7 @@ describe("native gjc ralplan runtime — persisted Planner state", () => {
 		await fs.mkdir(path.dirname(statePath(root)), { recursive: true });
 		await fs.writeFile(statePath(root), "{broken json", "utf-8");
 
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			[
 				"--write",
 				"--stage",
@@ -475,7 +475,7 @@ describe("native gjc ralplan runtime — persisted Planner state", () => {
 
 	it("records fallback metadata together with a fresh planner id", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			[
 				"--write",
 				"--stage",
@@ -511,7 +511,7 @@ describe("native gjc ralplan runtime — persisted Planner state", () => {
 
 	it("rejects invalid --planner-resumable with exit 2", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			[
 				"--write",
 				"--stage",
@@ -533,7 +533,7 @@ describe("native gjc ralplan runtime — persisted Planner state", () => {
 
 	it("rejects invalid --planner-id with exit 2", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			[
 				"--write",
 				"--stage",
@@ -555,7 +555,7 @@ describe("native gjc ralplan runtime — persisted Planner state", () => {
 
 	it("rejects unknown --fallback-reason with exit 2", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			[
 				"--write",
 				"--stage",
@@ -577,7 +577,7 @@ describe("native gjc ralplan runtime — persisted Planner state", () => {
 
 	it("requires --fallback-reason when other fallback flags are present", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			[
 				"--write",
 				"--stage",
@@ -599,7 +599,7 @@ describe("native gjc ralplan runtime — persisted Planner state", () => {
 
 	it("does not persist an artifact when planner flags are invalid (fail-fast)", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			[
 				"--write",
 				"--stage",
@@ -622,7 +622,7 @@ describe("native gjc ralplan runtime — persisted Planner state", () => {
 
 	it("requires --fallback-attempted-id alongside --fallback-reason", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			[
 				"--write",
 				"--stage",
@@ -646,7 +646,7 @@ describe("native gjc ralplan runtime — persisted Planner state", () => {
 
 	it("requires --fallback-stage-n alongside --fallback-reason", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			[
 				"--write",
 				"--stage",
@@ -670,7 +670,7 @@ describe("native gjc ralplan runtime — persisted Planner state", () => {
 
 	it("rejects a planner flag supplied without a value (missing value at EOF)", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			[
 				"--write",
 				"--stage",

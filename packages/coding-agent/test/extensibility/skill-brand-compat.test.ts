@@ -90,9 +90,9 @@ describe("stage skill pointers (057 P10)", () => {
 		expect(buildStageSkillPointer("c", root)).toContain("/skill:dev-testing");
 	});
 
-	it("is a no-op outside the jaw brand", () => {
+	it("continues to point stage prompts at available dev skills outside the jaw brand", () => {
 		setJawBrand(false);
-		expect(buildStageSkillPointer("p", root)).toBeNull();
+		expect(buildStageSkillPointer("p", root)).toContain("/skill:dev");
 	});
 
 	it("points audit lenses at their dev skills", () => {

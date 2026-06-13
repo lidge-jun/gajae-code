@@ -41,7 +41,7 @@ export type CurrentSessionGoalModeWriteResult =
 	| { status: "existing_goal"; goal: Goal }
 	| { status: "updated"; goal: Goal; sessionFile: string };
 
-interface UltragoalPlanShape {
+interface GoalPlanShape {
 	jwcObjective?: unknown;
 }
 
@@ -63,15 +63,15 @@ function isCreateGoalsArg(value: string): boolean {
 	return value === "create-goals" || value === "create";
 }
 
-export function isUltragoalCreateGoalsInvocation(args: readonly string[]): boolean {
+export function isGoalCreateGoalsInvocation(args: readonly string[]): boolean {
 	const command = args.find(arg => !arg.startsWith("-"));
 	return command !== undefined && isCreateGoalsArg(command);
 }
 
-export async function readUltragoalJwcObjective(cwd: string): Promise<{ objective: string; goalsPath: string }> {
+export async function readGoalJwcObjective(cwd: string): Promise<{ objective: string; goalsPath: string }> {
 	const goalsPath = ultragoalGoalsPath(cwd);
 	try {
-		const plan = (await Bun.file(goalsPath).json()) as UltragoalPlanShape;
+		const plan = (await Bun.file(goalsPath).json()) as GoalPlanShape;
 		const objective = typeof plan.jwcObjective === "string" ? plan.jwcObjective.trim() : "";
 		return { objective: objective || DEFAULT_ULTRAGOAL_OBJECTIVE, goalsPath };
 	} catch (error) {

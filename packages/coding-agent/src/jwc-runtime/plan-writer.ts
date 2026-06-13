@@ -53,13 +53,13 @@ const KNOWN_FALLBACK_REASONS = new Set([
 	"missing_record",
 ]);
 
-class RalplanCommandError extends Error {
+class PlanWriterCommandError extends Error {
 	constructor(
 		public readonly exitStatus: number,
 		message: string,
 	) {
 		super(message);
-		this.name = "RalplanCommandError";
+		this.name = "PlanWriterCommandError";
 	}
 }
 
@@ -95,24 +95,24 @@ export function isRalplanArtifactWriteInvocation(args: readonly string[]): boole
 
 function assertSafePathComponent(value: string, label: string): void {
 	if (!PATH_COMPONENT_RE.test(value) || value.includes("..")) {
-		throw new RalplanCommandError(2, `invalid path component for --${label}: ${value}`);
+		throw new PlanWriterCommandError(2, `invalid path component for --${label}: ${value}`);
 	}
 }
 
 function assertKnownStage(stage: string): asserts stage is RalplanStage {
 	if (!(KNOWN_STAGES as readonly string[]).includes(stage)) {
-		throw new RalplanCommandError(2, `unknown --stage: ${stage}. Expected one of: ${KNOWN_STAGES.join(", ")}.`);
+		throw new PlanWriterCommandError(2, `unknown --stage: ${stage}. Expected one of: ${KNOWN_STAGES.join(", ")}.`);
 	}
 }
 
 function parseStageN(raw: string | undefined): number {
-	if (!raw) throw new RalplanCommandError(2, "--stage_n is required");
+	if (!raw) throw new PlanWriterCommandError(2, "--stage_n is required");
 	if (!/^[1-9][0-9]{0,2}$/.test(raw)) {
-		throw new RalplanCommandError(2, `invalid --stage_n: ${raw}. Expected integer 1..999.`);
+		throw new PlanWriterCommandError(2, `invalid --stage_n: ${raw}. Expected integer 1..999.`);
 	}
 	const value = Number.parseInt(raw, 10);
 	if (value < 1 || value > 999) {
-		throw new RalplanCommandError(2, `invalid --stage_n: ${raw}. Expected integer 1..999.`);
+		throw new PlanWriterCommandError(2, `invalid --stage_n: ${raw}. Expected integer 1..999.`);
 	}
 	return value;
 }
@@ -140,7 +140,7 @@ async function resolveArtifactContent(rawArtifact: string, cwd: string): Promise
 	} catch (error) {
 		const err = error as NodeJS.ErrnoException;
 		if (err.code !== "ENOENT" && err.code !== "ENOTDIR") {
-			throw new RalplanCommandError(2, `failed to read --artifact ${candidate}: ${err.message}`);
+			throw new PlanWriterCommandError(2, `failed to read --artifact ${candidate}: ${err.message}`);
 		}
 	}
 	return rawArtifact;
@@ -169,7 +169,7 @@ async function readActiveRunId(cwd: string, sessionId: string | undefined): Prom
 	const existingRead = await readExistingStateForMutation(statePath);
 	if (existingRead.kind === "absent") return undefined;
 	if (existingRead.kind === "corrupt") {
-		throw new RalplanCommandError(
+		throw new PlanWriterCommandError(
 			2,
 			`existing ralplan state is corrupt or tampered (${existingRead.error}); refusing to overwrite ${statePath}`,
 		);
@@ -184,7 +184,7 @@ async function persistActiveRunId(cwd: string, sessionId: string | undefined, ru
 	const statePath = ralplanStatePath(cwd, sessionId);
 	const existingRead = await readExistingStateForMutation(statePath);
 	if (existingRead.kind === "corrupt") {
-		throw new RalplanCommandError(
+		throw new PlanWriterCommandError(
 			2,
 			`existing ralplan state is corrupt or tampered (${existingRead.error}); refusing to overwrite ${statePath}`,
 		);
@@ -219,19 +219,19 @@ interface PlannerStateUpdate {
 function parseBooleanFlag(raw: string, flag: string): boolean {
 	if (raw === "true") return true;
 	if (raw === "false") return false;
-	throw new RalplanCommandError(2, `invalid ${flag}: ${raw}. Expected "true" or "false".`);
+	throw new PlanWriterCommandError(2, `invalid ${flag}: ${raw}. Expected "true" or "false".`);
 }
 
 function assertSubagentId(value: string, label: string): void {
 	if (!SUBAGENT_ID_RE.test(value)) {
-		throw new RalplanCommandError(2, `invalid ${label}: ${value}`);
+		throw new PlanWriterCommandError(2, `invalid ${label}: ${value}`);
 	}
 }
 
 function plannerFlagValue(args: readonly string[], flag: string): string | undefined {
 	const value = flagValue(args, flag);
 	if (value === undefined && hasFlag(args, flag)) {
-		throw new RalplanCommandError(2, `missing value for ${flag}.`);
+		throw new PlanWriterCommandError(2, `missing value for ${flag}.`);
 	}
 	return value;
 }
@@ -239,7 +239,7 @@ function plannerFlagValue(args: readonly string[], flag: string): string | undef
 /**
  * Parse the optional persisted-Planner metadata flags that may ride alongside a
  * `--write`. Returns `undefined` when none are present so existing writes are
- * unaffected. Throws `RalplanCommandError` on any malformed value. This records
+ * unaffected. Throws `PlanWriterCommandError` on any malformed value. This records
  * a same-session audit/routing hint, not a durable subagent registry.
  */
 function parsePlannerStateArgs(args: readonly string[]): PlannerStateUpdate | undefined {
@@ -275,17 +275,17 @@ function parsePlannerStateArgs(args: readonly string[]): PlannerStateUpdate | un
 	);
 	if (anyFallback) {
 		if (!fallbackReason) {
-			throw new RalplanCommandError(2, "--fallback-reason is required when recording planner fallback metadata.");
+			throw new PlanWriterCommandError(2, "--fallback-reason is required when recording planner fallback metadata.");
 		}
 		if (!KNOWN_FALLBACK_REASONS.has(fallbackReason)) {
-			throw new RalplanCommandError(
+			throw new PlanWriterCommandError(
 				2,
 				`invalid --fallback-reason: ${fallbackReason}. Expected one of: ${[...KNOWN_FALLBACK_REASONS].join(", ")}.`,
 			);
 		}
 		update.fallbackReason = fallbackReason;
 		if (fallbackAttemptedId === undefined) {
-			throw new RalplanCommandError(
+			throw new PlanWriterCommandError(
 				2,
 				"--fallback-attempted-id is required when recording planner fallback metadata.",
 			);
@@ -293,12 +293,15 @@ function parsePlannerStateArgs(args: readonly string[]): PlannerStateUpdate | un
 		assertSubagentId(fallbackAttemptedId, "--fallback-attempted-id");
 		update.fallbackAttemptedId = fallbackAttemptedId;
 		if (fallbackStageNRaw === undefined) {
-			throw new RalplanCommandError(2, "--fallback-stage-n is required when recording planner fallback metadata.");
+			throw new PlanWriterCommandError(
+				2,
+				"--fallback-stage-n is required when recording planner fallback metadata.",
+			);
 		}
 		update.fallbackStageN = parseStageN(fallbackStageNRaw);
 		if (fallbackReceiptPath !== undefined) {
 			if (fallbackReceiptPath.trim() === "") {
-				throw new RalplanCommandError(2, "--fallback-receipt-path must not be empty.");
+				throw new PlanWriterCommandError(2, "--fallback-receipt-path must not be empty.");
 			}
 			update.fallbackReceiptPath = fallbackReceiptPath;
 		}
@@ -332,7 +335,7 @@ async function applyPlannerStateUpdate(
 	const statePath = ralplanStatePath(cwd, sessionId);
 	const existingRead = await readExistingStateForMutation(statePath);
 	if (existingRead.kind === "corrupt") {
-		throw new RalplanCommandError(
+		throw new PlanWriterCommandError(
 			2,
 			`existing ralplan state is corrupt or tampered (${existingRead.error}); refusing to overwrite ${statePath}`,
 		);
@@ -353,14 +356,14 @@ async function applyPlannerStateUpdate(
 
 async function resolveArtifactArgs(args: readonly string[], cwd: string): Promise<ResolvedArtifactArgs> {
 	const stage = flagValue(args, "--stage");
-	if (!stage) throw new RalplanCommandError(2, "--stage is required for ralplan --write");
+	if (!stage) throw new PlanWriterCommandError(2, "--stage is required for ralplan --write");
 	assertKnownStage(stage);
 
 	const stageN = parseStageN(flagValue(args, "--stage_n"));
 
 	const rawArtifact = flagValue(args, "--artifact");
 	if (rawArtifact === undefined || rawArtifact === "") {
-		throw new RalplanCommandError(2, "--artifact is required for ralplan --write");
+		throw new PlanWriterCommandError(2, "--artifact is required for ralplan --write");
 	}
 
 	const sessionIdRaw = flagValue(args, "--session-id")?.trim();
@@ -523,7 +526,7 @@ function extractPositionalTask(args: readonly string[]): string {
 		}
 		if (arg === "--interactive" || arg === "--deliberate" || arg === "--write" || arg === "--json") continue;
 		if (arg.startsWith("-")) {
-			throw new RalplanCommandError(2, `unknown flag for gjc ralplan: ${arg}`);
+			throw new PlanWriterCommandError(2, `unknown flag for gjc ralplan: ${arg}`);
 		}
 		parts.push(arg);
 	}
@@ -533,14 +536,14 @@ function extractPositionalTask(args: readonly string[]): string {
 function resolveConsensusArgs(args: readonly string[]): ConsensusHandoffArgs {
 	const architectKind = flagValue(args, "--architect")?.trim() || undefined;
 	if (architectKind && !KNOWN_ARCHITECT_KINDS.has(architectKind)) {
-		throw new RalplanCommandError(
+		throw new PlanWriterCommandError(
 			2,
 			`unknown --architect kind: ${architectKind}. Expected one of: ${[...KNOWN_ARCHITECT_KINDS].join(", ")}.`,
 		);
 	}
 	const criticKind = flagValue(args, "--critic")?.trim() || undefined;
 	if (criticKind && !KNOWN_CRITIC_KINDS.has(criticKind)) {
-		throw new RalplanCommandError(
+		throw new PlanWriterCommandError(
 			2,
 			`unknown --critic kind: ${criticKind}. Expected one of: ${[...KNOWN_CRITIC_KINDS].join(", ")}.`,
 		);
@@ -609,7 +612,7 @@ async function seedRalplanState(
 async function handleConsensusHandoff(args: readonly string[], cwd: string): Promise<RalplanCommandResult> {
 	const resolved = resolveConsensusArgs(args);
 	if (!resolved.task) {
-		throw new RalplanCommandError(2, 'gjc ralplan requires a task description, e.g. `jwc ralplan "<task>"`.');
+		throw new PlanWriterCommandError(2, 'gjc ralplan requires a task description, e.g. `jwc ralplan "<task>"`.');
 	}
 	const { statePath, runId } = await seedRalplanState(cwd, resolved);
 	const mode = resolved.deliberate ? "deliberate" : "short";
@@ -643,12 +646,13 @@ async function handleConsensusHandoff(args: readonly string[], cwd: string): Pro
 
 /* -------------------------------- entry --------------------------------- */
 
-export async function runNativeRalplanCommand(args: string[], cwd = process.cwd()): Promise<RalplanCommandResult> {
+export async function runNativePlanWriterCommand(args: string[], cwd = process.cwd()): Promise<RalplanCommandResult> {
 	try {
 		if (isRalplanArtifactWriteInvocation(args)) return await handleArtifactWrite(args, cwd);
 		return await handleConsensusHandoff(args, cwd);
 	} catch (error) {
-		if (error instanceof RalplanCommandError) return { status: error.exitStatus, stderr: `${error.message}\n` };
+		if (error instanceof PlanWriterCommandError) return { status: error.exitStatus, stderr: `${error.message}\n` };
 		return { status: 1, stderr: `${error instanceof Error ? error.message : String(error)}\n` };
 	}
 }
+export const runNativeRalplanCommand = runNativePlanWriterCommand;

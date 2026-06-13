@@ -5,7 +5,7 @@ import * as path from "node:path";
 import { syncSkillActiveState } from "../skill-state/active-state";
 import { buildJawInterviewHudSummary } from "../skill-state/workflow-hud";
 import { WORKFLOW_STATE_VERSION } from "../skill-state/workflow-state-contract";
-import { runNativeRalplanCommand } from "./plan-writer";
+import { runNativePlanWriterCommand } from "./plan-writer";
 import { runNativeStateCommand } from "./state-runtime";
 import { appendJsonl, readExistingStateForMutation, writeArtifact, writeWorkflowEnvelopeAtomic } from "./state-writer";
 
@@ -567,7 +567,7 @@ async function handleSpecWrite(args: readonly string[], cwd: string): Promise<Ja
 		const ralplanArgs = ["--deliberate", "--json"];
 		if (resolved.sessionId) ralplanArgs.push("--session-id", resolved.sessionId);
 		ralplanArgs.push(persisted.path);
-		const ralplanResult = await runNativeRalplanCommand(ralplanArgs, cwd);
+		const ralplanResult = await runNativePlanWriterCommand(ralplanArgs, cwd);
 		if (ralplanResult.status !== 0) {
 			throw new JawInterviewCommandError(
 				ralplanResult.status,

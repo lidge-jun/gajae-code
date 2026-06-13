@@ -380,10 +380,10 @@ describe("ExtensionUiController hook editor abort", () => {
 		expect(rendered).not.toContain("Prompt row 19");
 		expect(rendered).toContain("Alpha");
 		expect(rendered).toContain("Gamma");
-		expect(ui.terminal.write).toHaveBeenCalledWith("\x1b[?1006h\x1b[?1000h");
+		expect(ui.terminal.write).not.toHaveBeenCalledWith("\x1b[?1006h\x1b[?1000h");
 
 		ctx.hookSelector!.handleInput("\n");
 		expect(await promise).toBe("Alpha");
-		expect(ui.terminal.write).toHaveBeenCalledWith("\x1b[?1000l\x1b[?1006l");
+		expect(ui.terminal.write).not.toHaveBeenCalledWith("\x1b[?1000l\x1b[?1006l");
 	});
 });

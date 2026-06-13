@@ -5,7 +5,7 @@ import { YAML } from "bun";
 import type { SkillDiscoverySettings } from "../config/skill-settings-defaults";
 import { DEFAULT_DISABLED_EXTENSIONS, DEFAULT_SKILL_DISCOVERY_SETTINGS } from "../config/skill-settings-defaults";
 import {
-	buildActiveUltragoalPromptContext,
+	buildActiveGoalPromptContext,
 	buildSkillActivationAdditionalContext,
 	buildSkillStopOutput,
 	type EffectiveSkillConfigInput,
@@ -183,9 +183,9 @@ export async function dispatchJwcNativeSkillHook(
 		const effectiveSkillConfig = skillState
 			? await resolveEffectiveSkillConfig(cwd, options.effectiveSkillConfig, options.configPaths)
 			: undefined;
-		const activeUltragoalContext = skillState
+		const activeGoalContext = skillState
 			? null
-			: await buildActiveUltragoalPromptContext({
+			: await buildActiveGoalPromptContext({
 					cwd,
 					sessionId: readSessionId(payload),
 					threadId: readThreadId(payload),
@@ -193,15 +193,15 @@ export async function dispatchJwcNativeSkillHook(
 					prompt,
 					sessionFile: readSessionFile(payload),
 				});
-		if (activeUltragoalContext?.startsWith("BLOCK_ULTRAGOAL_COMPLETION:")) {
+		if (activeGoalContext?.startsWith("BLOCK_ULTRAGOAL_COMPLETION:")) {
 			return {
 				hookEventName,
 				outputJson: {
 					decision: "block",
-					reason: activeUltragoalContext,
+					reason: activeGoalContext,
 					hookSpecificOutput: {
 						hookEventName,
-						additionalContext: activeUltragoalContext,
+						additionalContext: activeGoalContext,
 					},
 				},
 			};
@@ -209,13 +209,13 @@ export async function dispatchJwcNativeSkillHook(
 		return {
 			hookEventName,
 			outputJson:
-				skillState || activeUltragoalContext
+				skillState || activeGoalContext
 					? {
 							hookSpecificOutput: {
 								hookEventName,
 								additionalContext: skillState
 									? buildSkillActivationAdditionalContext(skillState, effectiveSkillConfig)
-									: activeUltragoalContext,
+									: activeGoalContext,
 							},
 						}
 					: null,

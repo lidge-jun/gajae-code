@@ -65,11 +65,11 @@ describe("brand-conditional visual identity", () => {
 		expect(result.hasClawWordmark).toBe(false);
 	});
 
-	it("upstream gjc keeps red-claw theme with the claw banner (no regression)", () => {
+	it("gjc compatibility entrypoint keeps the current Jawcode visual identity", () => {
 		const result = probeBrand("gjc");
-		expect(result.theme).toBe("red-claw");
-		expect(result.hasJawWordmark).toBe(false);
-		expect(result.hasClawWordmark).toBe(true);
+		expect(result.theme).toBe("abyss-bite");
+		expect(result.hasJawWordmark).toBe(true);
+		expect(result.hasClawWordmark).toBe(false);
 	});
 
 	it("jwc banner collapses to the compact variant in short viewports (devlog 086.1)", () => {
@@ -79,8 +79,8 @@ describe("brand-conditional visual identity", () => {
 		expect(result.shortKeepsIdentity).toBe(true);
 	});
 
-	it("gjc banner ignores viewport height (diff-0: no compact variant upstream)", () => {
+	it("gjc compatibility banner uses the compact viewport-aware variant", () => {
 		const result = probeBrand("gjc");
-		expect(result.shortLineCount).toBe(result.fullLineCount);
+		expect(result.shortLineCount).toBeLessThan(result.fullLineCount);
 	});
 });

@@ -10,22 +10,22 @@
  */
 import path from "node:path";
 import {
+	appendGoalLedgerEvent,
+	checkpointGoal,
+	createGoalPlan,
+	type GoalEntry,
+	getGoalStatus,
+	readGoalLedger,
+	readGoalPlan,
+	refineGoalObjective,
+	startNextGoal,
+} from "./goal-engine";
+import {
 	GJC_SESSION_FILE_ENV,
 	GJC_SESSION_ID_ENV,
 	writeCurrentSessionGoalModeState,
 	writePendingGoalModeRequest,
 } from "./goal-mode-request";
-import {
-	appendUltragoalLedgerEvent,
-	checkpointUltragoalGoal,
-	createUltragoalPlan,
-	getUltragoalStatus,
-	readUltragoalLedger,
-	readUltragoalPlan,
-	refineUltragoalObjective,
-	startNextUltragoalGoal,
-	type UltragoalGoal,
-} from "./goal-engine";
 
 export interface GoalCommandResult {
 	stdout?: string;
@@ -108,8 +108,8 @@ async function writePauseGate(cwd: string, state: PauseGateState): Promise<void>
 	await Bun.write(pauseGatePath(cwd), `${JSON.stringify(state, null, "\t")}\n`);
 }
 
-async function activeGoal(cwd: string): Promise<UltragoalGoal | { error: string }> {
-	const plan = await readUltragoalPlan(cwd);
+async function activeGoal(cwd: string): Promise<GoalEntry | { error: string }> {
+	const plan = await readGoalPlan(cwd);
 	if (!plan) return { error: "no goal plan found — run `jwc goal set <objective>` first" };
 	const goal = plan.goals.find(item => item.status === "active") ?? plan.goals.find(item => item.status === "pending");
 	if (!goal) return { error: "no active goal story — all stories are closed (see `jwc goal status`)" };
@@ -145,8 +145,8 @@ export async function runNativeGoalCommand(argv: readonly string[], cwd: string)
 			case "set": {
 				const objective = positional.join(" ").trim();
 				if (!objective) return { stderr: "usage: jwc goal set <objective>\n", status: 2 };
-				const plan = await createUltragoalPlan({ cwd, brief: objective });
-				const started = await startNextUltragoalGoal({ cwd });
+				const plan = await createGoalPlan({ cwd, brief: objective });
+				const started = await startNextGoal({ cwd });
 				await activateGoalMode(cwd, objective);
 				return {
 					stdout: `✅ goal set — ${plan.goals.length} story(ies), active: ${started.goal?.id ?? "none"}\n${objective}\n`,
@@ -156,8 +156,8 @@ export async function runNativeGoalCommand(argv: readonly string[], cwd: string)
 			case "plan": {
 				const hint = positional.join(" ").trim();
 				const brief = hint ? `${GOAL_PLAN_PENDING_BRIEF}\nhint: ${hint}` : GOAL_PLAN_PENDING_BRIEF;
-				const plan = await createUltragoalPlan({ cwd, brief });
-				await startNextUltragoalGoal({ cwd });
+				const plan = await createGoalPlan({ cwd, brief });
+				await startNextGoal({ cwd });
 				await activateGoalMode(cwd, brief);
 				return {
 					stdout: `✅ goal plan mode — pending refinement (stories: ${plan.goals.length})\nRefine with: jwc goal refine "<specific objective>"\n`,
@@ -167,13 +167,13 @@ export async function runNativeGoalCommand(argv: readonly string[], cwd: string)
 			case "refine": {
 				const objective = positional.join(" ").trim();
 				if (!objective) return { stderr: "usage: jwc goal refine <objective>\n", status: 2 };
-				await refineUltragoalObjective({ cwd, objective });
+				await refineGoalObjective({ cwd, objective });
 				await activateGoalMode(cwd, objective);
 				return { stdout: `✅ goal refined: ${objective}\n`, status: 0 };
 			}
 			case "status": {
-				const summary = await getUltragoalStatus(cwd);
-				const plan = await readUltragoalPlan(cwd);
+				const summary = await getGoalStatus(cwd);
+				const plan = await readGoalPlan(cwd);
 				if (!plan) return { stdout: "goal: none (run `jwc goal set <objective>`)\n", status: 0 };
 				const active = plan.goals.find(goal => goal.status === "active");
 				const gate = await readPauseGate(cwd);
@@ -204,7 +204,7 @@ export async function runNativeGoalCommand(argv: readonly string[], cwd: string)
 				const goal = await activeGoal(cwd);
 				if ("error" in goal) return { stderr: `${goal.error}\n`, status: 1 };
 				const joined = [summary, ...evidence].join("; ");
-				await checkpointUltragoalGoal({ cwd, goalId: goal.id, status: "active", evidence: joined });
+				await checkpointGoal({ cwd, goalId: goal.id, status: "active", evidence: joined });
 				return { stdout: `✅ checkpoint recorded for ${goal.id} (status stays active)\n`, status: 0 };
 			}
 			case "done": {
@@ -212,7 +212,7 @@ export async function runNativeGoalCommand(argv: readonly string[], cwd: string)
 				const goal = await activeGoal(cwd);
 				if ("error" in goal) return { stderr: `${goal.error}\n`, status: 1 };
 				if (!force) {
-					const ledger = await readUltragoalLedger(cwd);
+					const ledger = await readGoalLedger(cwd);
 					const hasEvidence = ledger.some(
 						event =>
 							event.event === "goal_checkpointed" &&
@@ -232,7 +232,7 @@ export async function runNativeGoalCommand(argv: readonly string[], cwd: string)
 				const autoGate = path.join(cwd, ".jwc", "state", "pabcd-quality-gate.json");
 				const gateRef = qualityGateJson ?? ((await Bun.file(autoGate).exists()) ? autoGate : undefined);
 				const evidenceText = [note || "goal completion", ...evidence].join("; ");
-				await checkpointUltragoalGoal({
+				await checkpointGoal({
 					cwd,
 					goalId: goal.id,
 					status: "complete",
@@ -248,7 +248,7 @@ export async function runNativeGoalCommand(argv: readonly string[], cwd: string)
 				const reason = positional.join(" ").trim() || "cancelled by user";
 				const goal = await activeGoal(cwd);
 				if ("error" in goal) return { stderr: `${goal.error}\n`, status: 1 };
-				await checkpointUltragoalGoal({ cwd, goalId: goal.id, status: "superseded", evidence: reason });
+				await checkpointGoal({ cwd, goalId: goal.id, status: "superseded", evidence: reason });
 				return { stdout: `✅ ${goal.id} superseded — ${reason}\n`, status: 0 };
 			}
 			case "pause": {
@@ -277,7 +277,7 @@ export async function runNativeGoalCommand(argv: readonly string[], cwd: string)
 				}
 				const timestamp = new Date().toISOString();
 				await writePauseGate(cwd, { agentPauseCount: 0, paused: { actor: "agent", evidence: audit, timestamp } });
-				await appendUltragoalLedgerEvent(cwd, {
+				await appendGoalLedgerEvent(cwd, {
 					event: "goal_pause_audited",
 					actor: "agent",
 					evidence: audit,
@@ -287,14 +287,14 @@ export async function runNativeGoalCommand(argv: readonly string[], cwd: string)
 			}
 			case "resume": {
 				await writePauseGate(cwd, { agentPauseCount: 0 });
-				const plan = await readUltragoalPlan(cwd);
+				const plan = await readGoalPlan(cwd);
 				if (plan) await activateGoalMode(cwd, plan.jwcObjective);
 				return { stdout: "▶ goal resumed\n", status: 0 };
 			}
 			case "history": {
 				const limitRaw = Number.parseInt(positional[0] ?? "", 10);
 				const limit = Number.isFinite(limitRaw) ? Math.min(Math.max(limitRaw, 1), HISTORY_MAX) : HISTORY_DEFAULT;
-				const ledger = await readUltragoalLedger(cwd);
+				const ledger = await readGoalLedger(cwd);
 				const slice = ledger.slice(-limit).reverse();
 				if (slice.length === 0) return { stdout: "goal history: empty\n", status: 0 };
 				const lines = slice.map(event => {

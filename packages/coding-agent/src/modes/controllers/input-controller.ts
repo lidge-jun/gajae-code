@@ -478,7 +478,7 @@ export class InputController {
 		const text = `${chord} needs the English layout — switch to English (한/A) or press esc esc to exit`;
 		// 99.20.06: the hint lives on the composer footer; the hook-status line
 		// above the editor stays as the legacy surface when the footer is off.
-		if (this.ctx.composerFooter.isEnabled()) {
+		if (this.ctx.composerFooter?.isEnabled()) {
 			this.ctx.composerFooter.setTransient(text, { durationMs: HANGUL_IME_HINT_DURATION_MS });
 			return;
 		}
@@ -496,7 +496,7 @@ export class InputController {
 
 	/** Footer notice for an armed double-press exit (devlog 99.20.06 §2.4). */
 	#showExitPendingNotice(keyLabel: string): void {
-		if (!this.ctx.composerFooter.isEnabled()) return;
+		if (!this.ctx.composerFooter?.isEnabled()) return;
 		this.ctx.composerFooter.setTransient(`press ${keyLabel} again to exit`, {
 			durationMs: DOUBLE_PRESS_EXIT_WINDOW_MS,
 		});

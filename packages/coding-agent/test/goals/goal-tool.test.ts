@@ -5,7 +5,7 @@ import * as path from "node:path";
 import { GoalRuntime } from "@gajae-code/coding-agent/goals/runtime";
 import type { Goal, GoalModeState, GoalTokenUsage } from "@gajae-code/coding-agent/goals/state";
 import { GoalTool } from "@gajae-code/coding-agent/goals/tools/goal-tool";
-import { createUltragoalPlan, startNextUltragoalGoal } from "@gajae-code/coding-agent/jwc-runtime/goal-engine";
+import { createGoalPlan, startNextGoal } from "@gajae-code/coding-agent/jwc-runtime/goal-engine";
 import type { ToolSession } from "@gajae-code/coding-agent/tools";
 
 function createUsage(overrides: Partial<GoalTokenUsage> = {}): GoalTokenUsage {
@@ -229,8 +229,8 @@ describe("GoalTool", () => {
 	it("blocks direct unified goal completion for active ultragoal objectives without verification receipt", async () => {
 		const root = await fs.mkdtemp(path.join(os.tmpdir(), "gjc-goal-ultragoal-"));
 		try {
-			const plan = await createUltragoalPlan({ cwd: root, brief: "Ship verified ultragoal" });
-			await startNextUltragoalGoal({ cwd: root });
+			const plan = await createGoalPlan({ cwd: root, brief: "Ship verified ultragoal" });
+			await startNextGoal({ cwd: root });
 			const harness = createRuntimeHarness({
 				enabled: true,
 				mode: "active",

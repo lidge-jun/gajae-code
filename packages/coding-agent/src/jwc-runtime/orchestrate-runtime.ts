@@ -17,6 +17,7 @@ import orchestrateD from "../prompts/jaw/orchestrate-d.md" with { type: "text" }
 import orchestrateI from "../prompts/jaw/orchestrate-i.md" with { type: "text" };
 import orchestrateP from "../prompts/jaw/orchestrate-p.md" with { type: "text" };
 import { WORKFLOW_STATE_VERSION } from "../skill-state/workflow-state-version";
+import { checkpointGoal, readGoalPlan } from "./goal-engine";
 import {
 	canTransitionPabcd,
 	PABCD_MAX_A_ROUNDS,
@@ -32,7 +33,6 @@ import {
 	writeNativeWorkflowEnvelopeAtomic,
 } from "./orchestrate-state";
 import { buildAuditLensSkillPointer, buildStageSkillPointer } from "./stage-skill-map";
-import { checkpointUltragoalGoal, readUltragoalPlan } from "./goal-engine";
 
 export interface OrchestrateCommandResult {
 	stdout?: string;
@@ -407,7 +407,7 @@ async function recordGoalCheckpointForTransition(
 	envelope: { ctx?: { audit_status?: string; verification_status?: string }; plan_ref?: string },
 ): Promise<void> {
 	try {
-		const plan = await readUltragoalPlan(cwd);
+		const plan = await readGoalPlan(cwd);
 		if (!plan) return;
 		const goal = plan.goals.find(item => item.status === "active");
 		if (!goal) return;
@@ -416,7 +416,7 @@ async function recordGoalCheckpointForTransition(
 		if (envelope.ctx?.verification_status) gateNotes.push(`verification=${envelope.ctx.verification_status}`);
 		const summary = `pabcd ${from}\u2192${to}${gateNotes.length > 0 ? ` (${gateNotes.join(", ")})` : ""}`;
 		const evidence = [summary, pabcdStatePath(cwd), envelope.plan_ref].filter(Boolean).join("; ");
-		await checkpointUltragoalGoal({ cwd, goalId: goal.id, status: "active", evidence });
+		await checkpointGoal({ cwd, goalId: goal.id, status: "active", evidence });
 	} catch {
 		// fusion is additive — transitions never fail on ledger errors
 	}

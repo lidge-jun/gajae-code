@@ -1,6 +1,6 @@
 import { APP_NAME } from "@gajae-code/utils";
 import { Command } from "@gajae-code/utils/cli";
-import { runNativeRalplanCommand } from "../jwc-runtime/plan-writer";
+import { runNativePlanWriterCommand } from "../jwc-runtime/plan-writer";
 
 export default class Ralplan extends Command {
 	static description = `Run native ${APP_NAME.toUpperCase()} P-stage consensus planning workflow (ralplan engine)`;
@@ -12,7 +12,7 @@ export default class Ralplan extends Command {
 	];
 
 	async run(): Promise<void> {
-		const result = await runNativeRalplanCommand(this.argv, process.cwd());
+		const result = await runNativePlanWriterCommand(this.argv, process.cwd());
 		if (result.stdout) process.stdout.write(result.stdout);
 		if (result.stderr) process.stderr.write(result.stderr);
 		process.exitCode = result.status;

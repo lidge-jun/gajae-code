@@ -31,17 +31,17 @@ interface RalplanHudState extends WorkflowGateHudState {
 	updatedAt?: string;
 }
 
-interface UltragoalLikeGoal {
+interface GoalLikeEntry {
 	id: string;
 	title: string;
 	status: string;
 }
 
-interface UltragoalHudState extends WorkflowGateHudState {
+interface GoalHudState extends WorkflowGateHudState {
 	status: string;
-	currentGoal?: UltragoalLikeGoal;
+	currentGoal?: GoalLikeEntry;
 	counts: Record<string, number>;
-	goals: UltragoalLikeGoal[];
+	goals: GoalLikeEntry[];
 	latestLedgerEvent?: { event?: string; goalId?: string; timestamp?: string };
 	updatedAt?: string;
 }
@@ -155,7 +155,7 @@ export function buildRalplanHudSummary(state: RalplanHudState): WorkflowHudSumma
 	};
 }
 
-export function buildUltragoalHudSummary(state: UltragoalHudState): WorkflowHudSummary {
+export function buildGoalHudSummary(state: GoalHudState): WorkflowHudSummary {
 	const total = state.goals.length;
 	const complete = state.counts.complete ?? 0;
 	const blockers = (state.counts.blocked ?? 0) + (state.counts.review_blocked ?? 0) + (state.counts.failed ?? 0);

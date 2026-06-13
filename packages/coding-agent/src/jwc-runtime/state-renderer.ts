@@ -239,7 +239,7 @@ export function renderHistoryMarkdown(history: {
 	return `${lines.join("\n")}\n`;
 }
 
-export function renderUltragoalStatusMarkdown(summary: {
+export function renderGoalStatusMarkdown(summary: {
 	exists: boolean;
 	status: string;
 	paths: { goalsPath: string; ledgerPath?: string };

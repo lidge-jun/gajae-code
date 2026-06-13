@@ -68,7 +68,7 @@ describe("InteractiveMode.setEditorComponent", () => {
 		expect(lines.at(-1)).toStartWith("└");
 		expect(lines.at(-1)).toEndWith("┘");
 		expect(lines.some(line => line.startsWith("│") && line.includes(">") && line.endsWith("│"))).toBe(true);
-		expect(lines.join("\n")).toContain("Type your message...");
+		expect(lines.join("\n")).not.toContain("Type your message...");
 		expect(lines.join("\n")).not.toContain("›");
 	});
 

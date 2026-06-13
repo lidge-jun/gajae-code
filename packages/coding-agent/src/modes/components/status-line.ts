@@ -25,11 +25,7 @@ import { getPreset } from "./status-line/presets";
 import { renderSegment, type SegmentContext } from "./status-line/segments";
 import { getSeparator } from "./status-line/separators";
 import { calculateTokensPerSecond } from "./status-line/token-rate";
-import {
-	type PabcdSegmentState,
-	readPabcdSegmentState,
-	readUltragoalLedgerStats,
-} from "./status-line/workflow-readers";
+import { type PabcdSegmentState, readGoalLedgerStats, readPabcdSegmentState } from "./status-line/workflow-readers";
 
 export interface StatusLineSegmentOptions {
 	model?: { showThinkingLevel?: boolean };
@@ -662,7 +658,7 @@ export class StatusLineComponent implements Component {
 				try {
 					const getCwd = this.session.sessionManager?.getCwd;
 					const cwd = typeof getCwd === "function" ? getCwd.call(this.session.sessionManager) : getProjectDir();
-					return readUltragoalLedgerStats(cwd);
+					return readGoalLedgerStats(cwd);
 				} catch {
 					return null;
 				}

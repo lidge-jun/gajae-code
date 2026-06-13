@@ -137,7 +137,7 @@ describe("redesigned interactive shell chrome", () => {
 		const editorRendered = Bun.stripANSI(editor.render(140).join("\n"));
 
 		expect(statusRendered).toContain("very-long-model-name-for-footer-budget");
-		expect(statusRendered).toContain("forge-session");
+		expect(statusRendered).not.toContain("forge-session");
 		expect(editorRendered).toContain("› draft");
 		expect(editorRendered).not.toContain("very-long-model-name-for-footer-budget");
 		expect(editorRendered).not.toContain("╭");
@@ -207,7 +207,7 @@ describe("redesigned interactive shell chrome", () => {
 	});
 
 	it("keeps the default status preset dense and pulse-forward", () => {
-		expect(STATUS_LINE_PRESETS.default.leftSegments).toEqual(["model", "mode", "git", "pr", "path"]);
+		expect(STATUS_LINE_PRESETS.default.leftSegments).toEqual(["model", "mode", "pabcd", "git", "pr", "path"]);
 		expect(STATUS_LINE_PRESETS.default.rightSegments).toEqual([
 			"session_name",
 			"jobs",

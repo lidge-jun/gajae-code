@@ -124,7 +124,7 @@ describe("session slash surface (99.07.01)", () => {
 
 		const controller = await Bun.file(srcPath("modes", "controllers", "command-controller.ts")).text();
 		// Full id, not a prefix: UUIDv7 prefixes collide within the same ~65s creation window.
-		const originalSessionIdInterpolation = String.raw`\${originalSessionId}`;
+		const originalSessionIdInterpolation = "$" + "{originalSessionId}";
 		expect(controller).toContain(`Use /resume ${originalSessionIdInterpolation} to return to the original`);
 		expect(controller).toContain(`-r ${originalSessionIdInterpolation}`);
 		expect(controller).not.toContain("originalSessionId.slice(");

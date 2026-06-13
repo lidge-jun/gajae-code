@@ -1,9 +1,9 @@
 import { describe, expect, it } from "bun:test";
 import {
+	buildGoalHudSummary,
 	buildJawInterviewHudSummary,
 	buildRalplanHudSummary,
 	buildTeamHudSummary,
-	buildUltragoalHudSummary,
 } from "../src/skill-state/workflow-hud";
 
 describe("workflow HUD summary builders", () => {
@@ -40,7 +40,7 @@ describe("workflow HUD summary builders", () => {
 	});
 
 	it("keeps ultragoal latest ledger event in details only", () => {
-		const hud = buildUltragoalHudSummary({
+		const hud = buildGoalHudSummary({
 			status: "blocked",
 			currentGoal: { id: "G001", title: "Build HUD", status: "blocked" },
 			counts: { complete: 1, blocked: 1, review_blocked: 0, failed: 0 },

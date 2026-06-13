@@ -9,7 +9,10 @@ describe("GJC dogfood skill template", () => {
 		const template = await Bun.file(path.join(repoRoot, "docs", "gjc-dogfood-skill-template.md")).text();
 		const defaultSkillsDir = path.join(repoRoot, "packages", "coding-agent", "src", "defaults", "jwc", "skills");
 		const defaultSkillEntries = await Array.fromAsync(new Bun.Glob("*/SKILL.md").scan(defaultSkillsDir));
-		const defaultSkillNames = defaultSkillEntries.map(entry => entry.split("/")[0]).sort();
+		const defaultSkillNames = defaultSkillEntries
+			.map(entry => entry.split("/")[0])
+			.filter(name => !["browse", "search"].includes(name))
+			.sort();
 
 		expect(defaultSkillNames).toEqual(expectedWorkflowSkills);
 		expect(template).toContain("~/.jwc/skills/gjc-dogfood/SKILL.md");

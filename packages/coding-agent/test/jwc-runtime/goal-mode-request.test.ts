@@ -5,8 +5,8 @@ import {
 	consumePendingGoalModeRequest,
 	GJC_SESSION_FILE_ENV,
 	GJC_SESSION_ID_ENV,
-	isUltragoalCreateGoalsInvocation,
-	readUltragoalJwcObjective,
+	isGoalCreateGoalsInvocation,
+	readGoalJwcObjective,
 	writeCurrentSessionGoalModeState,
 	writePendingGoalModeRequest,
 } from "@gajae-code/coding-agent/jwc-runtime/goal-mode-request";
@@ -30,11 +30,11 @@ afterEach(async () => {
 
 describe("GJC ultragoal goal mode request", () => {
 	it("detects create-goals invocations without matching flags", () => {
-		expect(isUltragoalCreateGoalsInvocation(["create-goals", "--brief", "ship it"])).toBe(true);
-		expect(isUltragoalCreateGoalsInvocation(["create", "--brief", "ship it"])).toBe(true);
-		expect(isUltragoalCreateGoalsInvocation(["--json", "status"])).toBe(false);
-		expect(isUltragoalCreateGoalsInvocation(["--create-goals"])).toBe(false);
-		expect(isUltragoalCreateGoalsInvocation(["status", "--filter", "create-goals"])).toBe(false);
+		expect(isGoalCreateGoalsInvocation(["create-goals", "--brief", "ship it"])).toBe(true);
+		expect(isGoalCreateGoalsInvocation(["create", "--brief", "ship it"])).toBe(true);
+		expect(isGoalCreateGoalsInvocation(["--json", "status"])).toBe(false);
+		expect(isGoalCreateGoalsInvocation(["--create-goals"])).toBe(false);
+		expect(isGoalCreateGoalsInvocation(["status", "--filter", "create-goals"])).toBe(false);
 	});
 
 	it("reads jwcObjective from the generated ultragoal plan", async () => {
@@ -43,7 +43,7 @@ describe("GJC ultragoal goal mode request", () => {
 		await fs.mkdir(path.dirname(goalsPath), { recursive: true });
 		await Bun.write(goalsPath, JSON.stringify({ jwcObjective: "Complete .jwc/ultragoal/goals.json" }));
 
-		const result = await readUltragoalJwcObjective(root);
+		const result = await readGoalJwcObjective(root);
 
 		expect(result.objective).toBe("Complete .jwc/ultragoal/goals.json");
 		expect(result.goalsPath).toBe(goalsPath);
@@ -290,6 +290,6 @@ describe("GJC ultragoal goal mode request", () => {
 		await fs.mkdir(path.dirname(goalsPath), { recursive: true });
 		await Bun.write(goalsPath, "{");
 
-		await expect(readUltragoalJwcObjective(root)).rejects.toThrow(SyntaxError);
+		await expect(readGoalJwcObjective(root)).rejects.toThrow(SyntaxError);
 	});
 });

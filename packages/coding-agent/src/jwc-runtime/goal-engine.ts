@@ -2,58 +2,51 @@ import * as crypto from "node:crypto";
 import * as path from "node:path";
 import { APP_NAME } from "@gajae-code/utils";
 import type { WorkflowHudSummary } from "../skill-state/active-state";
-import { buildUltragoalHudSummary as buildWorkflowUltragoalHudSummary } from "../skill-state/workflow-hud";
+import { buildGoalHudSummary as buildWorkflowGoalHudSummary } from "../skill-state/workflow-hud";
 import { renderCliWriteReceipt } from "./cli-write-receipt";
 import { DEFAULT_ULTRAGOAL_OBJECTIVE } from "./goal-mode-request";
-import { renderUltragoalStatusMarkdown } from "./state-renderer";
+import { renderGoalStatusMarkdown } from "./state-renderer";
 import { reconcileWorkflowSkillState } from "./state-runtime";
 import { appendJsonl, writeArtifact, writeJsonAtomic } from "./state-writer";
 
-export type UltragoalJwcGoalMode = "aggregate" | "per-story";
-export type UltragoalGoalStatus =
-	| "pending"
-	| "active"
-	| "complete"
-	| "failed"
-	| "blocked"
-	| "review_blocked"
-	| "superseded";
+export type GoalJwcGoalMode = "aggregate" | "per-story";
+export type GoalStatus = "pending" | "active" | "complete" | "failed" | "blocked" | "review_blocked" | "superseded";
 
-export interface UltragoalGoal {
+export interface GoalEntry {
 	id: string;
 	title: string;
 	objective: string;
-	status: UltragoalGoalStatus;
+	status: GoalStatus;
 	createdAt: string;
 	updatedAt: string;
 	startedAt?: string;
 	completedAt?: string;
 	evidence?: string;
 	steering?: Record<string, unknown>;
-	completionVerification?: UltragoalCompletionVerification;
+	completionVerification?: GoalCompletionVerification;
 }
 
-export interface UltragoalPlan {
+export interface GoalPlan {
 	version: 1;
 	brief: string;
-	jwcGoalMode: UltragoalJwcGoalMode;
+	jwcGoalMode: GoalJwcGoalMode;
 	jwcObjective: string;
 	jwcObjectiveAliases?: string[];
-	goals: UltragoalGoal[];
+	goals: GoalEntry[];
 	createdAt: string;
 	updatedAt: string;
 }
 
-export type UltragoalReceiptKind = "per-goal" | "final-aggregate";
+export type GoalReceiptKind = "per-goal" | "final-aggregate";
 
-export interface UltragoalCompletionVerification {
+export interface GoalCompletionVerification {
 	schemaVersion: 1;
 	receiptId: string;
 	verifiedAt: string;
 	goalId: string;
-	receiptKind: UltragoalReceiptKind;
-	goalStatusBeforeCheckpoint: UltragoalGoalStatus;
-	jwcGoalMode: UltragoalJwcGoalMode;
+	receiptKind: GoalReceiptKind;
+	goalStatusBeforeCheckpoint: GoalStatus;
+	jwcGoalMode: GoalJwcGoalMode;
 	jwcObjective: string;
 	qualityGateHash: string;
 	jwcGoalSnapshotHash: string;
@@ -68,31 +61,31 @@ export interface UltragoalCompletionVerification {
 	checkpointLedgerEventId: string;
 }
 
-export interface UltragoalLedgerEvent extends JsonObject {
+export interface GoalLedgerEvent extends JsonObject {
 	eventId?: string;
 	event?: string;
 	goalId?: string;
 	timestamp?: string;
 }
 
-export interface UltragoalPaths {
+export interface GoalPaths {
 	dir: string;
 	briefPath: string;
 	goalsPath: string;
 	ledgerPath: string;
 }
 
-export interface UltragoalStatusSummary {
+export interface GoalStatusSummary {
 	exists: boolean;
 	status: "missing" | "pending" | "active" | "complete" | "blocked" | "failed";
-	paths: UltragoalPaths;
+	paths: GoalPaths;
 	jwcObjective?: string;
-	currentGoal?: UltragoalGoal;
-	counts: Record<UltragoalGoalStatus, number>;
-	goals: UltragoalGoal[];
+	currentGoal?: GoalEntry;
+	counts: Record<GoalStatus, number>;
+	goals: GoalEntry[];
 }
 
-export interface UltragoalCommandResult {
+export interface GoalEngineCommandResult {
 	status: number;
 	stdout?: string;
 	stderr?: string;
@@ -103,7 +96,7 @@ interface JsonObject {
 	[key: string]: unknown;
 }
 
-const TERMINAL_OR_SKIPPED_STATUSES = new Set<UltragoalGoalStatus>(["complete", "superseded"]);
+const TERMINAL_OR_SKIPPED_STATUSES = new Set<GoalStatus>(["complete", "superseded"]);
 const CLEAN_ARCHITECT_STATUS = "CLEAR";
 const APPROVE_RECOMMENDATION = "APPROVE";
 const PASSED_STATUS = "passed";
@@ -116,7 +109,7 @@ const MIN_SUBSTANTIVE_EVIDENCE_CHARS = 32;
 const GJC_GOAL_SNAPSHOT_MAX_AGE_MILLISECONDS = 10 * 60 * 1000;
 const GJC_GOAL_SNAPSHOT_MAX_FUTURE_SKEW_MILLISECONDS = 60 * 1000;
 
-const SCHEDULABLE_STATUSES = new Set<UltragoalGoalStatus>(["pending", "active", "failed"]);
+const SCHEDULABLE_STATUSES = new Set<GoalStatus>(["pending", "active", "failed"]);
 
 function stableStructuredValue(value: unknown): unknown {
 	if (Array.isArray(value)) return value.map(item => stableStructuredValue(item));
@@ -137,7 +130,7 @@ export function hashStructuredValue(value: unknown): string {
 		.digest("hex");
 }
 
-export function getUltragoalPaths(cwd: string): UltragoalPaths {
+export function getGoalPaths(cwd: string): GoalPaths {
 	const dir = path.join(cwd, ".jwc", "ultragoal");
 	return {
 		dir,
@@ -153,9 +146,9 @@ function isEnoent(error: unknown): boolean {
 	);
 }
 
-async function appendLedger(cwd: string, event: JsonObject): Promise<UltragoalLedgerEvent> {
-	const paths = getUltragoalPaths(cwd);
-	const entry: UltragoalLedgerEvent = {
+async function appendLedger(cwd: string, event: JsonObject): Promise<GoalLedgerEvent> {
+	const paths = getGoalPaths(cwd);
+	const entry: GoalLedgerEvent = {
 		eventId: typeof event.eventId === "string" ? event.eventId : crypto.randomUUID(),
 		...event,
 		timestamp: new Date().toISOString(),
@@ -167,22 +160,22 @@ async function appendLedger(cwd: string, event: JsonObject): Promise<UltragoalLe
 	return entry;
 }
 
-export async function readUltragoalLedger(cwd: string): Promise<UltragoalLedgerEvent[]> {
+export async function readGoalLedger(cwd: string): Promise<GoalLedgerEvent[]> {
 	try {
-		const raw = await Bun.file(getUltragoalPaths(cwd).ledgerPath).text();
+		const raw = await Bun.file(getGoalPaths(cwd).ledgerPath).text();
 		return raw
 			.split(/\r?\n/)
 			.map(line => line.trim())
 			.filter(line => line.length > 0)
-			.map(line => JSON.parse(line) as UltragoalLedgerEvent);
+			.map(line => JSON.parse(line) as GoalLedgerEvent);
 	} catch (error) {
 		if (isEnoent(error)) return [];
 		throw error;
 	}
 }
 
-async function writePlan(cwd: string, plan: UltragoalPlan): Promise<void> {
-	const paths = getUltragoalPaths(cwd);
+async function writePlan(cwd: string, plan: GoalPlan): Promise<void> {
+	const paths = getGoalPaths(cwd);
 	await writeArtifact(paths.briefPath, `${plan.brief.trim()}\n`, {
 		cwd,
 		audit: { category: "artifact", verb: "write", owner: "jwc-runtime" },
@@ -193,24 +186,20 @@ async function writePlan(cwd: string, plan: UltragoalPlan): Promise<void> {
 	});
 }
 
-function requiredUltragoalGoals(plan: UltragoalPlan): UltragoalGoal[] {
+function requiredGoalEntries(plan: GoalPlan): GoalEntry[] {
 	return plan.goals.filter(goal => goal.status !== "superseded");
 }
 
-function receiptRelevantGoals(
-	plan: UltragoalPlan,
-	goal: UltragoalGoal,
-	receiptKind: UltragoalReceiptKind,
-): UltragoalGoal[] {
-	return receiptKind === "final-aggregate" ? requiredUltragoalGoals(plan) : [goal];
+function receiptRelevantGoals(plan: GoalPlan, goal: GoalEntry, receiptKind: GoalReceiptKind): GoalEntry[] {
+	return receiptKind === "final-aggregate" ? requiredGoalEntries(plan) : [goal];
 }
 
-function ledgerEventId(event: UltragoalLedgerEvent): string | null {
+function ledgerEventId(event: GoalLedgerEvent): string | null {
 	return typeof event.eventId === "string" && event.eventId.trim().length > 0 ? event.eventId : null;
 }
 
 function latestRelevantLedgerEventId(
-	ledger: readonly UltragoalLedgerEvent[],
+	ledger: readonly GoalLedgerEvent[],
 	relevantGoalIds: readonly string[],
 	excludeEventId?: string,
 ): string | null {
@@ -225,11 +214,11 @@ function latestRelevantLedgerEventId(
 }
 
 function planSnapshotForReceipt(input: {
-	plan: UltragoalPlan;
-	goal: UltragoalGoal;
-	beforeStatus: UltragoalGoalStatus;
+	plan: GoalPlan;
+	goal: GoalEntry;
+	beforeStatus: GoalStatus;
 	targetGoalUpdatedAt: string;
-	receiptKind: UltragoalReceiptKind;
+	receiptKind: GoalReceiptKind;
 }): unknown {
 	const targetGoalSnapshot = {
 		...input.goal,
@@ -261,17 +250,17 @@ function planSnapshotForReceipt(input: {
 	};
 }
 
-export function computeUltragoalPlanGeneration(input: {
-	plan: UltragoalPlan;
-	ledger: readonly UltragoalLedgerEvent[];
-	goal: UltragoalGoal;
-	receiptKind: UltragoalReceiptKind;
-	beforeStatus: UltragoalGoalStatus;
+export function computeGoalPlanGeneration(input: {
+	plan: GoalPlan;
+	ledger: readonly GoalLedgerEvent[];
+	goal: GoalEntry;
+	receiptKind: GoalReceiptKind;
+	beforeStatus: GoalStatus;
 	excludeEventId?: string;
 	targetGoalUpdatedAt?: string;
 }): {
 	planGeneration: string;
-	basis: UltragoalCompletionVerification["basis"];
+	basis: GoalCompletionVerification["basis"];
 } {
 	const relevantGoals = receiptRelevantGoals(input.plan, input.goal, input.receiptKind);
 	const relevantGoalIds = relevantGoals.map(goal => goal.id);
@@ -292,7 +281,7 @@ export function computeUltragoalPlanGeneration(input: {
 			updatedAt: goal.id === input.goal.id ? targetGoalUpdatedAt : goal.updatedAt,
 		})),
 	);
-	const basis: UltragoalCompletionVerification["basis"] = {
+	const basis: GoalCompletionVerification["basis"] = {
 		planHashBeforeCheckpoint,
 		latestRelevantLedgerEventIdBeforeCheckpoint: latestRelevantLedgerEventId(
 			input.ledger,
@@ -306,31 +295,27 @@ export function computeUltragoalPlanGeneration(input: {
 	return { planGeneration: hashStructuredValue(basis), basis };
 }
 
-function chooseReceiptKind(
-	plan: UltragoalPlan,
-	goal: UltragoalGoal,
-	status: UltragoalGoalStatus,
-): UltragoalReceiptKind {
+function chooseReceiptKind(plan: GoalPlan, goal: GoalEntry, status: GoalStatus): GoalReceiptKind {
 	if (plan.jwcGoalMode === "per-story") return "per-goal";
 	if (status !== "complete") return "per-goal";
-	const unfinishedRequiredGoals = requiredUltragoalGoals(plan).filter(
+	const unfinishedRequiredGoals = requiredGoalEntries(plan).filter(
 		item => item.id !== goal.id && !TERMINAL_OR_SKIPPED_STATUSES.has(item.status),
 	);
 	return unfinishedRequiredGoals.length === 0 ? "final-aggregate" : "per-goal";
 }
 
 function buildCompletionReceipt(input: {
-	plan: UltragoalPlan;
-	ledger: readonly UltragoalLedgerEvent[];
-	goal: UltragoalGoal;
-	receiptKind: UltragoalReceiptKind;
-	beforeStatus: UltragoalGoalStatus;
+	plan: GoalPlan;
+	ledger: readonly GoalLedgerEvent[];
+	goal: GoalEntry;
+	receiptKind: GoalReceiptKind;
+	beforeStatus: GoalStatus;
 	qualityGateJson: JsonObject;
 	jwcGoalJson: JsonObject;
 	now: string;
 	checkpointLedgerEventId: string;
-}): UltragoalCompletionVerification {
-	const generation = computeUltragoalPlanGeneration({
+}): GoalCompletionVerification {
+	const generation = computeGoalPlanGeneration({
 		plan: input.plan,
 		ledger: input.ledger,
 		goal: input.goal,
@@ -360,7 +345,7 @@ function nonEmptyString(value: unknown): string | null {
 	return typeof value === "string" && value.trim().length > 0 ? value.trim() : null;
 }
 
-function normalizeGoalStatus(value: unknown): UltragoalGoalStatus {
+function normalizeGoalStatus(value: unknown): GoalStatus {
 	switch (value) {
 		case "pending":
 		case "active":
@@ -375,7 +360,7 @@ function normalizeGoalStatus(value: unknown): UltragoalGoalStatus {
 	}
 }
 
-function parseGoalStatus(value: unknown): UltragoalGoalStatus {
+function parseGoalStatus(value: unknown): GoalStatus {
 	const status = normalizeGoalStatus(value);
 	if (status === "pending" && value !== "pending") {
 		throw new Error(
@@ -385,7 +370,7 @@ function parseGoalStatus(value: unknown): UltragoalGoalStatus {
 	return status;
 }
 
-function normalizePlan(raw: unknown): UltragoalPlan {
+function normalizePlan(raw: unknown): GoalPlan {
 	if (typeof raw !== "object" || raw === null) throw new Error("Invalid ultragoal plan: expected object");
 	const record = raw as JsonObject;
 	const brief = nonEmptyString(record.brief) ?? "";
@@ -397,7 +382,7 @@ function normalizePlan(raw: unknown): UltragoalPlan {
 	const jwcObjective =
 		nonEmptyString(record.jwcObjective) ?? nonEmptyString(record.gjcObjective) ?? DEFAULT_ULTRAGOAL_OBJECTIVE;
 	const rawGoals = Array.isArray(record.goals) ? record.goals : [];
-	const goals: UltragoalGoal[] = rawGoals.map((item, index) => {
+	const goals: GoalEntry[] = rawGoals.map((item, index) => {
 		const goalRecord = typeof item === "object" && item !== null ? (item as JsonObject) : {};
 		const id = nonEmptyString(goalRecord.id) ?? `G${String(index + 1).padStart(3, "0")}`;
 		const title = nonEmptyString(goalRecord.title) ?? id;
@@ -419,7 +404,7 @@ function normalizePlan(raw: unknown): UltragoalPlan {
 					: undefined,
 			completionVerification:
 				typeof goalRecord.completionVerification === "object" && goalRecord.completionVerification !== null
-					? (goalRecord.completionVerification as UltragoalCompletionVerification)
+					? (goalRecord.completionVerification as GoalCompletionVerification)
 					: undefined,
 		};
 	});
@@ -439,16 +424,16 @@ function normalizePlan(raw: unknown): UltragoalPlan {
 	};
 }
 
-export async function readUltragoalPlan(cwd: string): Promise<UltragoalPlan | null> {
+export async function readGoalPlan(cwd: string): Promise<GoalPlan | null> {
 	try {
-		return normalizePlan(await Bun.file(getUltragoalPaths(cwd).goalsPath).json());
+		return normalizePlan(await Bun.file(getGoalPaths(cwd).goalsPath).json());
 	} catch (error) {
 		if (isEnoent(error)) return null;
 		throw error;
 	}
 }
 
-function emptyCounts(): Record<UltragoalGoalStatus, number> {
+function emptyCounts(): Record<GoalStatus, number> {
 	return {
 		pending: 0,
 		active: 0,
@@ -460,14 +445,14 @@ function emptyCounts(): Record<UltragoalGoalStatus, number> {
 	};
 }
 
-export async function getUltragoalStatus(cwd: string): Promise<UltragoalStatusSummary> {
-	const paths = getUltragoalPaths(cwd);
-	const plan = await readUltragoalPlan(cwd);
+export async function getGoalStatus(cwd: string): Promise<GoalStatusSummary> {
+	const paths = getGoalPaths(cwd);
+	const plan = await readGoalPlan(cwd);
 	const counts = emptyCounts();
 	if (!plan) return { exists: false, status: "missing", paths, counts, goals: [] };
 	for (const goal of plan.goals) counts[goal.status] += 1;
 	const currentGoal = plan.goals.find(goal => SCHEDULABLE_STATUSES.has(goal.status));
-	let status: UltragoalStatusSummary["status"] = "pending";
+	let status: GoalStatusSummary["status"] = "pending";
 	if (plan.goals.length > 0 && plan.goals.every(goal => TERMINAL_OR_SKIPPED_STATUSES.has(goal.status)))
 		status = "complete";
 	else if (counts.active > 0) status = "active";
@@ -483,11 +468,8 @@ export async function getUltragoalStatus(cwd: string): Promise<UltragoalStatusSu
 		goals: plan.goals,
 	};
 }
-export function buildUltragoalHudSummary(
-	summary: UltragoalStatusSummary,
-	latestLedger?: UltragoalLedgerEvent,
-): WorkflowHudSummary {
-	return buildWorkflowUltragoalHudSummary({
+export function buildGoalHudSummary(summary: GoalStatusSummary, latestLedger?: GoalLedgerEvent): WorkflowHudSummary {
+	return buildWorkflowGoalHudSummary({
 		status: summary.status,
 		currentGoal: summary.currentGoal,
 		counts: summary.counts,
@@ -509,7 +491,7 @@ function firstNonEmptyLine(text: string): string | undefined {
 
 function titleFromBrief(brief: string): string {
 	const firstLine = firstNonEmptyLine(brief);
-	if (!firstLine) return "Complete ultragoal brief";
+	if (!firstLine) return "Complete goal brief";
 	return clampTitle(firstLine);
 }
 
@@ -550,18 +532,18 @@ function parseGoalsFromBrief(brief: string): ParsedGoal[] {
 	});
 }
 
-export async function createUltragoalPlan(input: {
+export async function createGoalPlan(input: {
 	cwd: string;
 	brief: string;
-	jwcGoalMode?: UltragoalJwcGoalMode;
-}): Promise<UltragoalPlan> {
+	jwcGoalMode?: GoalJwcGoalMode;
+}): Promise<GoalPlan> {
 	const brief = input.brief.trim();
 	if (!brief) throw new Error("ultragoal brief is required");
 	const now = new Date().toISOString();
 	// Parse the untrimmed brief so the raw-line delimiter contract holds: a
 	// leading-indented `@goal` on the first line must stay objective text rather
 	// than being promoted to column 0 by trimming.
-	const goals: UltragoalGoal[] = parseGoalsFromBrief(input.brief).map((goal, index) => ({
+	const goals: GoalEntry[] = parseGoalsFromBrief(input.brief).map((goal, index) => ({
 		id: `G${String(index + 1).padStart(3, "0")}`,
 		title: goal.title,
 		objective: goal.objective,
@@ -569,7 +551,7 @@ export async function createUltragoalPlan(input: {
 		createdAt: now,
 		updatedAt: now,
 	}));
-	const plan: UltragoalPlan = {
+	const plan: GoalPlan = {
 		version: 1,
 		brief,
 		jwcGoalMode: input.jwcGoalMode ?? "aggregate",
@@ -588,7 +570,7 @@ export async function createUltragoalPlan(input: {
  * ledger writer itself private while letting the adapter record audited
  * pause events (`goal_pause_audited`).
  */
-export async function appendUltragoalLedgerEvent(cwd: string, event: JsonObject): Promise<UltragoalLedgerEvent> {
+export async function appendGoalLedgerEvent(cwd: string, event: JsonObject): Promise<GoalLedgerEvent> {
 	return await appendLedger(cwd, event);
 }
 
@@ -597,10 +579,10 @@ export async function appendUltragoalLedgerEvent(cwd: string, event: JsonObject)
  * the plan-level jwcObjective and the active (or first) story objective; no
  * ledger event by contract (refine is a wording change, not a state change).
  */
-export async function refineUltragoalObjective(input: { cwd: string; objective: string }): Promise<UltragoalPlan> {
+export async function refineGoalObjective(input: { cwd: string; objective: string }): Promise<GoalPlan> {
 	const objective = input.objective.trim();
 	if (!objective) throw new Error("goal refine requires a non-empty objective");
-	const plan = await readUltragoalPlan(input.cwd);
+	const plan = await readGoalPlan(input.cwd);
 	if (!plan) throw new Error("No ultragoal plan found. Run `jwc goal set <objective>` first.");
 	const now = new Date().toISOString();
 	plan.jwcObjective = objective;
@@ -614,27 +596,27 @@ export async function refineUltragoalObjective(input: { cwd: string; objective: 
 	return plan;
 }
 
-function chooseNextGoal(plan: UltragoalPlan, retryFailed: boolean): UltragoalGoal | undefined {
+function chooseNextGoal(plan: GoalPlan, retryFailed: boolean): GoalEntry | undefined {
 	return (
 		plan.goals.find(goal => goal.status === "active") ??
 		plan.goals.find(goal => goal.status === "pending") ??
 		(retryFailed ? plan.goals.find(goal => goal.status === "failed") : undefined)
 	);
 }
-export interface UltragoalRunCompletionState {
-	requiredGoals: UltragoalGoal[];
-	incompleteGoals: UltragoalGoal[];
-	nextGoal?: UltragoalGoal;
+export interface GoalRunCompletionState {
+	requiredGoals: GoalEntry[];
+	incompleteGoals: GoalEntry[];
+	nextGoal?: GoalEntry;
 	allComplete: boolean;
 	hasBlockers: boolean;
 	needsFinalAggregateReceipt: boolean;
 }
 
-export function getUltragoalRunCompletionState(
-	plan: UltragoalPlan,
+export function getGoalRunCompletionState(
+	plan: GoalPlan,
 	options: { retryFailed?: boolean } = {},
-): UltragoalRunCompletionState {
-	const requiredGoals = requiredUltragoalGoals(plan);
+): GoalRunCompletionState {
+	const requiredGoals = requiredGoalEntries(plan);
 	const incompleteGoals = requiredGoals.filter(goal => !TERMINAL_OR_SKIPPED_STATUSES.has(goal.status));
 	const nextGoal = chooseNextGoal(plan, options.retryFailed === true);
 	return {
@@ -647,15 +629,15 @@ export function getUltragoalRunCompletionState(
 	};
 }
 
-export async function startNextUltragoalGoal(input: { cwd: string; retryFailed?: boolean }): Promise<{
-	plan: UltragoalPlan;
-	goal?: UltragoalGoal;
+export async function startNextGoal(input: { cwd: string; retryFailed?: boolean }): Promise<{
+	plan: GoalPlan;
+	goal?: GoalEntry;
 	allComplete: boolean;
 }> {
-	const plan = await readUltragoalPlan(input.cwd);
+	const plan = await readGoalPlan(input.cwd);
 	if (!plan) throw new Error("No ultragoal plan found. Run `jwc ultragoal create-goals --brief ...` first.");
 	const goal = chooseNextGoal(plan, input.retryFailed === true);
-	if (!goal) return { plan, allComplete: getUltragoalRunCompletionState(plan).allComplete };
+	if (!goal) return { plan, allComplete: getGoalRunCompletionState(plan).allComplete };
 	if (goal.status !== "active") {
 		const now = new Date().toISOString();
 		goal.status = "active";
@@ -1110,8 +1092,8 @@ function snapshotUpdatedAtMilliseconds(value: unknown): number | null {
 async function readJwcGoalSnapshot(input: {
 	cwd: string;
 	value: string | undefined;
-	plan: UltragoalPlan;
-	goal?: UltragoalGoal;
+	plan: GoalPlan;
+	goal?: GoalEntry;
 	required: boolean;
 	errorPrefix: string;
 	allowCompletedLegacyBlocker?: boolean;
@@ -1161,15 +1143,15 @@ async function readJwcGoalSnapshot(input: {
 	return snapshot;
 }
 
-export async function checkpointUltragoalGoal(input: {
+export async function checkpointGoal(input: {
 	cwd: string;
 	goalId: string;
-	status: UltragoalGoalStatus;
+	status: GoalStatus;
 	evidence: string;
 	jwcGoalJson?: string;
 	qualityGateJson?: string;
-}): Promise<UltragoalPlan> {
-	const plan = await readUltragoalPlan(input.cwd);
+}): Promise<GoalPlan> {
+	const plan = await readGoalPlan(input.cwd);
 	if (!plan) throw new Error("No ultragoal plan found. Run `jwc ultragoal create-goals --brief ...` first.");
 	const goal = plan.goals.find(item => item.id === input.goalId);
 	if (!goal) throw new Error(`No ultragoal goal found for ${input.goalId}.`);
@@ -1182,7 +1164,7 @@ export async function checkpointUltragoalGoal(input: {
 				? await readStructuredValue(input.cwd, input.qualityGateJson)
 				: undefined;
 	const now = new Date().toISOString();
-	const ledgerBefore = await readUltragoalLedger(input.cwd);
+	const ledgerBefore = await readGoalLedger(input.cwd);
 	const beforeStatus = goal.status;
 	if (input.status === "complete") {
 		const blockedGoalId =
@@ -1248,34 +1230,34 @@ export async function checkpointUltragoalGoal(input: {
 	});
 	return plan;
 }
-export interface UltragoalCheckpointContinuation {
-	plan: UltragoalPlan;
-	checkpointedGoal: UltragoalGoal;
-	nextGoal?: UltragoalGoal;
+export interface GoalCheckpointContinuation {
+	plan: GoalPlan;
+	checkpointedGoal: GoalEntry;
+	nextGoal?: GoalEntry;
 	startedNext: boolean;
 	allComplete: boolean;
-	incompleteGoals: UltragoalGoal[];
+	incompleteGoals: GoalEntry[];
 }
 
-export async function checkpointAndContinueUltragoalGoal(input: {
+export async function checkpointAndContinueGoal(input: {
 	cwd: string;
 	goalId: string;
-	status: UltragoalGoalStatus;
+	status: GoalStatus;
 	evidence: string;
 	jwcGoalJson?: string;
 	qualityGateJson?: string;
 	advanceNext?: boolean;
 	retryFailed?: boolean;
-}): Promise<UltragoalCheckpointContinuation> {
-	let plan = await checkpointUltragoalGoal(input);
+}): Promise<GoalCheckpointContinuation> {
+	let plan = await checkpointGoal(input);
 	const checkpointedGoal = plan.goals.find(goal => goal.id === input.goalId);
 	if (!checkpointedGoal) throw new Error(`No ultragoal goal found for ${input.goalId}.`);
 	if (input.status === "complete" && input.advanceNext === true) {
-		const beforeAdvance = getUltragoalRunCompletionState(plan, { retryFailed: input.retryFailed });
+		const beforeAdvance = getGoalRunCompletionState(plan, { retryFailed: input.retryFailed });
 		if (beforeAdvance.nextGoal && beforeAdvance.nextGoal.status !== "active") {
-			const started = await startNextUltragoalGoal({ cwd: input.cwd, retryFailed: input.retryFailed });
+			const started = await startNextGoal({ cwd: input.cwd, retryFailed: input.retryFailed });
 			plan = started.plan;
-			const afterAdvance = getUltragoalRunCompletionState(plan, { retryFailed: input.retryFailed });
+			const afterAdvance = getGoalRunCompletionState(plan, { retryFailed: input.retryFailed });
 			return {
 				plan,
 				checkpointedGoal,
@@ -1286,7 +1268,7 @@ export async function checkpointAndContinueUltragoalGoal(input: {
 			};
 		}
 	}
-	const state = getUltragoalRunCompletionState(plan, { retryFailed: input.retryFailed });
+	const state = getGoalRunCompletionState(plan, { retryFailed: input.retryFailed });
 	return {
 		plan,
 		checkpointedGoal,
@@ -1297,14 +1279,14 @@ export async function checkpointAndContinueUltragoalGoal(input: {
 	};
 }
 
-export async function addUltragoalSubgoal(input: {
+export async function addGoalSubgoal(input: {
 	cwd: string;
 	title: string;
 	objective: string;
 	evidence: string;
 	rationale: string;
-}): Promise<UltragoalPlan> {
-	const plan = await readUltragoalPlan(input.cwd);
+}): Promise<GoalPlan> {
+	const plan = await readGoalPlan(input.cwd);
 	if (!plan) throw new Error("No ultragoal plan found. Run `jwc ultragoal create-goals --brief ...` first.");
 	for (const [label, value] of [
 		["title", input.title],
@@ -1337,20 +1319,20 @@ export async function addUltragoalSubgoal(input: {
 	return plan;
 }
 
-export async function recordUltragoalReviewBlockers(input: {
+export async function recordGoalReviewBlockers(input: {
 	cwd: string;
 	goalId: string;
 	title: string;
 	objective: string;
 	evidence: string;
 	jwcGoalJson?: string;
-}): Promise<UltragoalPlan> {
+}): Promise<GoalPlan> {
 	const objective = input.objective.trim();
 	if (!objective) throw new Error("record-review-blockers --objective is required");
 	if (!input.jwcGoalJson?.trim()) {
 		throw new Error('record-review-blockers require --gjc-goal-json from a fresh active goal({"op":"get"}) snapshot');
 	}
-	const plan = await checkpointUltragoalGoal({
+	const plan = await checkpointGoal({
 		cwd: input.cwd,
 		goalId: input.goalId,
 		status: "review_blocked",
@@ -1422,13 +1404,13 @@ function commandName(args: readonly string[]): string {
 	return "status";
 }
 
-function renderUltragoalHelp(args: readonly string[]): string | null {
+function renderGoalHelp(args: readonly string[]): string | null {
 	if (!args.some(isHelpArg) && args[0] !== "help") return null;
 	const subject =
 		args[0] === "help" ? args.find((arg, index) => index > 0 && !arg.startsWith("-")) : commandName(args);
 	if (subject === "checkpoint") {
 		return [
-			`Run native ${APP_NAME.toUpperCase()} Ultragoal workflow commands`,
+			`Run native ${APP_NAME.toUpperCase()} Goal workflow commands`,
 			"",
 			"USAGE",
 			`  $ ${APP_NAME} ultragoal checkpoint --goal-id <id> --status <status> --evidence <text> [FLAGS]`,
@@ -1454,7 +1436,7 @@ function renderUltragoalHelp(args: readonly string[]): string | null {
 		].join("\n");
 	}
 	return [
-		`Run native ${APP_NAME.toUpperCase()} Ultragoal workflow commands`,
+		`Run native ${APP_NAME.toUpperCase()} Goal workflow commands`,
 		"",
 		"USAGE",
 		`  $ ${APP_NAME} ultragoal <command> [FLAGS]`,
@@ -1481,13 +1463,13 @@ async function readBrief(cwd: string, args: readonly string[]): Promise<string> 
 	throw new Error("create-goals requires --brief, --brief-file, or --from-stdin");
 }
 
-function renderStatus(summary: UltragoalStatusSummary, json: boolean): string {
+function renderStatus(summary: GoalStatusSummary, json: boolean): string {
 	if (json) return `${JSON.stringify(summary, null, 2)}\n`;
-	return renderUltragoalStatusMarkdown(summary);
+	return renderGoalStatusMarkdown(summary);
 }
 
 function renderCompleteHandoff(
-	result: { plan: UltragoalPlan; goal?: UltragoalGoal; allComplete: boolean },
+	result: { plan: GoalPlan; goal?: GoalEntry; allComplete: boolean },
 	json: boolean,
 	cwd: string,
 ): string {
@@ -1499,13 +1481,13 @@ function renderCompleteHandoff(
 			goal_id: result.goal?.id,
 			goal_status: result.goal?.status,
 			gjc_objective: result.plan.jwcObjective,
-			goals_path: getUltragoalPaths(cwd).goalsPath,
+			goals_path: getGoalPaths(cwd).goalsPath,
 		});
 	}
-	if (result.allComplete) return "ultragoal complete all=true\n";
-	if (!result.goal) return "ultragoal next-action=none\n";
+	if (result.allComplete) return "goal complete all=true\n";
+	if (!result.goal) return "goal next-action=none\n";
 	return [
-		`ultragoal next-action=execute-goal goal-id=${result.goal.id}`,
+		`goal next-action=execute-goal goal-id=${result.goal.id}`,
 		`objective=${result.goal.objective}`,
 		`gjc-objective=${result.plan.jwcObjective}`,
 		"checkpoint requires=architectReview:CLEAR+APPROVE,executorQa:passed",
@@ -1513,8 +1495,8 @@ function renderCompleteHandoff(
 	].join("\n");
 }
 function renderCheckpointContinuation(
-	result: UltragoalCheckpointContinuation,
-	status: UltragoalGoalStatus,
+	result: GoalCheckpointContinuation,
+	status: GoalStatus,
 	json: boolean,
 	cwd: string,
 ): string {
@@ -1523,7 +1505,7 @@ function renderCheckpointContinuation(
 			ok: true,
 			goal_id: result.checkpointedGoal.id,
 			status,
-			goals_path: getUltragoalPaths(cwd).goalsPath,
+			goals_path: getGoalPaths(cwd).goalsPath,
 			completion_receipt_kind: result.checkpointedGoal.completionVerification?.receiptKind,
 			quality_gate_hash: result.checkpointedGoal.completionVerification?.qualityGateHash,
 			all_complete: result.allComplete,
@@ -1535,19 +1517,19 @@ function renderCheckpointContinuation(
 	const lines = [`Checkpointed ${result.checkpointedGoal.id} as ${status}.`];
 	if (status === "complete") {
 		if (result.allComplete) {
-			lines.push("All ultragoal goals are complete.");
+			lines.push("All goals are complete.");
 		} else if (result.nextGoal) {
-			lines.push(`Next ultragoal goal: ${result.nextGoal.id} — ${result.nextGoal.title}`);
+			lines.push(`Next goal: ${result.nextGoal.id} — ${result.nextGoal.title}`);
 			lines.push(`Objective: ${result.nextGoal.objective}`);
 			lines.push(`GJC objective: ${result.plan.jwcObjective}`);
 			lines.push(
 				result.startedNext
 					? "The next ultragoal goal is active; continue the current aggregate GJC goal and checkpoint this story when verified."
-					: "Run `jwc ultragoal complete-goals` to activate the next ultragoal story.",
+					: "Run `jwc goal complete-goals` to activate the next ultragoal story.",
 			);
 		}
 	} else if (status === "failed") {
-		lines.push("Resume failed goals with `jwc ultragoal complete-goals --retry-failed` after the blocker is fixed.");
+		lines.push("Resume failed goals with `jwc goal complete-goals --retry-failed` after the blocker is fixed.");
 	} else if (status === "blocked" || status === "review_blocked") {
 		lines.push(
 			"Blocked ultragoal work must be resolved with explicit blocker work or steering before final completion.",
@@ -1557,19 +1539,19 @@ function renderCheckpointContinuation(
 	return lines.join("\n");
 }
 
-async function dispatchUltragoalCommand(args: string[], cwd: string): Promise<UltragoalCommandResult> {
-	const help = renderUltragoalHelp(args);
+async function dispatchGoalCommand(args: string[], cwd: string): Promise<GoalEngineCommandResult> {
+	const help = renderGoalHelp(args);
 	if (help) return { status: 0, stdout: help };
 	try {
 		const command = commandName(args);
 		const json = hasFlag(args, "--json");
 		switch (command) {
 			case "status":
-				return { status: 0, stdout: renderStatus(await getUltragoalStatus(cwd), json) };
+				return { status: 0, stdout: renderStatus(await getGoalStatus(cwd), json) };
 			case "create":
 			case "create-goals": {
 				const mode = flagValue(args, "--gjc-goal-mode") === "per-story" ? "per-story" : "aggregate";
-				const plan = await createUltragoalPlan({ cwd, brief: await readBrief(cwd, args), jwcGoalMode: mode });
+				const plan = await createGoalPlan({ cwd, brief: await readBrief(cwd, args), jwcGoalMode: mode });
 				return {
 					status: 0,
 					createdPlan: true,
@@ -1578,16 +1560,16 @@ async function dispatchUltragoalCommand(args: string[], cwd: string): Promise<Ul
 								ok: true,
 								goals_count: plan.goals.length,
 								goal_ids: plan.goals.map(goal => goal.id),
-								goals_path: getUltragoalPaths(cwd).goalsPath,
+								goals_path: getGoalPaths(cwd).goalsPath,
 							})
-						: `Created ultragoal plan with ${plan.goals.length} goal${plan.goals.length === 1 ? "" : "s"} at ${getUltragoalPaths(cwd).goalsPath}.\n`,
+						: `Created ultragoal plan with ${plan.goals.length} goal${plan.goals.length === 1 ? "" : "s"} at ${getGoalPaths(cwd).goalsPath}.\n`,
 				};
 			}
 			case "complete-goals":
 				return {
 					status: 0,
 					stdout: renderCompleteHandoff(
-						await startNextUltragoalGoal({ cwd, retryFailed: hasFlag(args, "--retry-failed") }),
+						await startNextGoal({ cwd, retryFailed: hasFlag(args, "--retry-failed") }),
 						json,
 						cwd,
 					),
@@ -1596,7 +1578,7 @@ async function dispatchUltragoalCommand(args: string[], cwd: string): Promise<Ul
 				const goalId = flagValue(args, "--goal-id") ?? "";
 				const status = parseGoalStatus(flagValue(args, "--status"));
 				const evidence = flagValue(args, "--evidence") ?? "";
-				const result = await checkpointAndContinueUltragoalGoal({
+				const result = await checkpointAndContinueGoal({
 					cwd,
 					goalId,
 					status,
@@ -1613,7 +1595,7 @@ async function dispatchUltragoalCommand(args: string[], cwd: string): Promise<Ul
 			case "steer": {
 				const kind = flagValue(args, "--kind");
 				if (kind !== "add_subgoal") throw new Error("native steering currently supports --kind add_subgoal");
-				const plan = await addUltragoalSubgoal({
+				const plan = await addGoalSubgoal({
 					cwd,
 					title: flagValue(args, "--title") ?? "",
 					objective: flagValue(args, "--objective") ?? "",
@@ -1628,13 +1610,13 @@ async function dispatchUltragoalCommand(args: string[], cwd: string): Promise<Ul
 								ok: true,
 								kind,
 								goal_id: goal?.id,
-								goals_path: getUltragoalPaths(cwd).goalsPath,
+								goals_path: getGoalPaths(cwd).goalsPath,
 							})
 						: "Accepted add_subgoal steering.\n",
 				};
 			}
 			case "record-review-blockers": {
-				const plan = await recordUltragoalReviewBlockers({
+				const plan = await recordGoalReviewBlockers({
 					cwd,
 					goalId: flagValue(args, "--goal-id") ?? "",
 					title: flagValue(args, "--title") ?? "Resolve final code-review blockers",
@@ -1646,12 +1628,12 @@ async function dispatchUltragoalCommand(args: string[], cwd: string): Promise<Ul
 				return {
 					status: 0,
 					stdout: json
-						? renderCliWriteReceipt({ ok: true, goal_id: goal?.id, goals_path: getUltragoalPaths(cwd).goalsPath })
+						? renderCliWriteReceipt({ ok: true, goal_id: goal?.id, goals_path: getGoalPaths(cwd).goalsPath })
 						: "Recorded review blockers.\n",
 				};
 			}
 			default:
-				return { status: 1, stderr: `Unknown gjc ultragoal command: ${command}\n` };
+				return { status: 1, stderr: `Unknown gjc goal command: ${command}\n` };
 		}
 	} catch (error) {
 		return { status: 1, stderr: `${error instanceof Error ? error.message : String(error)}\n` };
@@ -1678,10 +1660,10 @@ const RECONCILE_COMMANDS = new Set([
  * therefore a read PLUS a derived repair; it never mutates goals.json/ledger.jsonl
  * beyond that reconcile-failure audit event.
  */
-async function reconcileUltragoalState(cwd: string): Promise<void> {
+async function reconcileGoalState(cwd: string): Promise<void> {
 	const sessionId = process.env.GJC_SESSION_ID?.trim() || undefined;
 	try {
-		const summary = await getUltragoalStatus(cwd);
+		const summary = await getGoalStatus(cwd);
 		const status = summary.status;
 		const active = summary.exists && status !== "complete";
 		const payload: Record<string, unknown> = {
@@ -1700,7 +1682,7 @@ async function reconcileUltragoalState(cwd: string): Promise<void> {
 		await reconcileWorkflowSkillState({ cwd, mode: "ultragoal", sessionId, active, phase: status, payload });
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error);
-		process.stderr.write(`ultragoal state reconciliation failed: ${message}\n`);
+		process.stderr.write(`goal state reconciliation failed: ${message}\n`);
 		try {
 			await appendLedger(cwd, { type: "reconcile_failed", error: message });
 		} catch {
@@ -1709,12 +1691,15 @@ async function reconcileUltragoalState(cwd: string): Promise<void> {
 	}
 }
 
-export async function runNativeUltragoalCommand(args: string[], cwd = process.cwd()): Promise<UltragoalCommandResult> {
+export async function runNativeGoalEngineCommand(
+	args: string[],
+	cwd = process.cwd(),
+): Promise<GoalEngineCommandResult> {
 	const command = commandName(args);
-	const result = await dispatchUltragoalCommand(args, cwd);
+	const result = await dispatchGoalCommand(args, cwd);
 	const isHelp = args.some(isHelpArg) || args[0] === "help";
 	if (!isHelp && result.status === 0 && RECONCILE_COMMANDS.has(command)) {
-		await reconcileUltragoalState(cwd);
+		await reconcileGoalState(cwd);
 	}
 	return result;
 }

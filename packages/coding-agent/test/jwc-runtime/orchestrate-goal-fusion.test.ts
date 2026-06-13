@@ -2,8 +2,8 @@ import { describe, expect, it } from "bun:test";
 import { mkdtempSync, readFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
+import { createGoalPlan, startNextGoal } from "../../src/jwc-runtime/goal-engine";
 import { runNativeOrchestrateCommand } from "../../src/jwc-runtime/orchestrate-runtime";
-import { createUltragoalPlan, startNextUltragoalGoal } from "../../src/jwc-runtime/goal-engine";
 
 function tempCwd(): string {
 	return mkdtempSync(path.join(os.tmpdir(), "jwc-fusion-"));
@@ -24,8 +24,8 @@ function readLedgerEvents(cwd: string): Array<Record<string, unknown>> {
 describe("orchestrate↔goal fusion (99.08-B)", () => {
 	it("appends a goal checkpoint on each stage transition when a goal is active", async () => {
 		const cwd = tempCwd();
-		await createUltragoalPlan({ cwd, brief: "fusion e2e objective" });
-		await startNextUltragoalGoal({ cwd });
+		await createGoalPlan({ cwd, brief: "fusion e2e objective" });
+		await startNextGoal({ cwd });
 
 		const enter = await runNativeOrchestrateCommand(["i"], cwd);
 		expect(enter.status).toBe(0);

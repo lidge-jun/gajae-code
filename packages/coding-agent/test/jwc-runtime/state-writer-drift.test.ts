@@ -4,7 +4,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { recordSkillActivation } from "@gajae-code/coding-agent/hooks/skill-state";
 import { runNativeJawInterviewCommand } from "@gajae-code/coding-agent/jwc-runtime/jaw-interview-runtime";
-import { runNativeRalplanCommand } from "@gajae-code/coding-agent/jwc-runtime/plan-writer";
+import { runNativePlanWriterCommand } from "@gajae-code/coding-agent/jwc-runtime/plan-writer";
 import { migrateAndPersistLegacyState } from "@gajae-code/coding-agent/jwc-runtime/state-migrations";
 import { runNativeStateCommand } from "@gajae-code/coding-agent/jwc-runtime/state-runtime";
 import { RequiredOnWriteEnvelopeSchema } from "@gajae-code/coding-agent/jwc-runtime/state-schema";
@@ -90,7 +90,7 @@ describe("workflow state writer drift guard", () => {
 
 	it("persists required-on-write envelope for ralplan seed", async () => {
 		const root = await tempDir();
-		const result = await runNativeRalplanCommand(["--json", "scope this change"], root);
+		const result = await runNativePlanWriterCommand(["--json", "scope this change"], root);
 		expect(result.status).toBe(0);
 		await expectPersistedEnvelope(path.join(root, ".jwc", "state", "ralplan-state.json"));
 	});
@@ -120,7 +120,7 @@ describe("workflow state writer drift guard", () => {
 			"utf-8",
 		);
 
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			["--write", "--stage", "planner", "--stage_n", "1", "--artifact", "# Plan", "--run-id", "legacy-run"],
 			root,
 		);
@@ -138,7 +138,7 @@ describe("workflow state writer drift guard", () => {
 			"utf-8",
 		);
 
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			["--write", "--stage", "planner", "--stage_n", "1", "--artifact", "# Plan", "--run-id", "legacy-run"],
 			root,
 		);
@@ -158,7 +158,7 @@ describe("workflow state writer drift guard", () => {
 			"utf-8",
 		);
 
-		const result = await runNativeRalplanCommand(
+		const result = await runNativePlanWriterCommand(
 			[
 				"--write",
 				"--stage",

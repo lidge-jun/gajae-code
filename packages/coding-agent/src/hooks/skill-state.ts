@@ -1,8 +1,8 @@
 import * as path from "node:path";
 import type { SkillDiscoverySettings } from "../config/skill-settings-defaults";
+import { isGoalBypassPrompt, readGoalVerificationState } from "../jwc-runtime/goal-guard";
 import { ModeStateSchema, SkillActiveStateSchema } from "../jwc-runtime/state-schema";
 import { writeJsonAtomic, writeWorkflowEnvelopeAtomic } from "../jwc-runtime/state-writer";
-import { isUltragoalBypassPrompt, readUltragoalVerificationState } from "../jwc-runtime/goal-guard";
 import { buildSessionContext, loadEntriesFromFile, type SessionEntry } from "../session/session-manager";
 import {
 	readVisibleSkillActiveState as readCanonicalVisibleSkillActiveState,
@@ -517,7 +517,7 @@ async function readCurrentGoalObjectiveFromSessionFile(sessionFile: string | und
 	return typeof objective === "string" && objective.trim().length > 0 ? objective.trim() : null;
 }
 
-export async function buildActiveUltragoalPromptContext(input: UserPromptSubmitStateInput): Promise<string | null> {
+export async function buildActiveGoalPromptContext(input: UserPromptSubmitStateInput): Promise<string | null> {
 	const visibleModeState = await readVisibleModeState(input.cwd, "ultragoal", input.sessionId, input.stateDir);
 	if (!visibleModeState) return null;
 	if (isTerminalModeState(visibleModeState.state)) return null;
@@ -533,7 +533,7 @@ export async function buildActiveUltragoalPromptContext(input: UserPromptSubmitS
 	const sessionObjective = await readCurrentGoalObjectiveFromSessionFile(input.sessionFile);
 	const normalizedPrompt = input.prompt?.replace(/\\?"/g, '"');
 	const isBypassPrompt = Boolean(
-		(normalizedPrompt && isUltragoalBypassPrompt(normalizedPrompt)) ||
+		(normalizedPrompt && isGoalBypassPrompt(normalizedPrompt)) ||
 			(input.prompt && /goal[\s\S]{0,80}complete/i.test(input.prompt)),
 	);
 	if (isBypassPrompt) {
@@ -541,10 +541,10 @@ export async function buildActiveUltragoalPromptContext(input: UserPromptSubmitS
 			(value): value is string => typeof value === "string" && value.trim().length > 0,
 		);
 		if (objectives.length === 0) {
-			return "BLOCK_ULTRAGOAL_COMPLETION: Active Ultragoal completion is blocked until a current jwc goal objective can be verified. Use durable blocker work or run strict `jwc ultragoal checkpoint --status complete --quality-gate-json <file> --gjc-goal-json <file>` before completion.";
+			return "BLOCK_ULTRAGOAL_COMPLETION: Active Goal completion is blocked until a current jwc goal objective can be verified. Use durable blocker work or run strict `jwc ultragoal checkpoint --status complete --quality-gate-json <file> --gjc-goal-json <file>` before completion.";
 		}
 		for (const objective of objectives) {
-			const diagnostic = await readUltragoalVerificationState({
+			const diagnostic = await readGoalVerificationState({
 				cwd: input.cwd,
 				currentGoal: { objective },
 			});
@@ -554,7 +554,7 @@ export async function buildActiveUltragoalPromptContext(input: UserPromptSubmitS
 			}
 		}
 	}
-	return `Ultragoal is active (phase: ${phase}; state: ${visibleModeState.statePath}). If the user prompt is a steering request, use \`jwc ultragoal steer\` to add or steer subgoals. Normal prose should not mutate Ultragoal state.`;
+	return `Goal is active (phase: ${phase}; state: ${visibleModeState.statePath}). If the user prompt is a steering request, use \`jwc ultragoal steer\` to add or steer subgoals. Normal prose should not mutate Goal state.`;
 }
 
 export async function buildSkillStopOutput(input: StopHookInput): Promise<Record<string, unknown> | null> {
@@ -584,7 +584,7 @@ export async function buildSkillStopOutput(input: StopHookInput): Promise<Record
 						? modeState.jwcObjective
 						: "");
 			if (objective) {
-				const diagnostic = await readUltragoalVerificationState({
+				const diagnostic = await readGoalVerificationState({
 					cwd: input.cwd,
 					currentGoal: { objective },
 				});
@@ -624,7 +624,7 @@ export function buildSkillActivationAdditionalContext(
 			? `skill: ${state.initialized_mode} activated and initial state initialized at ${state.initialized_state_path}; use \`jwc state write/read/clear --input '<json>' --json\` for runtime state updates.`
 			: null,
 		state.skill === "ultragoal"
-			? "Ultragoal is active. If the user prompt is a steering request, use `jwc ultragoal steer` to add or steer subgoals."
+			? "Goal is active. If the user prompt is a steering request, use `jwc ultragoal steer` to add or steer subgoals."
 			: null,
 		buildSanitizedEffectiveSkillConfigContext(effectiveSkillConfig),
 		"Follow AGENTS.md routing and preserve jwc workflow transition and planning-safety rules.",

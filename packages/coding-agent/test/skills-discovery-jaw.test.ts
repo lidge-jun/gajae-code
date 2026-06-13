@@ -15,6 +15,7 @@ describe("jaw-brand skill discovery (substitution model)", () => {
 	let tempDir = "";
 	let tempHomeDir = "";
 	let originalHome: string | undefined;
+	let originalJawBrand: string | undefined;
 	let originalBrand: string | undefined;
 	let projectDir = "";
 
@@ -23,8 +24,10 @@ describe("jaw-brand skill discovery (substitution model)", () => {
 		tempHomeDir = fs.mkdtempSync(path.join(os.tmpdir(), "gjc-skills-home-"));
 		originalHome = process.env.HOME;
 		originalBrand = process.env.GJC_BRAND_NAME;
+		originalJawBrand = process.env.JWC_BRAND_NAME;
 		process.env.HOME = tempHomeDir;
 		delete process.env.GJC_BRAND_NAME;
+		delete process.env.JWC_BRAND_NAME;
 		vi.spyOn(os, "homedir").mockReturnValue(tempHomeDir);
 		// Project nested under a work dir so .agents walk-up has a non-home ancestor.
 		projectDir = path.join(tempHomeDir, "work", "project");
@@ -34,6 +37,8 @@ describe("jaw-brand skill discovery (substitution model)", () => {
 	afterEach(() => {
 		if (originalBrand === undefined) delete process.env.GJC_BRAND_NAME;
 		else process.env.GJC_BRAND_NAME = originalBrand;
+		if (originalJawBrand === undefined) delete process.env.JWC_BRAND_NAME;
+		else process.env.JWC_BRAND_NAME = originalJawBrand;
 		cleanupTempHome(() => ({ tempDir, tempHomeDir, originalHome }))();
 	});
 

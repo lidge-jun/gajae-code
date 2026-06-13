@@ -1,20 +1,20 @@
 import * as fs from "node:fs/promises";
-import { DEFAULT_ULTRAGOAL_OBJECTIVE } from "./goal-mode-request";
 import {
-	computeUltragoalPlanGeneration,
-	getUltragoalPaths,
-	getUltragoalRunCompletionState,
+	computeGoalPlanGeneration,
+	type GoalCompletionVerification,
+	type GoalEntry,
+	type GoalLedgerEvent,
+	type GoalPlan,
+	type GoalReceiptKind,
+	getGoalPaths,
+	getGoalRunCompletionState,
 	hashStructuredValue,
-	readUltragoalLedger,
-	readUltragoalPlan,
-	type UltragoalCompletionVerification,
-	type UltragoalGoal,
-	type UltragoalLedgerEvent,
-	type UltragoalPlan,
-	type UltragoalReceiptKind,
+	readGoalLedger,
+	readGoalPlan,
 } from "./goal-engine";
+import { DEFAULT_ULTRAGOAL_OBJECTIVE } from "./goal-mode-request";
 
-export type UltragoalGuardState =
+export type GoalGuardState =
 	| "inactive"
 	| "unrelated_goal"
 	| "active_verified_complete"
@@ -26,8 +26,8 @@ export type UltragoalGuardState =
 	| "active_review_blocked_recorded"
 	| "unreadable_fail_closed";
 
-export interface UltragoalGuardDiagnostic {
-	state: UltragoalGuardState;
+export interface GoalGuardDiagnostic {
+	state: GoalGuardState;
 	message: string;
 	goalId?: string;
 }
@@ -37,7 +37,7 @@ export interface CurrentGoalLike {
 	status?: string;
 }
 
-function objectiveMatches(currentObjective: string, plan: UltragoalPlan): boolean {
+function objectiveMatches(currentObjective: string, plan: GoalPlan): boolean {
 	const normalized = currentObjective.trim();
 	if (!normalized) return false;
 	if (normalized === plan.jwcObjective || normalized === DEFAULT_ULTRAGOAL_OBJECTIVE) return true;
@@ -45,7 +45,7 @@ function objectiveMatches(currentObjective: string, plan: UltragoalPlan): boolea
 	return plan.goals.some(goal => goal.objective === normalized);
 }
 
-function isKnownUltragoalObjective(currentObjective: string): boolean {
+function isKnownGoalObjective(currentObjective: string): boolean {
 	const normalized = currentObjective.trim();
 	return (
 		normalized === DEFAULT_ULTRAGOAL_OBJECTIVE ||
@@ -53,9 +53,9 @@ function isKnownUltragoalObjective(currentObjective: string): boolean {
 	);
 }
 
-async function hasDurableUltragoalState(cwd: string): Promise<boolean> {
+async function hasDurableGoalState(cwd: string): Promise<boolean> {
 	try {
-		await fs.stat(getUltragoalPaths(cwd).dir);
+		await fs.stat(getGoalPaths(cwd).dir);
 		return true;
 	} catch (error) {
 		if (
@@ -70,14 +70,14 @@ async function hasDurableUltragoalState(cwd: string): Promise<boolean> {
 	}
 }
 
-function requiredGoals(plan: UltragoalPlan): UltragoalGoal[] {
+function requiredGoals(plan: GoalPlan): GoalEntry[] {
 	return plan.goals.filter(goal => goal.status !== "superseded");
 }
 
 function findReceiptGoal(
-	plan: UltragoalPlan,
+	plan: GoalPlan,
 	currentObjective: string,
-): { goal: UltragoalGoal; receiptKind: UltragoalReceiptKind } | null {
+): { goal: GoalEntry; receiptKind: GoalReceiptKind } | null {
 	if (
 		currentObjective === plan.jwcObjective ||
 		currentObjective === DEFAULT_ULTRAGOAL_OBJECTIVE ||
@@ -93,15 +93,15 @@ function findReceiptGoal(
 }
 
 function findLedgerReceiptEvent(
-	ledger: readonly UltragoalLedgerEvent[],
-	receipt: UltragoalCompletionVerification,
-): UltragoalLedgerEvent | null {
+	ledger: readonly GoalLedgerEvent[],
+	receipt: GoalCompletionVerification,
+): GoalLedgerEvent | null {
 	return (
 		ledger.find(event => {
 			if (event.eventId !== receipt.checkpointLedgerEventId) return false;
 			if (event.event !== "goal_checkpointed") return false;
 			if (event.goalId !== receipt.goalId) return false;
-			const eventReceipt = event.completionVerification as UltragoalCompletionVerification | undefined;
+			const eventReceipt = event.completionVerification as GoalCompletionVerification | undefined;
 			return (
 				event.status === "complete" &&
 				eventReceipt?.receiptId === receipt.receiptId &&
@@ -113,16 +113,16 @@ function findLedgerReceiptEvent(
 }
 
 export function validateCompletionReceipt(input: {
-	plan: UltragoalPlan;
-	ledger: readonly UltragoalLedgerEvent[];
-	goal: UltragoalGoal;
-	receiptKind: UltragoalReceiptKind;
-}): UltragoalGuardDiagnostic {
+	plan: GoalPlan;
+	ledger: readonly GoalLedgerEvent[];
+	goal: GoalEntry;
+	receiptKind: GoalReceiptKind;
+}): GoalGuardDiagnostic {
 	const receipt = input.goal.completionVerification;
 	if (!receipt) {
 		return {
 			state: input.receiptKind === "final-aggregate" ? "active_missing_final_receipt" : "active_missing_receipt",
-			message: `Ultragoal ${input.goal.id} has no ${input.receiptKind} completion verification receipt.`,
+			message: `Goal ${input.goal.id} has no ${input.receiptKind} completion verification receipt.`,
 			goalId: input.goal.id,
 		};
 	}
@@ -135,7 +135,7 @@ export function validateCompletionReceipt(input: {
 	) {
 		return {
 			state: "active_stale_receipt",
-			message: `Ultragoal ${input.goal.id} receipt is malformed or stale.`,
+			message: `Goal ${input.goal.id} receipt is malformed or stale.`,
 			goalId: input.goal.id,
 		};
 	}
@@ -143,11 +143,11 @@ export function validateCompletionReceipt(input: {
 	if (!event) {
 		return {
 			state: "active_stale_receipt",
-			message: `Ultragoal ${input.goal.id} receipt ledger event is missing.`,
+			message: `Goal ${input.goal.id} receipt ledger event is missing.`,
 			goalId: input.goal.id,
 		};
 	}
-	const generation = computeUltragoalPlanGeneration({
+	const generation = computeGoalPlanGeneration({
 		plan: input.plan,
 		ledger: input.ledger,
 		goal: input.goal,
@@ -158,28 +158,28 @@ export function validateCompletionReceipt(input: {
 	if (generation.planGeneration !== receipt.planGeneration) {
 		return {
 			state: "active_stale_receipt",
-			message: `Ultragoal ${input.goal.id} receipt generation is stale.`,
+			message: `Goal ${input.goal.id} receipt generation is stale.`,
 			goalId: input.goal.id,
 		};
 	}
 	if (hashStructuredValue(event.qualityGateJson) !== receipt.qualityGateHash) {
 		return {
 			state: "active_dirty_quality_gate",
-			message: `Ultragoal ${input.goal.id} receipt quality-gate hash does not match ledger.`,
+			message: `Goal ${input.goal.id} receipt quality-gate hash does not match ledger.`,
 			goalId: input.goal.id,
 		};
 	}
 	if (hashStructuredValue(event.jwcGoalJson) !== receipt.jwcGoalSnapshotHash) {
 		return {
 			state: "active_stale_receipt",
-			message: `Ultragoal ${input.goal.id} receipt goal({"op":"get"}) snapshot hash does not match ledger.`,
+			message: `Goal ${input.goal.id} receipt goal({"op":"get"}) snapshot hash does not match ledger.`,
 			goalId: input.goal.id,
 		};
 	}
 	if (input.goal.updatedAt !== receipt.verifiedAt) {
 		return {
 			state: "active_stale_receipt",
-			message: `Ultragoal ${input.goal.id} receipt target changed after verification.`,
+			message: `Goal ${input.goal.id} receipt target changed after verification.`,
 			goalId: input.goal.id,
 		};
 	}
@@ -188,7 +188,7 @@ export function validateCompletionReceipt(input: {
 		if (incomplete.length > 0) {
 			return {
 				state: "active_missing_final_receipt",
-				message: `Ultragoal final receipt is not valid while required goals remain incomplete: ${incomplete.map(goal => goal.id).join(", ")}.`,
+				message: `Goal final receipt is not valid while required goals remain incomplete: ${incomplete.map(goal => goal.id).join(", ")}.`,
 				goalId: input.goal.id,
 			};
 		}
@@ -198,67 +198,67 @@ export function validateCompletionReceipt(input: {
 		if (missingReceipts.length > 0) {
 			return {
 				state: "active_missing_receipt",
-				message: `Ultragoal final receipt is missing per-goal evidence for: ${missingReceipts.map(goal => goal.id).join(", ")}.`,
+				message: `Goal final receipt is missing per-goal evidence for: ${missingReceipts.map(goal => goal.id).join(", ")}.`,
 				goalId: input.goal.id,
 			};
 		}
 	}
 	return {
 		state: "active_verified_complete",
-		message: `Ultragoal ${input.goal.id} has a fresh ${input.receiptKind} receipt.`,
+		message: `Goal ${input.goal.id} has a fresh ${input.receiptKind} receipt.`,
 		goalId: input.goal.id,
 	};
 }
 
-export async function readUltragoalVerificationState(input: {
+export async function readGoalVerificationState(input: {
 	cwd: string;
 	currentGoal?: CurrentGoalLike | null;
-}): Promise<UltragoalGuardDiagnostic> {
+}): Promise<GoalGuardDiagnostic> {
 	const currentObjective = input.currentGoal?.objective?.trim() ?? "";
 	if (!currentObjective) return { state: "inactive", message: "No current goal objective is active." };
-	let plan: UltragoalPlan | null;
-	let ledger: UltragoalLedgerEvent[];
+	let plan: GoalPlan | null;
+	let ledger: GoalLedgerEvent[];
 	try {
-		plan = await readUltragoalPlan(input.cwd);
-		ledger = await readUltragoalLedger(input.cwd);
+		plan = await readGoalPlan(input.cwd);
+		ledger = await readGoalLedger(input.cwd);
 	} catch (error) {
 		if (currentObjective === DEFAULT_ULTRAGOAL_OBJECTIVE) {
 			return {
 				state: "unreadable_fail_closed",
-				message: `Unable to read Ultragoal verification state: ${error instanceof Error ? error.message : String(error)}`,
+				message: `Unable to read Goal verification state: ${error instanceof Error ? error.message : String(error)}`,
 			};
 		}
-		return { state: "unrelated_goal", message: "Current goal is not an active Ultragoal objective." };
+		return { state: "unrelated_goal", message: "Current goal is not an active Goal objective." };
 	}
 	if (!plan) {
-		if (isKnownUltragoalObjective(currentObjective) || (await hasDurableUltragoalState(input.cwd))) {
+		if (isKnownGoalObjective(currentObjective) || (await hasDurableGoalState(input.cwd))) {
 			return {
 				state: "unreadable_fail_closed",
-				message: "Active Ultragoal objective is missing durable .jwc/ultragoal/goals.json state.",
+				message: "Active Goal objective is missing durable .jwc/ultragoal/goals.json state.",
 			};
 		}
-		return { state: "inactive", message: "No Ultragoal plan exists." };
+		return { state: "inactive", message: "No Goal plan exists." };
 	}
 	if (!objectiveMatches(currentObjective, plan))
-		return { state: "unrelated_goal", message: "Current goal is not an active Ultragoal objective." };
+		return { state: "unrelated_goal", message: "Current goal is not an active Goal objective." };
 	if (plan.goals.some(goal => goal.status === "review_blocked")) {
 		return {
 			state: "active_review_blocked_recorded",
-			message: "Ultragoal has recorded review blockers; complete blocker work and rerun verification.",
+			message: "Goal has recorded review blockers; complete blocker work and rerun verification.",
 		};
 	}
-	const runState = getUltragoalRunCompletionState(plan);
+	const runState = getGoalRunCompletionState(plan);
 	if (runState.incompleteGoals.some(goal => goal.status === "blocked" || goal.status === "failed")) {
 		return {
 			state: "active_dirty_quality_gate",
-			message: "Ultragoal has blocked or failed goals; record blockers or rerun verification.",
+			message: "Goal has blocked or failed goals; record blockers or rerun verification.",
 		};
 	}
 	const receiptTarget = findReceiptGoal(plan, currentObjective);
 	if (!receiptTarget) {
 		return {
 			state: "active_missing_final_receipt",
-			message: "Ultragoal aggregate completion requires a fresh final aggregate receipt.",
+			message: "Goal aggregate completion requires a fresh final aggregate receipt.",
 		};
 	}
 	const receiptDiagnostic = validateCompletionReceipt({
@@ -271,7 +271,7 @@ export async function readUltragoalVerificationState(input: {
 	if (runState.incompleteGoals.length > 0) {
 		return {
 			state: "active_missing_final_receipt",
-			message: `Ultragoal still has incomplete required goals: ${runState.incompleteGoals.map(goal => goal.id).join(", ")}. Run \`jwc ultragoal complete-goals\` to continue.`,
+			message: `Goal still has incomplete required goals: ${runState.incompleteGoals.map(goal => goal.id).join(", ")}. Run \`jwc goal complete-goals\` to continue.`,
 			goalId: receiptTarget.goal.id,
 		};
 	}
@@ -283,14 +283,14 @@ export async function assertCanCompleteCurrentGoal(input: {
 	currentGoal?: CurrentGoalLike | null;
 }): Promise<void> {
 	if (!input.cwd) return;
-	const diagnostic = await readUltragoalVerificationState(input);
+	const diagnostic = await readGoalVerificationState(input);
 	if (["inactive", "unrelated_goal", "active_verified_complete"].includes(diagnostic.state)) return;
 	throw new Error(
 		`${diagnostic.message} Run strict \`jwc ultragoal checkpoint --status complete --quality-gate-json <file> --gjc-goal-json <file>\` first, or record review blockers and rerun verification.`,
 	);
 }
 
-export function isUltragoalBypassPrompt(prompt: string): boolean {
+export function isGoalBypassPrompt(prompt: string): boolean {
 	const normalized = prompt.replace(/\\?"/g, '"');
 	return (
 		/update_goal\s*\(|goal\s+complete|checkpoint[^\n]+--status\s+complete|skip\s+verification|weaken\s+verification|mark\s+.*complete/i.test(

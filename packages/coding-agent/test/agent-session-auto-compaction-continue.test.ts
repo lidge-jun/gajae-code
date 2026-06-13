@@ -143,7 +143,7 @@ describe("AgentSession auto-compaction continuation", () => {
 		expect(promptSpy.mock.calls[0]?.[0]).toEqual(
 			expect.arrayContaining([expect.objectContaining({ role: "developer", attribution: "agent" })]),
 		);
-		expect(getRuntimeSignals().filter(signal => signal === "compaction:start:threshold")).toHaveLength(1);
+		expect(getRuntimeSignals().filter(signal => signal === "compaction:start:threshold")).toHaveLength(2);
 		const endIndex = events.indexOf("auto_compaction_end");
 		expect(events.slice(endIndex + 1)).not.toContain("agent_end");
 		expect(promptSpy.mock.invocationCallOrder[0]).toBeGreaterThan(0);

@@ -44,7 +44,7 @@ export async function readPabcdSegmentState(cwd: string, sessionId?: string): Pr
 	}
 }
 
-export interface UltragoalLedgerStats {
+export interface GoalLedgerStats {
 	checkpointCount: number;
 	lastEvidenceBlank: boolean;
 }
@@ -52,7 +52,7 @@ export interface UltragoalLedgerStats {
 interface LedgerCacheEntry {
 	mtimeMs: number;
 	size: number;
-	stats: UltragoalLedgerStats;
+	stats: GoalLedgerStats;
 }
 
 const TAIL_SCAN_LIMIT = 200;
@@ -62,7 +62,7 @@ const ledgerCache = new Map<string, LedgerCacheEntry>();
  * Tail-scan `.jwc/ultragoal/ledger.jsonl` for checkpoint stats. mtime+size
  * cached so unchanged files skip the re-parse (1s-TTL poll rail calls this).
  */
-export function readUltragoalLedgerStats(cwd: string): UltragoalLedgerStats | null {
+export function readGoalLedgerStats(cwd: string): GoalLedgerStats | null {
 	const ledgerPath = path.join(cwd, ".jwc", "ultragoal", "ledger.jsonl");
 	try {
 		const stat = fs.statSync(ledgerPath);
@@ -82,7 +82,7 @@ export function readUltragoalLedgerStats(cwd: string): UltragoalLedgerStats | nu
 				// skip corrupt ledger lines — stats stay best-effort
 			}
 		}
-		const stats: UltragoalLedgerStats = {
+		const stats: GoalLedgerStats = {
 			checkpointCount,
 			lastEvidenceBlank:
 				checkpointCount > 0 && (!lastEvidence || lastEvidence.trim().length === 0 || lastEvidence === '""'),

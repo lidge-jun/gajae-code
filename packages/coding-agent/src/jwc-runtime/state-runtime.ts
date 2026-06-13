@@ -11,10 +11,10 @@ import {
 } from "../skill-state/active-state";
 import { initialPhaseForSkill } from "../skill-state/initial-phase";
 import {
+	buildGoalHudSummary,
 	buildJawInterviewHudSummary,
 	buildRalplanHudSummary,
 	buildTeamHudSummary,
-	buildUltragoalHudSummary,
 } from "../skill-state/workflow-hud";
 import {
 	type AuditEntry,
@@ -905,7 +905,7 @@ function buildHudForMode(
 			}
 			const currentGoalRaw = goals.find(g => g.status === "active") ?? goals.find(g => g.status === "pending");
 			const status = typeof payload.status === "string" ? (payload.status as string) : (phase ?? "pending");
-			return buildUltragoalHudSummary({
+			return buildGoalHudSummary({
 				status,
 				currentGoal: currentGoalRaw
 					? {

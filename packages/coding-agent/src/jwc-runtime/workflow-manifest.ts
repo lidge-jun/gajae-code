@@ -289,7 +289,7 @@ export const WORKFLOW_MANIFEST: Record<CanonicalJwcWorkflowSkill, SkillManifest>
 		],
 		retention: [STATE_RETENTION, ARTIFACT_RETENTION, LEDGER_RETENTION, PRUNE_RETENTION, FORCE_RETENTION],
 		hudFields: ["current_phase", "active_goal_id", "status", "counts", "ledger_path", "brief_path"],
-		graphLabel: "Ultragoal",
+		graphLabel: "Goal",
 	}),
 	team: manifest({
 		skill: "team",

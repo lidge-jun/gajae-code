@@ -3,8 +3,8 @@ import { mkdirSync, mkdtempSync, utimesSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import {
+	readGoalLedgerStats,
 	readPabcdSegmentState,
-	readUltragoalLedgerStats,
 	truncateObjective,
 } from "../src/modes/components/status-line/workflow-readers";
 
@@ -69,7 +69,7 @@ describe("workflow readers (99.04 C1)", () => {
 				"{corrupt line",
 			].join("\n"),
 		);
-		const stats = readUltragoalLedgerStats(cwd);
+		const stats = readGoalLedgerStats(cwd);
 		expect(stats?.checkpointCount).toBe(2);
 		expect(stats?.lastEvidenceBlank).toBe(true);
 	});
@@ -80,8 +80,8 @@ describe("workflow readers (99.04 C1)", () => {
 		mkdirSync(dir, { recursive: true });
 		const ledger = path.join(dir, "ledger.jsonl");
 		writeFileSync(ledger, JSON.stringify({ event: "goal_checkpointed", evidence: "e1" }));
-		const first = readUltragoalLedgerStats(cwd);
-		const second = readUltragoalLedgerStats(cwd);
+		const first = readGoalLedgerStats(cwd);
+		const second = readGoalLedgerStats(cwd);
 		expect(second).toBe(first); // identical object → cache hit
 
 		// Touch with new mtime + different size → re-parse
@@ -90,11 +90,11 @@ describe("workflow readers (99.04 C1)", () => {
 			`${JSON.stringify({ event: "goal_checkpointed", evidence: "e1" })}\n${JSON.stringify({ event: "goal_checkpointed", evidence: "e2" })}`,
 		);
 		utimesSync(ledger, new Date(), new Date(Date.now() + 1000));
-		expect(readUltragoalLedgerStats(cwd)?.checkpointCount).toBe(2);
+		expect(readGoalLedgerStats(cwd)?.checkpointCount).toBe(2);
 	});
 
 	it("ledger stats return null when no ledger exists", () => {
-		expect(readUltragoalLedgerStats(tempCwd())).toBeNull();
+		expect(readGoalLedgerStats(tempCwd())).toBeNull();
 	});
 });
 

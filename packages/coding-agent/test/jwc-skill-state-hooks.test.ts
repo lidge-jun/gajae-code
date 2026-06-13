@@ -13,13 +13,8 @@ import {
 	ensureWorkflowSkillActivationState,
 	readVisibleSkillActiveState,
 } from "../src/hooks/skill-state";
+import { addGoalSubgoal, checkpointGoal, createGoalPlan, startNextGoal } from "../src/jwc-runtime/goal-engine";
 import { RequiredOnWriteEnvelopeSchema } from "../src/jwc-runtime/state-schema";
-import {
-	addUltragoalSubgoal,
-	checkpointUltragoalGoal,
-	createUltragoalPlan,
-	startNextUltragoalGoal,
-} from "../src/jwc-runtime/goal-engine";
 import { getJawInterviewMutationDecision } from "../src/skill-state/jaw-interview-mutation-guard";
 import { WORKFLOW_STATE_VERSION } from "../src/skill-state/workflow-state-contract";
 
@@ -780,7 +775,7 @@ disabledExtensions:
 
 	it("UserPromptSubmit blocks active Ultragoal completion bypass prompts without a receipt", async () => {
 		const root = await cwd();
-		const plan = await createUltragoalPlan({ cwd: root, brief: "Ship verified ultragoal" });
+		const plan = await createGoalPlan({ cwd: root, brief: "Ship verified ultragoal" });
 		await dispatchJwcNativeSkillHook(
 			{
 				hookEventName: "UserPromptSubmit",
@@ -810,7 +805,7 @@ disabledExtensions:
 
 	it("UserPromptSubmit recovers active Ultragoal objective from session transcript", async () => {
 		const root = await cwd();
-		const plan = await createUltragoalPlan({ cwd: root, brief: "Ship verified ultragoal" });
+		const plan = await createGoalPlan({ cwd: root, brief: "Ship verified ultragoal" });
 		const sessionFile = path.join(root, "session.jsonl");
 		await Bun.write(
 			sessionFile,
@@ -840,16 +835,16 @@ disabledExtensions:
 
 	it("Stop blocks verified Ultragoal stories while later required goals remain", async () => {
 		const root = await cwd();
-		const plan = await createUltragoalPlan({ cwd: root, brief: "Ship verified ultragoal" });
-		await addUltragoalSubgoal({
+		const plan = await createGoalPlan({ cwd: root, brief: "Ship verified ultragoal" });
+		await addGoalSubgoal({
 			cwd: root,
 			title: "Second stage",
 			objective: "Complete the second stage.",
 			evidence: "The test needs a second required goal.",
 			rationale: "Regression coverage for multi-stage continuation.",
 		});
-		await startNextUltragoalGoal({ cwd: root });
-		await checkpointUltragoalGoal({
+		await startNextGoal({ cwd: root });
+		await checkpointGoal({
 			cwd: root,
 			goalId: "G001",
 			status: "complete",
@@ -892,16 +887,16 @@ disabledExtensions:
 
 	it("UserPromptSubmit blocks Ultragoal completion when later required goals remain", async () => {
 		const root = await cwd();
-		const plan = await createUltragoalPlan({ cwd: root, brief: "Ship verified ultragoal" });
-		await addUltragoalSubgoal({
+		const plan = await createGoalPlan({ cwd: root, brief: "Ship verified ultragoal" });
+		await addGoalSubgoal({
 			cwd: root,
 			title: "Second stage",
 			objective: "Complete the second stage.",
 			evidence: "The test needs a second required goal.",
 			rationale: "Regression coverage for multi-stage completion bypass.",
 		});
-		await startNextUltragoalGoal({ cwd: root });
-		await checkpointUltragoalGoal({
+		await startNextGoal({ cwd: root });
+		await checkpointGoal({
 			cwd: root,
 			goalId: "G001",
 			status: "complete",

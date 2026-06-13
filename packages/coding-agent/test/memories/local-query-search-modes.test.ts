@@ -26,12 +26,12 @@ describe("local-query search modes (99.01 M5)", () => {
 		expect(hits.some(h => h.ref === "stage1:manual:hybrid.md")).toBe(true);
 	});
 
-	it("fts-only returns no hits when FTS index is empty even if stage1 row exists", () => {
+	it("fts-only can find the auto-indexed stage1 row immediately after save", () => {
 		const agentDir = tempAgentDir();
 		const cwd = "/proj/fts-only-empty";
 		saveLocalMemoryManual(agentDir, cwd, "only.md", "lonely fts only token");
 		const hits = searchLocalMemories(agentDir, cwd, "lonely fts", 8, { searchMode: "fts" });
-		expect(hits.length).toBe(0);
+		expect(hits.some(h => h.ref === "stage1:manual:only.md")).toBe(true);
 	});
 
 	it("like mode still finds stage1 without FTS index", () => {
