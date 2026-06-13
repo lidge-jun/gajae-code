@@ -2499,6 +2499,10 @@ export class InteractiveMode implements InteractiveModeContext {
 		this.#selectorController.showEffortSelector();
 	}
 
+	showSearchEngineSelector(): void {
+		this.#selectorController.showSearchEngineSelector();
+	}
+
 	showQuotaSelector(): void {
 		this.#selectorController.showQuotaSelector();
 	}

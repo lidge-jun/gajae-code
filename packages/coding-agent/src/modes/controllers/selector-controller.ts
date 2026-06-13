@@ -44,6 +44,7 @@ import { addApiCompatibleProvider, formatProviderSetupResult } from "../../setup
 import { BUILTIN_SLASH_COMMANDS_INTERNAL } from "../../slash-commands/builtin-registry";
 import { isSearchProviderPreference, setPreferredImageProvider, setPreferredSearchProvider } from "../../tools";
 import { setSessionTerminalTitle } from "../../utils/title-generator";
+import type { SearchProviderId } from "../../web/search/types";
 import { AgentDashboard } from "../components/agent-dashboard";
 import { AssistantMessageComponent } from "../components/assistant-message";
 import { CustomProviderWizardComponent, type CustomProviderWizardSubmit } from "../components/custom-provider-wizard";
@@ -284,6 +285,140 @@ export class SelectorController {
 			container.addChild(list);
 			container.addChild(new DynamicBorder());
 			return { component: container, focus: list };
+		});
+	}
+
+	/** 2-pane dropdown for /searchengine — provider list + settings form (space to toggle, 080). */
+	showSearchEngineSelector(): void {
+		const engines: SelectItem[] = [
+			{ value: "auto", label: "auto", description: "Active model's native search, DuckDuckGo fallback" },
+			{ value: "codex", label: "chatgpt", description: "ChatGPT/OpenAI native search (codex)" },
+			{ value: "anthropic", label: "claude", description: "Anthropic native search" },
+			{ value: "gemini", label: "gemini", description: "Google Gemini native search" },
+			{ value: "xai", label: "grok", description: "xAI Grok unified web + X search" },
+			{ value: "duckduckgo", label: "duckduckgo", description: "Keyless DuckDuckGo (always available)" },
+			{ value: "perplexity", label: "perplexity", description: "Perplexity search" },
+			{ value: "exa", label: "exa", description: "Exa keyed search API" },
+			{ value: "brave", label: "brave", description: "Brave keyed search API" },
+			{ value: "tavily", label: "tavily", description: "Tavily keyed search API" },
+		];
+
+		// Settings form options
+		const ctx = this.ctx; // capture for closure (wrapper is a plain object, not a class method)
+		const DEPTHS = ["fast", "deep"] as const;
+		const EFFORTS = ["none", "low", "medium", "high"] as const;
+		const CONTEXTS = ["low", "medium", "high"] as const;
+
+		this.showSelector(done => {
+			let pane: "providers" | "settings" = "providers";
+			let settingsRow = 0; // 0=depth, 1=reasoning, 2=contextSize
+
+			// Read current settings
+			let depth = (ctx.settings.get("web_search.depth") as string) ?? "fast";
+			let effort = (ctx.settings.get("web_search.reasoningEffort") as string) ?? "none";
+			let ctxSize = (ctx.settings.get("web_search.contextSize") as string) ?? "high";
+			const selectedProvider = () => (ctx.settings.get("providers.webSearch") as string) ?? "auto";
+			const isCodexProvider = () => ["codex", "auto"].includes(selectedProvider());
+			const maxRow = () => isCodexProvider() ? 2 : 1; // hide contextSize for non-codex
+
+			// Provider list (pane 0)
+			const list = new SelectList(engines, 10, getSelectListTheme());
+			const currentIndex = engines.findIndex(item => item.value === ctx.settings.get("providers.webSearch"));
+			if (currentIndex >= 0) list.setSelectedIndex(currentIndex);
+			list.onSelect = item => {
+				done();
+				const next = item.value as SearchProviderId | "auto";
+				ctx.settings.set("providers.webSearch", next);
+				setPreferredSearchProvider(next);
+				void ctx.notifyConfigChanged?.();
+				ctx.statusLine.invalidate();
+				ctx.showStatus(`Search engine set to ${next}. Fallback remains DuckDuckGo.`);
+				ctx.ui.requestRender();
+			};
+			list.onCancel = () => { done(); ctx.ui.requestRender(); };
+
+			// 2-pane wrapper component
+			const wrapper: Component = {
+				render(width: number): string[] {
+					if (pane === "providers") {
+						const header = theme.fg("accent", " Web search engine") + theme.fg("dim", "  ·  space for settings");
+						return [
+							...new DynamicBorder().render(width),
+							header,
+							...list.render(width),
+							...new DynamicBorder().render(width),
+						];
+					}
+					// Settings pane
+					const rows: string[] = [];
+					const label = (text: string, active: boolean) => active ? theme.fg("accent", `▸ ${text}`) : `  ${text}`;
+					const seg = <T extends string>(options: readonly T[], current: string, active: boolean) =>
+						options.map(o => {
+							const selected = o === current;
+							if (selected && active) return theme.fg("accent", `[${o}]`);
+							if (selected) return `[${o}]`;
+							return theme.fg("dim", ` ${o} `);
+						}).join(" ");
+
+					rows.push(theme.fg("accent", " Search settings") + theme.fg("dim", `  ·  provider: ${selectedProvider()}  ·  space for providers`));
+					rows.push("");
+					rows.push(`${label("Depth", settingsRow === 0)}       ${seg(DEPTHS, depth, settingsRow === 0)}`);
+					rows.push(`${label("Reasoning", settingsRow === 1)}   ${seg(EFFORTS, effort, settingsRow === 1)}`);
+					if (isCodexProvider()) {
+						rows.push(`${label("Context", settingsRow === 2)}     ${seg(CONTEXTS, ctxSize, settingsRow === 2)}`);
+					}
+					rows.push("");
+					rows.push(theme.fg("dim", " ←/→ change · ↑/↓ move · ⏎ apply · esc back · space providers"));
+					return [...new DynamicBorder().render(width), ...rows, ...new DynamicBorder().render(width)];
+				},
+
+				handleInput(data: string) {
+					// Space toggles pane (model-selector pattern)
+					if (data === " ") {
+						pane = pane === "providers" ? "settings" : "providers";
+						wrapper.invalidate?.();
+						return;
+					}
+
+					if (pane === "providers") {
+						list.handleInput(data);
+						return;
+					}
+
+					// Settings pane key handling (080 §7: ↑/↓ row, ←/→ value, Enter apply)
+					if (data === "\x1b[A" || data === "\x1bOA") { // up
+						settingsRow = Math.max(0, settingsRow - 1);
+					} else if (data === "\x1b[B" || data === "\x1bOB") { // down
+						settingsRow = Math.min(maxRow(), settingsRow + 1);
+					} else if (data === "\x1b[D" || data === "\x1bOD") { // left
+						if (settingsRow === 0) depth = DEPTHS[Math.max(0, DEPTHS.indexOf(depth as typeof DEPTHS[number]) - 1)] ?? depth;
+						else if (settingsRow === 1) effort = EFFORTS[Math.max(0, EFFORTS.indexOf(effort as typeof EFFORTS[number]) - 1)] ?? effort;
+						else if (settingsRow === 2) ctxSize = CONTEXTS[Math.max(0, CONTEXTS.indexOf(ctxSize as typeof CONTEXTS[number]) - 1)] ?? ctxSize;
+					} else if (data === "\x1b[C" || data === "\x1bOC") { // right
+						if (settingsRow === 0) depth = DEPTHS[Math.min(DEPTHS.length - 1, DEPTHS.indexOf(depth as typeof DEPTHS[number]) + 1)] ?? depth;
+						else if (settingsRow === 1) effort = EFFORTS[Math.min(EFFORTS.length - 1, EFFORTS.indexOf(effort as typeof EFFORTS[number]) + 1)] ?? effort;
+						else if (settingsRow === 2) ctxSize = CONTEXTS[Math.min(CONTEXTS.length - 1, CONTEXTS.indexOf(ctxSize as typeof CONTEXTS[number]) + 1)] ?? ctxSize;
+					} else if (data === "\r" || data === "\n") { // Enter = apply
+						ctx.settings.set("web_search.depth", depth);
+						ctx.settings.set("web_search.reasoningEffort", effort);
+						ctx.settings.set("web_search.contextSize", ctxSize);
+						void ctx.notifyConfigChanged?.();
+						done();
+						ctx.showStatus(`Search: depth=${depth} reasoning=${effort} context=${ctxSize}`);
+						ctx.ui.requestRender();
+						return;
+					} else if (data === "\x1b" || data === "\x1b\x1b") { // Esc = back to providers
+						pane = "providers";
+					}
+					wrapper.invalidate?.();
+				},
+
+				invalidate() {
+					// no-op — TUI re-renders on requestRender
+				},
+			};
+
+			return { component: wrapper, focus: wrapper };
 		});
 	}
 

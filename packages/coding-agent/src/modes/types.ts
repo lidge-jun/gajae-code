@@ -252,6 +252,7 @@ export interface InteractiveModeContext {
 	showAgentsDashboard(): void;
 	showModelSelector(options?: { temporaryOnly?: boolean }): void;
 	showEffortSelector(): void;
+	showSearchEngineSelector(): void;
 	showQuotaSelector(): void;
 	showUsageReportPanel(title: string, load: () => Promise<((width: number) => string[]) | string>): void;
 	handleQuotaForProvider(providerId: string): Promise<void>;

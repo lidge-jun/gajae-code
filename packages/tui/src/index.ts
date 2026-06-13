@@ -21,10 +21,10 @@ export * from "./components/viewport-fill";
 export type * from "./editor-component";
 // Fuzzy matching
 export * from "./fuzzy";
-// Keybindings
-export * from "./keybindings";
 // Kitty keyboard protocol helpers
 export * from "./insert-history";
+// Keybindings
+export * from "./keybindings";
 export * from "./keys";
 // Renderer/runtime observability metrics (opt-in)
 export * from "./metrics";
