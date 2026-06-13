@@ -67,11 +67,12 @@
 
 ## 열린 질문
 
-- 스킬 주입 1차(프롬프트)→2차(네이티브) 전환 시점
-- cli-jaw A1 시스템 프롬프트(`src/prompt/templates/a1-system.md`)와 jwc 시스템 프롬프트의 권한 어휘 충돌 목록
+- ~~스킬 주입 1차(프롬프트)→2차(네이티브) 전환 시점~~ → **해소**: 네이티브 우선 확정 (260613)
+- ~~cli-jaw A1 시스템 프롬프트와 jwc 시스템 프롬프트의 권한 어휘 충돌 목록~~ → **축소**: A1 tool 섹션 조건부 제거로 충돌 범위 대폭 감소. 잔여: dispatch/computer-use/vision-click의 jwc tool과 충돌 여부만 확인
 - 자가 전이 단락 훅: 상주 환경에서 모델의 `jwc orchestrate <stage>` shell 호출을 in-process로 가로채는
   방식 (BashTool 인터셉트 vs 전용 도구 등록) — [111 §착수 전 실측 보강](./111_design_runtime_attach.md) 열린 질문 2 승계
 - D130-1 튜닝 항목 ①~④의 확정 시점 (130 착수 시 프로토타입으로 결정)
+- search skill 보강 범위: cli-jaw A1의 4단계 에스컬레이션(web-search → browser → ~~progrok~~ → web-ai) 중 jwc에 포팅할 라우팅 규칙 구체화
 
 ## 세부 실행 문서 (260613 구체화)
 

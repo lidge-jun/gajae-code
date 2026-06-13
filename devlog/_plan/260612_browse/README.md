@@ -1,8 +1,9 @@
 # 260612 browse — tool schema slimming + browse skill
 
-> 상태: 스캐폴딩 ✅
+> 상태: **MVP 구현 완료 ✅** (260613) — browse skill 등록 + browser.md 축소 + token 측정 + smoke 검증
 > 목적: `browser` tool 정의를 얇게 만들고 긴 조작 지침을 `browse` skill로 지연 주입한다.
 > 비목표: 기존 MVP/web-ai 빌딩 폴더로 흡수하지 않는다. `browse`는 독립 브라우저 조작·진단 트랙이다.
+> **확장 (260613)**: 이 패턴(hidden bundled skill로 tool guidance 분리)을 search, web-ai에도 적용. cli-jaw A1 tool 섹션 조건부 축소의 전제 작업.
 
 ## Jawdev layout
 
@@ -18,8 +19,8 @@
 - Fork policy: 기존 “번들 기본 workflow skill 4개 제한”은 이 트랙에서 제품 제약으로 보지 않는다.
 - 그래도 `browse`는 workflow skill이 아니라 **tool usage skill**로 취급한다.
 - 기본 context 절감이 1차 목표다. 런타임 통합(cli-jaw/AGBrowse backend)은 후속 트랙이다.
-- 현재 폴더의 MVP는 **계획 문서 스캐폴딩 + 실행 전 점검**이다. 이 패스에서는 제품 소스와 런타임 skill registry를 수정하지 않는다.
-- 구현 MVP는 별도 착수 시 `010_plan_tool_slimming.md`의 phase split을 따른다.
+- ~~현재 폴더의 MVP는 계획 문서 스캐폴딩~~ → **구현 완료** (260613). `browser.md` 72→14줄, `.describe()` 18개 제거, browse skill `hide:true` 등록, token 4,500→2,965 (34% 감소).
+- **후속 포팅 대상**: search skill 보강 + web-ai skill 포팅 (동일 `hide:true` 패턴). 130 Scope A 선행 작업.
 
 ## Subagent review — 260612
 

@@ -9,7 +9,7 @@
 
 | 단계 | 내용 | 앵커/근거 | AC |
 |---|---|---|---|
-| P1 | **도구 패리티 갭 표** 작성: 벤더 CLI 고유 기능(웹검색, computer-use, vision) vs jwc tools + cli-jaw `lib/mcp` 충당 범위 | jwc tools 인벤토리 `packages/coding-agent/src/tools/` · MLB 20-80 등급 표 (하우스 규칙) | 갭 표 승인, "차단급 갭 0건" 판정 |
+| P1 | **도구 패리티 갭 표** 작성: 벤더 CLI 고유 기능(웹검색, computer-use, vision) vs jwc tools + cli-jaw `lib/mcp` 충당 범위. **browser 통합 확정 (260613)**: `cli-jaw browser` CDP → jwc `browser` tool 라우팅, browse skill 정본. search/web-ai도 jwc hidden skill 포팅. | jwc tools 인벤토리 `packages/coding-agent/src/tools/` · MLB 20-80 등급 표 (하우스 규칙) | 갭 표 승인, "차단급 갭 0건" 판정 |
 | P2 | 기본값 전환: 신규 세션 기본 cli=`jwc`, 벤더 CLI(claude/codex/gemini)는 fallback 체인 강등 | cli-jaw `resolveMainCli()` (main-session.ts:36 — 110 §코드 사실) | 신규 세션 기본 jwc |
 | P3 | 마이그레이션: 기존 인스턴스 settings.json의 cli 값 — [기본값] 기존 값 존중, 신규만 jwc | cli-jaw settings | 기존 인스턴스 무회귀 |
 | P4 | 회귀 스위트: AGY/spawn 계열 + 110–130 e2e를 승격 게이트로 | 110 §완료 기준 · 130 done 3항목 | 전 게이트 green |

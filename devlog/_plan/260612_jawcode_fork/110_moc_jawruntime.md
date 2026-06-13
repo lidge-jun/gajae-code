@@ -91,6 +91,7 @@ spawnAgent 어댑터 삽입 지점:
    - `resolveMainCli()` 반환값 `'jwc'` 분기 추가 (`spawn.ts:774` 근처)
    - 기존 큐/게이트/타임아웃/직원 디스패치 시맨틱 보존 (`mainManaged`/`gateEligibleMain` 플래그)
    - `discriminate()` 레이어 건너뜀 — `AgentSessionEvent` 직접 구독
+   - **tool guidance 주입 금지** [확정 260613]: jwc가 tool description + hidden skill(browse, search, web-ai)로 자체 처리. cli-jaw는 PABCD/boss/identity/memory만 세션에 주입. A1 tool 섹션(browser §108-211, search routing) 비활성.
 
 3. **AgentSessionEvent → bus.broadcast() 매핑 표** (110 P 작성):
    - `message_update` (thinking_delta/tool_execution_* 포함) → `agent_stream`
