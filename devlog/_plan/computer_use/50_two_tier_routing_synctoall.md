@@ -65,7 +65,7 @@ cu-mcp는 **모델과 무관하게 서버에서 강제**되는 tier 정책을 �
 
 ### 1. syncToAll 최신화 — kiro 타깃 추가 + claude 경로 검증
 
-- **kiro 타깃 추가**: 경로 `~/.kiro/agents/agent_config.json`, 포맷 **JSON `mcpServers`**(`.example`의
+- **kiro 타깃 추가**: 경로 `~/.kiro/settings/mcp.json`, 포맷 **JSON `mcpServers`**(`.example`의
   `"mcpServers": {}` 블록으로 확정). **`toClaudeMcp` 재활용** 가능. `results`에 `kiro: false` 추가.
   - 파일 없으면 생성할지/스킵할지는 codex(존재 시만 patch) 방식과 통일 권장.
 - **grok**: 조치 없음(cursor-compat 자동). 단 사용자가 `GROK_CURSOR_MCPS_ENABLED`를 끄면 끊기므로
@@ -131,6 +131,6 @@ cli-jaw 통합 MCP(`loadUnifiedMcp`/`saveUnifiedMcp`, `JAW_HOME/mcp.json`)에 `c
 | 마지막 수정 | `2026-05-30 fe1d2db3 feat(ui): MCP settings page` |
 | 엔진 명단 | `cli-jaw/src/agent/args.ts:172-300` |
 | grok compat 스캔 | `~/.grok/docs/user-guide/07-mcp-servers.md:181-186` |
-| kiro mcpServers | `~/.kiro/agents/agent_config.json`(`.example:5` `"mcpServers": {}`) |
+| kiro mcpServers | `~/.kiro/settings/mcp.json`(`.example:5` `"mcpServers": {}`) |
 | claude 정설 경로 | 루트 `CLAUDE.md` §7 (`~/.claude.json → mcpServers`) |
 | cu-mcp tier enforcement | `cu-mcp-server/src/safety/enforcement.ts` `enforcePreAction` |
