@@ -21,6 +21,7 @@
 | 2 | [todo_pipeline.md](./todo_pipeline.md) | `todo_write` 세션 상태·리마인더·TUI `todoContainer` (99.30.01) | `packages/coding-agent/src/tools/todo-write.ts` |
 | 2 | [memory_pipeline.md](./memory_pipeline.md) | memories startup·주입·검색 갭(99 밴드) | `structure/memory_pipeline.md:1` |
 | 2 | [model_patches.md](./model_patches.md) | 모델별 동작 패치 4층 지도 + 신규 프로바이더 플레이북 | `packages/ai/src/providers/composer-discipline.ts:1` |
+| 2 | [search.md](./search.md) | web 검색 프로바이더 전환·OAuth/키 게이팅·auto 매핑·`/searchengine`·xAI 통합 검색 | `packages/coding-agent/src/web/search/provider.ts:157` |
 | 3 | [gitstructure.md](./gitstructure.md) | fork 원격, 표면 리네이밍, 리베이스 가드 | `devlog/_plan/260612_jawcode_fork/phase1/05_interview_conclusions.md:10` |
 | 3 | [fork-delta.md](./fork-delta.md) | HARD-EDIT/NEW/REMOVED 인덱스 | `structure/fork-delta.md:1` |
 | 3 | [fork_logic_changelog.md](./fork_logic_changelog.md) | git log 기반 **동작·런타임** 변경 | `structure/fork_logic_changelog.md:1` |
@@ -42,6 +43,7 @@
 | [memory_pipeline.md](./memory_pipeline.md) | jwc memory vs cli-jaw FTS/BM25 | memory, local-query |
 | [todo_pipeline.md](./todo_pipeline.md) | `todo_write`, phases, stop 리마인더, composer 패널 | 99.30, interactive-mode |
 | [model_patches.md](./model_patches.md) | 카탈로그 compat·요청 변환기·discipline 주입·호스트 방어 | composer, compat, discipline |
+| [search.md](./search.md) | 검색 프로바이더 16종·해석 체인·OAuth/키 게이팅·auto 8계열·`/searchengine`·xAI web+X | web_search, searchengine, provider, oauth, auto |
 | [fork_logic_changelog.md](./fork_logic_changelog.md) | orchestrate, interview, β migration, TUI, auth | logic, commits |
 | [jwc_readiness.md](./jwc_readiness.md) | MLB 50→62→68, CRITICAL 3, pabcd discovery | readiness, M1 close |
 | [m1_closeout.md](./m1_closeout.md) | 99 패키지·99.03 M1/M2/M3·착수 순서 | M1 close, 99 band |

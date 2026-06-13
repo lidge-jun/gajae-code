@@ -50,6 +50,7 @@ struct_har 밴드 문서의 **cli-jaw cite**는 PABCD·memory·주입 레일 비
 | [jwc_readiness.md](./jwc_readiness.md) | **지금 jwc 쓸 수 있나** (MLB·블로커·착수 순서) |
 | [m1_closeout.md](./m1_closeout.md) | 99 패키지·결정·착수 순서·struct_har 매핑 |
 | [todo_pipeline.md](./todo_pipeline.md) | todo_write · 세션 phases · TUI 접힘(99.30) | agent-session, interactive-mode |
+| [search.md](./search.md) | web 검색 프로바이더·OAuth/키 게이팅·auto·`/searchengine`·xAI web+X | web/search, slash-commands |
 | [beta_v0.1_closeout.md](./beta_v0.1_closeout.md) | beta v0.1 문서 세트·OSS·착수 순서 단일 정본 |
 | [struct_har/chase/](../struct_har/chase/README.md) | 갭 · **`10_*` / `20_*` 플랜 정본** |
 | [10_gjc_chase_MOC](../struct_har/chase/10_gjc_chase_MOC.md) | upstream gajae-code `10.NNN_*` |
