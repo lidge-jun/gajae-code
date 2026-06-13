@@ -83,19 +83,44 @@ jwc goal done   ← autoGate가 quality-gate.json 읽음
 ### 목표 흐름 (programmatic dispatch)
 
 ```
-jwc goal set "인증 시스템 리팩터"
-  ↓ goal dispatcher (신규)
-  ↓ for each story in plan:
-    ↓ runNativeOrchestrateCommand('i', cwd)  // 필요시
-    ↓ runNativeOrchestrateCommand('p', cwd)
-    ↓ runNativeOrchestrateCommand('a', cwd)
-    ↓ runNativeOrchestrateCommand('b', cwd)
-    ↓ runNativeOrchestrateCommand('c', cwd)
-    ↓ if C fails → re-enter P (cycle++)
-    ↓ runNativeOrchestrateCommand('d', cwd)
-    ↓ goal checkpoint → next story
+/goal set "인증 시스템 전면 리팩터"
+  ↓ goal dispatcher: 작업 분석 → story 분할 (동적 — 1개일 수도, 5개일 수도)
+  ↓
+  ↓ story G001:
+  │  P → A → B → C(pass) → D → checkpoint
+  │
+  ↓ story G002:
+  │  P → A → B → C(fail) → P(hotfix) → B → C(pass) → D → checkpoint
+  │
+  ↓ story G003: (런타임에 추가될 수도 — steering)
+  │  P → A → B → C(pass) → D → checkpoint
+  │
   ↓ all stories done → goal complete
 ```
+
+핵심 설계:
+- **I는 goal 밖** — 유저가 직접 `/interview`로 진입. goal은 I를 안 탐
+- **story 수는 동적** — 처음에 3개로 계획해도 중간에 steering으로 추가/제거
+- **각 story는 독립 PABCD cycle** — D에서 IDLE로 갔다가 다음 story의 P로 재진입
+- **C fail → re-enter P** — cycle counter로 무한루프 방지 (기본 max 3)
+- standalone PABCD (goal 없이)는 **한 사이클로 끝** — 현재와 동일
+
+### HITL → HOTL 전환
+
+| 모드 | 설명 | 게이트 |
+|---|---|---|
+| **standalone PABCD** (HITL) | 현재 동작. 매 전환마다 유저 승인 | I→P⛔ P→A⛔ A→B⛔ B→C⛔ C→D✅ |
+| **goal-wrapped PABCD** (HOTL) | goal이 자동 진행. 유저는 관찰 + 필요 시 개입 | 게이트 해제, HUD로 진행 상황 관찰 |
+
+HOTL에서 유저 개입 수단:
+- **steer**: goal steering으로 방향 수정 (story 추가/제거/수정)
+- **pause**: 아무 때나 `/goal pause` → PABCD 현재 phase에서 정지
+- **override**: 특정 phase에 유저 게이트 강제 삽입 (설정: `goal.gates: ["A"]` → A만 유저 확인)
+- **cancel**: `/goal cancel` → 현재 story 중단, 롤백
+
+goal이 PABCD를 감쌀 때는 **유저 게이트를 건너뛰고 자동 진행** — 원래 HITL이던 ⛔가 goal 모드에서는 자동 통과.
+유저는 HUD에서 `goal:B cycle=1 status=building`을 보면서 필요할 때만 개입.
+이것이 "원래 HITL인데 HOTL로 할 수 있게 해주는" 구조.
 
 ### 구현 위치
 
