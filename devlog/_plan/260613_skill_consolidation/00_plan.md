@@ -146,9 +146,62 @@ ultragoal SKILL.md의 핵심 가이드를 goal tool의 description에 통합:
 - goal-runtime.ts (HUD 상태 발행)
 - ultragoal-runtime.ts (HUD 이벤트 포맷)
 
+### M7: Multi-cycle PABCD + 서브에이전트 병렬 검증
+
+goal 하나에 PABCD가 **한 사이클로 끝나지 않음**. 복잡한 goal은:
+
+```
+G001: "인증 시스템 전면 리팩터"
+  cycle 1: P→A→B(auth-module)→C(fail)→ ← C에서 실패
+  cycle 2: P(hotfix)→B(fix)→C(pass)→D  ← 재진입, 수정 후 통과
+```
+
+#### Multi-cycle 설계
+
+- PABCD는 **선형 파이프라인이 아니라 루프**
+- C(Check)에서 실패 → P로 재진입 (hotfix plan) → B → C 재시도
+- cycle counter: `cycle=2 phase=B` HUD에 노출
+- 각 cycle은 ledger.jsonl에 독립 엔트리로 기록
+
+```
+◆ hud goal:B goals=1/3 current=G001 cycle=2 phase=B status=fixing receipt=wip
+```
+
+#### 서브에이전트 병렬 검증 (C phase)
+
+C(Check) 단계에서 **여러 검증을 병렬 서브에이전트로 파견**:
+
+```
+C phase dispatch:
+  ├─ executor(cheap:anthropic) → unit test 실행
+  ├─ executor(cheap:google)    → integration test
+  ├─ architect(best:anthropic) → architecture review
+  └─ critic(self)              → plan compliance check
+```
+
+- 서브에이전트 모델 라우팅 (260613_subagent_model_routing) 활용
+- 각 검증은 독립 — 하나라도 fail이면 cycle 재진입
+- 결과 aggregate: `{ pass: 3, fail: 1 }` → fail 사유와 함께 P로 복귀
+- pass 기준: **전원 pass** (majority vote 아님)
+
+#### HUD 확장
+
+```
+◆ hud goal:C goals=1/3 current=G001 cycle=1 phase=C status=verifying[2/4] receipt=wip
+◆ hud goal:C goals=1/3 current=G001 cycle=1 phase=C status=fail(architect) receipt=wip
+◆ hud goal:P goals=1/3 current=G001 cycle=2 phase=P status=hotfix-plan receipt=wip
+```
+
+#### 연관 플랜
+
+- 서브에이전트 모델 라우팅: `devlog/_plan/260613_subagent_model_routing/00_plan.md`
+- TaskItem.model 필드로 per-task 모델 지정 (이미 구현 완료)
+
 ## 미결정
 
 - ralplan-runtime.ts 완전 삭제 vs 레거시 아티팩트 읽기용 유지
 - ultragoal의 ai-slop-cleaner.md를 어디로 옮길지 (goal tool prompt? 별도 파일?)
 - `.jwc/plans/ralplan/` 기존 디스크 아티팩트 마이그레이션 or 읽기만 유지
 - `V1_STAGES` 배열에서 제거 시 기존 gate 이벤트 호환성
+- cycle 최대 횟수 제한 (무한 루프 방지) — 기본 3? 5?
+- C phase 병렬 검증 실패 시 사용자 확인 게이트 필요 여부 (자동 재진입 vs 승인 후 재진입)
