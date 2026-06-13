@@ -2081,6 +2081,11 @@ export class AcpAgent implements Agent {
 		}
 
 		const manager = new MCPManager(record.session.sessionManager.getCwd());
+		manager.setOnToolsChanged(tools => {
+			void record.session.refreshMCPTools(tools).catch(error => {
+				logger.warn("Failed to refresh ACP MCP tools after background update", { error });
+			});
+		});
 		const configs: MCPConfigMap = {};
 		const sources: MCPSourceMap = {};
 		for (const server of servers) {

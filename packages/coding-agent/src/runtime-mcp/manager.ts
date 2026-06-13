@@ -477,18 +477,12 @@ export class MCPManager {
 				const pendingWithoutCache = pendingTasks.filter(task => !cachedTools.has(task.name));
 				if (pendingWithoutCache.length > 0) {
 					for (const task of pendingWithoutCache) {
-						const message = `MCP server connection timed out during startup: ${task.name}`;
-						errors.set(task.name, message);
-						reportedErrors.add(task.name);
-						task.connectionAbort.abort(new Error(message));
-						if (this.#pendingConnections.has(task.name)) this.#pendingConnections.delete(task.name);
-						if (this.#pendingToolLoads.get(task.name) === task.toolsPromise)
-							this.#pendingToolLoads.delete(task.name);
-						this.#pendingConnectionControllers.delete(task.name);
+						logger.debug("MCP server still connecting after startup grace window", { path: `mcp:${task.name}` });
 					}
-					// Do not await these promises here: a misbehaving stdio/MCP transport can ignore
-					// AbortSignal and keep startup blocked indefinitely. The background toolsPromise
-					// handler will clean up if it eventually settles.
+					// Leave slow startups in-flight instead of aborting them. `npx`-backed
+					// stdio MCP servers can legitimately take longer than the startup grace
+					// window on first run; aborting here makes `/mcp list` report a false
+					// "not connected" state instead of "connecting".
 				}
 			}
 

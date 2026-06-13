@@ -966,6 +966,11 @@ export async function runRootCommand(
 	} else {
 		const { session, setToolUIContext, modelFallbackMessage, lspServers, mcpManager, eventBus } =
 			await createSession(sessionOptions);
+		mcpManager?.setOnToolsChanged(tools => {
+			void session.refreshMCPTools(tools).catch(error => {
+				logger.warn("Failed to refresh MCP tools after background update", { error });
+			});
+		});
 		if (parsedArgs.apiKey && !sessionOptions.model && session.model) {
 			authStorage.setRuntimeApiKey(session.model.provider, parsedArgs.apiKey);
 		}

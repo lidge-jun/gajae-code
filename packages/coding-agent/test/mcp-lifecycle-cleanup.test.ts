@@ -91,7 +91,7 @@ describe("MCP lifecycle cleanup", () => {
 		expect(manager.getConnection("slow")).toBeUndefined();
 	});
 
-	it("connectServers fails fast when an uncached MCP startup ignores abort", async () => {
+	it("connectServers keeps uncached slow startups connecting after the startup grace window", async () => {
 		let capturedSignal: AbortSignal | undefined;
 		mock.module("../src/runtime-mcp/client", () => ({
 			...mcpClient,
@@ -111,10 +111,49 @@ describe("MCP lifecycle cleanup", () => {
 		);
 
 		expect(Date.now() - startedAt).toBeLessThan(2_000);
-		expect(capturedSignal?.aborted).toBe(true);
+		expect(capturedSignal?.aborted).toBe(false);
 		expect(result.tools).toHaveLength(0);
-		expect(result.errors.get("stuck")).toBe("MCP server connection timed out during startup: stuck");
-		expect(manager.getConnectionStatus("stuck")).toBe("disconnected");
+		expect(result.errors.has("stuck")).toBe(false);
+		expect(manager.getConnectionStatus("stuck")).toBe("connecting");
+
+		await manager.disconnectAll();
+		expect(capturedSignal?.aborted).toBe(true);
+	});
+
+	it("slow startup completion refreshes tools in the background", async () => {
+		const release = Promise.withResolvers<MCPServerConnection>();
+		mock.module("../src/runtime-mcp/client", () => ({
+			...mcpClient,
+			connectToServer: () => release.promise,
+			listTools: async () => [
+				{
+					name: "late_tool",
+					description: "Late MCP tool",
+					inputSchema: { type: "object" },
+				},
+			],
+		}));
+		const { MCPManager: MockedManager } = await import("../src/runtime-mcp/manager");
+		const manager = new MockedManager(process.cwd());
+		let refreshedToolNames: string[] = [];
+		manager.setOnToolsChanged(tools => {
+			refreshedToolNames = tools.map(tool => tool.name);
+		});
+
+		const result = await manager.connectServers(
+			{ slow: { type: "stdio", command: "slow", timeout: 10_000 } },
+			{ slow: { provider: "test", providerName: "Test", path: "test", level: "project" } },
+		);
+
+		expect(result.tools).toHaveLength(0);
+		expect(manager.getConnectionStatus("slow")).toBe("connecting");
+
+		release.resolve(makeConnection("slow"));
+		await Bun.sleep(0);
+		await Bun.sleep(0);
+
+		expect(manager.getConnectionStatus("slow")).toBe("connected");
+		expect(refreshedToolNames).toEqual(["mcp__slow_late_tool"]);
 	});
 
 	it("HttpTransport.close aborts and settles background SSE readers without reconnect", async () => {
