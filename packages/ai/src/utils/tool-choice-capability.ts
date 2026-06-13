@@ -18,7 +18,7 @@ const loggedRegistryKeys = new Set<string>();
  * generation and dynamic discovery use this to default `toolChoiceSupport`.
  */
 export function isClaudeForcedToolChoiceIncapableModelId(modelId: string): boolean {
-	return /(?:^|[/.])claude-mythos(?:-|$)/i.test(modelId);
+	return /(?:^|[/.])claude-(?:mythos|fable)(?:-|$)/i.test(modelId);
 }
 
 /** Derives the effective static tool-choice support from compatibility flags. */
