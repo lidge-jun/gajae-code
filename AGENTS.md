@@ -158,7 +158,7 @@ Apply sanitization to success, error, diff, and streaming render paths.
 
 ## Commands and verification
 
-- Never commit unless explicitly asked.
+- Commit agent-owned completed changes proactively when the user has authorized execution; before committing, inspect status, stage only intended files, preserve unrelated/user work, and resolve or stop on conflicts instead of overwriting.
 - Never run `tsc` or `npx tsc`; use `bun check` / `bun run check:ts`.
 - For focused package changes, prefer targeted tests first, then type/lint/build checks as appropriate.
 - Required rebrand/default-surface gates after workflow-definition changes:
