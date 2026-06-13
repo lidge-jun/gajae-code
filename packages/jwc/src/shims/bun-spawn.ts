@@ -9,7 +9,8 @@
 import { type ChildProcess, spawn as nodeSpawn, spawnSync as nodeSpawnSync } from "node:child_process";
 import { Readable } from "node:stream";
 
-type StdioOption = "pipe" | "inherit" | "ignore" | null | undefined | number;
+type StdinData = string | ArrayBufferView | ArrayBuffer;
+type StdioOption = "pipe" | "inherit" | "ignore" | null | undefined | number | StdinData;
 
 export interface BunSpawnOptions {
 	cmd?: string[];
@@ -22,12 +23,25 @@ export interface BunSpawnOptions {
 	onExit?: (proc: unknown, exitCode: number | null, signalCode: string | null, error?: Error) => void;
 }
 
+/** Bun lets stdin be raw data (string/bytes) to feed the child; Node cannot put
+ *  that in its stdio array — we pipe and write it after spawn. */
+function isStdinData(value: StdioOption): value is StdinData {
+	return typeof value === "string" || ArrayBuffer.isView(value) || value instanceof ArrayBuffer;
+}
+
+function toStdinBuffer(value: StdinData): Buffer {
+	if (typeof value === "string") return Buffer.from(value, "utf8");
+	if (value instanceof ArrayBuffer) return Buffer.from(value);
+	return Buffer.from(value.buffer, value.byteOffset, value.byteLength);
+}
+
 function mapStdio(
 	option: StdioOption,
 	fallback: "pipe" | "inherit" | "ignore",
 ): "pipe" | "inherit" | "ignore" | number {
 	if (option === null || option === undefined) return fallback;
 	if (typeof option === "number") return option;
+	if (isStdinData(option)) return "pipe";
 	return option;
 }
 
@@ -116,6 +130,12 @@ export function bunSpawn(cmdOrOptions: string[] | BunSpawnOptions, maybeOptions?
 		// Bun defaults: stdin ignore, stdout pipe, stderr inherit.
 		stdio: [mapStdio(options.stdin, "ignore"), mapStdio(options.stdout, "pipe"), mapStdio(options.stderr, "inherit")],
 	});
+	// Bun accepts raw stdin data and feeds it to the child; Node needs an
+	// explicit pipe write (audit round-3 SQ-2 proc — git commit -F -).
+	if (isStdinData(options.stdin) && child.stdin) {
+		child.stdin.write(toStdinBuffer(options.stdin));
+		child.stdin.end();
+	}
 	return new NodeBunSubprocess(child, options.onExit);
 }
 
@@ -127,8 +147,10 @@ export function bunSpawnSync(cmdOrOptions: string[] | BunSpawnOptions, maybeOpti
 		cwd: options.cwd,
 		env: (options.env as NodeJS.ProcessEnv) ?? process.env,
 		signal: options.signal,
-		// Honor stdio so interactive/inherited-TTY spawns (tmux attach) work
-		// instead of silently capturing to pipes (audit SQ-3 proc).
+		// Raw stdin data is fed via node's `input`; otherwise honor stdio so
+		// interactive/inherited-TTY spawns (tmux attach) work instead of
+		// silently capturing to pipes (audit SQ-3 proc).
+		...(isStdinData(options.stdin) ? { input: toStdinBuffer(options.stdin) } : {}),
 		stdio: [mapStdio(options.stdin, "ignore"), mapStdio(options.stdout, "pipe"), mapStdio(options.stderr, "inherit")],
 	});
 	return {
@@ -136,7 +158,10 @@ export function bunSpawnSync(cmdOrOptions: string[] | BunSpawnOptions, maybeOpti
 		exitCode: result.status,
 		signalCode: result.signal,
 		success: result.status === 0,
-		stdout: result.stdout ? new Uint8Array(result.stdout) : null,
-		stderr: result.stderr ? new Uint8Array(result.stderr) : null,
+		// Keep the node Buffer (a Uint8Array subclass) so callers' .toString()
+		// UTF-8-decodes instead of emitting "109,97,..." byte lists (audit
+		// round-3 SQ-1 proc — tmux session listing).
+		stdout: result.stdout ?? null,
+		stderr: result.stderr ?? null,
 	};
 }

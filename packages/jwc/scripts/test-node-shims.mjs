@@ -114,6 +114,8 @@ try {
 			'export { bunFile } from "../src/shims/bun-file";',
 			'export { Database } from "../src/shims/bun-sqlite";',
 			'export { BunGlob } from "../src/shims/bun-glob";',
+			'export { bunSpawn, bunSpawnSync } from "../src/shims/bun-spawn";',
+			'export { buildNodeBunShim } from "../src/shims/bun-object";',
 		].join("\n"),
 	);
 	await build({
@@ -167,6 +169,11 @@ try {
 			assert.deepEqual([...db.prepare("SELECT a, b FROM t").columnNames], ["a", "b"], "columnNames");
 			assert.deepEqual([...db.prepare("INSERT INTO t (a,b) VALUES (3,4)").columnNames], [], "columnNames non-returning");
 			console.log("[test-node-shims] sqlite paramsCount/columnNames OK");
+
+			// round-3 SQ-1: array-form positional bindings (db.run(sql, [a,b])).
+			db.run("INSERT INTO t (a,b) VALUES (?, ?)", [10, 20]);
+			assert.deepEqual(db.prepare("SELECT a,b FROM t WHERE a=?").all([10]), [{ a: 10, b: 20 }], "array positional bind");
+			console.log("[test-node-shims] sqlite array positional binding OK");
 		} finally {
 			db.close();
 		}
@@ -200,12 +207,45 @@ try {
 		platform: "node",
 		format: "esm",
 	});
-	const { bunSpawnSync } = await import(spawnOut);
+	const { bunSpawn, bunSpawnSync } = await import(spawnOut);
 	const r = bunSpawnSync(["echo", "captured"], { stdout: "pipe" });
 	assert.ok(r.stdout && new TextDecoder().decode(r.stdout).includes("captured"), "spawnSync stdout pipe not captured");
 	assert.equal(r.exitCode, 0);
 	console.log("[test-node-shims] spawnSync stdio mapping OK");
+
+	// round-3 SQ-1 proc: spawnSync stdout must .toString() as UTF-8 text
+	// (Buffer), not a comma-separated byte list.
+	const t = bunSpawnSync(["printf", "main"], { stdout: "pipe" });
+	assert.equal(t.stdout.toString().trim(), "main", "spawnSync stdout .toString() not UTF-8");
+	console.log("[test-node-shims] spawnSync Buffer .toString() OK");
+
+	// round-3 SQ-2 proc: raw stdin data must be fed to the child (git commit -F -).
+	const cat = bunSpawn(["cat"], { stdin: new TextEncoder().encode("piped-input"), stdout: "pipe" });
+	const out = await new Response(cat.stdout).text();
+	await cat.exited;
+	assert.equal(out.trim(), "piped-input", "spawn raw stdin bytes not delivered");
+	console.log("[test-node-shims] spawn raw stdin bytes OK");
+
 	rmSync(spawnOut, { force: true });
+}
+
+// round-3 SQ-1 data: globalThis Bun shim must expose Glob (new Bun.Glob()).
+{
+	const shimOut = path.join(process.cwd(), "dist-node", `_shimobj-test-${process.pid}.mjs`);
+	await build({
+		entryPoints: ["src/shims/bun-object.ts"],
+		outfile: shimOut,
+		bundle: true,
+		platform: "node",
+		format: "esm",
+		external: ["better-sqlite3", "json5", "strip-ansi"],
+	});
+	const { buildNodeBunShim } = await import(shimOut);
+	const shim = buildNodeBunShim();
+	assert.equal(typeof shim.Glob, "function", "Bun.Glob missing from global shim");
+	assert.ok(new shim.Glob("*.txt").match("a.txt"), "Bun.Glob not usable");
+	console.log("[test-node-shims] Bun.Glob global shim OK");
+	rmSync(shimOut, { force: true });
 }
 
 // serve tls: cert/key must yield an https server (not plaintext).

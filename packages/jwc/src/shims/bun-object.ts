@@ -15,6 +15,7 @@ import JSON5 from "json5";
 import stripAnsi from "strip-ansi";
 import { BunArchive } from "./bun-archive";
 import { bunFile } from "./bun-file";
+import { BunGlob } from "./bun-glob";
 import { BunCryptoHasher, BunSHA256, bunHash } from "./bun-hash";
 import { bunJSONL } from "./bun-jsonl";
 import { bunServe } from "./bun-serve";
@@ -78,6 +79,7 @@ export function buildNodeBunShim(): BunShim {
 			satisfies: stubFn("semver.satisfies") as unknown as BunShim["semver"]["satisfies"],
 		},
 		Archive: BunArchive,
+		Glob: BunGlob,
 		gc: () => {
 			// no-op on Node by design (100 MOC mapping P)
 		},

@@ -15,7 +15,12 @@ export type SQLQueryBindings = string | number | bigint | boolean | null | Uint8
 type BindArgs = ReadonlyArray<SQLQueryBindings | Record<string, SQLQueryBindings>>;
 
 function normalizeBindings(args: BindArgs): unknown[] {
-	return args.map(arg => {
+	// bun:sqlite accepts a single array arg as the positional list
+	// (db.run(sql, [a, b, c])); better-sqlite3 wants them spread, and would
+	// otherwise turn the array into a numeric-keyed named object and reject it
+	// (audit round-3 SQ-1 — model-cache writes silently disabled).
+	const flat = args.length === 1 && Array.isArray(args[0]) ? (args[0] as BindArgs) : args;
+	return flat.map(arg => {
 		if (arg && typeof arg === "object" && !(arg instanceof Uint8Array)) {
 			const bare: Record<string, unknown> = {};
 			for (const [key, value] of Object.entries(arg)) {

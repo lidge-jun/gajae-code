@@ -39,6 +39,7 @@ export interface BunShim {
 	stripANSI(text: string): string;
 	semver: { order(a: string, b: string): -1 | 0 | 1; satisfies(version: string, range: string): boolean };
 	Archive: unknown;
+	Glob: unknown;
 	gc(force?: boolean): void;
 	env: NodeJS.ProcessEnv;
 	argv: string[];
