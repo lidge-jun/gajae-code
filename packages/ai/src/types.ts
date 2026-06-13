@@ -722,8 +722,13 @@ export type AssistantMessageEvent =
 	| {
 			type: "toolChoiceIncapability";
 			contentIndex?: undefined;
-			requestedChoice: ToolChoice;
-			resolvedChoice: ToolChoice | undefined;
+			api: string;
+			provider: string;
+			model: string;
+			requestedLevel: ToolChoiceSupport;
+			resolvedLevel: ToolChoiceSupport;
+			reason: string;
+			registryKey: string;
 	  };
 
 /**
