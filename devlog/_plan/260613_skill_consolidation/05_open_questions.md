@@ -21,6 +21,7 @@
 | D13 | A=계획검증, C=구현검증(의도대로 패치? 사이드이펙트?), 서브에이전트는 에이전트 동적 판단 | 유저 |
 | D14 | /goal=인간이 목표 설정, /goalplan=에이전트가 맥락에서 목표 파악+자율 실행 | 유저 |
 | D15 | ask tool JSON vs elicitation fence: 별도 트랙 (현재 플랜 밖) | 유저 |
+| D16 | /goalplan 맥락 전달: hint 텍스트가 goals.json에 저장 → continuation prompt로 주입 → 에이전트가 대화+hint+repo에서 목표 도출 | 리서치 확인 |
 
 ## 인터뷰 ask 포맷 (D12 후보)
 
