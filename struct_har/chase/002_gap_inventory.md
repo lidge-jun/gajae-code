@@ -1,16 +1,18 @@
 # chase — 갭 인벤토리 (횡단)
 
-> 스냅샷: gjc `75d103f45145` · jwc `dc4f22672581` · omp `db421bb2ef68` (2026-06-13 3차).
-> **reviewed through**: GJC `75d103f45145` (`75d103f` receipt spool → 10.011; `a12a751` model-profiles UX → **사용자 직접 패치 중**, 카드 미발급); OMP `db421bb2ef68` (15.12.3); JWC `dc4f22672581` (dirty local edits respected).
+> 스냅샷: gjc `75d103f45145` · jwc **`b03cb3be`** · omp `db421bb2ef68` (2026-06-13 **4차 — chase refresh**).
+> **reviewed through**: GJC `75d103f45145` (변동 없음); OMP `db421bb2ef68` (변동 없음); JWC `b03cb3be`
+> (260613 후반: 100밴드 완료 + 감사 6라운드, reformation 전 과정(G5·T1·T4·D5·가시성·안정성·fast 진단),
+> xAI 검색·`/searchengine`, MCP runtime discovery, 99.xx TUI/브랜드/pabcd 시리즈, structure 24→10 통합).
 > 상태: `⬜` 미착수 · `🟡` 설계/부분 · `✅` jwc 선행 · `—` 해당 없음
 > **기록**: [10_gjc_chase_MOC](./10_gjc_chase_MOC.md) · [20_omp_chase_MOC](./20_omp_chase_MOC.md) (`10.NNN_*` / `20.NNN_*`)
 ## 요약
 
 | 축 | jwc가 **앞서거나 유일** | jwc가 **뒤처지거나 약함** |
 |---|---|---|
-| **gjc** | orchestrate/PABCD 런타임, jaw 표면, `.jwc`, cli-jaw skills, **pi-shell UTF-8·submit gate 동기 완료 (10.009·10.010 ✅ 260613)** | upstream dev `75d103f45145` 기준 post-0.4.5 drift: pre-prompt context maintenance, RPC lifecycle/get_state payload, team tmux profile self-heal, receipt spool(10.011) — 수동 diff/reconcile 필요 |
-| **omp** | 4 workflow 번들, jaw 워크플로 | task-agent discovery/lifecycle, session export/share/fork/resume, local memory, compaction pruning은 **참조 전용**으로 약함 |
-| **자체** | — | 99.01–07, CI, M2 Node |
+| **gjc** | orchestrate/PABCD, jaw 표면, `.jwc`, cli-jaw skills, pi-shell UTF-8·submit gate(10.009·10.010 ✅), **Codex 전송 안정화(reformation ✅: 프리웜·WS 수명주기·워치독·rate-limit 텔레메트리·가시성)**, **xAI 검색·`/searchengine` ✅**, **MCP runtime discovery ✅** | upstream `75d103f` 기준: pre-prompt context maintenance, RPC lifecycle, team profile self-heal, receipt spool(10.011) |
+| **omp** | 4 workflow 번들, jaw 워크플로 | task-agent discovery/lifecycle, session export/share/fork/resume, local memory, compaction pruning = **참조 전용** |
+| **자체** | **100 Node 포팅 완료**(감사 6라운드), **TUI 렌더 O(n²) 수정**, 99.03·99.01·99.07 부분 | 99.02(CI)·99.04(HUD)·99.05(auth)·99.06(docs)·M2 110+ |
 
 ## 밴드별
 
@@ -26,10 +28,10 @@
 | 080_tui | 🟡 upstream TUI fixes | 🟡 테마/런타임 docs | 🟡 jaw 테마 · ⬜ **99.04** HUD | [bands/080_tui.md](./bands/080_tui.md) |
 | 081_cursor | 🟡 **높음** — cursor/provider | 🟡 IDE convention | 🟡 WIP kiro 분기 | [bands/081_cursor.md](./bands/081_cursor.md) |
 | 082_input | 🟡 IME upstream | — | ✅ jaw IME 일부 | [bands/082_input.md](./bands/082_input.md) |
-| 083_output | 🟡 compaction/session/pruning | 🟡 pruning docs | ✅ segment·collapse | [bands/083_output.md](./bands/083_output.md) |
+| 083_output | 🟡 compaction/session/pruning | 🟡 pruning docs | ✅ segment·collapse·**렌더 O(n²) 수정**(G5) | [bands/083_output.md](./bands/083_output.md) |
 | 090_auth | 🟡 **높음** — oauth 범용 | 🟡 provider 수 | 🟡 kiro NEW · ⬜ 99.05 | [bands/090_auth.md](./bands/090_auth.md) |
-| 099 | — | — | ⬜ **99.01–07** | [../jwc_patched/099_stabilization/](../jwc_patched/099_stabilization/) |
-| 100_node | 🟡 Bun-only parity · tmux/worker runtime | 🟡 **workerHost** · isolation PAL docs | ⬜ M2 포팅 | [bands/100_node.md](./bands/100_node.md) |
+| 099 | — | — | 🟡 99.03✅·99.01✅·99.07부분✅ / 99.02·04·05·06 ⬜ | [../jwc_patched/099_stabilization/](../jwc_patched/099_stabilization/) |
+| 100_node | 🟡 Bun-only parity · tmux/worker runtime | 🟡 **workerHost** · isolation PAL docs | ✅ **완료**(260613, 감사 6라운드) | [bands/100_node.md](./bands/100_node.md) |
 
 ## G1 — gjc에서 흔히 뒤쳐지는 항목 (CHANGELOG·코드 교차)
 
@@ -62,6 +64,20 @@
 | TUI 입력 micro | Esc draft clear·selector resetDisplay (`e914bf0`), ast-edit status 공백 축약 (`3d646d8`) | [20.006](./20.006_omp_chase_tui_input_micro_fixes.md) — 99.20 레인 선별 |
 | collab/brew | dot-joined room secrets (`0d49f94`), brew formula (`389add4`) | **비채택** — gjc/jwc lineage에 collab 부재, brew 미사용 |
 | worker/isolation | `workerHost` / isolation PAL docs | **100** M2 |
+
+## 260613 후반 신규 착지 — chase 스냅샷 이후 jwc 독자 성과
+
+| 영역 | 커밋 범위 | 요약 | 정본 |
+|---|---|---|---|
+| **Codex 전송 reformation** | `76176ce3`…`65d36ec3` (12커밋) | WS 수명주기(CONNECTING 합류·fatal 예산)·프리웜(`generate:false`+idle refresh)·워치독 300s 패리티·rate-limit 텔레메트리·가시성(footer ws/sse·delta/full·notice)·안정성 리뷰 2건·fast 진단(서버 회귀 5중 확정) | [structure/30_providers.md](../../structure/30_providers.md) · [devlog/_fin/000000_reformation/](../../devlog/_fin/000000_reformation/) |
+| **TUI 렌더 O(n²)** | `1814bb95` | 연속 Write 시 settled 컴포넌트 재클론·재렌더 제거 + TTSR 16KB 윈도 | 위 reformation |
+| **xAI 검색·`/searchengine`** | `c8df2824`…`a1bcf31e` (7커밋) | xAI Grok web+X 검색, `/searchengine` 프로바이더 전환+OAuth/키 게이팅, `/model` TUI args 위임 | [structure/30_providers.md](../../structure/30_providers.md) |
+| **100 Node 완료** | `2e9efc59`…`503f6467` (16커밋) | dist-node esbuild·전 Bun API 셰임·SDK import/session/streaming green·적대 감사 6라운드(보안 포함)·photon WASM 이미지 | [structure/10_architecture.md](../../structure/10_architecture.md) |
+| **MCP runtime discovery** | `0b493665` | CLI 세션에 MCP 런타임 디스커버리 와이어링(탈격리) | — |
+| **99.xx TUI/브랜드** | 다수 (pabcd·todo·login·search-panel·slash 등) | 99.03 완료, 99.07 부분, 99.20 시리즈, 99.30 todo 패널 접기 | [structure/50_status.md](../../structure/50_status.md) |
+
+이 항목들은 기존 chase 스냅샷(`dc4f2267`)에는 없었던 jwc 독자 성과이며, **chase 추적 대상이
+아닌 완료 사실**이다. gjc/omp 축 미변동(`75d103f`/`db421bb` 유지)이므로 G1/G2 항목은 그대로.
 
 ## 구현가치 (MLB 20-80) — 활성 chase 전 항목
 

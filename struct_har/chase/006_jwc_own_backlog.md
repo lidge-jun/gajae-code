@@ -6,17 +6,17 @@
 
 | 단계 | 점수 | 닫는 패키지 |
 |---|:---:|---|
-| 지금 | **50** | — |
-| 드라이버 임계 | **62** | **99.02 + 99.03** |
-| 99 전체 | **68** | 99.01–07 |
+| 지금 (260613) | **62** | 99.03✅ · 99.01✅ · 99.07 부분✅ · 100 완료✅ · reformation✅ |
+| 99.02 마감 후 | **62** | + CI green — 드라이버 임계점 |
+| 99 전체 | **68** | 99.04·05·06 잔여 |
 
 ## CRITICAL (참조: 구현은 devlog)
 
 | # | 갭 | GG | 참조 문서 |
 |---|---|---|---|
-| 1 | pabcd discovery M1/M2/M3 | 99.03 | [99.03.01](../../devlog/_plan/260612_jawcode_fork/phase1/99.03.01_impl_workflow_surface.md) PASS v2 |
-| 2 | `jwc memory` CLI 마감 | 99.01 | [99.01.00_moc_memory](../../devlog/_plan/260612_jawcode_fork/phase1/99.01.00_moc_memory.md) |
-| 3 | check:schemas + biome | 99.02 | [99.02.00](../../devlog/_plan/260612_jawcode_fork/phase1/99.02.00_plan_parallel_landing.md) · [status](../../structure/50_status.md) |
+| 1 | pabcd discovery M1/M2/M3 | 99.03 | ✅ 완료 (`45cba4e2`·`8a7ea342`·`90ef5223`) |
+| 2 | `jwc memory` CLI | 99.01 | ✅ 구현 완료 (`ada449b2`·`693c5ee0`·`56fcf0de`) |
+| 3 | check:schemas + biome | 99.02 | 코드 ✅ / **마감 ⬜** (PR 게이트, 런타임 무관) |
 
 ## 99 패키지 맵
 
@@ -36,7 +36,7 @@
 
 | 항목 | MOC | chase |
 |---|---|---|
-| Node 포팅 | [100_moc_node_porting](../../devlog/_plan/260612_jawcode_fork/100_moc_node_porting.md) | [bands/100_node.md](./bands/100_node.md) |
+| Node 포팅 | ✅ **완료**(260613, 감사 6라운드) [100_moc](../../devlog/_plan/260612_jawcode_fork/100_moc_node_porting.md) | [bands/100_node.md](./bands/100_node.md) |
 | 런타임 부착 | [111_design_runtime_attach](../../devlog/_plan/260612_jawcode_fork/111_design_runtime_attach.md) | 110+ |
 | β struct_har/Node | goal `3f6989ac` | **99 제외** |
 | OSS v0.1 | LICENSE·릴리즈·CONTRIBUTING | [status](../../structure/50_status.md) |
