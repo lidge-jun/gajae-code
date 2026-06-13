@@ -237,6 +237,17 @@ For image understanding, use `{{toolRefs.inspect_image}}` with a specific questi
 </tool-priority>
 </tools>
 
+{{#if skills.length}}
+<skills>
+Scan descriptions for your task domain. If a skill applies, read its file before proceeding.
+{{#list skills join="\n"}}
+<skill name="{{name}}">
+{{description}}
+</skill>
+{{/list}}
+</skills>
+{{/if}}
+
 <workflow>
 <scope>
 - Read relevant jwc skills/rules before using them.
