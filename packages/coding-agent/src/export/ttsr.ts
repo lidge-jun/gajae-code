@@ -63,6 +63,9 @@ const DEFAULT_SCOPE: TtsrScope = {
 	toolScopes: [],
 };
 
+/** Max chars kept per TTSR stream buffer for condition matching. */
+const TTSR_MATCH_WINDOW_CHARS = 16_384;
+
 export class TtsrManager {
 	readonly #settings: Required<TtsrSettings>;
 	readonly #rules = new Map<string, TtsrEntry>();
@@ -335,7 +338,14 @@ export class TtsrManager {
 	 */
 	checkDelta(delta: string, context: TtsrMatchContext): Rule[] {
 		const bufferKey = this.#bufferKey(context);
-		const nextBuffer = `${this.#buffers.get(bufferKey) ?? ""}${delta}`;
+		// Bound the match window: an unbounded buffer makes every delta re-run each
+		// rule regex over the full accumulated stream (O(n²) per turn). Conditions
+		// are local patterns; a generous tail window keeps cross-delta matches
+		// working without scanning megabytes of settled output per token.
+		let nextBuffer = `${this.#buffers.get(bufferKey) ?? ""}${delta}`;
+		if (nextBuffer.length > TTSR_MATCH_WINDOW_CHARS) {
+			nextBuffer = nextBuffer.slice(-TTSR_MATCH_WINDOW_CHARS);
+		}
 		this.#buffers.set(bufferKey, nextBuffer);
 
 		const matches: Rule[] = [];

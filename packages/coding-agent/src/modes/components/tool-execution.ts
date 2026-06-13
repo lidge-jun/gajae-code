@@ -139,6 +139,8 @@ export class ToolExecutionComponent extends Container {
 	#toolName: string;
 	#toolLabel: string;
 	#args: any;
+	#lastUpdateArgsPartialJson: string | undefined;
+	#lastUpdateArgsKeyCount: number | undefined;
 	#expanded = false;
 	#showImages: boolean;
 	#editFuzzyThreshold: number | undefined;
@@ -224,6 +226,23 @@ export class ToolExecutionComponent extends Container {
 	}
 
 	updateArgs(args: any, _toolCallId?: string): void {
+		// Settled tool calls get re-sent unchanged while a sibling block streams;
+		// their partialJson no longer changes, so skip the clone/diff/re-render.
+		// The key count guards the end-of-stream transition where providers swap
+		// in fully-parsed arguments without touching partialJson.
+		const isPlainObject = args !== null && typeof args === "object" && !Array.isArray(args);
+		const partialJson = isPlainObject ? (args as { __partialJson?: string }).__partialJson : undefined;
+		if (partialJson !== undefined) {
+			const keyCount = Object.keys(args).length;
+			if (partialJson === this.#lastUpdateArgsPartialJson && keyCount === this.#lastUpdateArgsKeyCount) {
+				return;
+			}
+			this.#lastUpdateArgsPartialJson = partialJson;
+			this.#lastUpdateArgsKeyCount = keyCount;
+		} else {
+			this.#lastUpdateArgsPartialJson = undefined;
+			this.#lastUpdateArgsKeyCount = undefined;
+		}
 		this.#args = cloneToolArgs(args);
 		this.#updateSpinnerAnimation();
 		void this.#runPreviewDiff();

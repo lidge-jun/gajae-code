@@ -417,8 +417,27 @@ export class EventController {
 				this.#lastThinkingCount = thinkingCount;
 			}
 
-			for (const content of this.ctx.streamingMessage.content) {
+			// A toolcall_delta only mutates the block at its contentIndex. Re-sending
+			// every settled sibling through updateArgs re-clones and re-renders their
+			// full args per token, turning multi-tool turns quadratic in completed
+			// content (second-Write-crawls bug) — on delta events, skip blocks that
+			// already have a component and aren't the active one.
+			const activeToolCallIndex =
+				event.assistantMessageEvent.type === "toolcall_delta" &&
+				typeof event.assistantMessageEvent.contentIndex === "number"
+					? event.assistantMessageEvent.contentIndex
+					: undefined;
+			const streamingContent = this.ctx.streamingMessage.content;
+			for (let blockIndex = 0; blockIndex < streamingContent.length; blockIndex++) {
+				const content = streamingContent[blockIndex];
 				if (content.type !== "toolCall") continue;
+				if (
+					activeToolCallIndex !== undefined &&
+					blockIndex !== activeToolCallIndex &&
+					this.ctx.pendingTools.has(content.id)
+				) {
+					continue;
+				}
 				if (content.name === "read") {
 					if (!readArgsHaveTarget(content.arguments)) {
 						// Args still streaming — defer until path is parseable so we can route to the
