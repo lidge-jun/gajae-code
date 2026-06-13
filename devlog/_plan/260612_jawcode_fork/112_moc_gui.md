@@ -10,7 +10,7 @@
 > `modes/acp/`(`_jwc/` extMethod canonical, `_gjc/` legacy 별칭)·`modes/bridge/` 기준. **연기 계약
 > 주의**: HTML export의 `gjc-share:v1:*` localStorage 키·`"GJC Session Export"` 타이틀은 기존
 > export 파일 호환 때문에 플립 연기 — Code 모드가 export 뷰를 재사용한다면 이 키를 그대로 읽을 것
-> ([260613_gjc_flip/05](../260613_gjc_flip/05_plan_flip.md) §연기). 113(웹 네이티브 표면)이 본
+> ([260613_gjc_flip/05](../../_fin/260613_gjc_flip/05_plan_flip.md) §연기). 113(웹 네이티브 표면)이 본
 > 밴드의 데이터 계약 자매 문서.
 
 핵심 발견: **cli-jaw에는 electron 데스크톱 셸이 이미 절반 구축되어 있다.** 따라서 이 밴드의 본선은

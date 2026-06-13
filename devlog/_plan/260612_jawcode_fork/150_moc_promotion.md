@@ -14,7 +14,7 @@
 | P3 | 마이그레이션: 기존 인스턴스 settings.json의 cli 값 — [기본값] 기존 값 존중, 신규만 jwc | cli-jaw settings | 기존 인스턴스 무회귀 |
 | P4 | 회귀 스위트: AGY/spawn 계열 + 110–130 e2e를 승격 게이트로 | 110 §완료 기준 · 130 done 3항목 | 전 게이트 green |
 | P5 | OAuth ToS 그레이존 재평가 ([phase1/090_moc_auth_release_gate.md](./phase1/090_moc_auth_release_gate.md) 이월) — 메인 승격으로 노출 증가 리스크 문서화 | 090 | 리스크 문서 갱신 |
-| P6 | **플립 연기 명단 정리 (승격 전제, 260613 신설)** — 하단 표 | [260613_gjc_flip/05](../260613_gjc_flip/05_plan_flip.md) §연기 | 외부 표면 jwc 일관성 |
+| P6 | **플립 연기 명단 정리 (승격 전제, 260613 신설)** — 하단 표 | [260613_gjc_flip/05](../../_fin/260613_gjc_flip/05_plan_flip.md) §연기 | 외부 표면 jwc 일관성 |
 
 ## P6 — 플립 연기 항목의 승격 게이트 매핑 (260613 신설)
 
