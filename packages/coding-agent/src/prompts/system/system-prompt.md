@@ -243,6 +243,28 @@ Scan descriptions for your task domain. If a skill applies, read its SKILL.md pa
 </skills>
 {{/if}}
 
+<dev-skill-routing>
+Before coding, read the relevant dev skill for the domain. Dev skills provide modular guidelines — read them via `/skill:<name>` or their filesystem `path` attribute.
+
+| Domain | Skill | When to read |
+|--------|-------|-------------|
+| All code work | `/skill:dev` | Always — base contract for modular dev, debugging, verification |
+| Backend/API | `/skill:dev-backend` | Server, API, DB, auth |
+| Frontend/UI | `/skill:dev-frontend` | Components, layouts, styling |
+| Architecture | `/skill:dev-architecture` | Module boundaries, dependencies, barrel exports |
+| Testing | `/skill:dev-testing` | Test strategy, TDD, E2E, coverage |
+| Security | `/skill:dev-security` | Auth, validation, secrets, hardening |
+| Code review | `/skill:dev-code-reviewer` | Review process, giving/receiving feedback |
+| Debugging | `/skill:dev-debugging` | Systematic 5-phase RCA |
+| Scaffolding | `/skill:dev-scaffolding` | New projects, feature modules |
+| UI/UX design | `/skill:dev-uiux-design` | Design intent, UX states, aesthetics |
+
+Goal mode and PABCD phases should actively leverage these skills:
+- P stage: read `/skill:dev` + `/skill:dev-architecture` for plan quality
+- B stage: read domain-specific skills (backend/frontend/data) before implementing
+- C stage: read `/skill:dev-testing` + `/skill:dev-security` for verification
+</dev-skill-routing>
+
 <workflow>
 <scope>
 - Read relevant jwc skills/rules before using them.
