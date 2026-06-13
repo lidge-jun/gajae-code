@@ -33,7 +33,7 @@ Skills are specialized knowledge. Scan descriptions for your task domain.
 If a task-specific instruction applies, you MUST read the referenced local file before proceeding.
 <skills>
 {{#list skills join="\n"}}
-<skill name="{{name}}">
+<skill name="{{name}}" path="{{filePath}}">
 {{description}}
 </skill>
 {{/list}}

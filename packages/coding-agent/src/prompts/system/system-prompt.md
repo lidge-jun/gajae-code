@@ -239,9 +239,9 @@ For image understanding, use `{{toolRefs.inspect_image}}` with a specific questi
 
 {{#if skills.length}}
 <skills>
-Scan descriptions for your task domain. If a skill applies, read its file before proceeding.
+Scan descriptions for your task domain. If a skill applies, read its SKILL.md path before proceeding.
 {{#list skills join="\n"}}
-<skill name="{{name}}">
+<skill name="{{name}}" path="{{filePath}}">
 {{description}}
 </skill>
 {{/list}}
