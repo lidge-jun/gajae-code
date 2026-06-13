@@ -57,6 +57,8 @@ const result = await build({
 	platform: "node",
 	target: "node22",
 	format: "esm",
+	// Installs globalThis.Bun (Node only) before any upstream module body runs.
+	inject: ["src/shims/index.ts"],
 	plugins: [textImportAttributes],
 	define: {
 		"Bun.env": "process.env",
