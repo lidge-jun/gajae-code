@@ -7036,6 +7036,10 @@ export class AgentSession {
 		if (currentModel) {
 			this.#closeProviderSessionsForModelSwitch(currentModel, model);
 		}
+		// A codex idle-refresh timer armed for the old model would otherwise fire
+		// once against the new model and no-op; cancel it on switch. Re-arms on the
+		// next turn_end if the new model is still codex.
+		this.#cancelCodexPrewarmRefresh();
 		this.agent.setModel(model);
 
 		// Re-evaluate append-only context mode — provider or setting may have changed
