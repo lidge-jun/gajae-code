@@ -98,17 +98,12 @@ const modelSegment: StatusLineSegment = {
 
 		const codexTransport = ctx.session.getCodexTransportStatus?.();
 
+		// The Codex/ChatGPT backend echoes service_tier `auto`/`default` even when
+		// `priority` (fast) is honored — verified against native codex-cli on a
+		// Pro account, which sends `priority` and never inspects the echo. So the
+		// echo is NOT a reliability signal; show ⚡ whenever fast is requested.
 		if (ctx.session.isFastModeActive() && theme.icon.fast) {
-			// The footer used to claim fast unconditionally. On the ChatGPT
-			// subscription backend `service_tier: priority` is silently ignored
-			// (the response echoes `default`), so once we've seen a realized
-			// tier, only show the icon when fast actually took effect — and mark
-			// `⚡?` when the server discarded the request.
-			if (codexTransport?.fastTier === "ignored") {
-				content += ` ${theme.fg("dim", `${theme.icon.fast}?`)}`;
-			} else {
-				content += ` ${theme.icon.fast}`;
-			}
+			content += ` ${theme.icon.fast}`;
 		}
 
 		// Codex transport marker: ws = websocket (delta rounds), sse = plain SSE,

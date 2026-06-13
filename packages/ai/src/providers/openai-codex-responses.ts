@@ -170,7 +170,7 @@ type CodexWebSocketSessionState = {
 	rateLimits?: OpenAICodexRateLimitsSnapshot;
 	/** Service tier we asked for on the last request (e.g. "priority" for fast mode). */
 	requestedServiceTier?: ServiceTier | "default";
-	/** Service tier the server actually echoed back — may downgrade silently. */
+	/** Service tier echoed by the server (often `auto`/`default` even when priority is honored — not a fast-realized signal). */
 	realizedServiceTier?: ServiceTier | "default";
 	canAppend: boolean;
 	turnState?: string;
@@ -1329,10 +1329,10 @@ function handleResponseCompleted(
 
 	const state = runtime.websocketState;
 	if (state) {
-		// Track requested vs server-realized service tier. On the ChatGPT
-		// subscription backend `service_tier: priority` (fast mode) is silently
-		// downgraded — the response echoes `default` — so the footer must not
-		// claim fast is active when the server ignored it.
+		// Raw service-tier telemetry (debug only). NOTE: the Codex/ChatGPT backend
+		// echoes `auto`/`default` even when `priority` is honored — verified against
+		// native codex-cli, which sends `priority` and never reads this echo. So the
+		// echo is NOT a fast-realized signal; do not interpret it as a downgrade.
 		const requestedTier = runtime.requestBodyForState.service_tier;
 		if (typeof requestedTier === "string") state.requestedServiceTier = requestedTier as ServiceTier | "default";
 		if (typeof response?.service_tier === "string") state.realizedServiceTier = response.service_tier;
