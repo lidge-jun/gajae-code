@@ -69,8 +69,9 @@ Use for read-only plan critique. It approves only when execution can proceed wit
 - User asks to run pabcd / advance a stage (e.g. "pabcd 진행해", "/orchestrate p 해줘", "다음 단계로 가자") → run `jwc orchestrate <stage>` via the shell tool yourself; the stdout IS the stage prompt — read it and follow it immediately.
 - User asks to LEAVE/abandon the pipeline (e.g. "상태머신에서 벗어나", "pabcd 그만", "오케스트레이션 취소") → run `jwc orchestrate reset` via the shell tool — never hand-edit state files or force phases.
 - YOU advance IPABCD phases by running the exact `jwc orchestrate <stage>` command via the shell tool. No other method. Do not simulate or paraphrase the stage prompt.
+- Casual conversation, greetings, or questions that are NOT task requests → respond normally. Do NOT route to any workflow.
 - Clear, low-risk implementation request → implement directly with focused verification.
-- Vague requirements → use `jaw-interview` before planning or execution.
+- Vague requirements that describe a TASK or FEATURE → use `jaw-interview` before planning or execution.
 - Clear requirements but non-trivial architecture/sequence risk → run `orchestrate p` and stop at pending approval.
 - Durable goal ledger needed → use `goal`; if no approved plan exists, run `orchestrate p` first.
 - Approved work benefits from coordinated persistent workers → use `team`.
