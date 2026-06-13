@@ -1,7 +1,12 @@
 # 60 — CU 리팩터링 계획: MCP Tax 제거 + cua-driver + cli-jaw 이식
 
-> 상태: 🟡 계획 수립 / 미착수. cu-mcp 29도구(33K 토큰 MCP Tax) + 포그라운드 제어 + 픽셀 좌표
-> 한계를 해결하는 3-phase 리팩터링. cli-jaw는 defer — jwc 로컬 안정화 후 장착.
+> 상태: ✅ **Phase 1-3 구현 완료**.
+> - Phase 1: `consolidated.ts` 구현 (`f63b0c50d`), Sonnet dev 검증 PASS, `CU_MCP_MODE=consolidated` 활성화
+> - Phase 2: cua-driver 0.5.3 설치 (`~/.local/bin/cua-driver`, 36도구), 두 번째 MCP 서버로 등록
+>   (Option B — 직접 노출, 어댑터 불필요). cu-mcp(포그라운드) + cua-driver(백그라운드) 양립.
+> - Phase 3: `~/.jwc/agent/settings.json` 생성, `mcp.enableProjectConfig: true`. discoveryMode는
+>   consolidated 1도구(~3K)로 충분해 기본 off — 필요 시 `mcp.discoveryMode: true`로 Tax 0 가능.
+> - cli-jaw는 defer (`2e91473e` revert). jwc 안정화 후 재장착.
 
 ## 한 줄 결론
 

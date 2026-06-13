@@ -59,15 +59,13 @@ a1-system.md·orchestration.md). jwc도 computer-use MCP를 갖게 됐으므로 
 - [x] cli-jaw 게이트에 jwc 추가 (프롬프트 3종)
 - [x] 방법론 B 근본 블로커 규명 — **codex 부모 코드서명 attestation**(team 2DC432GLL2, Codex 트리
   밖이면 SIGKILL). 250ms는 표면일 뿐. 실증: bash 부모로 메타 OK·액션 무응답. cli-jaw는 codex 경유.
-- [ ] (선택) 방법론 B를 jwc에서 쓰려면 codex 서브프로세스 dispatch 경로 설계 — 미착수
+- [x] (해소) 방법론 B 대안 — **cua-driver**(trycua/cua, 오픈 Sky) 0.5.3 설치, jwc에 두 번째 MCP로 등록
 - [x] **2-tier 라우팅** ([50](./50_two_tier_routing_synctoall.md)) — Sky=codex / cu-mcp=나머지
-  - [x] syncToAll 최신화: kiro 타깃 추가(`toClaudeMcp` 재활용) · grok 자동(조치 없음) · claude 경로 **수정** (`~/.mcp.json`→`~/.claude.json`)
-  - [x] codex 타깃 cu-mcp 제외 분기 (`filterServers`, Sky 중복 방지)
-  - [ ] cu-mcp 통합 MCP 등록 → 전파 (수동 등록 가능, syncToAll 런타임 확인 필요)
-  - [x] 프롬프트 2-tier 게이트 재작성 (Tier1=cu-mcp self-serve / Tier2=codex AX dispatch)
-  - [x] cli-jaw 빌드 완료 (`npm run build`, dist 반영 검증)
-- [ ] **좌표 정밀도 개선 (deferred)** — GPT-5.5 등 비-Claude 모델의 비전 좌표 추론이 부정확.
-  - **참조 구현: hermes-agent** (`~/Developer/codex/hermes-agent/tools/computer_use/`): `capture(mode='som')` → 스크린샷에 번호 오버레이 + AX 트리 반환 → `click(element=N)`으로 좌표 없이 클릭. `cua-driver` 백엔드(trycua/cua, SkyLight SPI, 백그라운드 윈도우 제어). 핵심 파일: `schema.py`(SoM 스키마), `cua_backend.py`(element_index 클릭), `vision_routing.py`(비전 모델 라우팅).
-  - cu-mcp 기존 인프라: 그리드 오버레이(`cu-native drawGrid`), 비전 보정 계수(`est:N`), `ax_press`(좌표 없이 AX press), 커서 프리뷰, 그리드 줌. MCP 도구로 미노출.
-  - **추천 경로**: hermes SoM 패턴을 cu-mcp에 이식 — `screenshot(annotate=true)` → inspect 그리드 프로브로 요소 열거 → sharp로 번호 오버레이 → `left_click(element=N)` 파라미터 추가. 순수 JS, cu-native 수정 불필요.
+  - [x] syncToAll 최신화: kiro 타깃 추가 · claude 경로 수정
+  - [x] cli-jaw CU 관련 **전부 revert** (`2e91473e`) — jwc 안정화 후 재장착
+- [x] **CU 리팩터링** ([60](./60_cu_refactor_plan.md)) — 3-phase 완료
+  - [x] Phase 1: 통합 도구 29→1 (`consolidated.ts`, `f63b0c50d`), Sonnet dev 검증 PASS
+  - [x] Phase 2: cua-driver 0.5.3 설치 + jwc 두 번째 MCP 등록 (cu-mcp=포그라운드 + cua-driver=백그라운드 양립)
+  - [x] Phase 3: `~/.jwc/agent/settings.json` 생성, `mcp.enableProjectConfig: true`. discoveryMode 가능(off 기본)
+- [ ] **좌표 정밀도 SoM (deferred)** — hermes `capture(mode='som')` + `click(element=N)` 패턴. cua-driver `get_window_state` + `click(element_index)` 활용. 순수 JS 이식.
 - [ ] 사용자 검수
