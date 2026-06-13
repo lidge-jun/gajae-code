@@ -1,9 +1,9 @@
 const PHASE_HUES: Record<string, number> = {
-	i: 180,
-	p: 50,
-	a: 300,
-	b: 120,
-	c: 0,
+	i: 200,
+	p: 240,
+	a: 45,
+	b: 150,
+	c: 290,
 	d: 0,
 };
 
