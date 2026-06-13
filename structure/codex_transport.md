@@ -3,7 +3,8 @@
 > OpenAI Codex(ChatGPT 백엔드 Responses) 전송로의 jwc 전용 안정화·가시성 레이어 정본.
 > 콜드스타트(프로덕션 2m15s 측정)·끊김·과부하를 줄이고 운영자에게 전송 상태를 노출한다.
 > 모델 카탈로그/노출 패치는 [model_patches.md](./model_patches.md), 일반 검색은
-> [search.md](./search.md) 참조. 구현 경위는 devlog 100 밴드 T1/T4/D5.
+> [search.md](./search.md) 참조. 구현·진단 경위는 [devlog/_fin/000000_reformation](../devlog/_fin/000000_reformation/00_moc_toolcall_loop_reformation.md)
+> (T1/T4/D5 + 측정 기반 진단).
 
 Codex는 다른 OpenAI-compat 프로바이더와 달리 **WebSocket 우선, SSE 폴백**의 자체 전송로를
 쓴다(`packages/ai/src/providers/openai-codex-responses.ts`). 그 위에 네 가지 jwc 패치가 얹혀 있다.
@@ -52,6 +53,28 @@ Codex는 다른 OpenAI-compat 프로바이더와 달리 **WebSocket 우선, SSE 
 > 아님**이 판명돼 ⚡? 마커는 되돌렸다. `/fast` 설정 영속화 자체는 [fork-delta.md](./fork-delta.md) 참조.
 
 ---
+
+## 6. 진단 결론 — "fast 둔화"는 서버측 (클라 수리 불가)
+
+위 패치들은 전송 **안정화·가시성**이며, 사용자가 겪은 "대화 이어가면/끊어치면 출력 둔화,
+기다리면 회복"의 **근본 원인은 아니다.** 측정 기반 진단(전문: [10.04](../devlog/_fin/000000_reformation/10.04_symptom_burst_slowdown.md)):
+
+- **원인 = gpt-5.5 `fast`(service_tier=priority) 서버측 회귀.** 5중 확정: ① 사용자 실증(fast off→둔화0)
+  ② 코드(codex·jwc 모두 passthrough — tier 전용 타임아웃/재시도 없음, 100% 서버측)
+  ③ openai/codex 이슈 다발(#24422 등, 2026-04~, 미해결) ④ headless 버스트 미재현(간헐 서버 현상)
+  ⑤ 공식 문서(priority는 spiky 트래픽 부적합).
+- **기각된 가설(측정)**: 서버 quota 스로틀(rate_limits 6% 평탄) / 클라 라운드당 clone+stringify
+  (마이크로벤치 0.6ms) / 배칭 프롬프트 유도(gpt-5.5 무반응, revert).
+- **완화책**(수리 아님): `/fast off`(=`serviceTier:none`) + effort `:high→:medium`(체감 3~5x) +
+  단순작업 `gpt-5.4-mini`. 가시성 패치(델타/full 로그·rate_limit 텔레메트리)가 **이 진단을 가능케 함**.
+
+## 7. 별개 상존 — TUI 긴-텍스트 마크다운 O(n²) (전송 무관)
+
+- `coding-agent/src/modes/components/assistant-message.ts:193` `updateContent`가 텍스트 델타마다
+  누적 전체 텍스트로 `new Markdown(fullText)` 재생성 → 캐시 키가 전체 텍스트라 토큰마다 미스 →
+  전체 lexer+highlight 재실행 = **출력 길이에 O(n²)**. 긴 단일 응답 렌더 둔화 유발(본 fast 증상의
+  주인은 아님). **확정 패치 후보**지만 보호된 TUI 영역(메모리 `tui-visual-design-protected`)이라
+  코얼레싱/tail-only 파싱은 시각 검증 후 적용. (툴-args O(n²) `G5`는 이미 수리 — `1814bb95`.)
 
 ## 근거 파일
 
