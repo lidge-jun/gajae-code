@@ -104,14 +104,18 @@ function splitUstarName(name: string): { name: string; prefix: string } | null {
 	return null;
 }
 
-function tarHeader(name: string, size: number, options: { typeflag?: number; prefix?: string } = {}): Uint8Array {
+function tarHeader(
+	name: string,
+	size: number,
+	options: { typeflag?: number; prefix?: string; mtimeSec?: number } = {},
+): Uint8Array {
 	const header = new Uint8Array(512);
 	header.set(ENCODER.encode(name).subarray(0, 100), 0);
 	writeOctal(header, 100, 8, 0o644); // mode
 	writeOctal(header, 108, 8, 0); // uid
 	writeOctal(header, 116, 8, 0); // gid
 	writeOctal(header, 124, 12, size);
-	writeOctal(header, 136, 12, Math.floor(Date.now() / 1000));
+	writeOctal(header, 136, 12, options.mtimeSec ?? Math.floor(Date.now() / 1000));
 	header.set(ENCODER.encode("        "), 148); // checksum placeholder (spaces)
 	header[156] = options.typeflag ?? 0x30; // typeflag '0' (file) unless overridden
 	header.set(ENCODER.encode("ustar\0"), 257);
@@ -131,20 +135,25 @@ function padTo512(part: Uint8Array): Uint8Array[] {
 
 /** Header(s) for one entry: ustar prefix split when possible, else a GNU
  *  longname ('L') record carrying the full path (parseTar reads both). */
-function entryHeaders(name: string, size: number): Uint8Array[] {
+function entryHeaders(name: string, size: number, mtimeSec?: number): Uint8Array[] {
 	const split = splitUstarName(name);
-	if (split) return [tarHeader(split.name, size, { prefix: split.prefix })];
+	if (split) return [tarHeader(split.name, size, { prefix: split.prefix, mtimeSec })];
 	const longNameBytes = ENCODER.encode(`${name}\0`);
-	const longHeader = tarHeader("././@LongLink", longNameBytes.byteLength, { typeflag: 0x4c /* 'L' */ });
+	const longHeader = tarHeader("././@LongLink", longNameBytes.byteLength, { typeflag: 0x4c /* 'L' */, mtimeSec });
 	const truncated = new TextDecoder().decode(ENCODER.encode(name).subarray(0, 100));
-	return [longHeader, ...padTo512(longNameBytes), tarHeader(truncated, size)];
+	return [longHeader, ...padTo512(longNameBytes), tarHeader(truncated, size, { mtimeSec })];
 }
 
-function buildTar(entries: Map<string, Uint8Array>): Uint8Array {
+interface TarWriteEntry {
+	data: Uint8Array;
+	mtimeSec?: number;
+}
+
+function buildTar(entries: Map<string, TarWriteEntry>): Uint8Array {
 	const parts: Uint8Array[] = [];
-	for (const [name, data] of entries) {
-		parts.push(...entryHeaders(name, data.byteLength));
-		parts.push(...padTo512(data));
+	for (const [name, entry] of entries) {
+		parts.push(...entryHeaders(name, entry.data.byteLength, entry.mtimeSec));
+		parts.push(...padTo512(entry.data));
 	}
 	parts.push(new Uint8Array(1024)); // end-of-archive blocks
 	const total = parts.reduce((sum, part) => sum + part.byteLength, 0);
@@ -176,11 +185,22 @@ function isGzip(bytes: Uint8Array): boolean {
 	return bytes[0] === 0x1f && bytes[1] === 0x8b;
 }
 
-async function coerceEntry(value: unknown): Promise<Uint8Array> {
-	if (typeof value === "string") return ENCODER.encode(value);
-	if (value instanceof Uint8Array) return value;
-	if (value instanceof ArrayBuffer) return new Uint8Array(value);
-	if (typeof Blob !== "undefined" && value instanceof Blob) return new Uint8Array(await value.arrayBuffer());
+async function coerceEntry(value: unknown): Promise<TarWriteEntry> {
+	// File first: it is a Blob subclass but carries lastModified, which the
+	// read side preserves as the tar mtime — keep it on the write round-trip so
+	// editing one entry doesn't reset every other entry's mtime to now, and so
+	// identical inputs produce identical bytes (audit round-6 — determinism).
+	if (typeof File !== "undefined" && value instanceof File) {
+		const mtimeMs = Number.isFinite(value.lastModified) ? value.lastModified : 0;
+		return {
+			data: new Uint8Array(await value.arrayBuffer()),
+			mtimeSec: mtimeMs > 0 ? Math.floor(mtimeMs / 1000) : undefined,
+		};
+	}
+	if (typeof value === "string") return { data: ENCODER.encode(value) };
+	if (value instanceof Uint8Array) return { data: value };
+	if (value instanceof ArrayBuffer) return { data: new Uint8Array(value) };
+	if (typeof Blob !== "undefined" && value instanceof Blob) return { data: new Uint8Array(await value.arrayBuffer()) };
 	throw new Error(`Bun.Archive shim: unsupported entry type ${Object.prototype.toString.call(value)}`);
 }
 
@@ -217,14 +237,14 @@ export class BunArchive {
 	}
 
 	static async write(path: string, entries: Record<string, unknown>): Promise<void> {
-		const normalized = new Map<string, Uint8Array>();
+		const normalized = new Map<string, TarWriteEntry>();
 		for (const [name, value] of Object.entries(entries)) {
 			normalized.set(name, await coerceEntry(value));
 		}
 		let bytes: Uint8Array;
 		if (/\.zip$/i.test(path)) {
 			const zipInput: Record<string, Uint8Array> = {};
-			for (const [name, data] of normalized) zipInput[name] = data;
+			for (const [name, entry] of normalized) zipInput[name] = entry.data;
 			bytes = zipSync(zipInput);
 		} else {
 			const tar = buildTar(normalized);

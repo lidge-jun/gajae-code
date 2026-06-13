@@ -114,6 +114,28 @@ try {
 		}
 		console.log("[test-node-shims] archive path-traversal sanitize OK");
 
+		// round-6: write must preserve File.lastModified as tar mtime (no reset
+		// to now) so multi-entry edits keep mtimes and identical inputs are
+		// deterministic.
+		const mtimeMs = 1_700_000_000_000;
+		const preserved = await BunArchive.write(path.join(tmpdir(), `jwc-mt-${process.pid}.tar`), {
+			"keep.txt": new File(["data"], "keep.txt", { lastModified: mtimeMs }),
+		});
+		void preserved;
+		const mtTar = path.join(tmpdir(), `jwc-mt2-${process.pid}.tar`);
+		try {
+			await BunArchive.write(mtTar, { "keep.txt": new File(["data"], "keep.txt", { lastModified: mtimeMs }) });
+			const roundtrip = await new BunArchive(readFileSync(mtTar)).files();
+			assert.equal(roundtrip.get("keep.txt").lastModified, Math.floor(mtimeMs / 1000) * 1000, "write dropped File mtime");
+			// determinism: same input → same bytes.
+			const a = readFileSync(mtTar);
+			await BunArchive.write(mtTar, { "keep.txt": new File(["data"], "keep.txt", { lastModified: mtimeMs }) });
+			assert.deepEqual([...readFileSync(mtTar)], [...a], "tar write not deterministic");
+			console.log("[test-node-shims] archive write mtime preserve + determinism OK");
+		} finally {
+			rmSync(mtTar, { force: true });
+		}
+
 		// round-5 SQ-1: a valid tar whose first entry name starts with "PK"
 		// (PKG-INFO) must NOT be misrouted to unzip and must round-trip.
 		const pkTar = path.join(tmpdir(), `jwc-pktar-${process.pid}.tar`);
