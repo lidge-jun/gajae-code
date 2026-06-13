@@ -467,6 +467,38 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 		},
 	},
 	{
+		name: "interview",
+		aliases: ["jaw-interview", "deep-interview"],
+		description: "Socratic requirements gathering — IPABCD I-stage (jaw-interview engine)",
+		inlineHint: "[request]",
+		allowArgs: true,
+		handle: async (command, runtime) => {
+			const args = (command.args ?? "").trim();
+			const argv = ["i", ...(args ? [args] : [])];
+			const result = await runNativeOrchestrateCommand(argv, runtime.session.sessionManager.getCwd());
+			if (result.stderr) await runtime.output(result.stderr.trimEnd());
+			if (result.status === 0 && result.stdout) {
+				await runtime.session.prompt(result.stdout);
+			} else if (result.stdout) {
+				await runtime.output(result.stdout.trimEnd());
+			}
+			return commandConsumed();
+		},
+	},
+	{
+		name: "goalplan",
+		aliases: ["goal-plan"],
+		description: "AI-driven goal planning — agent analyzes context and sets goal autonomously",
+		inlineHint: "[hint]",
+		allowArgs: true,
+		handleTui: async (command, runtime) => {
+			const args = (command.args ?? "").trim();
+			const goalArgs = args ? `plan ${args}` : "plan";
+			await runtime.ctx.handleGoalModeCommand(goalArgs);
+			runtime.ctx.editor.setText("");
+		},
+	},
+	{
 		name: "model",
 		aliases: ["models"],
 		description: "Select model (opens selector UI)",
