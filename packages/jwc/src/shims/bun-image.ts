@@ -1,25 +1,53 @@
 /**
- * `Bun.Image` Node shim (audit round-5 SQ-1 build).
+ * `Bun.Image` Node shim (100.14 — photon WASM backend; opencode precedent).
  *
- * Bun.Image is a native decode/transform/encode pipeline. Node has no
- * equivalent without a heavy image dependency (sharp/jimp), which is a
- * user-approval decision (project rule: no deps without approval). So this
- * shim does what it can WITHOUT decoding:
- *  - metadata(): parse width/height/format from the file header (PNG/JPEG/GIF/
- *    WebP/BMP) — no pixel decode needed. This lets image-resize.ts take its
- *    fast path (already-within-budget images pass through untouched).
- *  - resize()/encode()/bytes(): no pure-JS encoder is bundled, so the terminal
- *    rejects with a clear, catchable error. image-resize.ts already catches it
- *    and returns the original buffer (graceful degradation) — only the
- *    WebP-source + excludeWebP config surfaces it as an explicit error, which
- *    is the honest outcome when the image genuinely cannot be re-encoded.
+ * Bun.Image is a native decode/transform/encode pipeline. On Node it is backed
+ * by `@silvia-odwyer/photon-node` (WASM — no platform-native binary, unlike
+ * sharp/libvips). The Bun runtime never reaches this shim (native Bun.Image),
+ * so photon only loads under the dist-node bundle, and only when an image is
+ * actually transformed.
+ *  - metadata(): header parse (PNG/JPEG/GIF/WebP/BMP) — no WASM load, so the
+ *    image-resize fast path (already-within-budget) stays cheap.
+ *  - resize()/png()/jpeg()/webp() → bytes(): lazy-load photon, decode, resize
+ *    (Lanczos3), re-encode to the chosen format, free the WASM heap. Decode/
+ *    encode failure throws (caught by image-resize → returns the original).
  */
+import { createRequire } from "node:module";
 
 interface ImageMetadata {
 	width: number;
 	height: number;
 	format: string;
 }
+
+type PhotonImage = {
+	get_width(): number;
+	get_height(): number;
+	get_bytes(): Uint8Array;
+	get_bytes_jpeg(quality: number): Uint8Array;
+	get_bytes_webp(): Uint8Array;
+	free(): void;
+};
+type PhotonModule = {
+	PhotonImage: { new_from_byteslice(vec: Uint8Array): PhotonImage };
+	resize(img: PhotonImage, width: number, height: number, filter: number): PhotonImage;
+	SamplingFilter: { Lanczos3: number };
+};
+
+let photonPromise: Promise<PhotonModule> | undefined;
+function loadPhoton(): Promise<PhotonModule> {
+	// Resolve from node_modules (photon is an esbuild external): its CJS main
+	// inits the WASM synchronously off its own __dirname. createRequire avoids
+	// esbuild rewriting the dynamic import into a bundled lookup.
+	photonPromise ??= (async () => {
+		const require = createRequire(import.meta.url);
+		const mod = require("@silvia-odwyer/photon-node") as PhotonModule & { default?: PhotonModule };
+		return mod.default ?? mod;
+	})();
+	return photonPromise;
+}
+
+type OutputFormat = { kind: "png" } | { kind: "jpeg"; quality: number } | { kind: "webp" };
 
 function readUInt16BE(b: Uint8Array, o: number): number {
 	return ((b[o] ?? 0) << 8) | (b[o + 1] ?? 0);
@@ -80,43 +108,72 @@ function parseImageHeader(b: Uint8Array): ImageMetadata {
 	throw new Error("Bun.Image shim: unrecognized image header (Node build cannot decode this format)");
 }
 
-function transformUnsupported(): never {
-	throw new Error(
-		"Bun.Image transform/encode is unavailable in the jwc Node build (no bundled image encoder); image left unmodified",
-	);
-}
-
 class NodeBunImage {
 	#bytes: Uint8Array;
+	#target?: { width: number; height: number };
+	#format: OutputFormat = { kind: "png" };
 
 	constructor(input: Uint8Array | ArrayBuffer | Buffer) {
 		this.#bytes = input instanceof ArrayBuffer ? new Uint8Array(input) : input;
 	}
 
 	async metadata(): Promise<ImageMetadata> {
+		// Header parse only — no WASM, keeps the image-resize fast path cheap.
 		return parseImageHeader(this.#bytes);
 	}
 
-	// Chainable transform surface — every terminal rejects cleanly so callers
-	// fall back to the original buffer instead of crashing on a missing method.
-	resize(): this {
+	resize(width: number, height: number): this {
+		this.#target = { width: Math.max(1, Math.round(width)), height: Math.max(1, Math.round(height)) };
 		return this;
 	}
-	encode(): this {
+
+	png(): this {
+		this.#format = { kind: "png" };
 		return this;
 	}
-	rotate(): this {
+	jpeg(options?: { quality?: number }): this {
+		this.#format = { kind: "jpeg", quality: clampQuality(options?.quality) };
 		return this;
 	}
-	flip(): this {
+	webp(_options?: { quality?: number }): this {
+		// photon's WebP encoder takes no quality argument.
+		this.#format = { kind: "webp" };
 		return this;
 	}
+
 	async bytes(): Promise<Uint8Array> {
-		return transformUnsupported();
+		const photon = await loadPhoton();
+		let decoded: PhotonImage | undefined;
+		let resized: PhotonImage | undefined;
+		try {
+			decoded = photon.PhotonImage.new_from_byteslice(this.#bytes);
+			let source = decoded;
+			if (this.#target) {
+				resized = photon.resize(decoded, this.#target.width, this.#target.height, photon.SamplingFilter.Lanczos3);
+				source = resized;
+			}
+			const out =
+				this.#format.kind === "jpeg"
+					? source.get_bytes_jpeg(this.#format.quality)
+					: this.#format.kind === "webp"
+						? source.get_bytes_webp()
+						: source.get_bytes();
+			// Copy out of the WASM-owned view before freeing the heap.
+			return new Uint8Array(out);
+		} finally {
+			resized?.free();
+			decoded?.free();
+		}
 	}
+
 	async arrayBuffer(): Promise<ArrayBuffer> {
-		return transformUnsupported();
+		return (await this.bytes()).slice().buffer;
 	}
+}
+
+function clampQuality(quality: number | undefined): number {
+	if (typeof quality !== "number" || !Number.isFinite(quality)) return 80;
+	return Math.min(100, Math.max(0, Math.round(quality)));
 }
 
 export const BunImage = NodeBunImage;

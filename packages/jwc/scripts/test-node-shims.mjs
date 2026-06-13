@@ -10,6 +10,7 @@ import { execFileSync } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import { deflateSync } from "node:zlib";
 import { build } from "esbuild";
 
 // Bundle inside the package so the external better-sqlite3 import resolves
@@ -322,7 +323,60 @@ try {
 	assert.equal(meta.height, 1, "Bun.Image png height");
 	console.log("[test-node-shims] Bun.Image metadata OK");
 
+	// 100.14: Bun.Image transforms must actually resize+re-encode via photon.
+	const png16 = makeRgbaPng(16, 16);
+	const jpegOut = await new shim.Image(png16).resize(8, 8).jpeg({ quality: 80 }).bytes();
+	assert.ok(jpegOut instanceof Uint8Array && jpegOut.length > 0, "jpeg encode empty");
+	assert.equal(jpegOut[0], 0xff, "jpeg SOI byte 0");
+	assert.equal(jpegOut[1], 0xd8, "jpeg SOI byte 1");
+	const pngOut = await new shim.Image(png16).resize(8, 8).png().bytes();
+	assert.equal(pngOut[0], 0x89, "png signature");
+	assert.equal((await new shim.Image(pngOut).metadata()).width, 8, "resized png is 8px wide");
+	const webpOut = await new shim.Image(png16).resize(8, 8).webp().bytes();
+	assert.equal(String.fromCharCode(webpOut[0], webpOut[1], webpOut[2], webpOut[3]), "RIFF", "webp RIFF magic");
+	console.log("[test-node-shims] Bun.Image photon resize+encode (jpeg/png/webp) OK");
+
+	// Degenerate/undecodable input must throw (image-resize catches → original).
+	await assert.rejects(() => new shim.Image(Buffer.from([1, 2, 3, 4])).resize(2, 2).png().bytes(), "garbage decode should throw");
+	console.log("[test-node-shims] Bun.Image undecodable input throws (graceful) OK");
+
 	rmSync(shimOut, { force: true });
+}
+
+/** Minimal valid RGBA PNG (filter byte 0 + solid pixels) for photon round-trips. */
+function makeRgbaPng(w, h) {
+	const crcTable = [];
+	for (let n = 0; n < 256; n++) {
+		let c = n;
+		for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+		crcTable[n] = c >>> 0;
+	}
+	const crc32 = buf => {
+		let c = 0xffffffff;
+		for (const b of buf) c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8);
+		return (c ^ 0xffffffff) >>> 0;
+	};
+	const chunk = (type, data) => {
+		const tb = Buffer.from(type, "ascii");
+		const len = Buffer.alloc(4);
+		len.writeUInt32BE(data.length, 0);
+		const crc = Buffer.alloc(4);
+		crc.writeUInt32BE(crc32(Buffer.concat([tb, data])), 0);
+		return Buffer.concat([len, tb, data, crc]);
+	};
+	const ihdr = Buffer.alloc(13);
+	ihdr.writeUInt32BE(w, 0);
+	ihdr.writeUInt32BE(h, 4);
+	ihdr[8] = 8; // bit depth
+	ihdr[9] = 6; // color type RGBA
+	const row = Buffer.concat([Buffer.from([0]), Buffer.from(new Array(w * 4).fill(0x80))]);
+	const raw = Buffer.concat(new Array(h).fill(row));
+	return Buffer.concat([
+		Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]),
+		chunk("IHDR", ihdr),
+		chunk("IDAT", deflateSync(raw)),
+		chunk("IEND", Buffer.alloc(0)),
+	]);
 }
 
 // serve tls: cert/key must yield an https server (not plaintext).

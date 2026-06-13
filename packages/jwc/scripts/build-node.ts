@@ -84,8 +84,17 @@ const result = await build({
 		"import.meta.path": "JWC_IMPORT_META_PATH",
 	},
 	// Runtime deps resolved from node_modules, not inlined. (node-tar/xxhash-wasm
-	// were dropped — no import site exists, audit W-1.)
-	external: ["better-sqlite3", "strip-ansi", "json5", "@gajae-code/natives", "markit-ai"],
+	// were dropped — no import site exists, audit W-1.) photon-node carries a
+	// 1.9MB .wasm its CJS main loads off its own __dirname, so it must stay
+	// external — esbuild does not inline the .wasm (100.14).
+	external: [
+		"better-sqlite3",
+		"strip-ansi",
+		"json5",
+		"@silvia-odwyer/photon-node",
+		"@gajae-code/natives",
+		"markit-ai",
+	],
 	logLevel: "info",
 }).catch(error => {
 	console.error("[build:node] failed:", error?.message ?? error);
