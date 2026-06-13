@@ -26,12 +26,16 @@ subagent_models:
     best: gpt-5.5
     cheap: gpt-5.4-mini
   xai:
-    best: grok-4.3
-    cheap: grok-composer-2.5-fast
+    cheap: grok-composer-2.5-fast    # best 없음 (cheap only)
   google:
-    best: gemini-3-flash-preview
-    cheap: gemini-2.5-flash
+    best: gemini-3.1-pro
+    cheap: gemini-3.5-flash
 ```
+
+추가 규칙:
+- **cheap의 리즈닝 파라미터는 메인 세션(self)과 동일**하게 상속. cheap이라고 thinking off 하지 않음.
+- **sonnet-4-6은 anthropic cheap이 아니라 범용 cheap 기본값**으로도 쓸 수 있음 (가성비 최적).
+- best가 없는 프로바이더(xai)는 cheap만 노출 → 해당 프로바이더의 총 슬롯 = 1.
 
 ### 노출 규칙
 
@@ -50,10 +54,10 @@ subagent_models:
 ### 총 사용 가능 모델 수
 
 ```
-self (1) + providers × 2 = 1 + N×2
+self (1) + Σ provider slots = 1 + Σ(best?1:0 + cheap?1:0)
 
 예시 (4 provider 로그인):
-  self(1) + anthropic(2) + codex(2) + xai(2) + google(2) = 9 모델
+  self(1) + anthropic(2) + codex(2) + xai(1) + google(2) = 8 모델
 ```
 
 ## 기존 인프라
