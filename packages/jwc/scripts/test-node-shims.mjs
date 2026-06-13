@@ -340,6 +340,19 @@ try {
 	await assert.rejects(() => new shim.Image(Buffer.from([1, 2, 3, 4])).resize(2, 2).png().bytes(), "garbage decode should throw");
 	console.log("[test-node-shims] Bun.Image undecodable input throws (graceful) OK");
 
+	// no-resize path (target undefined): re-encode original dims, no double-free.
+	const reencoded = await new shim.Image(png16).png().bytes();
+	assert.equal((await new shim.Image(reencoded).metadata()).width, 16, "no-resize path keeps original dims");
+	console.log("[test-node-shims] Bun.Image no-resize re-encode OK");
+
+	// Documented limitation: photon get_bytes_webp() ignores quality — the
+	// webp() quality arg is accepted (type-compat) but produces identical bytes.
+	// image-resize tolerates this (falls back to the dimension ladder).
+	const webpQ40 = await new shim.Image(png16).resize(8, 8).webp({ quality: 40 }).bytes();
+	const webpQ90 = await new shim.Image(png16).resize(8, 8).webp({ quality: 90 }).bytes();
+	assert.equal(webpQ40.length, webpQ90.length, "webp quality is expected to be a no-op in photon");
+	console.log("[test-node-shims] Bun.Image webp quality no-op (documented) OK");
+
 	rmSync(shimOut, { force: true });
 }
 
