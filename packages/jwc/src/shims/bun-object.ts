@@ -7,6 +7,10 @@
  * implementations (file/sleep → 100.03, spawn → 100.04, data core → 100.05,
  * peripherals → 100.07).
  */
+import { bunFile } from "./bun-file";
+import { bunSleep, bunSleepSync } from "./bun-sleep";
+import { bunStderr, bunStdin, bunStdout } from "./bun-stdio";
+import { bunWrite } from "./bun-write";
 import type { BunShim } from "./types";
 
 function notImplemented(api: string): never {
@@ -20,10 +24,10 @@ function stubFn(api: string): (...args: unknown[]) => never {
 export function buildNodeBunShim(): BunShim {
 	return {
 		__jwcNodeShim: true,
-		file: stubFn("file") as unknown as BunShim["file"],
-		write: stubFn("write") as unknown as BunShim["write"],
-		sleep: stubFn("sleep") as unknown as BunShim["sleep"],
-		sleepSync: stubFn("sleepSync") as unknown as BunShim["sleepSync"],
+		file: bunFile,
+		write: bunWrite as BunShim["write"],
+		sleep: bunSleep as BunShim["sleep"],
+		sleepSync: bunSleepSync,
 		spawn: stubFn("spawn"),
 		spawnSync: stubFn("spawnSync"),
 		hash: stubFn("hash") as unknown as BunShim["hash"],
@@ -40,9 +44,9 @@ export function buildNodeBunShim(): BunShim {
 		JSONL: { parseChunk: stubFn("JSONL.parseChunk") },
 		JSON5: { parse: stubFn("JSON5.parse") as unknown as (text: string) => unknown },
 		serve: stubFn("serve"),
-		stdin: process.stdin,
-		stdout: process.stdout,
-		stderr: process.stderr,
+		stdin: bunStdin,
+		stdout: bunStdout,
+		stderr: bunStderr,
 		stripANSI: stubFn("stripANSI") as unknown as BunShim["stripANSI"],
 		semver: {
 			order: stubFn("semver.order") as unknown as BunShim["semver"]["order"],
