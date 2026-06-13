@@ -38,7 +38,7 @@ import type { ExtensionUIContext } from "./extensibility/extensions/types";
 import { InteractiveMode, runAcpMode, runBridgeMode, runPrintMode, runRpcMode } from "./modes";
 import { initTheme, stopThemeWatcher } from "./modes/theme/theme";
 import type { SubmittedUserInput } from "./modes/types";
-import type { MCPManager } from "./runtime-mcp";
+import { discoverAndLoadMCPTools, type MCPManager } from "./runtime-mcp";
 import {
 	type CreateAgentSessionOptions,
 	type CreateAgentSessionResult,
@@ -902,6 +902,31 @@ export async function runRootCommand(
 	sessionOptions.modelRegistry = modelRegistry;
 	sessionOptions.hasUI = isInteractive || mode === "rpc-ui";
 	sessionOptions.settings = settingsInstance;
+
+	// MCP runtime discovery: the SDK quarantines auto-discovery (it only uses an
+	// explicitly-supplied manager), so the CLI wires it here — load servers from
+	// the user/project `mcp.json` (e.g. computer-use) and hand the connected
+	// manager to the session. Best-effort: a failed/timed-out server must never
+	// block startup, so swallow errors and proceed with whatever connected.
+	if (!sessionOptions.mcpManager) {
+		try {
+			const mcpResult = await discoverAndLoadMCPTools(getProjectDir(), {
+				authStorage,
+				enableProjectConfig: true,
+			});
+			sessionOptions.mcpManager = mcpResult.manager;
+			// createTools() never reads the MCP manager, so its connected tools
+			// must be handed in explicitly as customTools. Unwrap LoadedCustomTool
+			// → CustomTool so the model actually sees the MCP tools (e.g.
+			// computer-use), not just a registered singleton.
+			const mcpTools = mcpResult.tools.map(loaded => loaded.tool);
+			if (mcpTools.length > 0) {
+				sessionOptions.customTools = [...(sessionOptions.customTools ?? []), ...mcpTools];
+			}
+		} catch (error) {
+			logger.warn("MCP discovery failed; continuing without MCP tools", { error });
+		}
+	}
 
 	// Handle CLI --api-key as runtime override (not persisted)
 	if (parsedArgs.apiKey) {
