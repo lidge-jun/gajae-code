@@ -47,10 +47,10 @@ function globalJobKey(cwd: string): string {
 
 export function openMemoryDb(dbPath: string): Database {
 	const db = new Database(dbPath);
+	db.run("PRAGMA busy_timeout = 5000");
 	db.exec(`
 PRAGMA journal_mode=WAL;
 PRAGMA synchronous=NORMAL;
-PRAGMA busy_timeout=5000;
 
 CREATE TABLE IF NOT EXISTS threads (
 	id TEXT PRIMARY KEY,
