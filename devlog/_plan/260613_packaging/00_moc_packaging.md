@@ -19,17 +19,18 @@ cua-driver(`~/.local/bin/cua-driver`)도 외부 바이너리. GitHub에 배포�
 
 ## 작업 항목 (Sonnet 전수조사 결과로 갱신 예정)
 
-- [ ] cu-mcp를 `packages/computer-use-mcp/`로 이동 (의존성: `@modelcontextprotocol/sdk` + `zod`)
-- [ ] cu-native Swift 바이너리 전략 결정 (prebuilt binary vs build-from-source vs optional)
-- [ ] `~/.jwc/agent/mcp.json`의 절대경로 → 상대경로 or 동적 해석
-- [ ] cua-driver → optional peer dependency + 설치 가이드
-- [ ] jawcode 소스 내 `/Users/jun` 하드코딩 제거
-- [ ] cli-jaw 소스 내 머신 종속 참조 제거
-- [ ] structure 문서의 절대경로 → 상대경로 변환 (devlog 참조 경로)
+- [x] cu-mcp를 `packages/cu-mcp-server/`로 이동 (`4508c96e`)
+- [x] cu-native Swift → prebuilt binary `packages/cu-mcp-server/bin/cu-native`
+- [x] `~/.jwc/agent/mcp.json` → `node`(PATH) + 상대경로 + cwd
+- [x] cua-driver → `cua-driver`(PATH), optional
+- [x] jawcode 소스 내 `/Users/jun` → 0건 (Sonnet 감사 확인)
+- [x] cli-jaw 소스 내 → 0건 (Sonnet 감사 확인)
+- [x] 2차 전수조사 ([20](./20_audit_round2.md)): 외부 바이너리 11종 목록화, 설정 하드코딩 전부 해소, 런타임 외부 레포 참조 0건
 
 ## 문서
 
 | # | 문서 | 내용 |
 |---|---|---|
 | 00 | 본 MOC | 감사 범위·작업 항목 |
-| (추가 예정) | Sonnet 전수조사 결과 | jawcode·cli-jaw·cu-mcp 감사 결과 |
+| [10](./10_audit_results.md) | 1차 전수조사 | jawcode·cli-jaw·cu-mcp 감사 (Sonnet 3건) |
+| (추가 예정) | 2차 전수조사 | 외부 바이너리·설정 하드코딩·외부 레포 참조 (Sonnet 3건) |
