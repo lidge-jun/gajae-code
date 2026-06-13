@@ -474,6 +474,11 @@ export class StatusLineComponent implements Component {
 		this.#onPabcdStageChange = cb;
 	}
 
+	refreshPabcdNow(): void {
+		this.#pabcdLastFetch = 0;
+		this.#refreshPabcdInBackground();
+	}
+
 	get activePabcdStage(): string | null {
 		if (!this.#pabcdState?.active) return null;
 		const currentSessionId = this.session.sessionManager?.getSessionId?.();

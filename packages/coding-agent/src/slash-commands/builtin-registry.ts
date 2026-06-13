@@ -465,6 +465,20 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 			}
 			return commandConsumed();
 		},
+		handleTui: async (command, runtime) => {
+			const args = (command.args ?? "").trim();
+			const argv = args.length > 0 ? args.split(/\s+/) : [];
+			const sessionId = runtime.ctx.session.sessionManager.getSessionId?.();
+			if (sessionId) argv.push("--session-id", sessionId);
+			const result = await runNativeOrchestrateCommand(argv, runtime.ctx.session.sessionManager.getCwd());
+			const sub = argv[0]?.toLowerCase();
+			const stageEntered = result.status === 0 && !!sub && sub !== "status" && sub !== "verdict";
+			if (stageEntered) {
+				await runtime.ctx.session.sendPabcdStageContext({ deliverAs: "nextTurn" });
+				runtime.ctx.statusLine.refreshPabcdNow();
+			}
+			runtime.ctx.editor.setText("");
+		},
 	},
 	{
 		name: "interview",

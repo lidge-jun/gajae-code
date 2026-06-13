@@ -9,8 +9,8 @@ const PHASE_HUES: Record<string, number> = {
 
 const PHASE_IS_ACHROMATIC = new Set(["d"]);
 const SATURATION = 100;
-const LIGHTNESS_MIN = 30;
-const LIGHTNESS_MAX = 70;
+const LIGHTNESS_MIN = 45;
+const LIGHTNESS_MAX = 75;
 const CYCLE_MS = 2000;
 const FRAME_MS = 100;
 
