@@ -104,6 +104,23 @@ self (1) + Σ provider slots = 1 + Σ(best?1:0 + cheap?1:0)
   self(1) + anthropic(2) + codex(2) + xai(1) + google(2) = 8 모델
 ```
 
+## 현재 Gap 분석
+
+cli-jaw 기준 (260613 스냅샷):
+
+| 레이어 | model 필드 | 파일 | 상태 |
+|---|---|---|---|
+| `SpawnOpts` | `model?: string` | `spawn.ts:684` | ✅ 있음 |
+| Employee dispatch | `emp["model"]` DB→spawn 전달 | `distribute.ts:502` | ✅ 있음 |
+| **Task agent API** (executor/planner/architect/critic) | 없음 | — | ❌ gap |
+
+- 하위 레이어(`spawnAgent`)는 model을 받을 준비가 돼 있음
+- employee는 DB `employees.model` 컬럼에서 모델을 읽어 `spawnAgent({model})` 전달 → 작동
+- **task agent 4종은 모델 지정 인터페이스 자체가 없음** — 메인 세션 기본 모델로만 실행
+- jaw TUI에서 task dispatch 시 노출 필드: `agent`, `tasks`, `context`, `schema`, `spawnPlan`, `inheritContext` — **model 없음**
+
+→ S3에서 task agent dispatch 경로에 `model` (또는 `modelHint: "cheap:anthropic"`) 파라미터를 추가하고, 프리셋 해석 → `spawnAgent({model})` 전달 배선이 핵심.
+
 ## 기존 인프라
 
 - `createAgentSession({ model })`: 이미 model 옵션 존재 (sdk.ts:225)
@@ -118,8 +135,8 @@ self (1) + Σ provider slots = 1 + Σ(best?1:0 + cheap?1:0)
 |---|---|---|
 | S1 | 프리셋 스키마 정의 + 기본값 내장 | `SubagentModelPreset` 타입, 위 표의 기본값 |
 | S2 | 설정 파일 로드/오버라이드 | config.yml 또는 settings.json 경로 결정 |
-| S3 | task agent spawn 시 model 라우팅 | `resolveSubagentModel(preset, targetHint)` |
-| S4 | TUI 노출 | 서브에이전트 spawn 시 어떤 모델로 돌리는지 표시 |
+| S3 | task agent dispatch에 `modelHint` 필드 추가 | `resolveSubagentModel(hint)` → `spawnAgent({model})` 배선 |
+| S4 | TUI 노출 | task dispatch 시 모델 선택 UI + 실행 중 어떤 모델인지 표시 |
 | S5 | e2e | 다른 프로바이더 서브에이전트 1턴 완주 |
 
 ## 미결정
