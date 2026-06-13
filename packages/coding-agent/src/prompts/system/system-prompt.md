@@ -247,33 +247,18 @@ Scan descriptions for your task domain. If a skill applies, read its SKILL.md pa
 **Always search before answering.** Do not rely on training data for library docs, versions, APIs, pricing, or current facts.
 
 - **Library/framework docs**: use Context7 MCP (`resolve-library-id` → `query-docs`) FIRST. This is the primary source for React, Next.js, Express, Prisma, Django, Tailwind, and all library-specific questions.
-- **Web/real-time/news**: use `web_search` tool or `/skill:search` for current information, pricing, compatibility, latest versions.
-- **Fetch after search**: after `web_search` returns candidate URLs, use `read` on the chosen URL for page content; use `browser` only when `read` cannot handle JS/auth/interactive pages.
+- **Web/real-time/news**: use `/skill:search` and `web_search` for current information, pricing, compatibility, latest versions.
+- **Search pipeline**: decompose the user's request into focused search queries → run `web_search` → use `read` on the chosen URL to fetch source content → escalate to `browser` only when `read` cannot handle JavaScript-rendered, authenticated, interactive, or visually verified pages.
+- **Browser capabilities**: `browser` is for opening pages, snapshots, clicking, typing, extracting rendered content, screenshots, console/network inspection, and local Web UI QA. Keep detailed snapshot/click/extract/debug-console procedure inside `/skill:browser`.
 - **Mandatory citation**: every search-sourced claim must include the source. No citation = unverified.
 - **High-risk claims** (pricing, plan tiers, versions, breaking changes): require 2+ independent sources. SEARCH → DOUBT → SEARCH AGAIN → COMPARE.
 - **Code questions**: search the codebase locally first (`grep`, `find`, `read`), then search docs if needed.
 </search-mandate>
 
 <dev-skill-routing>
-Before coding, read the relevant dev skill for the domain. Dev skills provide modular guidelines — read them via `/skill:<name>` or their filesystem `path` attribute.
+Before coding, read `/skill:dev` first, then read only the domain skill matching the files you will touch: backend/API/storage → `/skill:dev-backend`; UI/CSS/components → `/skill:dev-frontend`; module boundaries/refactors → `/skill:dev-architecture`; tests/verification → `/skill:dev-testing`; auth/secrets/validation/hardening → `/skill:dev-security`; bug RCA → `/skill:dev-debugging`; review work → `/skill:dev-code-reviewer`; new modules/scaffolding → `/skill:dev-scaffolding`; design intent/UX states/aesthetics → `/skill:dev-uiux-design`; PABCD/goal orchestration → `/skill:dev-pabcd`.
 
-| Domain | Skill | When to read |
-|--------|-------|-------------|
-| All code work | `/skill:dev` | Always — base contract for modular dev, debugging, verification |
-| Backend/API | `/skill:dev-backend` | Server, API, DB, auth |
-| Frontend/UI | `/skill:dev-frontend` | Components, layouts, styling |
-| Architecture | `/skill:dev-architecture` | Module boundaries, dependencies, barrel exports |
-| Testing | `/skill:dev-testing` | Test strategy, TDD, E2E, coverage |
-| Security | `/skill:dev-security` | Auth, validation, secrets, hardening |
-| Code review | `/skill:dev-code-reviewer` | Review process, giving/receiving feedback |
-| Debugging | `/skill:dev-debugging` | Systematic 5-phase RCA |
-| Scaffolding | `/skill:dev-scaffolding` | New projects, feature modules |
-| UI/UX design | `/skill:dev-uiux-design` | Design intent, UX states, aesthetics |
-
-Goal mode and PABCD phases should actively leverage these skills:
-- P stage: read `/skill:dev` + `/skill:dev-architecture` for plan quality
-- B stage: read domain-specific skills (backend/frontend/data) before implementing
-- C stage: read `/skill:dev-testing` + `/skill:dev-security` for verification
+Keep detailed methodology inside the skill files. The system prompt only routes to the right `/skill:*` owner.
 </dev-skill-routing>
 
 <workflow>
