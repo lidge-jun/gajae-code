@@ -1,6 +1,6 @@
 # 010 Plan — browser tool definition slimming
 
-> 상태: 스캐폴딩 ✅
+> 상태: 🟢 MVP 구현 완료 (260613-14)
 > 목표: 기본 요청마다 상주하는 `browser` tool schema/description 비용을 줄인다.
 
 ## Phase split
@@ -77,7 +77,15 @@ Implementation rule: do not compact to `z.record(...)` in the first pass. If a l
 
 ## Token measurement
 
-Use the repo-local token estimator pattern from the investigation. Record both before and after in this file or the implementation receipt.
+### Before (260612 baseline)
+- browser 단독: ~4.5K tokens (description 1.8K + schema 2.7K)
+
+### After (260614 측정)
+- browser.md: 988 chars → ~247 tokens (14줄 affordance만)
+- schema: 60줄 → ~1,125 tokens (`.describe()` 7개 — 짧고 필수적, 유지)
+- **총합: ~1,372 tokens** (4.5K → 1.4K, **69% 절감**)
+
+목표 2.5K 이하 **달성** (1.4K < 2.5K).
 
 ```bash
 bun -e 'import { createTools } from "./packages/coding-agent/src/tools/index.ts"; import { Settings } from "./packages/coding-agent/src/config/settings.ts"; import { countTokens } from "@gajae-code/natives"; const settings=Settings.isolated({"inspect_image.enabled":true,"calc.enabled":false,"github.enabled":false,"checkpoint.enabled":false,"renderMermaid.enabled":false}); const session={cwd:process.cwd(),hasUI:true,settings,getSessionFile:()=>null,getSessionSpawns:()=>null,enableLsp:true,skipPythonPreflight:true,skills:[{name:"jaw-interview",description:"",path:""}],getAgentId:()=>"0-Main",agentRegistry:{}}; const tools=await createTools(session); const rows=tools.map(t=>{let schema=""; try{schema=JSON.stringify(t.parameters??{});}catch{} return {name:t.name, mode:t.loadMode, total:countTokens([t.name,t.description??"",schema])};}).sort((a,b)=>b.total-a.total); console.table(rows.filter(r=>r.name==="browser")); console.log("total", rows.reduce((s,r)=>s+r.total,0), "count", rows.length);'

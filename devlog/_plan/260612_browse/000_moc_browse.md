@@ -1,6 +1,6 @@
 # 000 MOC — browse skill + browser tool slimming
 
-> 상태: 스캐폴딩 ✅
+> 상태: 🟢 MVP 구현 완료 (260614) — 4.5K→1.4K tokens (69% 절감)
 > 입력: 사용자 지시 “browse tool 정의를 대폭 줄이고 + browse 스킬로 주입” (260612)
 > 소유: `packages/coding-agent` browser tool prompt/schema surface
 

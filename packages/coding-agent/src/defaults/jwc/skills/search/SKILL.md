@@ -1,6 +1,7 @@
 ---
 name: search
 description: Search strategy — tool routing, query normalization, temporal anchoring, dual-search mandate, citation rules.
+hide: true
 ---
 
 # search
