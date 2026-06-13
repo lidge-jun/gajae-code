@@ -8,9 +8,9 @@ const PHASE_HUES: Record<string, number> = {
 };
 
 const PHASE_IS_ACHROMATIC = new Set(["d"]);
-const SATURATION = 80;
-const LIGHTNESS_MIN = 35;
-const LIGHTNESS_MAX = 65;
+const SATURATION = 100;
+const LIGHTNESS_MIN = 30;
+const LIGHTNESS_MAX = 70;
 const CYCLE_MS = 2000;
 const FRAME_MS = 100;
 
@@ -62,6 +62,19 @@ export function createPabcdBorderCycle(invalidate: () => void): PabcdBorderHandl
 			clearInterval(timer);
 		},
 	};
+}
+
+export function getPabcdPhaseAnsi(phase: string): string {
+	const normalized = phase.toLowerCase();
+	if (PHASE_IS_ACHROMATIC.has(normalized)) return "\x1b[37m";
+	const hue = PHASE_HUES[normalized];
+	if (hue === undefined) return "";
+	return hslToAnsi(hue, SATURATION, 55);
+}
+
+export function colorPabcdLabel(phase: string, text: string): string {
+	const ansi = getPabcdPhaseAnsi(phase);
+	return ansi ? `${ansi}${text}\x1b[39m` : text;
 }
 
 export function isPabcdPhase(phase: string | undefined): boolean {

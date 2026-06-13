@@ -2,6 +2,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { ThinkingLevel } from "@gajae-code/agent-core";
 import { TERMINAL } from "@gajae-code/tui";
+import { colorPabcdLabel } from "../pabcd-border";
 import {
 	APP_NAME,
 	formatDuration,
@@ -211,7 +212,7 @@ const pabcdSegment: StatusLineSegment = {
 		}
 		const label = PABCD_STAGE_LABELS[state.stage] ?? state.stage.toUpperCase();
 		const chip = pabcdGateChip(state);
-		const content = theme.fg("accent", label);
+		const content = colorPabcdLabel(state.stage, label);
 		return { content: chip ? `${content} ${chip}` : content, visible: true };
 	},
 };
