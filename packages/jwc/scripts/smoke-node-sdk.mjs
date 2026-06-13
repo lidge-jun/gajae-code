@@ -22,8 +22,10 @@ const workDir = mkdtempSync(path.join(tmpdir(), "jwc-smoke-cwd-"));
 const agentDir = mkdtempSync(path.join(tmpdir(), "jwc-smoke-agent-"));
 process.env.GJC_BRAND_NAME = "jwc";
 
+let smokeSucceeded = false;
 try {
-	const session = await sdk.createAgentSession({ cwd: workDir, agentDir });
+	const result = await sdk.createAgentSession({ cwd: workDir, agentDir });
+	const session = result.session ?? result;
 	const keys = Object.keys(session ?? {});
 	console.log(`[smoke 100.09] createAgentSession OK — keys: ${keys.slice(0, 12).join(", ")}${keys.length > 12 ? ", …" : ""}`);
 	const target = session.session ?? session;
@@ -32,8 +34,14 @@ try {
 	);
 	console.log(`[smoke 100.09] surface — ${surface.join(" · ")}`);
 	await (session.dispose?.() ?? target.dispose?.());
+	await result.mcpManager?.disconnectAll?.();
 	console.log("[smoke 100.09] dispose OK");
+	smokeSucceeded = true;
 } finally {
 	rmSync(workDir, { recursive: true, force: true });
 	rmSync(agentDir, { recursive: true, force: true });
+}
+
+if (smokeSucceeded) {
+	process.exit(0);
 }

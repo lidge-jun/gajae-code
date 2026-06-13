@@ -10,11 +10,11 @@
 	"exports": {
 		".": {
 			"types": "./src/index.ts",
-			"import": "./src/index.ts"
+			"import": "./dist-node/sdk.js"
 		},
 		"./sdk": {
 			"types": "./src/sdk.ts",
-			"import": "./src/sdk.ts"
+			"import": "./dist-node/sdk.js"
 		}
 	},
 	"dependencies": {
@@ -30,11 +30,14 @@
 	},
 	"files": [
 		"bin",
-		"dist"
+		"dist",
+		"dist-node"
 	],
 	"scripts": {
 		"bundle": "bun build src/cli-entry.ts --target=bun --outfile=dist/jwc.bundle.js --external mupdf --external markit-ai --external @gajae-code/natives",
-		"build:node": "bun scripts/build-node.ts"
+		"build:node": "bun scripts/build-node.ts",
+		"smoke:node-sdk": "node scripts/smoke-node-sdk.mjs",
+		"smoke:packed-sdk": "node scripts/smoke-packed-sdk.mjs"
 	},
 	"devDependencies": {
 		"@gajae-code/coding-agent": "catalog:",

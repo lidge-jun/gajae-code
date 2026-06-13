@@ -27,7 +27,19 @@ bun run build:node
 node scripts/smoke-node-sdk.mjs
 ```
 
-If the smoke script still imports `../dist-node/sdk.js` directly, the publish slice must add a packed-install variant that imports `jawcode/sdk`.
+`scripts/smoke-node-sdk.mjs` keeps the direct dist-node import as the low-level
+artifact smoke. `scripts/smoke-packed-sdk.mjs` verifies the package-facing
+specifier by linking the package into a temporary `node_modules/jawcode` and
+running `import("jawcode/sdk")` through the package export map.
+
+```sh
+cd packages/jwc
+node scripts/smoke-packed-sdk.mjs
+```
+
+The package export map must point `.` and `./sdk` at `dist-node/sdk.js`; source
+TypeScript remains only the development `types` target until declaration
+generation is added.
 
 ## Output
 
