@@ -1,6 +1,6 @@
-# chase `_legacy` INDEX
+# chase `_fin` INDEX
 
-완료된 `10.NNN` / `20.NNN` — 본문은 `_legacy/10/` · `_legacy/20/`.
+완료된 `10.NNN` / `20.NNN` — 본문은 `_fin/10/` · `_fin/20/`.
 
 | NNN | 제목 | 완료일 | 파일 |
 |---|---|---|---|
@@ -9,4 +9,4 @@
 
 ## superseded (devlog)
 
-구 devlog-only 복사본 · [devlog/_legacy/chase/superseded](../../../devlog/_plan/260612_jawcode_fork/phase1/_legacy/chase/superseded/)
+구 devlog-only 복사본 · [devlog/_fin/chase/superseded](../../../devlog/_plan/260612_jawcode_fork/phase1/_fin/chase/superseded/)

@@ -1,4 +1,4 @@
-# chase — 번호 · `_legacy` 워크플로
+# chase — 번호 · `_fin` 워크플로
 
 > **정본 위치**: **`struct_har/chase/`**
 > - MOC: `10_gjc_chase_MOC.md` · `20_omp_chase_MOC.md`
@@ -25,15 +25,15 @@
 > 상태: ⬜ | 🟡 | ✅
 ```
 
-## `_legacy` — 완료 시
+## `_fin` — 완료 시
 
 | 단계 | 행동 |
 |---|---|
 | 1 | `> 상태: ✅` · 완료일 · HEAD |
-| 2 | MOC 표 ✅ + [_legacy/INDEX](./_legacy/INDEX.md) |
-| 3 | `10.NNN_*.md` → **`struct_har/chase/_legacy/10/`** 또는 `…/20/` |
+| 2 | MOC 표 ✅ + [_fin/INDEX](./_fin/INDEX.md) |
+| 3 | `10.NNN_*.md` → **`struct_har/chase/_fin/10/`** 또는 `…/20/` |
 | 4 | [002_gap_inventory](./002_gap_inventory.md) · `bands/` |
-| 5 | (선택) devlog `_legacy/chase/`에 동일 복사 — **필수 아님** |
+| 5 | (선택) devlog `_fin/chase/`에 동일 복사 — **필수 아님** |
 
 ## 신규 NNN
 

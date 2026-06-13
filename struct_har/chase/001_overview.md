@@ -9,7 +9,7 @@ jawcode를 **OSS upstream**으로 운영할 때도 chase는 유효하다: gjc/om
 
 - **10** — [10_gjc_chase_MOC](./10_gjc_chase_MOC.md) · `10.001_` … `10.NNN_*`
 - **20** — [20_omp_chase_MOC](./20_omp_chase_MOC.md) · `20.001_` … `20.NNN_*`
-- 완료 → [_legacy/10|20](./_legacy/README.md) · [05](./005_devlog_numbering.md)
+- 완료 → [_fin/10|20](./_fin/README.md) · [05](./005_devlog_numbering.md)
 
 devlog 스텁만: `devlog/.../10_gjc_chase_MOC.md`. 구 `10_phase1_jwc_shell` = 010 셸 ✅.
 ## 갭 4종

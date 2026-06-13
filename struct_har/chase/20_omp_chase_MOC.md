@@ -53,7 +53,7 @@
 
 ## 완료
 
-→ [_legacy/20/](./_legacy/20/README.md)
+→ [_fin/20/](./_fin/20/README.md)
 
 ## gjc
 

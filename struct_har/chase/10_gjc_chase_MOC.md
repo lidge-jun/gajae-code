@@ -9,7 +9,7 @@
 | **10** | 본 MOC (`10_gjc_chase_MOC.md`) |
 | **10.NNN** | 플랜 (`10.001_…` 파일명) |
 
-규약 · `_legacy`: [005_devlog_numbering.md](./005_devlog_numbering.md)
+규약 · `_fin`: [005_devlog_numbering.md](./005_devlog_numbering.md)
 
 ## 링크
 
@@ -57,12 +57,12 @@
 
 ## 완료
 
-→ [_legacy/10/](./_legacy/10/README.md) · [INDEX](./_legacy/INDEX.md)
+→ [_fin/10/](./_fin/10/README.md) · [INDEX](./_fin/INDEX.md)
 
 | NNN | 문서 | 완료일 | 구현 |
 |---|---|---|---|
-| 009 | [10.009 pi-shell UTF-8 panic](./_legacy/10/10.009_gjc_chase_pishell_utf8_fixup.md) | 260613 | [99.11.01](../../devlog/_plan/260612_jawcode_fork/phase1/99.11.01_plan_upstream_pishell_utf8_fixup.md) — 188 tests green |
-| 010 | [10.010 harness submit gate](./_legacy/10/10.010_gjc_chase_harness_submit_readiness.md) | 260613 | [99.11.02](../../devlog/_plan/260612_jawcode_fork/phase1/99.11.02_plan_upstream_harness_submit_gate.md) — 175 tests green |
+| 009 | [10.009 pi-shell UTF-8 panic](./_fin/10/10.009_gjc_chase_pishell_utf8_fixup.md) | 260613 | [99.11.01](../../devlog/_plan/260612_jawcode_fork/phase1/99.11.01_plan_upstream_pishell_utf8_fixup.md) — 188 tests green |
+| 010 | [10.010 harness submit gate](./_fin/10/10.010_gjc_chase_harness_submit_readiness.md) | 260613 | [99.11.02](../../devlog/_plan/260612_jawcode_fork/phase1/99.11.02_plan_upstream_harness_submit_gate.md) — 175 tests green |
 
 ## 불변
 

@@ -10,7 +10,7 @@
 | **10 gjc** | [10_gjc_chase_MOC.md](./10_gjc_chase_MOC.md) | `10.001_` … `10.010_` … (`10.NNN_*`) |
 | **20 omp** | [20_omp_chase_MOC.md](./20_omp_chase_MOC.md) | `20.001_` … `20.006_` … (`20.NNN_*`) |
 
-- 규약 · 완료 이동: [005_devlog_numbering.md](./005_devlog_numbering.md) → [`_legacy/10|20/`](./_legacy/README.md)
+- 규약 · 완료 이동: [005_devlog_numbering.md](./005_devlog_numbering.md) → [`_fin/10|20/`](./_fin/README.md)
 - devlog `10_gjc_chase_MOC` / `20_omp_chase_MOC` = **스텁** (로드맵 링크용)
 
 ## 정본 축
@@ -30,7 +30,7 @@
 | [001_overview.md](./001_overview.md) | 정의 · 읽기 순서 |
 | [002_gap_inventory.md](./002_gap_inventory.md) | 횡단 갭 + **구현가치 MLB 20-80 표** |
 | [003_reference_from_gjc.md](./003_reference_from_gjc.md) · [004_reference_from_omp.md](./004_reference_from_omp.md) | 참조 원칙 |
-| [005_devlog_numbering.md](./005_devlog_numbering.md) | NNN · `_legacy` |
+| [005_devlog_numbering.md](./005_devlog_numbering.md) | NNN · `_fin` |
 | [006_jwc_own_backlog.md](./006_jwc_own_backlog.md) | G3/G4 자체 백로그 (구 04 — 260613 충돌 해소 리네임) |
 | [bands/](./bands/) | 밴드 카드 |
 
@@ -38,7 +38,7 @@
 
 1. `10.001` / `20.001` 사이클 (fetch)
 2. 새 갭 → `10.009_<slug>.md` 등 **여기**에 추가
-3. 완료 → `_legacy/10/` 또는 `20/`
+3. 완료 → `_fin/10/` 또는 `20/`
 4. [002_gap_inventory](./002_gap_inventory.md) · INDEX HEAD · MOC `reviewed through`
 
 ## 관련

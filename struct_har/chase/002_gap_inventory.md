@@ -39,8 +39,8 @@
 |---|---|---|---|
 | 세션/autocompact | pre-send estimated context maintenance; canonical prune persistence; maxTokens reserve | **HARD-EDIT** `packages/coding-agent/src/session/agent-session.ts` — jaw 083 segment/collapse와 충돌 예상 | [10.004](./10.004_gjc_chase_session_compaction.md) |
 | RPC/headless | malformed JSONL recovery; EOF/shutdown `ensureOnDisk`; `get_state` tools/systemPrompt include-gate | 중 — workflow gate/RPC 표면 유지하며 선별 | [10.008](./10.008_gjc_chase_rpc_lifecycle.md) |
-| pi-shell fixup ✅ | char→byte index 변환으로 멀티바이트 bash 명령 panic 제거 (#551, GJC `2b4d407b471b`) | **landed 260613** — clean cherry-pick, 188 tests ([99.11.01](../../devlog/_plan/260612_jawcode_fork/phase1/99.11.01_plan_upstream_pishell_utf8_fixup.md)) | [10.009](./_legacy/10/10.009_gjc_chase_pishell_utf8_fixup.md) |
-| harness submit gate ✅ | `submitUnavailableReason` 체인 + `Observation.readyForSubmit` (#549, `f814413`) | **landed 260613** — sm/types/owner + `#submit` 선별 포팅, 175 tests ([99.11.02](../../devlog/_plan/260612_jawcode_fork/phase1/99.11.02_plan_upstream_harness_submit_gate.md)) | [10.010](./_legacy/10/10.010_gjc_chase_harness_submit_readiness.md) |
+| pi-shell fixup ✅ | char→byte index 변환으로 멀티바이트 bash 명령 panic 제거 (#551, GJC `2b4d407b471b`) | **landed 260613** — clean cherry-pick, 188 tests ([99.11.01](../../devlog/_plan/260612_jawcode_fork/phase1/99.11.01_plan_upstream_pishell_utf8_fixup.md)) | [10.009](./_fin/10/10.009_gjc_chase_pishell_utf8_fixup.md) |
+| harness submit gate ✅ | `submitUnavailableReason` 체인 + `Observation.readyForSubmit` (#549, `f814413`) | **landed 260613** — sm/types/owner + `#submit` 선별 포팅, 175 tests ([99.11.02](../../devlog/_plan/260612_jawcode_fork/phase1/99.11.02_plan_upstream_harness_submit_gate.md)) | [10.010](./_fin/10/10.010_gjc_chase_harness_submit_readiness.md) |
 | receipt spool | `ReceiptEnvelope` JSONL spool export — `--receipt-spool-dir`/env, cursor append on `writeReceiptImmutable` (#554, `75d103f`) | 소~중 — owner/storage hunk **clean 실측**, `harness.ts` 배관만 선별; 10.008 묶음 권장 | [10.011](./10.011_gjc_chase_receipt_spool.md) |
 | model-profiles UX | 그룹 프리셋 선택 (`model-selector.ts` +346, #553, `a12a751`) | — **사용자 직접 패치 중 (260613)**, 카드 미발급 | [10.001 changelog](./10.001_gjc_chase_cycle.md) |
 | team/leader bootstrap | `@gjc-profile` tag self-heal for gjc-launched leaders (#546, GJC `050aa1731551`) | 중 — jwc `team` workflow surface and leader profile invariant must survive rebrand | [10.007](./10.007_gjc_chase_team_profile_self_heal.md) |
@@ -86,8 +86,8 @@
 
 | 항목 | 축 | 구현가치 | 비용 | 분류 | 근거 |
 |---|---|:---:|---|---|---|
-| [10.009](./_legacy/10/10.009_gjc_chase_pishell_utf8_fixup.md) pi-shell UTF-8 panic | gjc | **70** | 소 (clean cherry-pick) | ✅ **채택 완료 (260613)** | 크래시 수정 + 한글 명령 노출 면적 큼 — 99.11.01로 랜딩 |
-| [10.010](./_legacy/10/10.010_gjc_chase_harness_submit_readiness.md) harness submit gate | gjc | **65** | 중 (`owner.ts`만 선별) | ✅ **채택 완료 (260613)** | headless/orchestrate 신뢰성 직결 — 99.11.02로 랜딩 |
+| [10.009](./_fin/10/10.009_gjc_chase_pishell_utf8_fixup.md) pi-shell UTF-8 panic | gjc | **70** | 소 (clean cherry-pick) | ✅ **채택 완료 (260613)** | 크래시 수정 + 한글 명령 노출 면적 큼 — 99.11.01로 랜딩 |
+| [10.010](./_fin/10/10.010_gjc_chase_harness_submit_readiness.md) harness submit gate | gjc | **65** | 중 (`owner.ts`만 선별) | ✅ **채택 완료 (260613)** | headless/orchestrate 신뢰성 직결 — 99.11.02로 랜딩 |
 | [10.004](./10.004_gjc_chase_session_compaction.md) session/compaction | gjc | 65 | **대 (HARD-EDIT)** | 선별 병합 | 효용 높으나 jaw 083 segment/collapse와 충돌 예상 |
 | [10.011](./10.011_gjc_chase_receipt_spool.md) receipt spool exporter | gjc | **60** | 소~중 (owner/storage clean 실측) | **즉시~선별** | orchestrate 관측성 직결; 10.010 랜딩 직후가 적기; 10.008과 묶음 |
 | [10.002](./10.002_gjc_chase_ai_auth.md) ai·auth | gjc | 60 | 중 | 선별 병합 | provider/oauth 폭 — 90 밴드 99.05와 동레인 |

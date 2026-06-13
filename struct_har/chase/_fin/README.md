@@ -1,4 +1,4 @@
-# struct_har/chase/_legacy/
+# struct_har/chase/_fin/
 
 완료된 **`10.NNN` / `20.NNN`** 플랜 본문 보관.
 
