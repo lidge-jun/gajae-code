@@ -689,9 +689,19 @@ export function buildSessionContext(
 		const compactionIdx = path.findIndex(e => e.type === "compaction" && e.id === compaction.id);
 
 		if (!remoteReplacementHistory) {
+			// Clamp search to entries after the previous compaction (if any)
+			// to prevent stale firstKeptEntryId from hydrating old messages.
+			let searchStart = 0;
+			for (let i = compactionIdx - 1; i >= 0; i--) {
+				if (path[i].type === "compaction") {
+					searchStart = i + 1;
+					break;
+				}
+			}
+
 			// Emit kept messages (before compaction, starting from firstKeptEntryId)
 			let foundFirstKept = false;
-			for (let i = 0; i < compactionIdx; i++) {
+			for (let i = searchStart; i < compactionIdx; i++) {
 				const entry = path[i];
 				if (entry.id === compaction.firstKeptEntryId) {
 					foundFirstKept = true;
