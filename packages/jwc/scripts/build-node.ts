@@ -57,6 +57,12 @@ const result = await build({
 	platform: "node",
 	target: "node22",
 	format: "esm",
+	banner: {
+		// Bundled CJS deps (e.g. yaml/dist) call require("process") etc.;
+		// esbuild's ESM require-shim falls back to a real top-level `require`
+		// when one exists — provide it via createRequire.
+		js: 'import { createRequire as __jwcCreateRequire } from "node:module"; const require = __jwcCreateRequire(import.meta.url);',
+	},
 	// Installs globalThis.Bun (Node only) before any upstream module body runs,
 	// plus the import.meta.dir/path replacement identifiers.
 	inject: ["src/shims/index.ts", "src/shims/import-meta.ts"],

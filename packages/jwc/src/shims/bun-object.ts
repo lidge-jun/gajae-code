@@ -7,6 +7,7 @@
  * implementations (file/sleep → 100.03, spawn → 100.04, data core → 100.05,
  * peripherals → 100.07).
  */
+import { randomBytes } from "node:crypto";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -93,13 +94,25 @@ export function buildNodeBunShim(): BunShim {
 			const require_ = createRequire(pathToFileURL(path.join(parent, "__resolve__.js")));
 			return require_.resolve(specifier);
 		},
+		randomUUIDv7: (): string => {
+			// RFC 9562 UUIDv7: 48-bit unix-ms timestamp + version/variant bits
+			// over random payload — monotonic enough for session ids.
+			const bytes = randomBytes(16);
+			const ts = BigInt(Date.now());
+			for (let i = 0; i < 6; i++) {
+				bytes[5 - i] = Number((ts >> BigInt(i * 8)) & 0xffn);
+			}
+			bytes[6] = ((bytes[6] as number) & 0x0f) | 0x70;
+			bytes[8] = ((bytes[8] as number) & 0x3f) | 0x80;
+			const hex = bytes.toString("hex");
+			return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+		},
 		which: (command: string): string | null => {
 			const result = bunSpawnSync(["which", command]);
 			if (!result.success || !result.stdout) return null;
 			const text = new TextDecoder().decode(result.stdout).trim();
 			return text.length > 0 ? text : null;
 		},
-		randomUUIDv7: stubFn("randomUUIDv7") as unknown as BunShim["randomUUIDv7"],
 		nanoseconds: () => Number(process.hrtime.bigint()),
 	};
 }
