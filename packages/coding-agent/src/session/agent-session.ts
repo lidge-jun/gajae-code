@@ -7302,10 +7302,6 @@ export class AgentSession {
 		}
 	}
 
-	#getProviderReplaySource(messages: AgentMessage[]): string {
-		return JSON.stringify(messages.map(message => this.#normalizeSessionMessageForProviderReplay(message)));
-	}
-
 	#hashProviderReplaySource(messages: AgentMessage[]): { source: string; hash: bigint } {
 		const parts: string[] = [];
 		for (const msg of messages) {
@@ -7549,7 +7545,7 @@ export class AgentSession {
 				async signal => {
 					await Promise.resolve();
 					if (signal.aborted) return;
-					await this.#runAutoCompaction(reason, willRetry, true);
+					await this.#runAutoCompaction(reason, willRetry, true, options);
 				},
 				{ generation },
 			);

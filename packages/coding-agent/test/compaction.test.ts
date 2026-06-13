@@ -789,6 +789,31 @@ describe("findCutPoint", () => {
 		expect(result.firstKeptEntryIndex).toBe(0);
 	});
 
+	it("should fall back to last cut point when budget exceeded but no valid cut point at/after overflow index", () => {
+		// Scenario: all cut points are BEFORE the overflow entry. The budget-exceeding
+		// message is the last one, with no valid cut point at or after its index.
+		// Without the foundCutPoint fallback, cutIndex stays at cutPoints[0] (keeps
+		// everything) — the bug #542 fixed.
+		const entries: SessionEntry[] = [
+			createMessageEntry(createUserMessage("old context")), // index 0 — cut point
+			createMessageEntry(createAssistantMessage("old reply", createMockUsage(0, 50, 500, 0))), // index 1
+			createMessageEntry(createUserMessage("recent")), // index 2 — cut point
+			// No assistant after index 2, so no cut point at index >= 3
+			// A large tool result at the end that blows the budget
+			createMessageEntry({
+				role: "toolResult",
+				content: "x".repeat(100000),
+				toolCallId: "tc1",
+				timestamp: Date.now(),
+			} as any),
+		];
+
+		// Budget is small enough that the tool result alone exceeds it
+		const result = findCutPoint(entries, 0, entries.length, 100);
+		// Should fall back to cutPoints[last] (index 2), NOT cutPoints[0] (index 0)
+		expect(result.firstKeptEntryIndex).toBe(2);
+	});
+
 	it("should indicate split turn when cutting at assistant message", () => {
 		// Create a scenario where we cut at an assistant message mid-turn
 		const entries: SessionEntry[] = [
