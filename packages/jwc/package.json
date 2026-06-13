@@ -29,9 +29,11 @@
 		"dist"
 	],
 	"scripts": {
-		"bundle": "bun build src/cli-entry.ts --target=bun --outfile=dist/jwc.bundle.js --external mupdf --external markit-ai --external @gajae-code/natives"
+		"bundle": "bun build src/cli-entry.ts --target=bun --outfile=dist/jwc.bundle.js --external mupdf --external markit-ai --external @gajae-code/natives",
+		"build:node": "bun scripts/build-node.ts"
 	},
 	"devDependencies": {
-		"@gajae-code/coding-agent": "catalog:"
+		"@gajae-code/coding-agent": "catalog:",
+		"esbuild": "^0.25.0"
 	}
 }
