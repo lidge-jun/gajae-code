@@ -1,5 +1,6 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, spyOn } from "bun:test";
 import { BUILTIN_SLASH_COMMANDS_INTERNAL } from "../../src/slash-commands/builtin-registry";
+import * as searchProviderModule from "../../src/web/search/provider";
 import type { SlashCommandRuntime } from "../../src/slash-commands/types";
 
 function findSearchEngineCommand() {
@@ -14,10 +15,31 @@ function createRuntime(options: {
 	currentWebSearch?: string;
 	activeModelProvider?: string;
 	configChanges?: number[];
+	/** When omitted, no authStorage is exposed (status falls back to a plain candidate list). */
+	withAuthStorage?: boolean;
+	/** Provider keys reporting an OAuth credential (e.g. "openai-codex", "anthropic"). */
+	oauthKeys?: string[];
+	/** Provider keys reporting a stored (non-OAuth) auth credential. */
+	authKeys?: string[];
 }): SlashCommandRuntime {
+	// AuthStorage stub: only keys in oauthKeys/authKeys report available, so the
+	// gating mirrors real OAuth-vs-key activation (env-keyed providers stay off).
+	const oauth = new Set(options.oauthKeys ?? []);
+	const auth = new Set([...(options.authKeys ?? []), ...(options.oauthKeys ?? [])]);
+	const authStorage = options.withAuthStorage
+		? {
+				getAll: () => ({}),
+				hasAuth: (provider: string) => auth.has(provider),
+				hasOAuth: (provider: string) => oauth.has(provider),
+				getApiKey: () => undefined,
+				getOAuthAccess: () => undefined,
+				getOAuthAccountId: () => undefined,
+			}
+		: undefined;
 	return {
 		session: {
 			model: options.activeModelProvider ? { provider: options.activeModelProvider } : undefined,
+			modelRegistry: authStorage ? { authStorage } : undefined,
 		},
 		sessionManager: {},
 		settings: {
@@ -84,6 +106,27 @@ describe("searchengine slash command", () => {
 		expect(outputs.join("\n")).toContain("Search engine set to codex");
 	});
 
+	it("calls the runtime setter as the second half of the mandatory dual-write", async () => {
+		// providers.webSearch has no SETTING_HOOK, so settings.set alone does
+		// NOT update the in-process preferred provider — the handler must also
+		// call setPreferredSearchProvider. Guard against silently dropping it.
+		const spy = spyOn(searchProviderModule, "setPreferredSearchProvider");
+		try {
+			const outputs: string[] = [];
+			const settingsLog: Array<{ key: string; value: unknown }> = [];
+			const command = findSearchEngineCommand();
+
+			await command?.handle?.(
+				{ name: "searchengine", args: "claude", text: "/searchengine claude" },
+				createRuntime({ outputs, settingsLog }),
+			);
+
+			expect(spy).toHaveBeenCalledWith("anthropic");
+		} finally {
+			spy.mockRestore();
+		}
+	});
+
 	it("accepts canonical provider ids directly", async () => {
 		const outputs: string[] = [];
 		const settingsLog: Array<{ key: string; value: unknown }> = [];
@@ -125,5 +168,58 @@ describe("searchengine slash command", () => {
 		const output = outputs.join("\n");
 		expect(output).toContain("Unknown search engine: altavista");
 		expect(output).toContain("Aliases:");
+	});
+
+	it("status: OAuth credential activates codex; keyless DuckDuckGo always activated; keyed providers stay in Needs setup", async () => {
+		const outputs: string[] = [];
+		const settingsLog: Array<{ key: string; value: unknown }> = [];
+		const command = findSearchEngineCommand();
+
+		// OAuth-logged into OpenAI (codex) — mirrors model-layer OAuth gating.
+		await command?.handle?.(
+			{ name: "searchengine", args: "status", text: "/searchengine status" },
+			createRuntime({ outputs, settingsLog, withAuthStorage: true, oauthKeys: ["openai-codex"] }),
+		);
+
+		const output = outputs.join("\n");
+		const activatedLine = output.split("\n").find(l => l.startsWith("Activated:")) ?? "";
+		expect(activatedLine).toContain("duckduckgo");
+		expect(activatedLine).toContain("codex");
+		// A keyed-only provider with no key must NOT be activated.
+		expect(activatedLine).not.toContain("brave");
+		expect(output).toContain("Needs setup:");
+		expect(output).toContain("brave — set BRAVE_API_KEY");
+	});
+
+	it("status: stored anthropic auth (Claude OAuth) activates anthropic search without a separate search key", async () => {
+		const outputs: string[] = [];
+		const settingsLog: Array<{ key: string; value: unknown }> = [];
+		const command = findSearchEngineCommand();
+
+		await command?.handle?.(
+			{ name: "searchengine", args: "status", text: "/searchengine status" },
+			createRuntime({ outputs, settingsLog, withAuthStorage: true, authKeys: ["anthropic"] }),
+		);
+
+		const activatedLine = outputs.join("\n").split("\n").find(l => l.startsWith("Activated:")) ?? "";
+		expect(activatedLine).toContain("anthropic");
+	});
+
+	it("warns when selecting a keyed provider with no credential (persists but flags setup)", async () => {
+		const outputs: string[] = [];
+		const settingsLog: Array<{ key: string; value: unknown }> = [];
+		const command = findSearchEngineCommand();
+
+		await command?.handle?.(
+			{ name: "searchengine", args: "brave", text: "/searchengine brave" },
+			createRuntime({ outputs, settingsLog, withAuthStorage: true }),
+		);
+
+		// Still persisted (operator may add the key next)...
+		expect(settingsLog).toEqual([{ key: "providers.webSearch", value: "brave" }]);
+		// ...but warned it's not active yet.
+		const output = outputs.join("\n");
+		expect(output).toContain("not activated yet");
+		expect(output).toContain("BRAVE_API_KEY");
 	});
 });

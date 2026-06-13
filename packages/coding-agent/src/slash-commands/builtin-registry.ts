@@ -22,8 +22,9 @@ import {
 	parseProviderCompatibility,
 } from "../setup/provider-onboarding";
 import { parseThinkingLevel } from "../thinking";
-import { nativeSearchProviderFor, setPreferredSearchProvider } from "../web/search/provider";
+import { getSearchProvider, nativeSearchProviderFor, setPreferredSearchProvider } from "../web/search/provider";
 import { isSearchProviderPreference, type SearchProviderId } from "../web/search/types";
+import type { AuthStorage } from "@gajae-code/ai";
 
 /**
  * 083.4: parse a /effort argument, accepting Codex ReasoningEffort vocabulary
@@ -230,24 +231,91 @@ function describeAutoSearchTarget(activeModelProvider: string | undefined): stri
 		: "active model has no native search; DuckDuckGo";
 }
 
+const SEARCH_ENGINE_IDS: ReadonlyArray<SearchProviderId> = [
+	"duckduckgo",
+	"codex",
+	"anthropic",
+	"gemini",
+	"perplexity",
+	"kimi",
+	"zai",
+	"exa",
+	"brave",
+	"jina",
+	"tavily",
+	"parallel",
+	"kagi",
+	"synthetic",
+	"searxng",
+];
+
+/**
+ * Activation guidance per provider. OAuth-capable providers unlock via
+ * /login; keyed providers activate only when their API key/credential is
+ * present (mirrors the model layer's OAuth-vs-key gating for
+ * openai/xai/anthropic).
+ */
+const SEARCH_ENGINE_SETUP_HINTS: Record<SearchProviderId, string> = {
+	duckduckgo: "keyless — always available",
+	codex: "OAuth — run /login openai-codex",
+	gemini: "OAuth — run /login google-gemini-cli (or google-antigravity)",
+	anthropic: "set ANTHROPIC_SEARCH_API_KEY or store anthropic auth",
+	perplexity: "set PERPLEXITY_API_KEY / PERPLEXITY_COOKIES, or /login perplexity (OAuth)",
+	kimi: "set MOONSHOT_SEARCH_API_KEY / KIMI_SEARCH_API_KEY, or /login kimi-code (OAuth)",
+	zai: "set ZAI_API_KEY",
+	exa: "set EXA_API_KEY (and keep exa.enabled on)",
+	brave: "set BRAVE_API_KEY",
+	jina: "set JINA_API_KEY",
+	tavily: "set TAVILY_API_KEY",
+	parallel: "set PARALLEL_API_KEY",
+	kagi: "store kagi credential (auth storage only — no env var)",
+	synthetic: "set SYNTHETIC_API_KEY",
+	searxng: "set SEARXNG_ENDPOINT (or the searxng.endpoint setting)",
+};
+
+async function isSearchEngineAvailable(id: SearchProviderId, authStorage: AuthStorage): Promise<boolean> {
+	try {
+		const provider = await getSearchProvider(id);
+		return await provider.isAvailable(authStorage);
+	} catch {
+		return false;
+	}
+}
+
 function formatSearchEngineCandidates(): string {
 	return [
-		"Providers: auto, duckduckgo, exa, brave, jina, kimi, zai, perplexity, anthropic, gemini, codex, tavily, parallel, kagi, synthetic, searxng",
+		`Providers: auto, ${SEARCH_ENGINE_IDS.join(", ")}`,
 		"Aliases: chatgpt/openai → codex, claude → anthropic, google → gemini, ddg/duck → duckduckgo, active/native/default → auto",
 	].join("\n");
 }
 
-function formatSearchEngineStatus(
+async function formatSearchEngineStatus(
 	current: SearchProviderId | "auto",
 	activeModelProvider: string | undefined,
-): string {
+	authStorage: AuthStorage | undefined,
+): Promise<string> {
 	const lines = [
 		current === "auto"
 			? `Search engine: auto (${describeAutoSearchTarget(activeModelProvider)})`
 			: `Search engine: ${current}`,
 		"Fallback: duckduckgo (always appended)",
-		formatSearchEngineCandidates(),
 	];
+	if (authStorage) {
+		const probes = await Promise.all(
+			SEARCH_ENGINE_IDS.map(async id => ({ id, available: await isSearchEngineAvailable(id, authStorage) })),
+		);
+		const activated = probes.filter(p => p.available).map(p => p.id);
+		const locked = probes.filter(p => !p.available);
+		lines.push(`Activated: auto, ${activated.join(", ")}`);
+		if (locked.length > 0) {
+			lines.push("Needs setup:");
+			for (const { id } of locked) {
+				lines.push(`  ${id} — ${SEARCH_ENGINE_SETUP_HINTS[id]}`);
+			}
+		}
+	} else {
+		lines.push(formatSearchEngineCandidates());
+	}
 	return lines.join("\n");
 }
 
@@ -512,9 +580,12 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 		],
 		handle: async (command, runtime) => {
 			const current = runtime.settings.get("providers.webSearch");
+			const authStorage = runtime.session.modelRegistry?.authStorage;
 			const raw = command.args.trim();
 			if (!raw || raw.toLowerCase() === "status") {
-				await runtime.output(formatSearchEngineStatus(current, runtime.session.model?.provider));
+				await runtime.output(
+					await formatSearchEngineStatus(current, runtime.session.model?.provider, authStorage),
+				);
 				return commandConsumed();
 			}
 			const next = normalizeSearchEngineArg(raw);
@@ -527,10 +598,20 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 			runtime.settings.set("providers.webSearch", next);
 			setPreferredSearchProvider(next);
 			await runtime.notifyConfigChanged?.();
+			// Explicit keyed/OAuth providers selected without credentials still
+			// persist (operator may set the key next), but warn so the choice
+			// isn't silently a no-op behind the DuckDuckGo fallback.
+			let setupNote = "";
+			if (next !== "auto" && next !== "duckduckgo" && authStorage) {
+				const available = await isSearchEngineAvailable(next, authStorage);
+				if (!available) {
+					setupNote = `\n⚠ ${next} is not activated yet — ${SEARCH_ENGINE_SETUP_HINTS[next]}. Searches use DuckDuckGo until then.`;
+				}
+			}
 			await runtime.output(
-				next === "auto"
+				(next === "auto"
 					? `Search engine set to auto (${describeAutoSearchTarget(runtime.session.model?.provider)}). Fallback remains DuckDuckGo.`
-					: `Search engine set to ${next}. Fallback remains DuckDuckGo.`,
+					: `Search engine set to ${next}. Fallback remains DuckDuckGo.`) + setupNote,
 			);
 			return commandConsumed();
 		},
@@ -1537,6 +1618,10 @@ function adaptTuiSlashRuntime(ctx: InteractiveModeContext): SlashCommandRuntime 
 			await ctx.refreshSlashCommandState();
 			await ctx.session.refreshSshTool({ activateIfAvailable: true });
 		},
+		// Forward config-change notifications so `handle`-only commands that
+		// mutate settings (e.g. /searchengine) reach TUI consumers, matching
+		// the ACP dispatcher which wires this through.
+		notifyConfigChanged: ctx.notifyConfigChanged ? () => ctx.notifyConfigChanged?.() : undefined,
 	};
 }
 
