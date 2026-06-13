@@ -451,6 +451,8 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 		handle: async (command, runtime) => {
 			const args = (command.args ?? "").trim();
 			const argv = args.length > 0 ? args.split(/\s+/) : [];
+			const sessionId = runtime.session.sessionManager.getSessionId?.();
+			if (sessionId) argv.push("--session-id", sessionId);
 			const result = await runNativeOrchestrateCommand(argv, runtime.session.sessionManager.getCwd());
 			if (result.stderr) await runtime.output(result.stderr.trimEnd());
 			const sub = argv[0]?.toLowerCase();
@@ -473,6 +475,8 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 		handle: async (command, runtime) => {
 			const args = (command.args ?? "").trim();
 			const argv = ["i", ...(args ? [args] : [])];
+			const sessionId = runtime.session.sessionManager.getSessionId?.();
+			if (sessionId) argv.push("--session-id", sessionId);
 			const result = await runNativeOrchestrateCommand(argv, runtime.session.sessionManager.getCwd());
 			if (result.stderr) await runtime.output(result.stderr.trimEnd());
 			const sub = argv[0]?.toLowerCase();
