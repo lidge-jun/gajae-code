@@ -68,6 +68,30 @@ describe("xai response virtualization", () => {
 	it("returns empty answer/sources for a payload with no message output", () => {
 		expect(parseXaiResponse({ output: [] })).toEqual({ answer: "", sources: [] });
 	});
+
+	it("falls back to the URL when xAI returns a numeric citation index as the title (live-data quirk)", () => {
+		const { sources } = parseXaiResponse({
+			output: [
+				{
+					type: "message",
+					content: [
+						{
+							type: "output_text",
+							text: "answer",
+							annotations: [
+								{ type: "url_citation", url: "https://x.com/u/status/1", title: "1" },
+								{ type: "url_citation", url: "https://x.com/u/status/2", title: "Real Title" },
+							],
+						},
+					],
+				},
+			],
+		});
+		expect(sources).toEqual([
+			{ title: "https://x.com/u/status/1", url: "https://x.com/u/status/1" },
+			{ title: "Real Title", url: "https://x.com/u/status/2" },
+		]);
+	});
 });
 
 describe("xai search request shape (integration)", () => {

@@ -88,10 +88,12 @@ export function parseXaiResponse(data: XaiResponsesPayload): { answer: string; s
 				if (annotation.type !== "url_citation" || !annotation.url) continue;
 				if (seenUrls.has(annotation.url)) continue;
 				seenUrls.add(annotation.url);
-				sources.push({
-					title: annotation.title?.trim() || annotation.url,
-					url: annotation.url,
-				});
+				// xAI returns the citation INDEX ("1", "2", …) as the title, not
+				// a descriptive label; fall back to the URL so sources read
+				// usefully instead of showing a bare ordinal.
+				const rawTitle = annotation.title?.trim();
+				const title = rawTitle && !/^\d+$/.test(rawTitle) ? rawTitle : annotation.url;
+				sources.push({ title, url: annotation.url });
 			}
 		}
 	}
