@@ -35,7 +35,7 @@ subagent_models:
 
   # ── 런타임 프록시 (kiro/copilot은 자체 인증으로 다른 모델 접근) ──
   kiro:
-    best: claude-fable-5                  # kiro 자체 인증 경유
+    best: claude-opus-4.8                 # kiro 자체 인증 경유
     cheap: deepseek-3.2                   # kiro 무료 모델
   copilot:
     best: gpt-5.5                         # copilot 자체 인증 경유
