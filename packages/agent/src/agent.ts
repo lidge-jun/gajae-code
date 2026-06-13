@@ -1106,7 +1106,7 @@ export class Agent {
 	 */
 	async prewarmCodexContent(): Promise<"refresh" | "cold" | "skipped"> {
 		const model = this.#state.model;
-		if (!model || model.api !== "openai-codex-responses") return "skipped";
+		if (model?.api !== "openai-codex-responses") return "skipped";
 		// The append-only log must only advance through real turns; a prewarm
 		// build would mutate it out-of-band.
 		if (this.#appendOnlyContext) return "skipped";

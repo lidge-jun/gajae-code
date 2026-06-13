@@ -1225,10 +1225,8 @@ export class TUI extends Container {
 		}
 		const expandStart = renderMetrics.now();
 		const result: string[] = [];
-		let sentinels = 0;
 		for (const line of lines) {
-			if (line === VIEWPORT_FILL_SENTINEL) sentinels++;
-			else result.push(line);
+			if (line !== VIEWPORT_FILL_SENTINEL) result.push(line);
 		}
 		// While content overflows the viewport (083.7 §9/§12): scrolled-out rows
 		// cannot be reclaimed, so a shrink (autocomplete close, collapse) grows

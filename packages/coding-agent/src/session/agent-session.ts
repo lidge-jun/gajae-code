@@ -1642,7 +1642,7 @@ export class AgentSession {
 		| { transport: "websocket" | "sse"; fallback: boolean; primaryUsedPercent?: number }
 		| undefined {
 		const model = this.model;
-		if (!model || model.api !== "openai-codex-responses") return undefined;
+		if (model?.api !== "openai-codex-responses") return undefined;
 		const details = getOpenAICodexTransportDetails(model as Model<"openai-codex-responses">, {
 			sessionId: this.agent.providerSessionId,
 			baseUrl: model.baseUrl,
@@ -4670,7 +4670,7 @@ export class AgentSession {
 		const cwd = this.sessionManager.getCwd();
 		const sessionId = this.sessionManager.getSessionId();
 		const result = await readPabcdStateWithFallback(cwd, sessionId).catch(() => null);
-		if (!result || !result.ok) return null;
+		if (!result?.ok) return null;
 		const activeGoal = this.getGoalModeState()?.goal;
 		const content = buildPabcdStageContent(result.value, activeGoal ? { objective: activeGoal.objective } : null);
 		if (!content) return null;

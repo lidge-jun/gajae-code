@@ -25,7 +25,6 @@ import type { InteractiveModeContext } from "../../modes/types";
 import { setSessionTerminalTitle, setTerminalTitle } from "../../utils/title-generator";
 
 const MAX_WIDGET_LINES = 10;
-const HOOK_SELECTOR_MOUSE_REPORTING_ENABLE = "\x1b[?1006h\x1b[?1000h";
 const HOOK_SELECTOR_MOUSE_REPORTING_DISABLE = "\x1b[?1000l\x1b[?1006l";
 const HOOK_SELECTOR_CHROME_ROWS = 7;
 const HOOK_SELECTOR_OUTLINE_ROWS = 2;
@@ -700,12 +699,6 @@ export class ExtensionUiController {
 		this.ctx.ui.requestRender();
 		attachAbort();
 		return promise;
-	}
-
-	#enableHookSelectorMouseReporting(): void {
-		if (this.#hookSelectorMouseReportingEnabled) return;
-		this.#hookSelectorMouseReportingEnabled = true;
-		this.#writeTerminalControl(HOOK_SELECTOR_MOUSE_REPORTING_ENABLE);
 	}
 
 	#disableHookSelectorMouseReporting(): void {

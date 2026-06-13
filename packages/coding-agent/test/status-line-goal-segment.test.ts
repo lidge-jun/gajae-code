@@ -33,8 +33,7 @@ function ctx(ultragoal: SegmentContext["ultragoal"], goalState?: GoalStateStub):
 }
 
 function strip(content: string): string {
-	// biome-ignore lint/suspicious/noControlCharactersInRegex: ANSI escape stripping needs the control char
-	return content.replace(/\[[0-9;]*m/g, "");
+	return content.replace(/\x1b\[[0-9;]*m/g, "");
 }
 
 describe("goal segment ledger chips (99.04.04)", () => {

@@ -365,17 +365,17 @@ export type { CustomTool, CustomToolFactory } from "./extensibility/custom-tools
 export type * from "./extensibility/extensions";
 export type { Skill } from "./extensibility/skills";
 export type { FileSlashCommand } from "./extensibility/slash-commands";
+export {
+	type PabcdEnvelope,
+	readPabcdStateWithFallback,
+	writeNativeWorkflowEnvelopeAtomic,
+} from "./jwc-runtime/orchestrate-state";
 export type { AgentSession, AgentSessionEvent } from "./session/agent-session";
 // Host-driven session lifecycle (120.1 안 A): embedders pick create/continueRecent/open
 // and inject via CreateAgentSessionOptions.sessionManager.
 export { SessionManager } from "./session/session-manager";
 export type { Tool } from "./tools";
 export { buildDirectoryTree, buildWorkspaceTree, type DirectoryTree, type WorkspaceTree } from "./workspace-tree";
-export {
-	type PabcdEnvelope,
-	readPabcdStateWithFallback,
-	writeNativeWorkflowEnvelopeAtomic,
-} from "./jwc-runtime/orchestrate-state";
 
 export {
 	// Individual tool classes (for custom usage)

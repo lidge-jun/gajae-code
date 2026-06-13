@@ -6,11 +6,11 @@ import type { SessionState } from "../session.js";
  * In a future terminal UI mode, would show interactive prompt.
  */
 export async function promptPermissions(
-  session: SessionState,
-  apps: Array<{ bundleId: string; displayName: string; tier: string }>,
-  additionalGrants: { clipboardRead?: boolean; clipboardWrite?: boolean; systemKeyCombos?: boolean },
+	_session: SessionState,
+	_apps: Array<{ bundleId: string; displayName: string; tier: string }>,
+	_additionalGrants: { clipboardRead?: boolean; clipboardWrite?: boolean; systemKeyCombos?: boolean },
 ): Promise<boolean> {
-  // Auto-approve in CLI mode (no terminal UI yet)
-  // Phase 3.7 of the plan describes a full terminal UI with [Allow]/[Deny]
-  return true;
+	// Auto-approve in CLI mode (no terminal UI yet)
+	// Phase 3.7 of the plan describes a full terminal UI with [Allow]/[Deny]
+	return true;
 }

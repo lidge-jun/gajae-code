@@ -59,7 +59,6 @@ function createCtx(branch: string): SegmentContext {
 }
 
 function strip(content: string): string {
-	// biome-ignore lint/suspicious/noControlCharactersInRegex: stripping ANSI escapes
 	return content.replace(/\x1b\[[0-9;]*m/g, "");
 }
 

@@ -1,8 +1,11 @@
-import { BUILTIN_SLASH_COMMANDS_INTERNAL } from "./src/slash-commands/builtin-registry";
 import { discoverAuthStorage } from "./src/sdk";
+import { BUILTIN_SLASH_COMMANDS_INTERNAL } from "./src/slash-commands/builtin-registry";
 
 const cmd = BUILTIN_SLASH_COMMANDS_INTERNAL.find(c => c.name === "searchengine");
-if (!cmd?.handle) { console.error("FAIL: no searchengine handler"); process.exit(1); }
+if (!cmd?.handle) {
+	console.error("FAIL: no searchengine handler");
+	process.exit(1);
+}
 
 const authStorage = await discoverAuthStorage();
 const outputs: string[] = [];
@@ -10,17 +13,22 @@ const settingsLog: Array<{ key: string; value: unknown }> = [];
 let webSearch = "auto";
 
 const runtime: any = {
-  session: { model: { provider: "anthropic" }, modelRegistry: { authStorage } },
-  sessionManager: {},
-  settings: {
-    get: (k: string) => (k === "providers.webSearch" ? webSearch : undefined),
-    set: (k: string, v: any) => { if (k === "providers.webSearch") webSearch = v; settingsLog.push({ key: k, value: v }); },
-  },
-  cwd: process.cwd(),
-  output: (t: string) => { outputs.push(t); },
-  refreshCommands: () => {},
-  reloadPlugins: async () => {},
-  notifyConfigChanged: () => {},
+	session: { model: { provider: "anthropic" }, modelRegistry: { authStorage } },
+	sessionManager: {},
+	settings: {
+		get: (k: string) => (k === "providers.webSearch" ? webSearch : undefined),
+		set: (k: string, v: any) => {
+			if (k === "providers.webSearch") webSearch = v;
+			settingsLog.push({ key: k, value: v });
+		},
+	},
+	cwd: process.cwd(),
+	output: (t: string) => {
+		outputs.push(t);
+	},
+	refreshCommands: () => {},
+	reloadPlugins: async () => {},
+	notifyConfigChanged: () => {},
 };
 
 // 1. status — real local credentials

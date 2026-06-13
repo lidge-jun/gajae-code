@@ -17,8 +17,7 @@ function ctx(pabcd: SegmentContext["pabcd"]): SegmentContext {
 }
 
 function strip(content: string): string {
-	// biome-ignore lint/suspicious/noControlCharactersInRegex: ANSI escape stripping needs the control char
-	return content.replace(/\[[0-9;]*m/g, "");
+	return content.replace(/\x1b\[[0-9;]*m/g, "");
 }
 
 describe("pabcd strip segment (99.04.02)", () => {

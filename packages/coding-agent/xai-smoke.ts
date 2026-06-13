@@ -1,5 +1,5 @@
-import { BUILTIN_SLASH_COMMANDS_INTERNAL } from "./src/slash-commands/builtin-registry";
 import { discoverAuthStorage } from "./src/sdk";
+import { BUILTIN_SLASH_COMMANDS_INTERNAL } from "./src/slash-commands/builtin-registry";
 import { getSearchProvider } from "./src/web/search/provider";
 
 const authStorage = await discoverAuthStorage();
@@ -13,10 +13,14 @@ console.log("xai hasOAuth:", authStorage.hasOAuth("xai"), "hasAuth:", authStorag
 const cmd = BUILTIN_SLASH_COMMANDS_INTERNAL.find(c => c.name === "searchengine");
 const outputs: string[] = [];
 const runtime: any = {
-  session: { model: { provider: "xai" }, modelRegistry: { authStorage } },
-  sessionManager: {}, settings: { get: () => "auto", set: () => {} },
-  cwd: process.cwd(), output: (t: string) => outputs.push(t),
-  refreshCommands: () => {}, reloadPlugins: async () => {}, notifyConfigChanged: () => {},
+	session: { model: { provider: "xai" }, modelRegistry: { authStorage } },
+	sessionManager: {},
+	settings: { get: () => "auto", set: () => {} },
+	cwd: process.cwd(),
+	output: (t: string) => outputs.push(t),
+	refreshCommands: () => {},
+	reloadPlugins: async () => {},
+	notifyConfigChanged: () => {},
 };
 await cmd!.handle!({ name: "searchengine", args: "status", text: "/searchengine status" }, runtime);
 console.log("\n=== /searchengine status (active model=xai) ===");
@@ -25,7 +29,9 @@ console.log(outputs.join("\n"));
 // 3. grok alias resolves
 outputs.length = 0;
 let persisted: any;
-runtime.settings.set = (k: string, v: any) => { persisted = { k, v }; };
+runtime.settings.set = (k: string, v: any) => {
+	persisted = { k, v };
+};
 await cmd!.handle!({ name: "searchengine", args: "grok", text: "/searchengine grok" }, runtime);
 console.log("\n=== /searchengine grok ===");
 console.log(outputs.join("\n"), "| persisted:", JSON.stringify(persisted));

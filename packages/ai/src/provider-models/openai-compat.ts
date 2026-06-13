@@ -1877,8 +1877,7 @@ export function anthropicModelManagerOptions(
 						): Model<"anthropic-messages"> => {
 							const discoveredName = typeof entry.display_name === "string" ? entry.display_name : defaults.name;
 							const reference = references.get(defaults.id);
-							const unlisted =
-								isAnthropicOAuthToken(apiKey) && !ANTHROPIC_OAUTH_LISTED_MODELS.has(defaults.id);
+							const unlisted = isAnthropicOAuthToken(apiKey) && !ANTHROPIC_OAUTH_LISTED_MODELS.has(defaults.id);
 							if (!reference) {
 								return {
 									...defaults,

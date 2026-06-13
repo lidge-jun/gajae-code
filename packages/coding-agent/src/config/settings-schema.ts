@@ -2218,19 +2218,31 @@ export const SETTINGS_SCHEMA = {
 		type: "string",
 		default: "fast",
 		enum: ["fast", "deep"],
-		ui: { tab: "tools", label: "Search Depth", description: "fast = 60s sync, deep = 180s async with heavier models" },
+		ui: {
+			tab: "tools",
+			label: "Search Depth",
+			description: "fast = 60s sync, deep = 180s async with heavier models",
+		},
 	},
 	"web_search.reasoningEffort": {
 		type: "string",
 		default: "none",
 		enum: ["none", "low", "medium", "high"],
-		ui: { tab: "tools", label: "Search Reasoning", description: "Reasoning effort for web search (deep tier floors to high)" },
+		ui: {
+			tab: "tools",
+			label: "Search Reasoning",
+			description: "Reasoning effort for web search (deep tier floors to high)",
+		},
 	},
 	"web_search.contextSize": {
 		type: "string",
 		default: "high",
 		enum: ["low", "medium", "high"],
-		ui: { tab: "tools", label: "Search Context Size", description: "How much web content to include (codex provider)" },
+		ui: {
+			tab: "tools",
+			label: "Search Context Size",
+			description: "How much web content to include (codex provider)",
+		},
 	},
 
 	"browser.enabled": {

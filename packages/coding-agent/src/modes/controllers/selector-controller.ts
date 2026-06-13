@@ -319,7 +319,7 @@ export class SelectorController {
 			let ctxSize = (ctx.settings.get("web_search.contextSize") as string) ?? "high";
 			const selectedProvider = () => (ctx.settings.get("providers.webSearch") as string) ?? "auto";
 			const isCodexProvider = () => ["codex", "auto"].includes(selectedProvider());
-			const maxRow = () => isCodexProvider() ? 2 : 1; // hide contextSize for non-codex
+			const maxRow = () => (isCodexProvider() ? 2 : 1); // hide contextSize for non-codex
 
 			// Provider list (pane 0)
 			const list = new SelectList(engines, 10, getSelectListTheme());
@@ -335,7 +335,10 @@ export class SelectorController {
 				ctx.showStatus(`Search engine set to ${next}. Fallback remains DuckDuckGo.`);
 				ctx.ui.requestRender();
 			};
-			list.onCancel = () => { done(); ctx.ui.requestRender(); };
+			list.onCancel = () => {
+				done();
+				ctx.ui.requestRender();
+			};
 
 			// 2-pane wrapper component
 			const wrapper: Component = {
@@ -351,16 +354,22 @@ export class SelectorController {
 					}
 					// Settings pane
 					const rows: string[] = [];
-					const label = (text: string, active: boolean) => active ? theme.fg("accent", `▸ ${text}`) : `  ${text}`;
+					const label = (text: string, active: boolean) =>
+						active ? theme.fg("accent", `▸ ${text}`) : `  ${text}`;
 					const seg = <T extends string>(options: readonly T[], current: string, active: boolean) =>
-						options.map(o => {
-							const selected = o === current;
-							if (selected && active) return theme.fg("accent", `[${o}]`);
-							if (selected) return `[${o}]`;
-							return theme.fg("dim", ` ${o} `);
-						}).join(" ");
+						options
+							.map(o => {
+								const selected = o === current;
+								if (selected && active) return theme.fg("accent", `[${o}]`);
+								if (selected) return `[${o}]`;
+								return theme.fg("dim", ` ${o} `);
+							})
+							.join(" ");
 
-					rows.push(theme.fg("accent", " Search settings") + theme.fg("dim", `  ·  provider: ${selectedProvider()}  ·  space for providers`));
+					rows.push(
+						theme.fg("accent", " Search settings") +
+							theme.fg("dim", `  ·  provider: ${selectedProvider()}  ·  space for providers`),
+					);
 					rows.push("");
 					rows.push(`${label("Depth", settingsRow === 0)}       ${seg(DEPTHS, depth, settingsRow === 0)}`);
 					rows.push(`${label("Reasoning", settingsRow === 1)}   ${seg(EFFORTS, effort, settingsRow === 1)}`);
@@ -386,19 +395,39 @@ export class SelectorController {
 					}
 
 					// Settings pane key handling (080 §7: ↑/↓ row, ←/→ value, Enter apply)
-					if (data === "\x1b[A" || data === "\x1bOA") { // up
+					if (data === "\x1b[A" || data === "\x1bOA") {
+						// up
 						settingsRow = Math.max(0, settingsRow - 1);
-					} else if (data === "\x1b[B" || data === "\x1bOB") { // down
+					} else if (data === "\x1b[B" || data === "\x1bOB") {
+						// down
 						settingsRow = Math.min(maxRow(), settingsRow + 1);
-					} else if (data === "\x1b[D" || data === "\x1bOD") { // left
-						if (settingsRow === 0) depth = DEPTHS[Math.max(0, DEPTHS.indexOf(depth as typeof DEPTHS[number]) - 1)] ?? depth;
-						else if (settingsRow === 1) effort = EFFORTS[Math.max(0, EFFORTS.indexOf(effort as typeof EFFORTS[number]) - 1)] ?? effort;
-						else if (settingsRow === 2) ctxSize = CONTEXTS[Math.max(0, CONTEXTS.indexOf(ctxSize as typeof CONTEXTS[number]) - 1)] ?? ctxSize;
-					} else if (data === "\x1b[C" || data === "\x1bOC") { // right
-						if (settingsRow === 0) depth = DEPTHS[Math.min(DEPTHS.length - 1, DEPTHS.indexOf(depth as typeof DEPTHS[number]) + 1)] ?? depth;
-						else if (settingsRow === 1) effort = EFFORTS[Math.min(EFFORTS.length - 1, EFFORTS.indexOf(effort as typeof EFFORTS[number]) + 1)] ?? effort;
-						else if (settingsRow === 2) ctxSize = CONTEXTS[Math.min(CONTEXTS.length - 1, CONTEXTS.indexOf(ctxSize as typeof CONTEXTS[number]) + 1)] ?? ctxSize;
-					} else if (data === "\r" || data === "\n") { // Enter = apply
+					} else if (data === "\x1b[D" || data === "\x1bOD") {
+						// left
+						if (settingsRow === 0)
+							depth = DEPTHS[Math.max(0, DEPTHS.indexOf(depth as (typeof DEPTHS)[number]) - 1)] ?? depth;
+						else if (settingsRow === 1)
+							effort = EFFORTS[Math.max(0, EFFORTS.indexOf(effort as (typeof EFFORTS)[number]) - 1)] ?? effort;
+						else if (settingsRow === 2)
+							ctxSize =
+								CONTEXTS[Math.max(0, CONTEXTS.indexOf(ctxSize as (typeof CONTEXTS)[number]) - 1)] ?? ctxSize;
+					} else if (data === "\x1b[C" || data === "\x1bOC") {
+						// right
+						if (settingsRow === 0)
+							depth =
+								DEPTHS[Math.min(DEPTHS.length - 1, DEPTHS.indexOf(depth as (typeof DEPTHS)[number]) + 1)] ??
+								depth;
+						else if (settingsRow === 1)
+							effort =
+								EFFORTS[
+									Math.min(EFFORTS.length - 1, EFFORTS.indexOf(effort as (typeof EFFORTS)[number]) + 1)
+								] ?? effort;
+						else if (settingsRow === 2)
+							ctxSize =
+								CONTEXTS[
+									Math.min(CONTEXTS.length - 1, CONTEXTS.indexOf(ctxSize as (typeof CONTEXTS)[number]) + 1)
+								] ?? ctxSize;
+					} else if (data === "\r" || data === "\n") {
+						// Enter = apply
 						ctx.settings.set("web_search.depth", depth);
 						ctx.settings.set("web_search.reasoningEffort", effort);
 						ctx.settings.set("web_search.contextSize", ctxSize);
@@ -407,7 +436,8 @@ export class SelectorController {
 						ctx.showStatus(`Search: depth=${depth} reasoning=${effort} context=${ctxSize}`);
 						ctx.ui.requestRender();
 						return;
-					} else if (data === "\x1b" || data === "\x1b\x1b") { // Esc = back to providers
+					} else if (data === "\x1b" || data === "\x1b\x1b") {
+						// Esc = back to providers
 						pane = "providers";
 					}
 					wrapper.invalidate?.();

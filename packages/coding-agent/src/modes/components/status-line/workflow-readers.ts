@@ -28,7 +28,7 @@ export interface PabcdSegmentState {
 export async function readPabcdSegmentState(cwd: string, sessionId?: string): Promise<PabcdSegmentState | null> {
 	try {
 		const result = await readPabcdStateWithFallback(cwd, sessionId);
-		if (!result || !result.ok) return null;
+		if (!result?.ok) return null;
 		const envelope = result.value;
 		const stage = (envelope.current_phase ?? "").toLowerCase();
 		if (!envelope.active || !stage || stage === "complete") return null;

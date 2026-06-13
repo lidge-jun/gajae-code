@@ -1,19 +1,26 @@
 import * as path from "node:path";
 import { getAgentDir, isEnoent, parseFrontmatter } from "@gajae-code/utils";
+import webAiFragment from "./jwc/skill-fragments/browse/web-ai.md" with { type: "text" };
+import browseSkill from "./jwc/skills/browse/SKILL.md" with { type: "text" };
 import autoAnswerUncertainFragment from "./jwc/skills/jaw-interview/auto-answer-uncertain.md" with { type: "text" };
 import autoResearchGreenfieldFragment from "./jwc/skills/jaw-interview/auto-research-greenfield.md" with {
 	type: "text",
 };
 import jawInterviewSkill from "./jwc/skills/jaw-interview/SKILL.md" with { type: "text" };
 import ralplanSkill from "./jwc/skills/ralplan/SKILL.md" with { type: "text" };
+import searchSkill from "./jwc/skills/search/SKILL.md" with { type: "text" };
 import teamSkill from "./jwc/skills/team/SKILL.md" with { type: "text" };
 import aiSlopCleanerFragment from "./jwc/skills/ultragoal/ai-slop-cleaner.md" with { type: "text" };
-import browseSkill from "./jwc/skills/browse/SKILL.md" with { type: "text" };
-import searchSkill from "./jwc/skills/search/SKILL.md" with { type: "text" };
 import ultragoalSkill from "./jwc/skills/ultragoal/SKILL.md" with { type: "text" };
-import webAiFragment from "./jwc/skill-fragments/browse/web-ai.md" with { type: "text" };
 
-export const DEFAULT_JWC_DEFINITION_NAMES = ["browse", "jaw-interview", "ralplan", "search", "team", "ultragoal"] as const;
+export const DEFAULT_JWC_DEFINITION_NAMES = [
+	"browse",
+	"jaw-interview",
+	"ralplan",
+	"search",
+	"team",
+	"ultragoal",
+] as const;
 export type DefaultJwcDefinitionName = (typeof DEFAULT_JWC_DEFINITION_NAMES)[number];
 export type DefaultJwcDefinitionKind = "skill" | "skill-fragment";
 export type EmbeddedDefaultJwcSkill = {

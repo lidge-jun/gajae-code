@@ -30,7 +30,12 @@ for (const model of MODELS) {
 		console.log(`sources: ${res.sources.length}`);
 		console.log(`tokens: in ${res.usage?.inputTokens ?? "?"} / out ${res.usage?.outputTokens ?? "?"}`);
 		console.log(`--- answer (first 700 chars) ---\n${answer.slice(0, 700)}`);
-		console.log(`--- sources ---\n${res.sources.slice(0, 6).map(s => `  • ${s.title ?? s.url}`).join("\n")}`);
+		console.log(
+			`--- sources ---\n${res.sources
+				.slice(0, 6)
+				.map(s => `  • ${s.title ?? s.url}`)
+				.join("\n")}`,
+		);
 	} catch (err) {
 		console.log(`\n══════ ${model} ══════`);
 		console.log(`FAILED: ${err instanceof Error ? err.message : String(err)}`);

@@ -295,11 +295,12 @@ export class WebSearchTool implements AgentTool<typeof webSearchSchema, SearchRe
 		// Reasoning effort: settings value + deep floor (080 §7).
 		const EFFORT_ORDER = ["none", "low", "medium", "high"] as const;
 		const settingsEffort = (this.#session.settings?.get("web_search.reasoningEffort") as string) ?? "none";
-		const effectiveEffort = depth === "deep"
-			? EFFORT_ORDER.indexOf(settingsEffort as typeof EFFORT_ORDER[number]) >= EFFORT_ORDER.indexOf("high")
-				? settingsEffort
-				: "high"
-			: settingsEffort;
+		const effectiveEffort =
+			depth === "deep"
+				? EFFORT_ORDER.indexOf(settingsEffort as (typeof EFFORT_ORDER)[number]) >= EFFORT_ORDER.indexOf("high")
+					? settingsEffort
+					: "high"
+				: settingsEffort;
 		const settingsContextSize = (this.#session.settings?.get("web_search.contextSize") as string) ?? "high";
 
 		// Deep tier (075 S4): register as async job — returns immediately with a
@@ -376,9 +377,12 @@ export const webSearchCustomTool: CustomTool<typeof webSearchSchema, SearchRende
 		const timeoutMs = depth === "deep" ? DEEP_SEARCH_TIMEOUT_MS : undefined;
 		const EFFORT_ORDER = ["none", "low", "medium", "high"] as const;
 		const sEffort = (ctx.settings?.get("web_search.reasoningEffort") as string) ?? "none";
-		const effectiveEffort = depth === "deep"
-			? EFFORT_ORDER.indexOf(sEffort as typeof EFFORT_ORDER[number]) >= EFFORT_ORDER.indexOf("high") ? sEffort : "high"
-			: sEffort;
+		const effectiveEffort =
+			depth === "deep"
+				? EFFORT_ORDER.indexOf(sEffort as (typeof EFFORT_ORDER)[number]) >= EFFORT_ORDER.indexOf("high")
+					? sEffort
+					: "high"
+				: sEffort;
 		const sCtxSize = (ctx.settings?.get("web_search.contextSize") as string) ?? "high";
 		return executeSearch(toolCallId, params, {
 			authStorage,

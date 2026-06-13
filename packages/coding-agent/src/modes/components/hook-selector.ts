@@ -220,8 +220,6 @@ class FocusAwareList extends Container {
 	#selectedIndex = 0;
 	#maxVisibleRows = 0;
 	#outline: boolean;
-	#listSlot: boolean;
-	#listSlotLabel = "";
 
 	constructor(outline: boolean) {
 		super();

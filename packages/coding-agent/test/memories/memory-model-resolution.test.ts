@@ -2,29 +2,15 @@ import { describe, expect, it } from "bun:test";
 import { mkdtempSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import type { Model } from "@gajae-code/ai";
-import { setAgentDir } from "@gajae-code/utils";
 import { Settings } from "../../src/config/settings";
 import {
 	persistMemoryModelResolution,
 	readMemoryModelResolution,
 	resolveMemoryModelPattern,
 } from "../../src/memories/memory-model-resolution";
-import type { AgentSession } from "../../src/session/agent-session";
 
 function tempAgentDir(): string {
 	return mkdtempSync(path.join(os.tmpdir(), "jwc-mem-model-"));
-}
-
-function stubSession(agentDir: string, cwd: string, settings: Settings, model?: Model): AgentSession {
-	setAgentDir(agentDir);
-	return {
-		settings,
-		sessionManager: { getCwd: () => cwd },
-		modelRegistry: { getAll: () => (model ? [model] : []) },
-		model,
-		taskDepth: 0,
-	} as unknown as AgentSession;
 }
 
 describe("memory-model-resolution (99.01)", () => {

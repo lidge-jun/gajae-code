@@ -191,7 +191,7 @@ describe("JWC_ → GJC_ load-time mirror (062.1 safety net)", () => {
 		const proc = Bun.spawnSync(
 			["bun", "-e", 'await import("./src/env"); console.log(Bun.env.GJC_MIRROR_TEST ?? "unset");'],
 			{
-				cwd: import.meta.dir + "/..",
+				cwd: `${import.meta.dir}/..`,
 				env: { ...process.env, JWC_MIRROR_TEST: "mirrored" },
 			},
 		);

@@ -1,8 +1,8 @@
 import type { ScreenshotMeta, SessionState } from "./session.js";
 
 export interface ResolvedCoord {
-  x: number;
-  y: number;
+	x: number;
+	y: number;
 }
 
 /**
@@ -18,54 +18,42 @@ export interface ResolvedCoord {
  *
  * Falls back to raw values when no screenshot has been taken yet.
  */
-export function resolveCoordinate(
-  x: number,
-  y: number,
-  state: SessionState,
-): ResolvedCoord {
-  const { coordinateMode, lastScreenshot } = state;
+export function resolveCoordinate(x: number, y: number, state: SessionState): ResolvedCoord {
+	const { coordinateMode, lastScreenshot } = state;
 
-  if (coordinateMode === "normalized_0_100") {
-    return resolveNormalized(x, y, lastScreenshot);
-  }
+	if (coordinateMode === "normalized_0_100") {
+		return resolveNormalized(x, y, lastScreenshot);
+	}
 
-  // "pixels" mode
-  return resolvePixels(x, y, lastScreenshot);
+	// "pixels" mode
+	return resolvePixels(x, y, lastScreenshot);
 }
 
 export const resolveCoordinates = resolveCoordinate;
 
-function resolvePixels(
-  x: number,
-  y: number,
-  meta: ScreenshotMeta | null,
-): ResolvedCoord {
-  if (!meta) {
-    // No screenshot taken yet — pass through raw values
-    return { x, y };
-  }
+function resolvePixels(x: number, y: number, meta: ScreenshotMeta | null): ResolvedCoord {
+	if (!meta) {
+		// No screenshot taken yet — pass through raw values
+		return { x, y };
+	}
 
-  const scaleX = meta.displayWidth / meta.width;
-  const scaleY = meta.displayHeight / meta.height;
+	const scaleX = meta.displayWidth / meta.width;
+	const scaleY = meta.displayHeight / meta.height;
 
-  return {
-    x: meta.originX + x * scaleX,
-    y: meta.originY + y * scaleY,
-  };
+	return {
+		x: meta.originX + x * scaleX,
+		y: meta.originY + y * scaleY,
+	};
 }
 
-function resolveNormalized(
-  x: number,
-  y: number,
-  meta: ScreenshotMeta | null,
-): ResolvedCoord {
-  if (!meta) {
-    // Without display info, treat percentages as raw (best-effort)
-    return { x, y };
-  }
+function resolveNormalized(x: number, y: number, meta: ScreenshotMeta | null): ResolvedCoord {
+	if (!meta) {
+		// Without display info, treat percentages as raw (best-effort)
+		return { x, y };
+	}
 
-  return {
-    x: meta.originX + (x / 100) * meta.displayWidth,
-    y: meta.originY + (y / 100) * meta.displayHeight,
-  };
+	return {
+		x: meta.originX + (x / 100) * meta.displayWidth,
+		y: meta.originY + (y / 100) * meta.displayHeight,
+	};
 }
