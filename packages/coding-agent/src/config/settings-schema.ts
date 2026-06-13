@@ -2737,6 +2737,7 @@ export const SETTINGS_SCHEMA = {
 			"synthetic",
 			"parallel",
 			"searxng",
+			"xai",
 		] as const,
 		default: "auto",
 		ui: {

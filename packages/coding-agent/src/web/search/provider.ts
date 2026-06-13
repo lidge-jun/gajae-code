@@ -93,6 +93,11 @@ const PROVIDER_META: Record<SearchProviderId, ProviderMeta> = {
 		label: "SearXNG",
 		load: async () => new (await import("./providers/searxng")).SearXNGProvider(),
 	},
+	xai: {
+		id: "xai",
+		label: "xAI Grok",
+		load: async () => new (await import("./providers/xai")).XaiProvider(),
+	},
 	duckduckgo: {
 		id: "duckduckgo",
 		label: "DuckDuckGo",
@@ -139,6 +144,7 @@ export const SEARCH_PROVIDER_ORDER: SearchProviderId[] = [
 	"kagi",
 	"synthetic",
 	"searxng",
+	"xai",
 ];
 
 /**
@@ -163,6 +169,8 @@ const MODEL_PROVIDER_TO_SEARCH: Record<string, SearchProviderId> = {
 	zai: "zai",
 	perplexity: "perplexity",
 	synthetic: "synthetic",
+	xai: "xai",
+	grok: "xai",
 };
 
 /** Preferred provider set via settings (default: auto) */

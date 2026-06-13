@@ -212,6 +212,8 @@ const SEARCH_ENGINE_ALIASES: Record<string, SearchProviderId | "auto"> = {
 	openai: "codex",
 	claude: "anthropic",
 	google: "gemini",
+	grok: "xai",
+	x: "xai",
 	ddg: "duckduckgo",
 	duck: "duckduckgo",
 };
@@ -236,6 +238,7 @@ const SEARCH_ENGINE_IDS: ReadonlyArray<SearchProviderId> = [
 	"codex",
 	"anthropic",
 	"gemini",
+	"xai",
 	"perplexity",
 	"kimi",
 	"zai",
@@ -271,6 +274,7 @@ const SEARCH_ENGINE_SETUP_HINTS: Record<SearchProviderId, string> = {
 	kagi: "store kagi credential (auth storage only — no env var)",
 	synthetic: "set SYNTHETIC_API_KEY",
 	searxng: "set SEARXNG_ENDPOINT (or the searxng.endpoint setting)",
+	xai: "OAuth — run grok login (or set XAI_API_KEY) — Grok X Search",
 };
 
 async function isSearchEngineAvailable(id: SearchProviderId, authStorage: AuthStorage): Promise<boolean> {
@@ -285,7 +289,7 @@ async function isSearchEngineAvailable(id: SearchProviderId, authStorage: AuthSt
 function formatSearchEngineCandidates(): string {
 	return [
 		`Providers: auto, ${SEARCH_ENGINE_IDS.join(", ")}`,
-		"Aliases: chatgpt/openai → codex, claude → anthropic, google → gemini, ddg/duck → duckduckgo, active/native/default → auto",
+		"Aliases: chatgpt/openai → codex, claude → anthropic, google → gemini, grok/x → xai, ddg/duck → duckduckgo, active/native/default → auto",
 	].join("\n");
 }
 
@@ -572,6 +576,7 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 			{ name: "chatgpt", description: "ChatGPT/OpenAI native search (codex)" },
 			{ name: "claude", description: "Anthropic native search" },
 			{ name: "gemini", description: "Google Gemini native search" },
+			{ name: "grok", description: "xAI Grok X Search (xai)" },
 			{ name: "duckduckgo", description: "Keyless DuckDuckGo (always available)" },
 			{ name: "perplexity", description: "Perplexity search" },
 			{ name: "exa", description: "Exa keyed search API" },
