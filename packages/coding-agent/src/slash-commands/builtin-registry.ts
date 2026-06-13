@@ -451,7 +451,9 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 		handle: async (command, runtime) => {
 			const args = (command.args ?? "").trim();
 			const argv = args.length > 0 ? args.split(/\s+/) : [];
-			const result = await runNativeOrchestrateCommand(argv, process.cwd());
+			// Session cwd, not process.cwd(): resident ACP/in-process hosts run N sessions
+			// with distinct workspaces in one process (112.2 B1).
+			const result = await runNativeOrchestrateCommand(argv, runtime.session.sessionManager.getCwd());
 			if (result.stderr) await runtime.output(result.stderr.trimEnd());
 			const sub = argv[0]?.toLowerCase();
 			const stageEntered = result.status === 0 && !!sub && sub !== "status" && sub !== "verdict";
@@ -559,7 +561,6 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 	},
 	{
 		name: "searchengine",
-		aliases: ["SEARCHENGINE"],
 		description: "Select web search engine provider",
 		acpDescription: "Select web search engine provider",
 		inlineHint: "[provider|status]",
@@ -611,6 +612,33 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 					: `Search engine set to ${next}. Fallback remains DuckDuckGo.`) + setupNote,
 			);
 			return commandConsumed();
+		},
+		handleTui: (command, runtime) => {
+			const raw = command.args.trim();
+			// No args → interactive bottom selector (parity with /effort, /model).
+			if (!raw) {
+				runtime.ctx.showSearchEngineSelector();
+				runtime.ctx.editor.setText("");
+				return;
+			}
+			if (raw.toLowerCase() === "status") {
+				const current = runtime.ctx.settings.get("providers.webSearch");
+				runtime.ctx.showStatus(`Search engine: ${current ?? "auto"}. Fallback remains DuckDuckGo.`);
+				runtime.ctx.editor.setText("");
+				return;
+			}
+			const next = normalizeSearchEngineArg(raw);
+			if (!next) {
+				runtime.ctx.showError(`Unknown search engine: ${raw}\n${formatSearchEngineCandidates()}`);
+				runtime.ctx.editor.setText("");
+				return;
+			}
+			runtime.ctx.settings.set("providers.webSearch", next);
+			setPreferredSearchProvider(next);
+			void runtime.ctx.notifyConfigChanged?.();
+			refreshStatusLine(runtime.ctx);
+			runtime.ctx.showStatus(`Search engine set to ${next}. Fallback remains DuckDuckGo.`);
+			runtime.ctx.editor.setText("");
 		},
 	},
 	{

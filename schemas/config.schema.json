@@ -109,8 +109,12 @@
 		},
 		"disabledProviders": {
 			"type": "array",
-			"items": true,
-			"default": []
+			"items": {
+				"type": "string"
+			},
+			"default": [
+				"google"
+			]
 		},
 		"disabledExtensions": {
 			"type": "array",
@@ -165,6 +169,15 @@
 						}
 					},
 					"additionalProperties": false
+				},
+				"github": {
+					"type": "object",
+					"properties": {
+						"prBase": {
+							"type": "string"
+						}
+					},
+					"additionalProperties": false
 				}
 			},
 			"additionalProperties": false
@@ -193,12 +206,12 @@
 				"dark": {
 					"type": "string",
 					"description": "Theme used when terminal has dark background",
-					"default": "red-claw"
+					"default": "abyss-bite"
 				},
 				"light": {
 					"type": "string",
 					"description": "Theme used when terminal has light background",
-					"default": "blue-crab"
+					"default": "abyss-bite-light"
 				}
 			},
 			"additionalProperties": false
@@ -385,6 +398,28 @@
 					],
 					"description": "Wrap file paths in OSC 8 hyperlinks for terminal-native click-to-open (auto: detect support; off: never; always: unconditional)",
 					"default": "auto"
+				},
+				"composerPin": {
+					"type": "boolean",
+					"description": "Keep the input composer pinned to the terminal bottom, filling the gap above with blank space (default: on for jwc)"
+				},
+				"composerFooter": {
+					"type": "boolean",
+					"description": "Persistent one-row line below the input composer for transient notices (double-press exit, IME hints) and idle shortcuts (default: on for jwc)"
+				}
+			},
+			"additionalProperties": false
+		},
+		"tool": {
+			"type": "object",
+			"properties": {
+				"renderMode": {
+					"type": "string",
+					"enum": [
+						"commit",
+						"verbose"
+					],
+					"description": "commit: active tools preview in a live zone above the input and enter history collapsed; verbose: tool previews stream inline in the transcript (legacy)"
 				}
 			},
 			"additionalProperties": false
@@ -869,6 +904,72 @@
 				"summaryInjectionTokenLimit": {
 					"type": "number",
 					"default": 5000
+				},
+				"searchMode": {
+					"type": "string",
+					"enum": [
+						"hybrid",
+						"fts",
+						"like"
+					],
+					"description": "hybrid: FTS5 with LIKE fallback; fts: FTS5 only; like: substring scan",
+					"default": "hybrid"
+				},
+				"modelRolePattern": {
+					"type": "string",
+					"description": "Model pattern for stage1/phase2 jobs (provider/model or modelRoles alias). Falls back to modelRoles.memory, then default."
+				},
+				"taskSnapshotTopN": {
+					"type": "number",
+					"default": 4
+				},
+				"taskSnapshotEpisodeCap": {
+					"type": "number",
+					"default": 2
+				},
+				"taskSnapshotMaxChars": {
+					"type": "number",
+					"default": 1200
+				},
+				"searchMaxChars": {
+					"type": "number",
+					"default": 4000
+				},
+				"snapshotSnippetChars": {
+					"type": "number",
+					"default": 200
+				},
+				"searchSnippetChars": {
+					"type": "number",
+					"default": 700
+				},
+				"hitCountDedupThreshold": {
+					"type": "number",
+					"default": 3
+				},
+				"compactedTaskSnapshotTopN": {
+					"type": "number",
+					"default": 2
+				},
+				"compactedTaskSnapshotEpisodeCap": {
+					"type": "number",
+					"default": 1
+				},
+				"compactedTaskSnapshotMaxChars": {
+					"type": "number",
+					"default": 600
+				},
+				"compactedSnapshotSnippetChars": {
+					"type": "number",
+					"default": 120
+				},
+				"compactedSearchSnippetChars": {
+					"type": "number",
+					"default": 400
+				},
+				"compactionContextMaxChars": {
+					"type": "number",
+					"default": 800
 				}
 			},
 			"additionalProperties": false
@@ -881,10 +982,59 @@
 					"enum": [
 						"off",
 						"local",
-						"hindsight"
+						"hindsight",
+						"mem0"
 					],
-					"description": "Off, local memory pipeline, or Hindsight remote memory",
+					"description": "Off, local memory pipeline, Hindsight, or Mem0 remote memory",
 					"default": "off"
+				}
+			},
+			"additionalProperties": false
+		},
+		"mem0": {
+			"type": "object",
+			"properties": {
+				"apiKey": {
+					"type": "string"
+				},
+				"apiUrl": {
+					"type": "string",
+					"default": "https://api.mem0.ai"
+				},
+				"userId": {
+					"type": "string"
+				},
+				"userIdPrefix": {
+					"type": "string"
+				},
+				"agentId": {
+					"type": "string"
+				},
+				"scoping": {
+					"type": "string",
+					"enum": [
+						"global",
+						"per-project",
+						"per-project-tagged"
+					],
+					"default": "per-project-tagged"
+				},
+				"autoRecall": {
+					"type": "boolean",
+					"default": true
+				},
+				"autoRetain": {
+					"type": "boolean",
+					"default": true
+				},
+				"retainEveryNTurns": {
+					"type": "number"
+				},
+				"searchTopK": {
+					"type": "number"
+				},
+				"recallPreamble": {
+					"type": "string"
 				}
 			},
 			"additionalProperties": false
@@ -1506,7 +1656,7 @@
 					"properties": {
 						"enabled": {
 							"type": "boolean",
-							"description": "Cache rendered issue/PR view output in ~/.gjc/cache/github-cache.db so repeated reads are free",
+							"description": "Cache rendered issue/PR view output in ~/.jwc/cache/github-cache.db so repeated reads are free",
 							"default": true
 						},
 						"softTtlSec": {
@@ -1532,6 +1682,21 @@
 					"type": "boolean",
 					"description": "Enable the web_search tool for web searching",
 					"default": true
+				},
+				"depth": {
+					"type": "string",
+					"description": "fast = 60s sync, deep = 180s async with heavier models",
+					"default": "fast"
+				},
+				"reasoningEffort": {
+					"type": "string",
+					"description": "Reasoning effort for web search (deep tier floors to high)",
+					"default": "none"
+				},
+				"contextSize": {
+					"type": "string",
+					"description": "How much web content to include (codex provider)",
+					"default": "high"
 				}
 			},
 			"additionalProperties": false
@@ -1756,6 +1921,11 @@
 					"type": "object",
 					"additionalProperties": true,
 					"default": {}
+				},
+				"modelPresets": {
+					"type": "object",
+					"additionalProperties": true,
+					"default": {}
 				}
 			},
 			"additionalProperties": false
@@ -1874,7 +2044,8 @@
 						"kagi",
 						"synthetic",
 						"parallel",
-						"searxng"
+						"searxng",
+						"xai"
 					],
 					"description": "Provider for web search tool",
 					"default": "auto"
