@@ -246,6 +246,35 @@ describe("buildSessionContext", () => {
 			expect(ctx.messages).toHaveLength(4);
 			expect((ctx.messages[0] as any).summary).toContain("Second summary");
 		});
+
+		it("stale firstKeptEntryId before previous compaction does not hydrate old messages", () => {
+			// compaction cp2 has firstKeptEntryId="B" which is BEFORE compaction cp1.
+			// The clamp must prevent messages A, B, C, D from being included.
+			const entries: SessionEntry[] = [
+				msg("A", null, "user", "msgA"),
+				msg("B", "A", "assistant", "msgB"),
+				msg("C", "B", "user", "msgC"),
+				msg("D", "C", "assistant", "msgD"),
+				compaction("cp1", "D", "First summary", "C"),
+				msg("E", "cp1", "user", "msgE"),
+				msg("F", "E", "assistant", "msgF"),
+				compaction("cp2", "F", "Second summary", "B"), // stale: points before cp1
+				msg("G", "cp2", "user", "msgG"),
+			];
+			const ctx = buildSessionContext(entries);
+
+			// Only: summary + G (no kept messages since B is outside the clamped range)
+			expect(ctx.messages).toHaveLength(2);
+			expect((ctx.messages[0] as any).summary).toContain("Second summary");
+			expect((ctx.messages[1] as any).content).toBe("msgG");
+
+			// Pre-compaction1 messages must NOT appear
+			const allText = ctx.messages.map((m: any) => m.content ?? m.summary ?? "").join(" ");
+			expect(allText).not.toContain("msgA");
+			expect(allText).not.toContain("msgB");
+			expect(allText).not.toContain("msgC");
+			expect(allText).not.toContain("msgD");
+		});
 	});
 
 	describe("with branches", () => {
