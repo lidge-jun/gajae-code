@@ -193,6 +193,15 @@ function pabcdGateChip(state: NonNullable<SegmentContext["pabcd"]>): string | nu
 }
 
 /** 99.04.02 — IPABCD stage strip: past=dim, current=accent+marker, rest=muted. */
+const PABCD_STAGE_LABELS: Record<string, string> = {
+	i: "INTERV",
+	p: "PLAN",
+	a: "AUDIT",
+	b: "BUILD",
+	c: "CHECK",
+	d: "DONE",
+};
+
 const pabcdSegment: StatusLineSegment = {
 	id: "pabcd",
 	render(ctx) {
@@ -200,15 +209,10 @@ const pabcdSegment: StatusLineSegment = {
 		if (!state?.active || !PABCD_ORDER.includes(state.stage as (typeof PABCD_ORDER)[number])) {
 			return { content: "", visible: false };
 		}
-		const idx = PABCD_ORDER.indexOf(state.stage as (typeof PABCD_ORDER)[number]);
-		const band = PABCD_ORDER.map((stage, i) => {
-			const ch = stage.toUpperCase();
-			if (i < idx) return theme.fg("dim", ch);
-			if (i === idx) return theme.fg("accent", `${theme.symbol("pabcd.current")}${ch}`);
-			return theme.fg("muted", ch);
-		}).join(theme.fg("dim", "\u00b7"));
+		const label = PABCD_STAGE_LABELS[state.stage] ?? state.stage.toUpperCase();
 		const chip = pabcdGateChip(state);
-		return { content: chip ? `${band} ${chip}` : band, visible: true };
+		const content = theme.fg("accent", label);
+		return { content: chip ? `${content} ${chip}` : content, visible: true };
 	},
 };
 
