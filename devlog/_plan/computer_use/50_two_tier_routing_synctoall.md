@@ -123,6 +123,22 @@ cli-jaw 통합 MCP(`loadUnifiedMcp`/`saveUnifiedMcp`, `JAW_HOME/mcp.json`)에 `c
      두는 게 정합적(다른 모델들이 같은 무제한 권한을 공유하면 리스크가 모델 수만큼 곱해짐). 상세
      [10](./10_methodology_a_cu_mcp_reimpl.md) §full-tier 오버라이드. ✅ 적용·검증.
 
+## Deferred: 좌표 정밀도 개선
+
+비-Claude 모델(GPT-5.5, grok 등)의 비전 좌표 추론이 부정확해 클릭이 빗나감. 실증(260613):
+GPT-5.5가 디시 글쓰기 페이지에서 `left_click` 성공했으나 좌표가 의도한 필드와 살짝 어긋남.
+
+**이미 있는 인프라**: 그리드 오버레이(`cu-native drawGrid --grid N`), 비전 보정 계수(`est:N` 1.56x/1.97x),
+AX semantic press(`ax_press` — 좌표 없이 요소 직접 조작), 커서 프리뷰(`cmdPreview`), 그리드 줌(`cmdGridZoom`).
+이들은 CLI skill(`computer-use.mjs`)에 연결돼 있으나 **MCP 도구로는 미노출**.
+
+**가장 효과적인 미구현: Set-of-Mark(SoM)** — AX 트리 요소 열거 → 스크린샷 이미지에 번호 바운딩 박스
+그려서 반환 → 모델이 **번호만 지정** → 서버가 정확한 중심 좌표로 변환. 순수 JS(`inspect` 재활용 +
+`sharp`로 이미지 오버레이). 모델이 픽셀 좌표를 읽을 필요가 아예 없어짐.
+
+cli-jaw 2-tier 연계: cu-mcp(Tier 1) 정밀도 보상이 중요해지면 SoM 먼저 구현.
+codex Sky(Tier 2)는 AX-트리 기반이라 좌표 정밀도 문제 자체가 없음.
+
 ## 근거
 
 | 영역 | 위치 |
