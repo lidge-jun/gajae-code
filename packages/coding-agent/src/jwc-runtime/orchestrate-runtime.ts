@@ -138,6 +138,12 @@ async function readCurrent(
 	if (result === null) return { envelope: null };
 	if (!result.ok) return { error: `corrupt pabcd state at ${pabcdStatePath(cwd, sessionId)}: ${result.error}` };
 	const value = result.value;
+	if (sessionId && value.session_id !== undefined && value.session_id !== sessionId) {
+		return { envelope: null };
+	}
+	if (sessionId && value.session_id === undefined) {
+		return { envelope: null };
+	}
 	const stage = typeof value.current_phase === "string" && isStage(value.current_phase) ? value.current_phase : null;
 	if (stage === null) return { error: `pabcd state has unknown stage: ${String(value.current_phase)}` };
 	return {

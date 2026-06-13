@@ -1,6 +1,6 @@
 ---
 name: explore
-model: cheap:self
+model: self
 description: Fast read-only codebase scout returning compressed context for handoff
 tools: read, search, find, web_search
 thinking-level: med
