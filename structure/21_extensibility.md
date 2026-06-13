@@ -64,6 +64,38 @@
 | root discovery | root 또는 child dir에 plugin manifest가 있으면 plugin root로 인정한다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/gjc-plugins/paths.ts:18`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/gjc-plugins/paths.ts:28` |
 | extension load | extension loader는 native capability modules와 installed plugin extension paths를 합친다. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/extensions/loader.ts:505`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/extensibility/extensions/loader.ts:513` |
 
+## MCP Runtime (격리 + 해제 배선)
+
+> 공개 GJC 표면은 MCP 런타임 디스커버리를 **의도적으로 격리(quarantine)**한다. `createAgentSession`은
+> 명시적으로 넘긴 `options.mcpManager`만 쓰고 직접 디스커버리하지 않는다. `main.ts`에서 CLI 경로에
+> 한해 디스커버리를 켜는 배선을 추가했다(`0b493665`). 전체 조사: [`devlog/_plan/computer_use/`](../devlog/_plan/computer_use/00_moc_computer_use.md).
+
+| 항목 | 현재 구조 | 근거 |
+|---|---|---|
+| 격리 선언 | SDK가 MCP 런타임 디스커버리를 deprecated/ignored로 격리. project/user MCP config를 여기서 절대 디스커버 안 함. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:278`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/sdk.ts:1273` |
+| 해제 배선 | `runRootCommand`가 `discoverAndLoadMCPTools(getProjectDir(), …)`로 manager를 만들어 `sessionOptions.mcpManager` + `customTools`로 주입. print 경로는 `sessionManager` undefined라 `getProjectDir()` 사용. `createTools()`가 manager를 참조 안 하므로 tool을 `customTools`로 명시 전달해야 모델이 봄. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/main.ts:41`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/main.ts:913` |
+| config 스캔 | builtin discovery가 `{cwd}/.jwc/{mcp.json,.mcp.json}`(project) + `~/.jwc/agent/{mcp.json,.mcp.json}`(user)를 스캔. 등록은 읽히나 세션엔 위 배선으로만 물림. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/discovery/builtin.ts:205`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/discovery/builtin.ts:209` |
+| startup 레이스 | `STARTUP_TIMEOUT_MS = 250`. 모든 서버 병렬 연결 후 `Promise.race([allSettled, delay(250)])`. 250ms 초과 + 캐시 없으면 abort. 가벼운 node 스크립트는 통과, 서명된 `.app`은 실패(닭-달걀). | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/runtime-mcp/manager.ts:60`, `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/runtime-mcp/manager.ts:459` |
+| 스키마 정규화 | MCP 도구 스키마는 `normalizeSchemaForMCP`로 정규화되나 `$ref` 인라인(deref)은 안 함 → 깨진 `$ref`는 provider 400. cu-mcp는 소스에서 `$ref` 미발생하게 고침. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/runtime-mcp/tool-bridge.ts:234` |
+| tool-cache | 서버별 도구 정의를 agent.db에 캐시해 다음 startup을 빠르게. | `/Users/jun/Developer/new/700_projects/jawcode/packages/coding-agent/src/runtime-mcp/tool-cache.ts` |
+
+## Computer Use (cu-mcp)
+
+> 데스크톱 제어는 모델 기능이 아니라 **MCP 서버**다. jwc는 위 격리 해제 + 외부 **cu-mcp** 서버 등록으로
+> 데스크톱 제어를 self-serve한다(grok-4.3 실증). codex 번들 Sky(AX-트리)는 codex 부모 코드서명
+> attestation으로 jwc에선 직접 구동 불가 — 방법론 비교는 [`computer_use/00_moc`](../devlog/_plan/computer_use/00_moc_computer_use.md).
+> cu-mcp 소스: `~/developer/codex/23_computer_use/src/cu-mcp-server/`(별도 레포, Anthropic computer-use 표면 재구현, 좌표/스크린샷 기반).
+
+| 항목 | 현재 구조 | 근거 |
+|---|---|---|
+| 등록 | jwc user 스코프 `~/.jwc/agent/mcp.json`에 `computer-use` stdio 서버(node 절대경로 + `dist/index.js`). | `~/.jwc/agent/mcp.json` |
+| 서버 엔트리 | MCP stdio 서버(`@modelcontextprotocol/sdk`), 29 도구(mouse·keyboard·screenshot·scroll·app·clipboard·batch·utility·teach·inspect). | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/index.ts`, `~/developer/codex/23_computer_use/src/cu-mcp-server/src/tools/*.ts` |
+| 네이티브 제어 | `native.ts`가 `CU_NATIVE_PATH`(또는 `.build/release/cu-native`)의 Swift 바이너리를 `execFile`로 호출해 실제 마우스/키보드/스크린샷 수행. | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/native.ts:12` |
+| 결정론적 tier | `categoryToTier(getAppCategory(bundleId))`: 브라우저/trading=read, 터미널·IDE=click, media=차단, 그 외=full. `request_access` 부여 + 매 액션 `enforcePreAction`/`enforcePointUnderClick`로 서버에서 강제(모델 무관). | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/safety/tiers.ts:35`, `…/src/safety/enforcement.ts`, `…/src/tools/app.ts:96` |
+| 카테고리 리스트 | 브라우저/터미널/trading/media bundle-id 집합. | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/safety/bundleIds.ts` |
+| full-tier 오버라이드 | `CU_TIER_OVERRIDE=full`이면 `isFullTierOverride()`가 모든 카테고리(미디어 포함)를 full로. jwc는 `mcp.json`의 `env`로 켬(개인 사용). 기본값은 안전 tier 유지 → cli-jaw 멀티-프로바이더는 safe-by-construction. 시스템 키콤보(⌘Q 등)는 별개로 차단. | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/safety/tiers.ts:25`, `…/src/safety/tiers.ts:36` |
+| 단일 세션 락 | 머신당 1세션 락 `~/.claude/computer-use.lock`. | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/safety/lock.ts` |
+
 ## D5와 현재 gap
 
 | 목표 | 현재 코드 | gap |

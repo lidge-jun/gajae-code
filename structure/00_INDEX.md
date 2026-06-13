@@ -22,7 +22,7 @@ cite: gjc_origin=`devlog/_upstream_gjc/<path>:<line>` · jwc_patched=`700_projec
 | **1 기반** | [architecture.md](./10_architecture.md) | 모노레포 형태·cli-jaw 시임 + **packages/crates 지도** + **SDK 표면**(`createAgentSession`) |
 | | [conventions.md](./11_conventions.md) | 포크·리베이스·jawdev·MOC 규약 + **git 구조·리베이스 가드** |
 | **2 코어** | [prompt_flow.md](./20_prompt_flow.md) | 시스템 프롬프트 조립(`system-prompt.md`·append·skills) |
-| | [extensibility.md](./21_extensibility.md) | skills/slash/custom-tools/hooks/plugins + **번들 워크플로 4종**(jaw-interview·ralplan·ultragoal·team) |
+| | [extensibility.md](./21_extensibility.md) | skills/slash/custom-tools/hooks/plugins + **번들 워크플로 4종**(jaw-interview·ralplan·ultragoal·team) + **MCP 런타임(격리·해제 배선) · Computer Use(cu-mcp·tier override)** |
 | | [session_storage.md](./22_session_storage.md) | SQLite·auth·history + **memory pipeline** + **todo pipeline(99.30)** |
 | **3 서브시스템** | [providers.md](./30_providers.md) | **Codex 전송·프리웜·워치독·fast 진단** + **모델 패치 4층** + **검색 프로바이더** |
 | | [scroll.md](./31_scroll.md) | TUI 스크롤/뷰포트/커밋폴딩/렌더 정책 |
@@ -59,6 +59,7 @@ cite: gjc_origin=`devlog/_upstream_gjc/<path>:<line>` · jwc_patched=`700_projec
 | 99.30 todo UX | `session_storage.md`, `struct_har/jwc_patched/080_tui/` |
 | TUI 스크롤·렌더 경로 | `scroll.md` |
 | Codex 전송·모델 패치·검색·fast 진단 | `providers.md` (devlog: `_fin/000000_reformation`) |
+| MCP 런타임 격리/해제·computer-use(cu-mcp) | `extensibility.md` (devlog: `_plan/computer_use/`) |
 
 ## struct_har 재생성
 
