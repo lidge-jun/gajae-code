@@ -56,8 +56,14 @@ function formatChip(chip: WorkflowHudChip): string | null {
 	return prefix ? `${prefix}:${body}` : body;
 }
 
+const HUD_DISPLAY_NAMES: Record<string, string> = {
+	ralplan: "plan",
+	ultragoal: "goal",
+};
+
 function formatEntry(entry: SkillActiveEntry): string {
-	const skill = sanitizeHudPart(entry.skill);
+	const rawSkill = sanitizeHudPart(entry.skill);
+	const skill = HUD_DISPLAY_NAMES[rawSkill] ?? rawSkill;
 	const phase = sanitizeHudPart(entry.phase);
 	const base = phase ? `${skill}:${phase}` : skill;
 	const chips = [...(entry.hud?.chips ?? [])]
