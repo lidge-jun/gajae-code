@@ -49,6 +49,7 @@ a1-system.md·orchestration.md). jwc도 computer-use MCP를 갖게 됐으므로 
 | [30](./30_jawcode_mcp_unquarantine.md) | jawcode MCP 격리 해제 배선(main.ts) + 250ms startup 레이스 + 스키마 정규화 |
 | [40](./40_cli_jaw_gate.md) | cli-jaw "codex-only" 게이트에 jwc 추가 |
 | [50](./50_two_tier_routing_synctoall.md) | **2-tier 라우팅(Sky=codex / cu-mcp=나머지) + syncToAll 최신화(kiro 추가·grok 자동·claude 경로 검증)** |
+| [60](./60_cu_refactor_plan.md) | **CU 리팩터링 3-phase: 통합 도구(29→1, 33K→3K) + cua-driver 백엔드(백그라운드) + 지연 로딩(discoveryMode). cli-jaw defer** |
 
 ## 진행
 
