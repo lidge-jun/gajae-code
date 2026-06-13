@@ -34,6 +34,15 @@ const NEXT_HINTS: Record<string, string> = {
 	D: "Summarize the cycle, then run `jwc orchestrate d --complete`.",
 };
 
+const HOTL_HINTS: Record<string, string> = {
+	I: "HOTL: Complete requirements, then run `jwc orchestrate p` immediately — do not wait for user.",
+	P: "HOTL: Finalize the plan and run `jwc orchestrate a` immediately. Record checkpoint with `jwc goal update --evidence \"plan finalized\"`. Do NOT wait for user approval.",
+	A: "HOTL: Run audit subagents. On PASS, run `jwc orchestrate b` immediately with checkpoint. Do NOT wait for user approval.",
+	B: "HOTL: Implement the plan. On verification DONE, run `jwc orchestrate c` immediately with checkpoint. Do NOT wait for user approval.",
+	C: "HOTL: Run the gates. All green → run `jwc orchestrate d` yourself.",
+	D: "HOTL: Summarize, then run `jwc orchestrate d --complete`. If goal has remaining work, re-enter `jwc orchestrate p` for the next cycle.",
+};
+
 /**
  * Build the stage-header content for an active envelope, or null when no
  * header should be injected (inactive, complete, or unknown stage).
@@ -60,9 +69,9 @@ export function buildPabcdStageContent(
 	}
 	const gates = gateChips.length > 0 ? ` · ${gateChips.join(" · ")}` : "";
 
-	// 99.08-A — co-display when a durable goal runs alongside the pipeline;
-	// pabcd-only sessions keep the original header shape.
-	const goalPrefix = goal?.objective?.trim() ? `GOAL: ${truncateObjective(goal.objective, GOAL_SUMMARY_MAX)} · ` : "";
+	const hasGoal = !!goal?.objective?.trim();
+	const goalPrefix = hasGoal ? `GOAL: ${truncateObjective(goal!.objective, GOAL_SUMMARY_MAX)} · ` : "";
+	const hints = hasGoal ? HOTL_HINTS : NEXT_HINTS;
 
-	return `[${goalPrefix}PABCD — ${stage}: ${label}${gates}]\n${NEXT_HINTS[stage] ?? ""}`.trimEnd();
+	return `[${goalPrefix}PABCD — ${stage}: ${label}${gates}]\n${hints[stage] ?? ""}`.trimEnd();
 }
