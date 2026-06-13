@@ -198,6 +198,7 @@ interface CodexStreamRuntime {
 	currentBlock: CodexOutputBlock | null;
 	nativeOutputItems: Array<Record<string, unknown>>;
 	websocketStreamRetries: number;
+	websocketFatalFailures: number;
 	providerRetryAttempt: number;
 	sawTerminalEvent: boolean;
 	canSafelyReplayWebsocketOverSse: boolean;
@@ -840,6 +841,7 @@ function createCodexStreamRuntime(initial: {
 		currentBlock: null,
 		nativeOutputItems: [],
 		websocketStreamRetries: 0,
+		websocketFatalFailures: 0,
 		providerRetryAttempt: 0,
 		sawTerminalEvent: false,
 		canSafelyReplayWebsocketOverSse: true,
@@ -1413,9 +1415,15 @@ async function tryReplayWebsocketFailureOverSse(
 	const streamError = error instanceof Error ? error : new Error(String(error));
 	const replayingBufferedOutputOverSse = context.output.content.length > 0;
 	const isFatal = isCodexWebSocketFatalError(streamError);
+	if (isFatal) runtime.websocketFatalFailures += 1;
+	// Connection-level (fatal) errors used to flip the whole session to SSE on
+	// the FIRST occurrence — one lost handshake race permanently downgraded the
+	// transport to full-context rounds. Give the connection one fresh attempt;
+	// only a repeat failure activates the session-wide fallback.
+	const fatalBudgetExhausted = runtime.websocketFatalFailures > 1;
 	const activateFallback =
 		replayingBufferedOutputOverSse ||
-		isFatal ||
+		fatalBudgetExhausted ||
 		runtime.websocketStreamRetries >= getCodexWebSocketRetryBudget(context.options);
 	recordCodexWebSocketFailure(state, activateFallback);
 	logCodexDebug("codex websocket stream fallback", {
@@ -2055,6 +2063,11 @@ class CodexWebSocketConnection {
 		return this.#socket?.readyState === WebSocket.OPEN;
 	}
 
+	/** True while the websocket handshake is still in flight. */
+	isConnectionPending(): boolean {
+		return this.#socket?.readyState === WebSocket.CONNECTING;
+	}
+
 	matchesAuth(headers: Record<string, string>): boolean {
 		return this.#headers.authorization === headers.authorization;
 	}
@@ -2297,6 +2310,15 @@ async function getOrCreateCodexWebSocketConnection(
 		}
 		state.connection.close("token-refresh");
 		resetCodexWebSocketAppendState(state);
+	}
+	// Join an in-flight handshake instead of killing it. Closing a CONNECTING
+	// socket surfaces as "WebSocket is closed before the connection is
+	// established" on whoever started it (prewarm vs first request race) and
+	// used to cascade into a session-wide SSE fallback.
+	if (state.connection?.isConnectionPending() && state.connection.matchesAuth(headerRecord)) {
+		logger.time("codexWs:joinPendingHandshake");
+		await state.connection.connect(signal);
+		return state.connection;
 	}
 	state.connection?.close("reconnect");
 	resetCodexWebSocketAppendState(state);
