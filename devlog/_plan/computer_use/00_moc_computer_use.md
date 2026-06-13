@@ -59,9 +59,10 @@ a1-system.md·orchestration.md). jwc도 computer-use MCP를 갖게 됐으므로 
 - [x] 방법론 B 근본 블로커 규명 — **codex 부모 코드서명 attestation**(team 2DC432GLL2, Codex 트리
   밖이면 SIGKILL). 250ms는 표면일 뿐. 실증: bash 부모로 메타 OK·액션 무응답. cli-jaw는 codex 경유.
 - [ ] (선택) 방법론 B를 jwc에서 쓰려면 codex 서브프로세스 dispatch 경로 설계 — 미착수
-- [ ] **2-tier 라우팅 설계 합의** ([50](./50_two_tier_routing_synctoall.md)) — Sky=codex / cu-mcp=나머지
-  - [ ] syncToAll 최신화: kiro 타깃 추가(`toClaudeMcp` 재활용) · grok 자동(조치 없음) · claude 경로 검증
-  - [ ] codex 타깃 cu-mcp 제외 분기 (Sky 중복 방지)
-  - [ ] cu-mcp 통합 MCP 등록 → 전파
-  - [ ] 프롬프트 2-tier 게이트 재작성 (정밀 AX → control/codex, 그 외 → 내장 cu-mcp)
-- [ ] 사용자 검수 → 커밋 분할
+- [x] **2-tier 라우팅** ([50](./50_two_tier_routing_synctoall.md)) — Sky=codex / cu-mcp=나머지
+  - [x] syncToAll 최신화: kiro 타깃 추가(`toClaudeMcp` 재활용) · grok 자동(조치 없음) · claude 경로 **수정** (`~/.mcp.json`→`~/.claude.json`)
+  - [x] codex 타깃 cu-mcp 제외 분기 (`filterServers`, Sky 중복 방지)
+  - [ ] cu-mcp 통합 MCP 등록 → 전파 (수동 등록 가능, syncToAll 런타임 확인 필요)
+  - [x] 프롬프트 2-tier 게이트 재작성 (Tier1=cu-mcp self-serve / Tier2=codex AX dispatch)
+  - [x] cli-jaw 빌드 완료 (`npm run build`, dist 반영 검증)
+- [ ] 사용자 검수

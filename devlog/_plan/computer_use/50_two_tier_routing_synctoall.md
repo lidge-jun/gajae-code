@@ -1,6 +1,7 @@
 # 50 — 2-tier CU 라우팅 + cli-jaw syncToAll 최신화
 
-> 상태: 🟡 설계 합의 / 미구현. 사용자 — "codex면 Sky, 나머지는 cu-mcp 활성화. 프롬프트에
+> 상태: ✅ **구현 완료** (cli-jaw `d78f0d62`). syncToAll 8타깃 + codex cu-mcp 제외 + claude 경로
+> 수정 + 프롬프트 2-tier 재작성 + 빌드. 사용자 — "codex면 Sky, 나머지는 cu-mcp 활성화. 프롬프트에
 > '정밀 AX 조작은 control(codex) 직원 경유, 아니면 내장 도구' 규칙을 박는다. syncToAll도 손봐야 한다
 > (grok은 자동, kiro만)."
 
