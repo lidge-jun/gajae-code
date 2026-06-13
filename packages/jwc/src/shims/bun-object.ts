@@ -7,7 +7,11 @@
  * implementations (file/sleep → 100.03, spawn → 100.04, data core → 100.05,
  * peripherals → 100.07).
  */
+import JSON5 from "json5";
+import stripAnsi from "strip-ansi";
 import { bunFile } from "./bun-file";
+import { bunHash, BunCryptoHasher, BunSHA256 } from "./bun-hash";
+import { bunJSONL } from "./bun-jsonl";
 import { bunSpawn, bunSpawnSync } from "./bun-spawn";
 import { bunSleep, bunSleepSync } from "./bun-sleep";
 import { bunStderr, bunStdin, bunStdout } from "./bun-stdio";
@@ -31,24 +35,16 @@ export function buildNodeBunShim(): BunShim {
 		sleepSync: bunSleepSync,
 		spawn: bunSpawn as BunShim["spawn"],
 		spawnSync: bunSpawnSync as BunShim["spawnSync"],
-		hash: stubFn("hash") as unknown as BunShim["hash"],
-		CryptoHasher: class {
-			constructor() {
-				notImplemented("CryptoHasher");
-			}
-		},
-		SHA256: class {
-			constructor() {
-				notImplemented("SHA256");
-			}
-		},
-		JSONL: { parseChunk: stubFn("JSONL.parseChunk") },
-		JSON5: { parse: stubFn("JSON5.parse") as unknown as (text: string) => unknown },
+		hash: bunHash as unknown as BunShim["hash"],
+		CryptoHasher: BunCryptoHasher,
+		SHA256: BunSHA256,
+		JSONL: bunJSONL,
+		JSON5: { parse: JSON5.parse, stringify: JSON5.stringify },
 		serve: stubFn("serve"),
 		stdin: bunStdin,
 		stdout: bunStdout,
 		stderr: bunStderr,
-		stripANSI: stubFn("stripANSI") as unknown as BunShim["stripANSI"],
+		stripANSI: stripAnsi,
 		semver: {
 			order: stubFn("semver.order") as unknown as BunShim["semver"]["order"],
 			satisfies: stubFn("semver.satisfies") as unknown as BunShim["semver"]["satisfies"],

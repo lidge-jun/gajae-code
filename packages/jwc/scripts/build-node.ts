@@ -59,6 +59,11 @@ const result = await build({
 	format: "esm",
 	// Installs globalThis.Bun (Node only) before any upstream module body runs.
 	inject: ["src/shims/index.ts"],
+	alias: {
+		// 100.05: bun:sqlite resolves to the better-sqlite3 adapter in the Node
+		// bundle; the Bun runtime keeps the native module.
+		"bun:sqlite": "./src/shims/bun-sqlite.ts",
+	},
 	plugins: [textImportAttributes],
 	define: {
 		"Bun.env": "process.env",
@@ -71,10 +76,9 @@ const result = await build({
 		"xxhash-wasm",
 		"@gajae-code/natives",
 		"markit-ai",
-		// Left unresolved on purpose until the 100.02 shim aliases land —
+		// Left unresolved on purpose until their shim aliases land —
 		// importing these from Node will fail at runtime, not at build time.
 		"bun",
-		"bun:sqlite",
 		"bun:ffi",
 	],
 	logLevel: "info",

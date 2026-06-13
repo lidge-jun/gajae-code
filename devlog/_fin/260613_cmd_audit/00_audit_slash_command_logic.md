@@ -1,11 +1,13 @@
 # 00 — audit: 슬래시 커맨드 논리 취약점 전수 감사
 
-> 상태: 조사 ✅ (260613, /help 2창 작업 중 파생) / 수리 ⬜ — P1은 1줄 수리, 즉시 승격 권고.
+> 상태: 조사 ✅ (260613, /help 2창 작업 중 파생) / **재감사 v2 ✅ (260613, 플립 `8e17a1ce`
+> 랜딩 후 현행 기준 — 하단 절)** / 수리: **P1 ✅ (260613 — `allowArgs: true` + 회귀 1케이스,
+> model-onboarding-guidance 6 pass · provider 7 pass · tsc 0)** / P2~P9 잔여는 v2 표 참조.
 > 입력: 사용자 "지금 cmd들의 논리적 취약점들이 있을텐데 그것도 _plan에 별도 폴더 만들어서 기록".
 > 방법: `builtin-registry.ts` 정적 스윕(스펙 39건 파싱) + 디스패처 2종(TUI `:1382`·ACP
 > `acp-builtins.ts`) 게이트 추적 + 입력 파이프라인(`input-controller.ts:320-440`) 폴스루 추적.
-> 관련: [99.20.02](../260612_jawcode_fork/phase1/99.20.02_audit_interaction_grammar.md) (인터랙션 문법
-> 불일치 — 본 감사는 그 커맨드-계층 자매편), [99.20.08](../260612_jawcode_fork/phase1/99.20.08_impl_help_command.md) (/help).
+> 관련: [99.20.02](../../_plan/260612_jawcode_fork/phase1/99.20.02_audit_interaction_grammar.md) (인터랙션 문법
+> 불일치 — 본 감사는 그 커맨드-계층 자매편), [99.20.08](../../_plan/260612_jawcode_fork/phase1/99.20.08_impl_help_command.md) (/help).
 
 슬래시 커맨드 계층은 "스펙 선언(레지스트리) → 디스패처 게이트 → 폴스루(LLM 프롬프트)"의
 3단인데, **선언과 집행이 어긋나는 지점마다 입력이 조용히 LLM으로 새는 구조**다. 아래 9건 중
@@ -86,3 +88,35 @@ P1이 실사용 버그, P2가 구조 원인, 나머지는 계약 불일치·표�
 | P5 | 자동완성 별칭 매칭 | 소~중 (tui autocomplete) |
 | P4/P6/P7 | 표면 정비 — 슬라이스 분리 | 중 |
 | P8/P9 | 문서화/기록 | — |
+
+---
+
+## 재감사 (260613 v2 — gjc→jwc 플립 `8e17a1ce` 랜딩 후 현행 기준)
+
+> 방법: 위 9건을 현행 `slash-commands/builtin-registry.ts`·`acp-builtins.ts`·
+> `modes/controllers/input-controller.ts`에 대해 재추적. 파일 경로가 `modes/` →
+> `slash-commands/`로 이동했으나 핵심 라인(:1382 게이트, :1333 provicer, :1319 ACTIVE 필터)은
+> 번호까지 유지.
+
+| # | v1 상태 | v2 판정 | 근거 |
+|---|---|---|---|
+| P1 | 실버그 | 🔴 **여전히 미수리** | `/model` 스펙(`:345` 블록)에 `allowArgs` 부재, 게이트 `:1382` 그대로 — `/model sonnet`은 지금도 채팅으로 폴스루. **v1의 랜딩 보류 사유(fork/resume 병행 작업)는 플립 랜딩으로 소멸 — 즉시 수리 가능** |
+| P2 | 구조 원인 | 🔴 그대로 | `formatUnknownBuiltinSlashCommandDiagnostic` 여전히 "provicer" 1건 특례 (`:1333-1340`), usage 에러/푸터 안내 미구현 |
+| P3 | 모드 비대칭 | 🔴 그대로 | `acp-builtins.ts`에 `allowArgs` 참조 0건 — TUI만 게이트하는 비대칭 유지 |
+| P4 | TUI-전용 17종 | 🔴 **확대 (17→20종)** | handleTui-only: 기존 + redraw·tree·exit. goal/new/drop/resume 세션 수명 갭 그대로 |
+| P5 | ✅ 해소 | ✅ 유지 | `extensibility/slash-commands.ts:135` — 별칭 독립 자동완성 + "alias of /name" 건재 |
+| P6 | 이중 용법 | 🟡 **형태 변화** | `/fast`도 값 enum을 subcommands로 채택(`:502-505`) — fast/effort 간 문법 불일치는 해소됐으나, "값 enum을 subcommands(하위 동작) 계약에 등재"하는 의미 왜곡은 1건→2건으로 확대 |
+| P7 | 3종 혼재 | 🟡 **축소 (3종→2종)** | `/todo` 레지스트리에서 제거 + `case "help"` 패턴 소멸. 잔존: `/ssh` 선언형(`:1016`) vs `/provider` ad-hoc `args === "help"`(`:830`·`:886`) |
+| P8 | 데드 경로 | ⚪ **진술 stale — 항목 재작성 필요** | `doubleEscapeAction`은 데드가 아니라 활성: `input-controller.ts:130`에서 빈 에디터 더블 esc 시 tree(기본)/branch/none 분기, `tree.md` 문서에도 명시. v1의 "esc esc = 즉시 종료 안전망" 전제 자체가 현행과 불일치 |
+| P9 | 기록만 | 🔴 그대로 | `ACTIVE_BUILTIN_SLASH_COMMAND_REGISTRY` 로드 시 `isJawBrand()` 1회 평가 (`:1319-1322`) |
+
+### v2 수리 우선순위 (갱신)
+
+| 순위 | 항목 | 비고 |
+|---|---|---|
+| ~~P1~~ | ~~`/model`에 `allowArgs: true` 1줄 + 회귀 1케이스~~ | ✅ 수리 완료 (260613, 본 감사 마감 커밋과 함께 랜딩) |
+| P2+P3 | 거부 시 usage 에러 + ACP 게이트 동기화 | 같은 디스패처 슬라이스로 묶어 처리 권장 |
+| P6 | `subcommands` 계약 주석(`types.ts`)을 "동작+값 enum 겸용"으로 정정하거나 값 전용 필드 분리 | fast/effort 통일로 코드 쪽 정리는 끝 — 계약 문서만 결정 필요 |
+| P7 | `/provider`의 ad-hoc help 2사이트를 usage 에러로 통일 | /todo 소멸로 잔여 면적 절반 |
+| P8 | 항목 자체를 현행 거동(doubleEscapeAction 활성) 기준으로 재작성 | 수리 아님 — 감사 기록 정정 |
+| P4/P9 | 변동 없음 — v1 판단 유지 | |

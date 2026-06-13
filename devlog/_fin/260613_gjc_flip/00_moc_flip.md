@@ -1,12 +1,14 @@
 # 00 — MOC: gjc→jwc 소스코드 플립
 
-> 상태: 🟡 개설 (260613 밤) — 분석 파견 → 플랜 확정 → 단계 실행 → 검증 (야간 자율 진행).
+> 상태: ✅ 완료 (260613) — F1~F6 전부 랜딩+검증, `8e17a1ce refactor!: flip gjc→jwc across
+> source + composer footer + /help + ralplan farewell`로 커밋 (분할 대신 단일 커밋 채택).
+> 후속 작업(100.01 dist-node 등)이 플립 위에서 진행 중.
 > 입력: 사용자 260613 — "소스코드도 flip하는 플랜을 세우고, 소스코드의 gjc 부분을 jwc로.
 > devlog _plan 아래 새 폴더. sonnet 서브에이전트 병렬 파견해서 논의 → 계획 확정 → flip
 > 차례차례 진행, 전부 구현 + 검증까지 완료." + "전부 플랜을 세우고 진행해야돼".
-> 선행 결정: [99.30.02](../260612_jawcode_fork/phase1/99.30.02_plan_workflow_skill_alignment.md) §7
+> 선행 결정: [99.30.02](../../_plan/260612_jawcode_fork/phase1/99.30.02_plan_workflow_skill_alignment.md) §7
 > **이별** — upstream gjc ralplan 트랙과 결별, chase는 의미론적 팔로우만 (chase 003 원칙 5).
-> ⚠️ 본 플립은 [065.1](../260612_jawcode_fork/phase1/065.1_plan_internal_identifiers.md) "내부 식별자
+> ⚠️ 본 플립은 [065.1](../../_plan/260612_jawcode_fork/phase1/065.1_plan_internal_identifiers.md) "내부 식별자
 > 보존" 결정과 fork-delta **보존 경계(BOUNDARY: gjc-internal-identifiers)를 의도적으로 뒤집는다**
 > — 이별 결정의 소스코드 귀결.
 
@@ -33,4 +35,4 @@
 - [x] 06 실행 로그 마감
 - [x] 후속: phase1/ 재편(149문서+링크 보정) · 100~150 플랜 9건 "260613 플립 기준 재구체화" 마커
   완료 (100·110·120 = Sonnet, 나머지 직접) · fork-delta 보존 경계 반전 기록
-- [ ] 사용자 검수 → 커밋 분할 (권장: F1 디렉터리 / F2 심볼 / F3 계약 / F4 코드값 / F5 인프라 / 문서)
+- [x] 사용자 검수 → 커밋 — 분할 대신 단일 커밋(`8e17a1ce`)으로 랜딩 (devlog는 `586a4379`)
