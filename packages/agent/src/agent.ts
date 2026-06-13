@@ -153,6 +153,8 @@ export interface AgentOptions {
 	 * Use this when abort decisions must happen before buffered events continue flowing.
 	 */
 	onAssistantMessageEvent?: (message: AssistantMessage, event: AssistantMessageEvent) => void;
+	/** Called for non-content tool-choice incapability stream events. */
+	onToolChoiceIncapability?: AgentLoopConfig["onToolChoiceIncapability"];
 
 	/**
 	 * Called when GPT-5 Harmony protocol leakage is detected and mitigated.
@@ -311,6 +313,7 @@ export class Agent {
 	#onResponse?: SimpleStreamOptions["onResponse"];
 	#onSseEvent?: SimpleStreamOptions["onSseEvent"];
 	#onAssistantMessageEvent?: (message: AssistantMessage, event: AssistantMessageEvent) => void;
+	#onToolChoiceIncapability?: AgentLoopConfig["onToolChoiceIncapability"];
 	#onHarmonyLeak?: (event: HarmonyAuditEvent) => void | Promise<void>;
 	#onBeforeYield?: () => Promise<void> | void;
 	#shouldPause?: AgentLoopConfig["shouldPause"];
@@ -375,6 +378,7 @@ export class Agent {
 		this.#intentTracing = opts.intentTracing === true;
 		this.#getToolChoice = opts.getToolChoice;
 		this.#onAssistantMessageEvent = opts.onAssistantMessageEvent;
+		this.#onToolChoiceIncapability = opts.onToolChoiceIncapability;
 		this.#onHarmonyLeak = opts.onHarmonyLeak;
 		this.#shouldPause = opts.shouldPause;
 		this.beforeToolCall = opts.beforeToolCall;
@@ -1270,6 +1274,12 @@ export class Agent {
 				? (message, event) => {
 						if (this.#activeRunId !== runId) return;
 						this.#onAssistantMessageEvent?.(message, event);
+					}
+				: undefined,
+			onToolChoiceIncapability: this.#onToolChoiceIncapability
+				? event => {
+						if (this.#activeRunId !== runId) return;
+						this.#onToolChoiceIncapability?.(event);
 					}
 				: undefined,
 			onHarmonyLeak: this.#onHarmonyLeak,

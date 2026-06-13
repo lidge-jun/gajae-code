@@ -1,6 +1,23 @@
 import { enrichModelThinking } from "./model-thinking";
 import MODELS from "./models.json" with { type: "json" };
 import type { Api, KnownProvider, Model, Usage } from "./types";
+import { isClaudeForcedToolChoiceIncapableModelId } from "./utils/tool-choice-capability";
+
+/**
+ * Bundled-catalog compat defaults applied at load time so stale committed
+ * models.json snapshots still receive policy-critical fields (e.g. Claude
+ * Fable/Mythos rejecting forced tool use) without a full regeneration.
+ */
+function applyBundledCompatDefaults(model: Model<Api>): Model<Api> {
+	if (
+		(model.api === "anthropic-messages" || model.api === "bedrock-converse-stream") &&
+		isClaudeForcedToolChoiceIncapableModelId(model.id) &&
+		(model.compat as { toolChoiceSupport?: string } | undefined)?.toolChoiceSupport === undefined
+	) {
+		return { ...model, compat: { ...(model.compat ?? {}), toolChoiceSupport: "auto" } as Model<Api>["compat"] };
+	}
+	return model;
+}
 
 /**
  * Static bundled model registry loaded from `models.json`.
@@ -14,7 +31,7 @@ const modelRegistry: Map<string, Map<string, Model<Api>>> = new Map();
 for (const [provider, models] of Object.entries(MODELS)) {
 	const providerModels = new Map<string, Model<Api>>();
 	for (const [id, model] of Object.entries(models)) {
-		providerModels.set(id, enrichModelThinking(model as Model<Api>));
+		providerModels.set(id, applyBundledCompatDefaults(enrichModelThinking(model as Model<Api>)));
 	}
 	modelRegistry.set(provider, providerModels);
 }
