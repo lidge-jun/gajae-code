@@ -96,6 +96,8 @@
 | full-tier 오버라이드 | `CU_TIER_OVERRIDE=full`이면 `isFullTierOverride()`가 모든 카테고리(미디어 포함)를 full로. jwc는 `mcp.json`의 `env`로 켬(개인 사용). 기본값은 안전 tier 유지 → cli-jaw 멀티-프로바이더는 safe-by-construction. 시스템 키콤보(⌘Q 등)는 별개로 차단. | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/safety/tiers.ts:25`, `…/src/safety/tiers.ts:36` |
 | 단일 세션 락 | 머신당 1세션 락 `~/.claude/computer-use.lock`. | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/safety/lock.ts` |
 | Anthropic 표면 추종 | cu-mcp는 **Claude Code 내장 computer-use(`computer_20250124`)의 도구 표면을 정본**으로 따른다. 도구명·파라미터 타입·description을 Anthropic 표면에 맞추고, cu-mcp 전용 확장(inspect/ax_press/teach)은 상위 호환으로 추가. 주요 맞춤: `switch_display` 모니터 **이름**(string) 기반 / `screenshot`·`zoom`에 `save_to_disk` 파라미터(`/tmp/cu-mcp-screenshots/`) / `coordinate` description Anthropic 원문 / screenshot 응답에 멀티모니터 이름 안내 / auto 모드에서 frontmost 앱 디스플레이 자동 감지. | Claude Code `/mcp` 도구 스키마 대조 기준 |
+| 통합 도구 모드 | `CU_MCP_MODE=consolidated`이면 29개 도구 대신 **1개 `computer_use` 도구(action discriminator)** 등록. hermes 패턴. 토큰 33K→~3K (91% 절감). `text`/`keys`/`modifiers` 분리, batch non-recursive 스키마, drag finally 가드. `--consolidated` 플래그로도 활성화. 기본값은 29도구 레거시 모드 유지. | `~/developer/codex/23_computer_use/src/cu-mcp-server/src/tools/consolidated.ts`, `…/src/index.ts:41` |
+| cua-driver (Phase 2) | trycua/cua 프로젝트의 **오픈 Sky 재구현**. SkyLight SPI 기반 백그라운드 윈도우 제어, element_index 클릭, parent attestation 없음. `~/.local/bin/cua-driver mcp`(MCP stdio, 36도구). jwc에 **두 번째 MCP 서버**로 등록(`~/.jwc/agent/mcp.json`). cu-mcp(포그라운드/좌표)와 cua-driver(백그라운드/AX) 양립. | `~/.local/bin/cua-driver`, `~/.jwc/agent/mcp.json`, hermes 참조 `~/Developer/codex/hermes-agent/tools/computer_use/cua_backend.py` |
 
 ## D5와 현재 gap
 
