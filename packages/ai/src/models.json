@@ -2807,7 +2807,8 @@
 				"cacheWrite": 3.75
 			},
 			"contextWindow": 200000,
-			"maxTokens": 8192
+			"maxTokens": 8192,
+			"unlisted": true
 		},
 		"claude-3-5-sonnet-20241022": {
 			"id": "claude-3-5-sonnet-20241022",
@@ -2827,7 +2828,8 @@
 				"cacheWrite": 3.75
 			},
 			"contextWindow": 200000,
-			"maxTokens": 8192
+			"maxTokens": 8192,
+			"unlisted": true
 		},
 		"claude-3-haiku-20240307": {
 			"id": "claude-3-haiku-20240307",
@@ -2847,7 +2849,33 @@
 				"cacheWrite": 0.3
 			},
 			"contextWindow": 200000,
-			"maxTokens": 4096
+			"maxTokens": 4096,
+			"unlisted": true
+		},
+		"claude-fable-5": {
+			"id": "claude-fable-5",
+			"name": "Anthropic Fable 5",
+			"api": "anthropic-messages",
+			"provider": "anthropic",
+			"baseUrl": "https://api.anthropic.com",
+			"reasoning": true,
+			"input": [
+				"text",
+				"image"
+			],
+			"cost": {
+				"input": 10,
+				"output": 50,
+				"cacheRead": 1,
+				"cacheWrite": 12.5
+			},
+			"contextWindow": 1000000,
+			"maxTokens": 128000,
+			"thinking": {
+				"mode": "anthropic-adaptive",
+				"minLevel": "minimal",
+				"maxLevel": "xhigh"
+			}
 		},
 		"claude-haiku-4-5": {
 			"id": "claude-haiku-4-5",
@@ -2897,7 +2925,8 @@
 				"mode": "budget",
 				"minLevel": "minimal",
 				"maxLevel": "xhigh"
-			}
+			},
+			"unlisted": true
 		},
 		"claude-opus-4-0": {
 			"id": "claude-opus-4-0",
@@ -2922,7 +2951,8 @@
 				"mode": "budget",
 				"minLevel": "minimal",
 				"maxLevel": "xhigh"
-			}
+			},
+			"unlisted": true
 		},
 		"claude-opus-4-1": {
 			"id": "claude-opus-4-1",
@@ -2947,7 +2977,8 @@
 				"mode": "budget",
 				"minLevel": "minimal",
 				"maxLevel": "xhigh"
-			}
+			},
+			"unlisted": true
 		},
 		"claude-opus-4-1-20250805": {
 			"id": "claude-opus-4-1-20250805",
@@ -2972,7 +3003,8 @@
 				"mode": "budget",
 				"minLevel": "minimal",
 				"maxLevel": "xhigh"
-			}
+			},
+			"unlisted": true
 		},
 		"claude-opus-4-20250514": {
 			"id": "claude-opus-4-20250514",
@@ -2997,7 +3029,8 @@
 				"mode": "budget",
 				"minLevel": "minimal",
 				"maxLevel": "xhigh"
-			}
+			},
+			"unlisted": true
 		},
 		"claude-opus-4-5": {
 			"id": "claude-opus-4-5",
@@ -3022,7 +3055,8 @@
 				"mode": "anthropic-budget-effort",
 				"minLevel": "minimal",
 				"maxLevel": "xhigh"
-			}
+			},
+			"unlisted": true
 		},
 		"claude-opus-4-5-20251101": {
 			"id": "claude-opus-4-5-20251101",
@@ -3047,7 +3081,8 @@
 				"mode": "anthropic-budget-effort",
 				"minLevel": "minimal",
 				"maxLevel": "xhigh"
-			}
+			},
+			"unlisted": true
 		},
 		"claude-opus-4-6": {
 			"id": "claude-opus-4-6",
@@ -3147,7 +3182,8 @@
 				"mode": "budget",
 				"minLevel": "minimal",
 				"maxLevel": "xhigh"
-			}
+			},
+			"unlisted": true
 		},
 		"claude-sonnet-4-20250514": {
 			"id": "claude-sonnet-4-20250514",
@@ -3172,7 +3208,8 @@
 				"mode": "budget",
 				"minLevel": "minimal",
 				"maxLevel": "xhigh"
-			}
+			},
+			"unlisted": true
 		},
 		"claude-sonnet-4-5": {
 			"id": "claude-sonnet-4-5",
@@ -3197,7 +3234,8 @@
 				"mode": "anthropic-budget-effort",
 				"minLevel": "minimal",
 				"maxLevel": "xhigh"
-			}
+			},
+			"unlisted": true
 		},
 		"claude-sonnet-4-5-20250929": {
 			"id": "claude-sonnet-4-5-20250929",
@@ -3222,7 +3260,8 @@
 				"mode": "anthropic-budget-effort",
 				"minLevel": "minimal",
 				"maxLevel": "xhigh"
-			}
+			},
+			"unlisted": true
 		},
 		"claude-sonnet-4-6": {
 			"id": "claude-sonnet-4-6",
