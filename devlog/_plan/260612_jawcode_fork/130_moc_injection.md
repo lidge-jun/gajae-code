@@ -74,6 +74,14 @@
 - D130-1 튜닝 항목 ①~④의 확정 시점 (130 착수 시 프로토타입으로 결정)
 - ~~search skill 보강 범위~~ → **130.2 §6 감사 결과 참조**: 커버리지 갭 9건 식별 (높음 3 / 중 4 / 낮 2). progrok/M1-M5/agbrowse research plan은 의도적 미포팅
 
+## 선행 완료 (109 밴드)
+
+| 문서 | 내용 | 130 영향 |
+|---|---|---|
+| [109.1](./109.1_receipt_tool_guidance_porting.md) | browse/search/web-ai 포팅 | Slice A 전제 충족 (A1 축소 가능) |
+| [109.2](./109.2_receipt_integration_audit.md) | 병렬 감사 + DAG | A1 분석 완료, post-A1 override 권장 |
+| [109.3](./109.3_receipt_sdk_export.md) | sdk PABCD export | Slice C 즉시 착수 가능 |
+
 ## 세부 실행 문서 (260613 구체화)
 
-- [130.2_plan_injection_compose.md](./130.2_plan_injection_compose.md) — 4스코프 합성 (3개 기구현 확인), M2 done 게이트, consolidation 비활성 분기 (098 130.1~130.3 매핑)
+- [130.2_plan_injection_compose.md](./130.2_plan_injection_compose.md) — 4스코프 합성 (3개 기구현 확인), M2 done 게이트, consolidation 비활성 분기 (098 130.1~130.3 매핑). §6 병렬 감사 결과 포함.

@@ -130,6 +130,16 @@ spawnAgent 어댑터 삽입 지점:
 2. **도구 실행 샌드박스/권한 게이트**: jwc `AgentSession`의 bash 허용 범위를 cli-jaw `permissions` 설정과 어떻게 합칠지 (gwc tools 권한 모델 실사 필요)
 3. **멀티 인스턴스 `.cli-jaw-34xx` 격리**: 인스턴스별 서버 프로세스 = 인스턴스별 JawRuntime — 자연 격리 방침 유효성 검토
 
+## 선행 완료 (109 밴드)
+
+| 문서 | 내용 | 상태 |
+|---|---|---|
+| [109.1_receipt_tool_guidance_porting.md](./109.1_receipt_tool_guidance_porting.md) | browse/search/web-ai 네이티브 포팅 | ✅ |
+| [109.2_receipt_integration_audit.md](./109.2_receipt_integration_audit.md) | 병렬 감사 (블로커 검증 + 갭 + DAG) | ✅ |
+| [109.3_receipt_sdk_export.md](./109.3_receipt_sdk_export.md) | sdk.ts PABCD state export (Slice C 언블록) | ✅ |
+
+> 109 밴드가 110 이후 구현의 전제. tool guidance는 jwc 네이티브 완료, sdk 표면 확장 완료, 감사로 리스크 사전 식별 완료.
+
 ## 세부 실행 문서 (260613 구체화 — 소넷 병렬 실사 기반)
 
 | 문서 | 내용 |
