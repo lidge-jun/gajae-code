@@ -41,6 +41,7 @@ import {
 	calculatePromptTokens,
 	collectEntriesForBranchSummary,
 	compact,
+	estimateMessageTokensHeuristic,
 	estimateTokens,
 	generateBranchSummary,
 	generateHandoff,
@@ -854,6 +855,8 @@ export type BeforeAgentStartContributor = (event: {
 	sessionId: string | undefined;
 }) => Promise<BeforeAgentStartInternalMessage | undefined>;
 
+type ProviderReplaySourceCacheEntry = { source: string; hash: bigint };
+
 export class AgentSession {
 	readonly agent: Agent;
 	readonly sessionManager: SessionManager;
@@ -1424,7 +1427,7 @@ export class AgentSession {
 				recordSkip("unsupported-role");
 				return undefined;
 			}
-			const cloned = structuredClone(message) as Message;
+			const cloned = cloneJsonValueForForkSeed(message) as Message;
 			if ("providerPayload" in cloned) {
 				delete (cloned as { providerPayload?: unknown }).providerPayload;
 			}
@@ -1471,7 +1474,7 @@ export class AgentSession {
 		}
 		return {
 			messages,
-			agentMessages: messages.map(message => structuredClone(message) as AgentMessage),
+			agentMessages: messages.map(message => cloneJsonValueForForkSeed(message) as AgentMessage),
 			metadata: {
 				sourceSessionId: this.sessionId,
 				parentMessageCount: providerMessages.length,
@@ -1730,6 +1733,10 @@ export class AgentSession {
 	}
 
 	#codexRateLimitNoticed = false;
+
+	#activeModelProfile: string | undefined;
+	#prePromptContextCheckPromise: Promise<void> | undefined;
+	#providerReplaySourceCache = new WeakMap<AgentMessage, ProviderReplaySourceCacheEntry>();
 
 	#queuedExtensionEvents: Promise<void> = Promise.resolve();
 
@@ -3347,6 +3354,14 @@ export class AgentSession {
 	/** Current model (may be undefined if not yet selected) */
 	get model(): Model | undefined {
 		return this.agent.state.model;
+	}
+
+	setActiveModelProfile(profile: string | undefined): void {
+		this.#activeModelProfile = profile;
+	}
+
+	getActiveModelProfile(): string | undefined {
+		return this.#activeModelProfile;
 	}
 
 	/** Current thinking level */
@@ -5384,7 +5399,9 @@ export class AgentSession {
 				}
 				await this.#syncSkillPromptActiveStateSafely(appMessage, true);
 				try {
-					await this.agent.prompt(appMessage);
+					await this.#promptWithMessage(appMessage, typeof message.content === "string" ? message.content : "", {
+						skipPostPromptRecoveryWait: true,
+					});
 				} finally {
 					await this.#syncSkillPromptActiveStateSafely(appMessage, false);
 				}
@@ -5408,7 +5425,9 @@ export class AgentSession {
 			}
 			await this.#syncSkillPromptActiveStateSafely(appMessage, true);
 			try {
-				await this.agent.prompt(appMessage);
+				await this.#promptWithMessage(appMessage, typeof message.content === "string" ? message.content : "", {
+					skipPostPromptRecoveryWait: true,
+				});
 			} finally {
 				await this.#syncSkillPromptActiveStateSafely(appMessage, false);
 			}
@@ -6721,7 +6740,21 @@ export class AgentSession {
 		}
 	}
 
-	async #checkEstimatedContextBeforePrompt(): Promise<void> {
+	async #checkEstimatedContextBeforePrompt(pendingMessages?: AgentMessage[]): Promise<void> {
+		if (this.#prePromptContextCheckPromise) {
+			await this.#prePromptContextCheckPromise;
+			return;
+		}
+		const promise = this.#checkEstimatedContextBeforePromptOnce(pendingMessages);
+		this.#prePromptContextCheckPromise = promise;
+		try {
+			await promise;
+		} finally {
+			this.#prePromptContextCheckPromise = undefined;
+		}
+	}
+
+	async #checkEstimatedContextBeforePromptOnce(pendingMessages?: AgentMessage[]): Promise<void> {
 		const compactionSettings = this.settings.getGroup("compaction");
 		if (!compactionSettings.enabled || compactionSettings.strategy === "off") return;
 
@@ -6731,7 +6764,7 @@ export class AgentSession {
 		const maxOutputTokens = model.maxTokens ?? 0;
 		if (contextWindow <= 0) return;
 
-		let contextTokens = this.#estimateContextTokens().tokens;
+		const contextTokens = this.#estimateContextTokensForCompaction(pendingMessages).tokens;
 		if (!shouldCompact(contextTokens, contextWindow, compactionSettings, maxOutputTokens)) return;
 
 		logger.info("Pre-prompt context maintenance triggered", {
@@ -7269,11 +7302,32 @@ export class AgentSession {
 		}
 	}
 
+	#getProviderReplaySource(messages: AgentMessage[]): string {
+		return JSON.stringify(messages.map(message => this.#normalizeSessionMessageForProviderReplay(message)));
+	}
+
+	#hashProviderReplaySource(messages: AgentMessage[]): { source: string; hash: bigint } {
+		const parts: string[] = [];
+		for (const msg of messages) {
+			const cached = this.#providerReplaySourceCache.get(msg);
+			if (cached) {
+				parts.push(cached.source);
+				continue;
+			}
+			const source = JSON.stringify(this.#normalizeSessionMessageForProviderReplay(msg));
+			const hash = Bun.hash.xxHash64(source);
+			this.#providerReplaySourceCache.set(msg, { source, hash });
+			parts.push(source);
+		}
+		const source = `[${parts.join(",")}]`;
+		return { source, hash: Bun.hash.xxHash64(source) };
+	}
+
 	#didSessionMessagesChange(previousMessages: AgentMessage[], nextMessages: AgentMessage[]): boolean {
-		return (
-			JSON.stringify(previousMessages.map(message => this.#normalizeSessionMessageForProviderReplay(message))) !==
-			JSON.stringify(nextMessages.map(message => this.#normalizeSessionMessageForProviderReplay(message)))
-		);
+		const prev = this.#hashProviderReplaySource(previousMessages);
+		const next = this.#hashProviderReplaySource(nextMessages);
+		if (prev.hash !== next.hash) return true;
+		return prev.source !== next.source;
 	}
 
 	#getModelKey(model: Model): string {
@@ -9745,15 +9799,28 @@ export class AgentSession {
 	}
 
 	/**
-	 * Estimate context tokens from messages, using the last assistant usage when available.
+	 * Estimate context tokens for display/status (cheap heuristic, no native tokenizer).
 	 */
-	#estimateContextTokens(): {
-		tokens: number;
-	} {
-		const messages = this.messages;
-		const estimated = this.#estimateMessagesTokens();
+	#estimateContextTokens(): { tokens: number } {
+		return this.#estimateContextTokensWith(msg => this.#estimateMessageDisplayTokens(msg));
+	}
 
-		// Find last assistant message with usage
+	/**
+	 * Estimate context tokens for compaction decisions (native tokenizer, accurate).
+	 */
+	#estimateContextTokensForCompaction(pendingMessages?: AgentMessage[]): { tokens: number } {
+		return this.#estimateContextTokensWith(msg => this.#estimateMessageNativeContextTokens(msg), pendingMessages);
+	}
+
+	#estimateContextTokensWith(
+		estimateFn: (msg: AgentMessage) => number,
+		pendingMessages?: AgentMessage[],
+	): { tokens: number } {
+		const messages = this.messages;
+		const allMessages = pendingMessages ? [...messages, ...pendingMessages] : messages;
+
+		const estimated = allMessages.reduce((sum, msg) => sum + estimateFn(msg), 0);
+
 		let lastUsageIndex: number | null = null;
 		let lastUsage: Usage | undefined;
 		for (let i = messages.length - 1; i >= 0; i--) {
@@ -9769,23 +9836,24 @@ export class AgentSession {
 		}
 
 		if (!lastUsage || lastUsageIndex === null) {
-			// No usage data - estimate all messages
-			return {
-				tokens: estimated,
-			};
+			return { tokens: estimated };
 		}
 
 		const usageTokens = calculatePromptTokens(lastUsage);
 		let trailingTokens = 0;
-		for (let i = lastUsageIndex + 1; i < messages.length; i++) {
-			trailingTokens += estimateTokens(messages[i]);
+		for (let i = lastUsageIndex + 1; i < allMessages.length; i++) {
+			trailingTokens += estimateFn(allMessages[i]);
 		}
 
-		// Providers that under-report usage (e.g. cursor's input: 0) would make the
-		// usage-based number near zero; never report less than the content estimate.
-		return {
-			tokens: Math.max(usageTokens + trailingTokens, estimated),
-		};
+		return { tokens: Math.max(usageTokens + trailingTokens, estimated) };
+	}
+
+	#estimateMessageDisplayTokens(msg: AgentMessage): number {
+		return estimateMessageTokensHeuristic(msg as any);
+	}
+
+	#estimateMessageNativeContextTokens(msg: AgentMessage): number {
+		return estimateTokens(msg);
 	}
 
 	/**
@@ -10012,4 +10080,8 @@ export class AgentSession {
 	get extensionRunner(): ExtensionRunner | undefined {
 		return this.#extensionRunner;
 	}
+}
+
+function cloneJsonValueForForkSeed<T>(value: T): T {
+	return JSON.parse(JSON.stringify(value)) as T;
 }
