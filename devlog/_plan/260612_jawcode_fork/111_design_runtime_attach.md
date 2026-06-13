@@ -131,7 +131,26 @@ JawRuntime
 | **D5** | M1 99.02 orchestrate 표면 추가: 시스템 프롬프트에 `jwc orchestrate`가 자가 전이 명령으로 등재될 예정 — M2 임베딩 시 cli-jaw 서버 프로세스 내에서 `jwc orchestrate` shell 호출이 발생 가능 | §5 PABCD 항 미언급 — **신규 위험**: M2 임베디드 환경에서 `jwc orchestrate` shell 호출이 jwc CLI 바이너리를 별도 spawn할 수 있음 (상주 런타임과 충돌). 자가 전이 경로를 in-process API로 단락(short-circuit)해야 함 | **복잡화** — 130 밴드 오픈 아이템 |
 | **D6** | 99-밴드 구조체 추가: `modes/acp/`, `modes/bridge/`, `harness-control-plane/` 전부 실재 확인. 110 MOC "구 02/03 승계" 시임 분석 기반 — 당시 브리지/ACP 모드 존재 미확인이었을 수 있음 | §2 JawRuntime — in-process SDK 권고는 여전히 유효하지만, ACP/bridge 경로가 구조적으로 존재한다는 사실이 **롤백 스위치** 옵션을 강화함 (150 밴드 점진 승격 시 bridge 모드로 1릴리스 유지 가능) | **완화 옵션 추가** |
 
-### (e) 사용자 확인이 필요한 열린 질문
+### (e) 사용자 확인이 필요한 열린 질문 — **전부 결정 (260613)**
+
+> **핵심 결정: 두 모드 분리.** **Code 모드**(112.3 ACP)는 세션별 격리 — `~/.cli-jaw/jwc-agent`
+> 격리 config 유지. **jaw 모드**(110 상주 통합)는 호스트(cli-jaw)가 상태를 소유하므로, jwc를
+> **host-aware("hosted/jaw 모드")** 로 수정해 자기 상태를 호스트에 양보한다. 아래 1·2·5·신규
+> 항목은 이 단일 "jwc hosted 모드 플래그"로 묶어 구현(130 주입 3종 + 110 agentDir).
+>
+> | # | 질문 | 결정 | 구현 소속 |
+> |---|---|---|---|
+> | **0 (신규)** | jaw 모드 agentDir (e2e 발견: `~/.cli-jaw/jwc-agent` 빈 폴더라 인증 실패) | **A — `~/.jwc/agent` 재사용**. 기존 로그인/스킬/메모리 승계. Code 모드만 격리 유지 | 110 (jwc-runtime `jwcAgentDir()` 기본값) |
+> | **1** | PABCD 정본 충돌 | **A — cli-jaw `orc_state` DB 단일 정본**. jaw 모드일 때 jwc의 `.jwc/state/pabcd-state.json` 정본 경로 **단락**(호스트 DB에 양보) | 130 (+ jwc orchestrate-state 수정) |
+> | **2** | orchestrate 자가 전이 단락 | **A — orchestrate 전용 in-process 도구 등록**(shell `jwc orchestrate` 우회, 명시적) | 130 (+ 110 도구 등록) |
+> | **5** | discoverSkills 스텁 | **A — `sdk.ts`에서 `loadSkills` 재수출**(단일 import 경계 유지, 100.12 계약 일관) | 130 (+ jwc sdk 표면) |
+> | 3 | gateway busy 게이트 | ✅ 이미 해결 — `spawn.ts:319` or-체인 합류, 110 e2e에서 busy 정착 확인 | (완료) |
+> | 4 | `Bun.sleep` 잔존 | ✅ 이미 해결 — 100 셰임 적용 완료 | (완료) |
+>
+> ⚠️ **구현 주의**: 0·1·2·5 타깃 파일(`cli-jaw/jwc-runtime.ts`, jwc `sdk.ts`·`orchestrate-state.ts`)이
+> 모두 concurrent 세션 미커밋 작업과 겹침 — 착수 전 조율 필요.
+
+원문(아카이브):
 
 1. **PABCD 정본 충돌**: cli-jaw는 `jaw.db orc_state`(DB), jwc는 `.jwc/state/pabcd-state.json`(파일). M2 임베딩 후 어느 쪽이 정본? 130 밴드에서 단방향 동기화(cli-jaw DB → jwc 파일 쓰기?) 또는 단일 정본 결정이 필요.
 
