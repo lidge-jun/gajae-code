@@ -272,14 +272,48 @@ const IMAGE_TOKEN_ESTIMATE = 1200;
  * tokenizer. This is not Anthropic's first-party tokenizer (Anthropic doesn't
  * publish one) but is within ~5–10% across English/code text.
  */
-export function estimateTokens(message: AgentMessage): number {
+function countCollectedMessageFragments(collected: { fragments: string[]; extra: number }): number {
+	return countTokens(collected.fragments) + collected.extra;
+}
+
+/**
+ * Estimate token count for a message using the native o200k tokenizer.
+ * Exact for o200k only; an approximation for Anthropic/other model families.
+ */
+export function countMessageTokensNativeO200k(message: AgentMessage): number {
+	return countCollectedMessageFragments(collectMessageFragments(message));
+}
+
+export const estimateTokens = countMessageTokensNativeO200k;
+
+const HEURISTIC_BYTES_PER_TOKEN = 4;
+
+export function estimateMessageTokensHeuristic(message: AgentMessage): number {
+	const { fragments, extra } = collectMessageFragments(message);
+	let bytes = 0;
+	for (const fragment of fragments) {
+		bytes += fragment.length;
+	}
+	return extra + Math.ceil(bytes / HEURISTIC_BYTES_PER_TOKEN);
+}
+
+export function estimateTextTokensHeuristic(fragments: string | readonly string[]): number {
+	if (typeof fragments === "string") return Math.ceil(fragments.length / HEURISTIC_BYTES_PER_TOKEN);
+	let bytes = 0;
+	for (const fragment of fragments) {
+		bytes += fragment.length;
+	}
+	return Math.ceil(bytes / HEURISTIC_BYTES_PER_TOKEN);
+}
+
+function collectMessageFragments(message: AgentMessage): { fragments: string[]; extra: number } {
 	const fragments: string[] = [];
 	let extra = 0;
 	if ((message as { role?: string }).role === "bashExecution") {
 		const bash = message as { command?: unknown; output?: unknown };
 		if (typeof bash.command === "string") fragments.push(bash.command);
 		if (typeof bash.output === "string") fragments.push(bash.output);
-		return fragments.length === 0 ? 0 : countTokens(fragments);
+		return { fragments, extra };
 	}
 
 	switch (message.role) {
@@ -331,20 +365,45 @@ export function estimateTokens(message: AgentMessage): number {
 			break;
 		}
 		default:
-			return 0;
+			return { fragments: [], extra: 0 };
 	}
 
-	if (fragments.length === 0) return extra;
-	return extra + countTokens(fragments);
+	return { fragments, extra };
 }
 
-function estimateEntriesTokens(entries: SessionEntry[], startIndex: number, endIndex: number): number {
+function entryTokenFingerprint(
+	entry: SessionEntry,
+	message: AgentMessage,
+	collected: { fragments: string[]; extra: number },
+): string {
+	const maybePruned = message as { prunedAt?: unknown };
+	let fingerprint = `${entry.type.length}:${entry.type}${(entry.id ?? "").length}:${entry.id ?? ""}${message.role.length}:${message.role}${String(collected.extra).length}:${String(collected.extra)}${collected.fragments.length}:`;
+	for (const fragment of collected.fragments) fingerprint += `${fragment.length}:${fragment}`;
+	if (maybePruned.prunedAt !== undefined) {
+		const prunedAt = String(maybePruned.prunedAt);
+		fingerprint += `prunedAt${prunedAt.length}:${prunedAt}`;
+	}
+	return fingerprint;
+}
+
+const entryTokenCache = new WeakMap<SessionEntry, { fingerprint: string; tokens: number }>();
+
+export function estimateEntryTokens(entry: SessionEntry): number {
+	const msg = getMessageFromEntry(entry);
+	if (!msg) return 0;
+	const collected = collectMessageFragments(msg);
+	const fingerprint = entryTokenFingerprint(entry, msg, collected);
+	const cached = entryTokenCache.get(entry);
+	if (cached?.fingerprint === fingerprint) return cached.tokens;
+	const tokens = countCollectedMessageFragments(collected);
+	entryTokenCache.set(entry, { fingerprint, tokens });
+	return tokens;
+}
+
+export function estimateEntriesTokens(entries: SessionEntry[], startIndex: number, endIndex: number): number {
 	let total = 0;
 	for (let i = startIndex; i < endIndex; i++) {
-		const msg = getMessageFromEntry(entries[i]);
-		if (msg) {
-			total += estimateTokens(msg);
-		}
+		total += estimateEntryTokens(entries[i]);
 	}
 	return total;
 }
@@ -461,7 +520,7 @@ export function findCutPoint(
 		if (entry.type !== "message") continue;
 
 		// Estimate this message's size
-		const messageTokens = estimateTokens(entry.message);
+		const messageTokens = estimateEntryTokens(entry);
 		accumulatedTokens += messageTokens;
 
 		// Check if we've exceeded the budget
