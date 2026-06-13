@@ -95,3 +95,26 @@ anthropic→anthropic · google/google-gemini-cli/google-antigravity/gemini→ge
 moonshot/kimi-code/kimi→kimi · zai→zai · perplexity→perplexity · synthetic→synthetic.
 **keyed 단독 프로바이더(brave/jina/exa/tavily/kagi/parallel)는 auto에서 절대 자동 선택되지
 않음** — 명시 선택 전용 (`provider.ts:195-211` 주석 계약과 일치).
+
+---
+
+## xAI Grok 추가 (260613 — cli-jaw 260530 포팅)
+
+`700_projects/cli-jaw` devlog `_fin/260530_grok_xsearch_integration`의 검증된 설계를
+jawcode 검색 레이어로 이식. xAI Responses API(`https://api.x.ai/v1/responses`)의
+`x_search` 도구를 호출하고, 응답의 답변 텍스트 + `url_citation` 주석을 표준
+`SearchSource[]`로 가상화한다.
+
+| 항목 | 값 |
+|---|---|
+| provider id | `xai` (label "xAI Grok") |
+| 가용성 | `hasOAuth("xai") \|\| hasAuth("xai") \|\| XAI_API_KEY` — 모델 레이어 xai OAuth 키와 동일 |
+| auto 매핑 | 활성 모델 `xai`/`grok` → `xai` 검색 |
+| /searchengine 별칭 | `grok`, `x` → `xai` |
+| 모델 | 기본 `grok-4-fast` (비추론, 저레이턴시 — cli-jaw 32 라우터 결정) |
+| degraded 감지 | (연기) cli-jaw는 X 라이브 인덱스 결과 없을 때 `degraded:true` 감지 — jawcode 포팅은 1차에서 미반영 |
+
+검증: 단위 8케이스(게이팅 OAuth/key/none, 응답 가상화 dedup, x_search 요청 형태, 무자격 401) +
+실 authStorage 스모크(provider 등록·게이팅·auto 매핑·grok 별칭·미활성 경고). **미완료: 실제
+api.x.ai 라이브 x_search 왕복** — xAI OAuth(`grok login`) 보유 환경에서 cli-jaw `smoke_test.mjs`
+형태의 실호출 검증 필요. 이 라이브 스모크 전까지 본 폴더는 `_plan` 유지.
