@@ -230,9 +230,14 @@ export class ToolExecutionComponent extends Container {
 		// their partialJson no longer changes, so skip the clone/diff/re-render.
 		// The key count guards the end-of-stream transition where providers swap
 		// in fully-parsed arguments without touching partialJson.
+		//
+		// Only short-circuit WHILE args are still streaming. Once args are
+		// complete the provider may replace the partialJson-derived object with
+		// fully-parsed `arguments` whose partialJson+keyCount are unchanged but
+		// whose values differ — skipping that leaves the final diff preview stale.
 		const isPlainObject = args !== null && typeof args === "object" && !Array.isArray(args);
 		const partialJson = isPlainObject ? (args as { __partialJson?: string }).__partialJson : undefined;
-		if (partialJson !== undefined) {
+		if (partialJson !== undefined && !this.#argsComplete) {
 			const keyCount = Object.keys(args).length;
 			if (partialJson === this.#lastUpdateArgsPartialJson && keyCount === this.#lastUpdateArgsKeyCount) {
 				return;

@@ -127,6 +127,10 @@ const CODEX_PROGRESS_EVENT_TYPES = new Set([
 	"response.done",
 	"response.incomplete",
 	"response.failed",
+	// Mid-stream telemetry push — proves the wire is alive, so it must reset the
+	// idle watchdog (otherwise a quiet reasoning gap that only emits rate-limit
+	// pushes is wrongly aborted at the 300s floor).
+	"codex.rate_limits",
 	"error",
 ]);
 
@@ -529,7 +533,8 @@ function createRequestSetup(options: OpenAICodexResponsesOptions | undefined): C
 		source: AsyncGenerator<Record<string, unknown>>,
 	): AsyncGenerator<Record<string, unknown>> =>
 		iterateWithIdleTimeout(source, {
-			idleTimeoutMs: options?.streamIdleTimeoutMs ?? getOpenAIStreamIdleTimeoutMs(CODEX_STREAM_IDLE_TIMEOUT_FALLBACK_MS),
+			idleTimeoutMs:
+				options?.streamIdleTimeoutMs ?? getOpenAIStreamIdleTimeoutMs(CODEX_STREAM_IDLE_TIMEOUT_FALLBACK_MS),
 			errorMessage: "OpenAI Codex SSE stream stalled while waiting for the next event",
 			onIdle: () => requestAbortController.abort(),
 			abortSignal: options?.signal,

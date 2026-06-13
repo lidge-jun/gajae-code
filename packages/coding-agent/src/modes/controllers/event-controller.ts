@@ -557,7 +557,18 @@ export class EventController {
 			}
 
 			if (this.ctx.streamingMessage.stopReason !== "aborted" && this.ctx.streamingMessage.stopReason !== "error") {
+				// Push final fully-parsed args before marking complete. During
+				// streaming, updateArgs dedups on partialJson+keyCount; the final
+				// parsed `arguments` can share that fingerprint yet differ in value,
+				// so feed it explicitly (no __partialJson → bypasses the dedup) to
+				// guarantee the pre-execution diff preview uses complete args.
+				const finalToolArgs = new Map<string, unknown>();
+				for (const content of this.ctx.streamingMessage.content) {
+					if (content.type === "toolCall" && content.id) finalToolArgs.set(content.id, content.arguments);
+				}
 				for (const [toolCallId, component] of this.ctx.pendingTools.entries()) {
+					const finalArgs = finalToolArgs.get(toolCallId);
+					if (finalArgs !== undefined) component.updateArgs(finalArgs, toolCallId);
 					component.setArgsComplete(toolCallId);
 				}
 			}
