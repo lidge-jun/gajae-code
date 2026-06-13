@@ -79,7 +79,7 @@ function parseMajorMinorVersion(versionRaw?: string): { major: number; minor: nu
  * Windows Terminal introduced SIXEL support in preview 1.22.
  */
 export function isWindowsTerminalPreviewSixelSupported(
-	env: NodeJS.ProcessEnv = Bun.env,
+	env: NodeJS.ProcessEnv = process.env,
 	platform: NodeJS.Platform = process.platform,
 ): boolean {
 	if (platform !== "win32") return false;
@@ -94,7 +94,7 @@ export function isWindowsTerminalPreviewSixelSupported(
 function getFallbackImageProtocol(terminalId: TerminalId): ImageProtocol | null {
 	if (!process.stdout.isTTY) return null;
 	if (terminalId === "vscode" || terminalId === "alacritty") return null;
-	const term = Bun.env.TERM?.toLowerCase() ?? "";
+	const term = process.env.TERM?.toLowerCase() ?? "";
 	if (term.includes("screen") || term.includes("tmux") || term.includes("ghostty")) {
 		return ImageProtocol.Kitty;
 	}
@@ -128,7 +128,7 @@ export const TERMINAL_ID: TerminalId = (() => {
 		TERM_PROGRAM,
 		TERM,
 		COLORTERM,
-	} = Bun.env;
+	} = process.env;
 
 	if (KITTY_WINDOW_ID) return "kitty";
 	if (GHOSTTY_RESOURCES_DIR) return "ghostty";
@@ -180,8 +180,8 @@ export const TERMINAL = (() => {
 	}
 	// tmux and screen multiplexers do not reliably forward OSC 8 hyperlinks
 	// to the outer terminal, so force them off regardless of detected terminal.
-	const term = Bun.env.TERM?.toLowerCase() ?? "";
-	if (resolved.hyperlinks && (Bun.env.TMUX || term.startsWith("tmux") || term.startsWith("screen"))) {
+	const term = process.env.TERM?.toLowerCase() ?? "";
+	if (resolved.hyperlinks && (process.env.TMUX || term.startsWith("tmux") || term.startsWith("screen"))) {
 		resolved = new TerminalInfo(
 			resolved.id,
 			resolved.imageProtocol,

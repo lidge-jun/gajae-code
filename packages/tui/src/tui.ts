@@ -140,7 +140,7 @@ function isTermuxSession(): boolean {
 
 /** Detect terminal multiplexers where scrollback clearing and height-change redraws are hostile. */
 function isMultiplexerSession(): boolean {
-	return Boolean(Bun.env.TMUX || Bun.env.STY || Bun.env.ZELLIJ);
+	return Boolean(process.env.TMUX || process.env.STY || process.env.ZELLIJ);
 }
 
 function useLegacyMultiplexerFullRender(): boolean {
@@ -505,7 +505,7 @@ export class TUI extends Container {
 	#querySixelSupport(): void {
 		if (TERMINAL.imageProtocol) return;
 		if (process.platform !== "win32") return;
-		if (!Bun.env.WT_SESSION) return;
+		if (!process.env.WT_SESSION) return;
 		if (!process.stdin.isTTY || !process.stdout.isTTY) return;
 
 		this.#clearSixelProbeState();
