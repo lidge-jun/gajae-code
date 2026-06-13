@@ -165,6 +165,15 @@ export type ToolChoice =
 	| { type: "function"; function: { name: string } }
 	| { type: "tool"; name: string };
 
+export type ToolChoiceSupport = "none" | "auto" | "required" | "named";
+export type ToolChoiceSupportSource = "static" | "derived" | "runtime";
+
+export interface ToolChoiceCompat {
+	toolChoiceSupport?: ToolChoiceSupport;
+	supportsToolChoice?: boolean;
+	supportsForcedToolChoice?: boolean;
+}
+
 // Base options all providers share
 export type CacheRetention = "none" | "short" | "long";
 
@@ -715,7 +724,7 @@ export type AssistantMessageEvent =
  * Compatibility settings for openai-completions API.
  * Use this to override URL-based auto-detection for custom providers.
  */
-export interface OpenAICompat {
+export interface OpenAICompat extends ToolChoiceCompat {
 	/** Whether the provider supports the `store` field. Default: auto-detected from URL. */
 	supportsStore?: boolean;
 	/** Whether the provider supports the `developer` role (vs `system`). Default: auto-detected from URL. */
@@ -793,7 +802,7 @@ export interface OpenAICompat {
  * Use this to disable features that strict-by-default Anthropic accepts but
  * that proxy gateways (Vertex AI, AWS Bedrock-style fronts, etc.) reject.
  */
-export interface AnthropicCompat {
+export interface AnthropicCompat extends ToolChoiceCompat {
 	/**
 	 * Drop the top-level `strict: true` field on tool definitions. Vertex AI's
 	 * Anthropic-compatible endpoint rejects unknown tool fields with
