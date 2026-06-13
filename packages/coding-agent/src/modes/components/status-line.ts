@@ -462,6 +462,10 @@ export class StatusLineComponent implements Component {
 			});
 	}
 
+	get activePabcdStage(): string | null {
+		return this.#pabcdState?.active ? this.#pabcdState.stage : null;
+	}
+
 	#refreshSkillHudInBackground(): void {
 		if (this.#settings.showSkillHud === false) return;
 		const now = Date.now();

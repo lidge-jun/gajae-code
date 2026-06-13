@@ -96,6 +96,7 @@ import type { EvalExecutionComponent } from "./components/eval-execution";
 import type { HookEditorComponent } from "./components/hook-editor";
 import type { HookInputComponent } from "./components/hook-input";
 import type { HookSelectorComponent } from "./components/hook-selector";
+import { createPabcdBorderCycle, getPabcdBorderColor, isPabcdPhase, type PabcdBorderHandle } from "./components/pabcd-border";
 import { StatusLineComponent } from "./components/status-line";
 import type { ToolExecutionHandle } from "./components/tool-execution";
 import { WelcomeComponent, type LspServerInfo as WelcomeLspServerInfo } from "./components/welcome";
@@ -267,6 +268,7 @@ export class InteractiveMode implements InteractiveModeContext {
 	hookWidgetContainerAbove: Container;
 	hookWidgetContainerBelow: Container;
 	statusLine: StatusLineComponent;
+	#pabcdBorderHandle: PabcdBorderHandle | null = null;
 	/** 99.20.06 — persistent 1-row notice/hint line below the editor (CC footer model). */
 	composerFooter: ComposerFooter;
 
@@ -918,7 +920,22 @@ export class InteractiveMode implements InteractiveModeContext {
 			this.editor.setInputPrefix(getShellInputPrefix(this.isBashNoContext));
 		} else if (this.isPythonMode) {
 			this.editor.borderColor = theme.getPythonModeBorderColor();
+		} else if (this.statusLine.activePabcdStage && isPabcdPhase(this.statusLine.activePabcdStage)) {
+			this.editor.borderColor = getPabcdBorderColor(this.statusLine.activePabcdStage);
+			if (!this.#pabcdBorderHandle) {
+				this.#pabcdBorderHandle = createPabcdBorderCycle(() => {
+					const stage = this.statusLine.activePabcdStage;
+					if (stage) {
+						this.editor.borderColor = getPabcdBorderColor(stage);
+						this.ui.requestRender();
+					}
+				});
+			}
 		} else {
+			if (this.#pabcdBorderHandle) {
+				this.#pabcdBorderHandle.stop();
+				this.#pabcdBorderHandle = null;
+			}
 			const accentEnabled = !isSettingsInitialized() || settings.get("statusLine.sessionAccent") !== false;
 			const sessionName = accentEnabled ? this.sessionManager.getSessionName() : undefined;
 			const hex = sessionName ? getSessionAccentHex(sessionName) : undefined;
