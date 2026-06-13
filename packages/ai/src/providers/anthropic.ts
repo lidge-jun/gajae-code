@@ -881,6 +881,9 @@ function getAnthropicCompat(
 		disableAdaptiveThinking: model.compat?.disableAdaptiveThinking ?? false,
 		supportsEagerToolInputStreaming: model.compat?.supportsEagerToolInputStreaming ?? true,
 		supportsLongCacheRetention: model.compat?.supportsLongCacheRetention ?? true,
+		toolChoiceSupport: model.compat?.toolChoiceSupport ?? "named",
+		supportsToolChoice: model.compat?.supportsToolChoice ?? true,
+		supportsForcedToolChoice: model.compat?.supportsForcedToolChoice ?? true,
 	};
 }
 

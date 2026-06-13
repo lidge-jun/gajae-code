@@ -52,6 +52,7 @@ export async function initDb(): Promise<Database> {
 	await fs.mkdir(getConfigRootDir(), { recursive: true });
 
 	db = new Database(getStatsDbPath());
+	db.run("PRAGMA busy_timeout = 5000");
 	db.exec("PRAGMA journal_mode = WAL");
 
 	// Create tables

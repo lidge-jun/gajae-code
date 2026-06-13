@@ -226,6 +226,8 @@ export function detectOpenAICompat(model: Model<"openai-completions">, resolvedB
 		supportsStrictMode: detectStrictModeSupport(provider, baseUrl),
 		extraBody: isDirectDeepseekReasoning ? { thinking: { type: "enabled" } } : undefined,
 		toolStrictMode: isCerebras ? "all_strict" : "mixed",
+		toolChoiceSupport: "named" as const,
+		supportsForcedToolChoice: true,
 	};
 }
 
@@ -277,5 +279,7 @@ export function resolveOpenAICompat(
 		supportsStrictMode: model.compat.supportsStrictMode ?? detected.supportsStrictMode,
 		extraBody: model.compat.extraBody ?? detected.extraBody,
 		toolStrictMode: model.compat.toolStrictMode ?? detected.toolStrictMode,
+		toolChoiceSupport: model.compat.toolChoiceSupport ?? detected.toolChoiceSupport,
+		supportsForcedToolChoice: model.compat.supportsForcedToolChoice ?? detected.supportsForcedToolChoice,
 	};
 }
