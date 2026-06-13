@@ -458,8 +458,7 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 			const sub = argv[0]?.toLowerCase();
 			const stageEntered = result.status === 0 && !!sub && sub !== "status" && sub !== "verdict";
 			if (stageEntered && result.stdout) {
-				// Stage prompts steer the session itself, not the transcript log.
-				await runtime.session.prompt(result.stdout);
+				await runtime.output(result.stdout.trimEnd());
 			} else if (result.stdout) {
 				await runtime.output(result.stdout.trimEnd());
 			}
@@ -477,9 +476,7 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 			const argv = ["i", ...(args ? [args] : [])];
 			const result = await runNativeOrchestrateCommand(argv, runtime.session.sessionManager.getCwd());
 			if (result.stderr) await runtime.output(result.stderr.trimEnd());
-			if (result.status === 0 && result.stdout) {
-				await runtime.session.prompt(result.stdout);
-			} else if (result.stdout) {
+			if (result.stdout) {
 				await runtime.output(result.stdout.trimEnd());
 			}
 			return commandConsumed();
