@@ -274,7 +274,7 @@ const SEARCH_ENGINE_SETUP_HINTS: Record<SearchProviderId, string> = {
 	kagi: "store kagi credential (auth storage only — no env var)",
 	synthetic: "set SYNTHETIC_API_KEY",
 	searxng: "set SEARXNG_ENDPOINT (or the searxng.endpoint setting)",
-	xai: "OAuth — run grok login (or set XAI_API_KEY) — Grok X Search",
+	xai: "OAuth — run grok login (or set XAI_API_KEY) — Grok web + X search",
 };
 
 async function isSearchEngineAvailable(id: SearchProviderId, authStorage: AuthStorage): Promise<boolean> {
@@ -576,7 +576,7 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 			{ name: "chatgpt", description: "ChatGPT/OpenAI native search (codex)" },
 			{ name: "claude", description: "Anthropic native search" },
 			{ name: "gemini", description: "Google Gemini native search" },
-			{ name: "grok", description: "xAI Grok X Search (xai)" },
+			{ name: "grok", description: "xAI Grok unified web + X search (xai)" },
 			{ name: "duckduckgo", description: "Keyless DuckDuckGo (always available)" },
 			{ name: "perplexity", description: "Perplexity search" },
 			{ name: "exa", description: "Exa keyed search API" },

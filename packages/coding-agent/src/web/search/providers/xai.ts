@@ -1,5 +1,12 @@
 /**
- * xAI Grok web search via the Responses API `x_search` tool.
+ * xAI Grok unified search via the Responses API.
+ *
+ * Sends BOTH the `web_search` and `x_search` tools so Grok searches the
+ * general web AND the X (Twitter) live index in one round-trip, deciding per
+ * query which sources are relevant — not X-only. Live-verified against
+ * `https://api.x.ai/v1/responses`: the valid tool variants are `web_search`,
+ * `x_search`, `collections_search`, `file_search`; both web and X citations
+ * come back as identically-shaped `url_citation` annotations.
  *
  * Auth mirrors the model layer's xAI OAuth gating: a Grok OAuth credential
  * (stored under the "xai" key by `grok login` / the xAI OAuth flow) unlocks
@@ -7,11 +14,10 @@
  * through `AuthStorage` (`getOAuthAccess` for the bearer, `getApiKey` as the
  * fallback) — never by opening a sibling store.
  *
- * The Responses API returns a Grok-authored answer plus `url_citation`
- * annotations; we virtualize those into the standard `SearchSource[]` shape so
- * the calling agent's parser sees the same structure every other provider
- * emits. Reference: cli-jaw devlog 260530_grok_xsearch_integration (proven
- * against `https://api.x.ai/v1/responses`).
+ * The answer + `url_citation` annotations are virtualized into the standard
+ * `SearchSource[]` shape so the calling agent's parser sees the same structure
+ * every other provider emits. Reference: cli-jaw devlog
+ * 260530_grok_xsearch_integration.
  */
 import type { AuthStorage } from "@gajae-code/ai";
 import { $env } from "@gajae-code/utils";
@@ -23,8 +29,10 @@ import { classifyProviderHttpError, withHardTimeout } from "./utils";
 
 const XAI_BASE_URL = "https://api.x.ai/v1";
 const XAI_RESPONSES_PATH = "/responses";
-/** Fast, non-reasoning default keeps the search round-trip ~1-2s (cli-jaw 32). */
+/** Fast default keeps the search round-trip low-latency (cli-jaw 32). */
 const DEFAULT_XAI_SEARCH_MODEL = "grok-4-fast";
+/** Both tools so Grok unifies general web + X live index per query. */
+const XAI_SEARCH_TOOLS = [{ type: "web_search" }, { type: "x_search" }] as const;
 
 interface XaiAuth {
 	token: string;
@@ -110,7 +118,7 @@ async function searchXai(params: SearchParams): Promise<SearchResponse> {
 		model: DEFAULT_XAI_SEARCH_MODEL,
 		store: false,
 		input: [{ role: "user", content: params.query }],
-		tools: [{ type: "x_search" }],
+		tools: XAI_SEARCH_TOOLS,
 	};
 
 	const response = await fetch(`${XAI_BASE_URL}${XAI_RESPONSES_PATH}`, {
@@ -149,7 +157,7 @@ async function searchXai(params: SearchParams): Promise<SearchResponse> {
 	};
 }
 
-/** Search provider for xAI Grok X Search (`x_search`). */
+/** Search provider for xAI Grok unified web + X search. */
 export class XaiProvider extends SearchProvider {
 	readonly id = "xai";
 	readonly label = "xAI Grok";

@@ -137,7 +137,8 @@ describe("xai search request shape (integration)", () => {
 
 		expect(captured?.url).toBe("https://api.x.ai/v1/responses");
 		expect(captured?.auth).toBe("Bearer oauth-tok");
-		expect(captured?.body.tools).toEqual([{ type: "x_search" }]);
+		// Unified search: both general web AND X live index in one round-trip.
+		expect(captured?.body.tools).toEqual([{ type: "web_search" }, { type: "x_search" }]);
 		expect(result.provider).toBe("xai");
 		expect(result.answer).toBe("Live answer");
 		expect(result.sources).toEqual([{ title: "Post", url: "https://x.com/post" }]);
