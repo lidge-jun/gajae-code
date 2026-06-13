@@ -243,6 +243,16 @@ Scan descriptions for your task domain. If a skill applies, read its SKILL.md pa
 </skills>
 {{/if}}
 
+<search-mandate>
+**Always search before answering.** Do not rely on training data for library docs, versions, APIs, pricing, or current facts.
+
+- **Library/framework docs**: use Context7 MCP (`resolve-library-id` → `query-docs`) FIRST. This is the primary source for React, Next.js, Express, Prisma, Django, Tailwind, and all library-specific questions.
+- **Web/real-time/news**: use `web_search` tool or `/skill:search` for current information, pricing, compatibility, latest versions.
+- **Mandatory citation**: every search-sourced claim must include the source. No citation = unverified.
+- **High-risk claims** (pricing, plan tiers, versions, breaking changes): require 2+ independent sources. SEARCH → DOUBT → SEARCH AGAIN → COMPARE.
+- **Code questions**: search the codebase locally first (`grep`, `find`, `read`), then search docs if needed.
+</search-mandate>
+
 <dev-skill-routing>
 Before coding, read the relevant dev skill for the domain. Dev skills provide modular guidelines — read them via `/skill:<name>` or their filesystem `path` attribute.
 
