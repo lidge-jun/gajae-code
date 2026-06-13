@@ -1,6 +1,6 @@
 # 00 — MOC: Pre-Prompt Context Maintenance 이식 (#542 + #570)
 
-> 상태: 조사 ✅ (Sonnet 3병렬 hunk 매핑 진행 중) / 구현 ⬜
+> 상태: 조사 ✅ (Sonnet 3병렬 완료, 01/02/03 세부문서) / Phase 1 구현 ⬜ / Phase 2 구현 ⬜
 > upstream: gjc dev `534b4f0` (#542) + `8e8e784` (#570)
 > MLB 격차: JWC 55 vs GJC 65 — context 관리 도메인 최대 단일 갭
 > 난이도: **대** — `agent-session.ts`는 jawcode HARD-EDIT 최다 파일
