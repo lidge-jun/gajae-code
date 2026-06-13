@@ -1,7 +1,7 @@
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import type { ThinkingLevel } from "@gajae-code/agent-core";
-import { type Model, modelsAreEqual } from "@gajae-code/ai";
+import { type AuthStorage, type Model, modelsAreEqual } from "@gajae-code/ai";
 import { getOAuthProviders } from "@gajae-code/ai/utils/oauth";
 import { APP_NAME, getAgentDir, setProjectDir } from "@gajae-code/utils";
 import {
@@ -24,7 +24,6 @@ import {
 import { parseThinkingLevel } from "../thinking";
 import { getSearchProvider, nativeSearchProviderFor, setPreferredSearchProvider } from "../web/search/provider";
 import { isSearchProviderPreference, type SearchProviderId } from "../web/search/types";
-import type { AuthStorage } from "@gajae-code/ai";
 
 /**
  * 083.4: parse a /effort argument, accepting Codex ReasoningEffort vocabulary
@@ -228,9 +227,7 @@ function normalizeSearchEngineArg(raw: string): SearchProviderId | "auto" | unde
 
 function describeAutoSearchTarget(activeModelProvider: string | undefined): string {
 	const native = nativeSearchProviderFor(activeModelProvider);
-	return native
-		? `active model native search: ${native}`
-		: "active model has no native search; DuckDuckGo";
+	return native ? `active model native search: ${native}` : "active model has no native search; DuckDuckGo";
 }
 
 const SEARCH_ENGINE_IDS: ReadonlyArray<SearchProviderId> = [
@@ -588,17 +585,12 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 			const authStorage = runtime.session.modelRegistry?.authStorage;
 			const raw = command.args.trim();
 			if (!raw || raw.toLowerCase() === "status") {
-				await runtime.output(
-					await formatSearchEngineStatus(current, runtime.session.model?.provider, authStorage),
-				);
+				await runtime.output(await formatSearchEngineStatus(current, runtime.session.model?.provider, authStorage));
 				return commandConsumed();
 			}
 			const next = normalizeSearchEngineArg(raw);
 			if (!next) {
-				return usage(
-					`Unknown search engine: ${raw}\n${formatSearchEngineCandidates()}`,
-					runtime,
-				);
+				return usage(`Unknown search engine: ${raw}\n${formatSearchEngineCandidates()}`, runtime);
 			}
 			runtime.settings.set("providers.webSearch", next);
 			setPreferredSearchProvider(next);
