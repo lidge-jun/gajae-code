@@ -102,6 +102,12 @@ const X_REASONING_INCLUDED_HEADER = "x-reasoning-included";
 const CODEX_WEBSOCKET_FATAL_PATTERNS = ["websocket error:", "websocket closed before open", "connection timeout"];
 /** Max total time to spend retrying 429s with server-provided delays (5 minutes). */
 const CODEX_RATE_LIMIT_BUDGET_MS = 5 * 60 * 1000;
+/**
+ * Native-parity idle floor for Codex streams (codex-rs DEFAULT_STREAM_IDLE_TIMEOUT_MS
+ * = 300s). gpt-5.5 at high/xhigh effort legitimately goes silent for minutes mid-turn
+ * (openai/codex#24260 documents 30m); the global 120s default aborts those rounds.
+ */
+const CODEX_STREAM_IDLE_TIMEOUT_FALLBACK_MS = 300_000;
 
 const CODEX_PROGRESS_EVENT_TYPES = new Set([
 	"response.created",
@@ -502,7 +508,7 @@ function createRequestSetup(options: OpenAICodexResponsesOptions | undefined): C
 		source: AsyncGenerator<Record<string, unknown>>,
 	): AsyncGenerator<Record<string, unknown>> =>
 		iterateWithIdleTimeout(source, {
-			idleTimeoutMs: options?.streamIdleTimeoutMs ?? getOpenAIStreamIdleTimeoutMs(),
+			idleTimeoutMs: options?.streamIdleTimeoutMs ?? getOpenAIStreamIdleTimeoutMs(CODEX_STREAM_IDLE_TIMEOUT_FALLBACK_MS),
 			errorMessage: "OpenAI Codex SSE stream stalled while waiting for the next event",
 			onIdle: () => requestAbortController.abort(),
 			abortSignal: options?.signal,

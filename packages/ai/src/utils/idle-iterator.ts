@@ -29,12 +29,13 @@ export function getStreamIdleTimeoutMs(fallbackMs: number = DEFAULT_STREAM_IDLE_
  * Returns the idle timeout used for OpenAI-family streaming transports.
  *
  * Set `PI_OPENAI_STREAM_IDLE_TIMEOUT_MS=0` to disable the watchdog.
+ *
+ * `fallbackMs` widens the floor for transports whose legitimate silent gaps
+ * exceed the global default (e.g. Codex reasoning models); env overrides and
+ * caller options still take precedence.
  */
-export function getOpenAIStreamIdleTimeoutMs(): number | undefined {
-	return normalizeIdleTimeoutMs(
-		$env.PI_OPENAI_STREAM_IDLE_TIMEOUT_MS ?? $env.PI_STREAM_IDLE_TIMEOUT_MS,
-		DEFAULT_STREAM_IDLE_TIMEOUT_MS,
-	);
+export function getOpenAIStreamIdleTimeoutMs(fallbackMs: number = DEFAULT_STREAM_IDLE_TIMEOUT_MS): number | undefined {
+	return normalizeIdleTimeoutMs($env.PI_OPENAI_STREAM_IDLE_TIMEOUT_MS ?? $env.PI_STREAM_IDLE_TIMEOUT_MS, fallbackMs);
 }
 
 /**

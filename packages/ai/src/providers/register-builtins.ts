@@ -10,6 +10,7 @@
  * wired into the main streaming path. It provides the infrastructure for lazy
  * loading that can be integrated when stream.ts is refactored.
  */
+import { logger } from "@gajae-code/utils";
 import type {
 	Api,
 	AssistantMessage,
@@ -197,6 +198,18 @@ const GOOGLE_GEMINI_CLI_LAZY_STREAM_LIMITS: LazyStreamLimits = {
 	defaultFirstEventTimeoutMs: 300_000,
 };
 
+/**
+ * Codex native parity (codex-rs DEFAULT_STREAM_IDLE_TIMEOUT_MS = 300s for both
+ * the connect phase and inter-event gaps). gpt-5.5 at high/xhigh effort goes
+ * silent for minutes mid-turn (openai/codex#24260 documents 30m); the global
+ * 120s/100s floors abort those rounds and the retry re-pays the full prefill,
+ * which costs more than the wait it "saved".
+ */
+const OPENAI_CODEX_LAZY_STREAM_LIMITS: LazyStreamLimits = {
+	defaultFirstEventTimeoutMs: 300_000,
+	defaultIdleTimeoutMs: 300_000,
+};
+
 function forwardStream<TApi extends Api>(
 	target: EventStreamImpl,
 	source: AsyncIterable<AssistantMessageEvent>,
@@ -215,8 +228,24 @@ function forwardStream<TApi extends Api>(
 					getStreamFirstEventTimeoutMs(idleTimeoutMs, limits?.defaultFirstEventTimeoutMs),
 				errorMessage: LAZY_STREAM_IDLE_TIMEOUT_ERROR,
 				firstItemErrorMessage: LAZY_STREAM_FIRST_EVENT_TIMEOUT_ERROR,
-				onIdle: () => abortTracker.abortLocally(new Error(LAZY_STREAM_IDLE_TIMEOUT_ERROR)),
-				onFirstItemTimeout: () => abortTracker.abortLocally(new Error(LAZY_STREAM_FIRST_EVENT_TIMEOUT_ERROR)),
+				onIdle: () => {
+					logger.warn("Stream idle watchdog fired", {
+						provider: model.provider,
+						model: model.id,
+						idleTimeoutMs,
+					});
+					abortTracker.abortLocally(new Error(LAZY_STREAM_IDLE_TIMEOUT_ERROR));
+				},
+				onFirstItemTimeout: () => {
+					logger.warn("Stream first-event watchdog fired", {
+						provider: model.provider,
+						model: model.id,
+						firstItemTimeoutMs:
+							options.streamFirstEventTimeoutMs ??
+							getStreamFirstEventTimeoutMs(idleTimeoutMs, limits?.defaultFirstEventTimeoutMs),
+					});
+					abortTracker.abortLocally(new Error(LAZY_STREAM_FIRST_EVENT_TIMEOUT_ERROR));
+				},
 				abortSignal: options.signal,
 				// The synthetic `start` event is yielded immediately by every provider before
 				// the upstream model has emitted any tokens. Treating it as the first "real"
@@ -417,7 +446,10 @@ export const streamGoogleGeminiCli = createLazyStream(
 	GOOGLE_GEMINI_CLI_LAZY_STREAM_LIMITS,
 );
 export const streamGoogleVertex = createLazyStream(loadGoogleVertexProviderModule);
-export const streamOpenAICodexResponses = createLazyStream(loadOpenAICodexResponsesProviderModule);
+export const streamOpenAICodexResponses = createLazyStream(
+	loadOpenAICodexResponsesProviderModule,
+	OPENAI_CODEX_LAZY_STREAM_LIMITS,
+);
 export const streamOpenAICompletions = createLazyStream(loadOpenAICompletionsProviderModule);
 export const streamOpenAIResponses = createLazyStream(loadOpenAIResponsesProviderModule);
 export const streamCursor = createLazyStream(loadCursorProviderModule);
