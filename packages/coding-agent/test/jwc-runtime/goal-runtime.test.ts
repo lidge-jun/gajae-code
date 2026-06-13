@@ -2,8 +2,8 @@ import { afterEach, beforeEach, describe, expect, it } from "bun:test";
 import { mkdtempSync, rmSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { GOAL_PLAN_PENDING_BRIEF, runNativeGoalCommand } from "../../src/jwc-runtime/goal-runtime";
-import { readUltragoalLedger, readUltragoalPlan } from "../../src/jwc-runtime/ultragoal-runtime";
+import { GOAL_PLAN_PENDING_BRIEF, runNativeGoalCommand } from "../../src/jwc-runtime/goal-cli";
+import { readUltragoalLedger, readUltragoalPlan } from "../../src/jwc-runtime/goal-engine";
 
 const QUALITY_GATE = JSON.stringify({
 	architectReview: { verdict: "approved", evidence: "review notes attached" },

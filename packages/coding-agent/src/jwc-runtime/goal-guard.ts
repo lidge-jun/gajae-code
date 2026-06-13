@@ -12,7 +12,7 @@ import {
 	type UltragoalLedgerEvent,
 	type UltragoalPlan,
 	type UltragoalReceiptKind,
-} from "./ultragoal-runtime";
+} from "./goal-engine";
 
 export type UltragoalGuardState =
 	| "inactive"

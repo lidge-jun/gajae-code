@@ -5,7 +5,7 @@ import { reconcileWorkflowSkillState } from "@gajae-code/coding-agent/jwc-runtim
 import {
 	assertCanCompleteCurrentGoal,
 	validateCompletionReceipt,
-} from "@gajae-code/coding-agent/jwc-runtime/ultragoal-guard";
+} from "@gajae-code/coding-agent/jwc-runtime/goal-guard";
 import {
 	addUltragoalSubgoal,
 	buildUltragoalHudSummary,
@@ -16,7 +16,7 @@ import {
 	readUltragoalPlan,
 	runNativeUltragoalCommand,
 	startNextUltragoalGoal,
-} from "@gajae-code/coding-agent/jwc-runtime/ultragoal-runtime";
+} from "@gajae-code/coding-agent/jwc-runtime/goal-engine";
 import { readVisibleSkillActiveState } from "@gajae-code/coding-agent/skill-state/active-state";
 
 const tempRoots: string[] = [];

@@ -5,7 +5,7 @@ import * as path from "node:path";
 import { syncSkillActiveState } from "../skill-state/active-state";
 import { buildJawInterviewHudSummary } from "../skill-state/workflow-hud";
 import { WORKFLOW_STATE_VERSION } from "../skill-state/workflow-state-contract";
-import { runNativeRalplanCommand } from "./ralplan-runtime";
+import { runNativeRalplanCommand } from "./plan-writer";
 import { runNativeStateCommand } from "./state-runtime";
 import { appendJsonl, readExistingStateForMutation, writeArtifact, writeWorkflowEnvelopeAtomic } from "./state-writer";
 

@@ -19,7 +19,7 @@ import {
 	checkpointUltragoalGoal,
 	createUltragoalPlan,
 	startNextUltragoalGoal,
-} from "../src/jwc-runtime/ultragoal-runtime";
+} from "../src/jwc-runtime/goal-engine";
 import { getJawInterviewMutationDecision } from "../src/skill-state/jaw-interview-mutation-guard";
 import { WORKFLOW_STATE_VERSION } from "../src/skill-state/workflow-state-contract";
 

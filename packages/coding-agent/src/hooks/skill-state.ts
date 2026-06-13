@@ -2,7 +2,7 @@ import * as path from "node:path";
 import type { SkillDiscoverySettings } from "../config/skill-settings-defaults";
 import { ModeStateSchema, SkillActiveStateSchema } from "../jwc-runtime/state-schema";
 import { writeJsonAtomic, writeWorkflowEnvelopeAtomic } from "../jwc-runtime/state-writer";
-import { isUltragoalBypassPrompt, readUltragoalVerificationState } from "../jwc-runtime/ultragoal-guard";
+import { isUltragoalBypassPrompt, readUltragoalVerificationState } from "../jwc-runtime/goal-guard";
 import { buildSessionContext, loadEntriesFromFile, type SessionEntry } from "../session/session-manager";
 import {
 	readVisibleSkillActiveState as readCanonicalVisibleSkillActiveState,

@@ -3,7 +3,7 @@ import { mkdtempSync, readFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { runNativeOrchestrateCommand } from "../../src/jwc-runtime/orchestrate-runtime";
-import { createUltragoalPlan, startNextUltragoalGoal } from "../../src/jwc-runtime/ultragoal-runtime";
+import { createUltragoalPlan, startNextUltragoalGoal } from "../../src/jwc-runtime/goal-engine";
 
 function tempCwd(): string {
 	return mkdtempSync(path.join(os.tmpdir(), "jwc-fusion-"));

@@ -3,7 +3,7 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as url from "node:url";
 import { runNativeJawInterviewCommand } from "@gajae-code/coding-agent/jwc-runtime/jaw-interview-runtime";
-import { runNativeRalplanCommand } from "@gajae-code/coding-agent/jwc-runtime/ralplan-runtime";
+import { runNativeRalplanCommand } from "@gajae-code/coding-agent/jwc-runtime/plan-writer";
 
 import { getConfigRootDir, setAgentDir } from "@gajae-code/utils";
 import { resetSettingsForTest } from "../../src/config/settings";

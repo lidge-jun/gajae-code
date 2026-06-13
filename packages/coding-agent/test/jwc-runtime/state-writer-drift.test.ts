@@ -4,7 +4,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { recordSkillActivation } from "@gajae-code/coding-agent/hooks/skill-state";
 import { runNativeJawInterviewCommand } from "@gajae-code/coding-agent/jwc-runtime/jaw-interview-runtime";
-import { runNativeRalplanCommand } from "@gajae-code/coding-agent/jwc-runtime/ralplan-runtime";
+import { runNativeRalplanCommand } from "@gajae-code/coding-agent/jwc-runtime/plan-writer";
 import { migrateAndPersistLegacyState } from "@gajae-code/coding-agent/jwc-runtime/state-migrations";
 import { runNativeStateCommand } from "@gajae-code/coding-agent/jwc-runtime/state-runtime";
 import { RequiredOnWriteEnvelopeSchema } from "@gajae-code/coding-agent/jwc-runtime/state-schema";

@@ -32,7 +32,7 @@ import {
 	writeNativeWorkflowEnvelopeAtomic,
 } from "./orchestrate-state";
 import { buildAuditLensSkillPointer, buildStageSkillPointer } from "./stage-skill-map";
-import { checkpointUltragoalGoal, readUltragoalPlan } from "./ultragoal-runtime";
+import { checkpointUltragoalGoal, readUltragoalPlan } from "./goal-engine";
 
 export interface OrchestrateCommandResult {
 	stdout?: string;

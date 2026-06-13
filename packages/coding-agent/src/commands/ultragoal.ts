@@ -8,7 +8,7 @@ import {
 	writeCurrentSessionGoalModeState,
 	writePendingGoalModeRequest,
 } from "../jwc-runtime/goal-mode-request";
-import { runNativeUltragoalCommand } from "../jwc-runtime/ultragoal-runtime";
+import { runNativeUltragoalCommand } from "../jwc-runtime/goal-engine";
 
 export default class Ultragoal extends Command {
 	static description = `Run native ${APP_NAME.toUpperCase()} goal-ledger (ultragoal) workflow commands`;

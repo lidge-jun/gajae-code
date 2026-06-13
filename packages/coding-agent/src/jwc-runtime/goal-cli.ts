@@ -25,7 +25,7 @@ import {
 	refineUltragoalObjective,
 	startNextUltragoalGoal,
 	type UltragoalGoal,
-} from "./ultragoal-runtime";
+} from "./goal-engine";
 
 export interface GoalCommandResult {
 	stdout?: string;
