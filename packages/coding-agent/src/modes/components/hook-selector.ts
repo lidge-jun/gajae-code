@@ -224,7 +224,6 @@ class FocusAwareList extends Container {
 	constructor(outline: boolean) {
 		super();
 		this.#outline = outline;
-		this.#listSlot = false;
 	}
 
 	#footerLines: string[] = [];
@@ -239,8 +238,6 @@ class FocusAwareList extends Container {
 		slotFocused = false,
 	): void {
 		this.#options = options;
-		this.#listSlot = false;
-		this.#listSlotLabel = "";
 		this.#footerLines = footerLines;
 		// While the list-slot input owns focus, `selectedIndex` is only a scroll
 		// anchor — no option row may render as selected (the slot heading carries

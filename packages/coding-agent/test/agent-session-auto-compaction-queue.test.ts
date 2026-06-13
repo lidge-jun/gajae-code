@@ -129,9 +129,9 @@ describe("AgentSession auto-compaction queue resume", () => {
 						},
 						timestamp: Date.now(),
 					};
-					stream.push({ type: "message_start", message });
-					stream.push({ type: "message_end", message });
-					stream.end(message);
+					stream.push({ type: "start", partial: message });
+					stream.push({ type: "done", reason: "stop", message });
+					stream.end();
 				});
 				return stream;
 			},
@@ -371,6 +371,7 @@ describe("AgentSession auto-compaction queue resume", () => {
 		vi.useRealTimers();
 		session.settings.set("compaction.strategy", "handoff");
 		session.settings.set("compaction.thresholdTokens", 1000);
+		const continueSpy = vi.spyOn(session.agent, "continue").mockResolvedValue();
 
 		const { promise: reminderDone, resolve: onReminderDone } = Promise.withResolvers<void>();
 		session.subscribe(event => {

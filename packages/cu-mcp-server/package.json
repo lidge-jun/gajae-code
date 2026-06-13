@@ -12,12 +12,12 @@
   "os": ["darwin"],
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.29.0",
-    "zod": "^3.24.0"
+    "zod": "catalog:"
   },
   "devDependencies": {
-    "typescript": "^5.8.0",
+    "typescript": "catalog:",
     "tsx": "^4.21.0",
-    "@types/node": "^22.15.0"
+    "@types/node": "^24.10.0"
   },
-  "engines": { "node": ">=20" }
+  "engines": { "node": ">=24" }
 }

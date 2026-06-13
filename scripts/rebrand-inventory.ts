@@ -30,6 +30,7 @@ type MetadataViolation = {
 const repoRoot = process.cwd();
 
 const expectedBundledWorkflowSkills = ["jaw-interview", "ralplan", "team", "ultragoal"] as const;
+const bundledNonWorkflowSkills = new Set(["browse", "search"]);
 const expectedBundledRoleAgents = ["architect", "critic", "executor", "planner"] as const;
 const expectedPackageScope = "@gajae-code/";
 const expectedCliBins = ["gjc", "gjc-stats", "jwc"] as const;
@@ -159,7 +160,9 @@ function listVisibleDefinitions(): VisibleDefinition[] {
 }
 
 function listBundledWorkflowSkills(): VisibleDefinition[] {
-	return listSkillDirs("packages/coding-agent/src/defaults/jwc/skills").sort((a, b) => a.name.localeCompare(b.name) || a.path.localeCompare(b.path));
+	return listSkillDirs("packages/coding-agent/src/defaults/jwc/skills")
+		.filter(def => !bundledNonWorkflowSkills.has(def.name))
+		.sort((a, b) => a.name.localeCompare(b.name) || a.path.localeCompare(b.path));
 }
 
 function listBundledRoleAgents(): VisibleDefinition[] {

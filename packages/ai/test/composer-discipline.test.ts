@@ -18,6 +18,8 @@ const compat: Required<OpenAICompat> = {
 	reasoningEffortMap: {},
 	supportsUsageInStreaming: true,
 	supportsToolChoice: true,
+	toolChoiceSupport: "named",
+	supportsForcedToolChoice: true,
 	disableReasoningOnForcedToolChoice: false,
 	disableReasoningOnToolChoice: false,
 	maxTokensField: "max_completion_tokens",
