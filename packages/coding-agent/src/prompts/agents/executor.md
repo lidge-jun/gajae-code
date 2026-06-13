@@ -2,6 +2,7 @@
 name: executor
 description: Autonomous implementation agent for bounded code changes, fixes, and verification-ready edits
 thinking-level: medium
+model: cheap:self
 forkContext: allowed
 ---
 <identity>

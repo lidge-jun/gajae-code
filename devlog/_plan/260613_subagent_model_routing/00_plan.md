@@ -1,6 +1,6 @@
 # 서브에이전트 멀티프로바이더 모델 라우팅
 
-> 상태: 📋 계획 (260613)
+> 상태: 🟢 S1-S3 구현 완료 (260613) · S4-S5 미구현
 > 소속: jawcode M2+ · 선행: 110 JawRuntime 상주 + 130 주입 3종
 
 ## 핵심 아이디어
@@ -168,16 +168,16 @@ createAgentSession({ model: parentModel })
 
 ## 구현 슬라이스 (초안)
 
-| # | 내용 | 비고 |
+| # | 내용 | 상태 |
 |---|---|---|
-| S1 | 프리셋 스키마 + 기본값 내장 | `SubagentModelPreset` 타입, 프로바이더별 best/cheap 테이블 |
-| S2 | 설정 로드/오버라이드 | `~/.jwc/agent/config.yml` 또는 settings `task.modelPresets` |
-| S3a | **TaskItem schema에 `model` 필드 추가** | `z.string().optional()` — hint 문법: `self`, `cheap:anthropic`, `claude-sonnet-4-6` |
-| S3b | **resolveSubagentModel()** 구현 | hint → 프리셋 lookup → model pattern 반환 |
-| S3c | task/index.ts에서 TaskItem.model → ExecutorOptions.modelOverride 배선 | 기존 resolver 재사용 |
-| S4a | 번들 에이전트 frontmatter에 기본 model 추가 | executor: `cheap:self`, planner/critic: `cheap:self` 등 |
-| S4b | TUI 노출 | task dispatch 시 어떤 모델로 돌리는지 progress에 표시 |
-| S5 | e2e | 다른 프로바이더 서브에이전트 1턴 완주 |
+| S1 | 프리셋 스키마 + 기본값 내장 (`model-presets.ts`) | ✅ `0d85a769` |
+| S2 | 설정 로드/오버라이드 (`task.modelPresets` in settings-schema) | ✅ `0d85a769` |
+| S3a | TaskItem schema `model` 필드 | ✅ `0d85a769` |
+| S3b | `resolveModelHint()` 구현 | ✅ `0d85a769` |
+| S3c | task/index.ts 배선 (both paths) | ✅ `0d85a769` |
+| S4a | 번들 에이전트 frontmatter model 기본값 | ✅ executor/explore: `cheap:self` |
+| S4b | TUI 진행 중 모델 표시 | 🔲 미구현 (progress에 modelOverride 이미 전달, 렌더만 추가) |
+| S5 | e2e 테스트 | 🔲 미구현 (실제 프로바이더 필요) |
 
 ## 미결정
 

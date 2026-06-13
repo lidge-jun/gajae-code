@@ -540,6 +540,11 @@ function renderAgentProgress(
 	const titlePart = description ? `${theme.bold(displayId)}: ${description}` : displayId;
 	let statusLine = `${prefix} ${theme.fg(iconColor, icon)} ${theme.fg("accent", titlePart)}`;
 
+	if (progress.modelOverride) {
+		const modelLabel = Array.isArray(progress.modelOverride) ? progress.modelOverride[0] : progress.modelOverride;
+		if (modelLabel) statusLine += ` ${theme.fg("muted", `⟨${modelLabel}⟩`)}`;
+	}
+
 	// Show retry-blocked badge so the parent immediately sees that a child
 	// is sleeping on a provider 429, not silently progressing. Wins over the
 	// generic running spinner because "we're waiting on a quota window" is

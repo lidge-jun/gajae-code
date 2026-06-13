@@ -1,6 +1,6 @@
 # 스킬 통합: ultragoal → goal 흡수, ralplan → orchestrate p 대체
 
-> 상태: 📋 계획 (260613)
+> 상태: 🟢 M0-M8 구현 완료 + PABCD border 구현 (260613)
 > 소속: jawcode M2+ · 선행: 99.03.00 workflow surface revision
 
 ## 핵심 결정
