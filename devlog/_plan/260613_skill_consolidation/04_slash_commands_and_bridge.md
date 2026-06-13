@@ -80,30 +80,26 @@ jwc goal done   ← autoGate가 quality-gate.json 읽음
 
 **문제**: 에이전트가 중간에 끊기면 cycle이 멈춤. 프로그래밍적 연결 없음.
 
-### 목표 흐름 (programmatic dispatch)
+### 목표 흐름 (에이전트 판단 기반, 프로그래밍적 루프 아님)
 
 ```
 /goal set "인증 시스템 전면 리팩터"
-  ↓ goal dispatcher: 작업 분석 → story 분할 (동적 — 1개일 수도, 5개일 수도)
   ↓
-  ↓ story G001:
-  │  P → A → B → C(pass) → D → checkpoint
-  │
-  ↓ story G002:
-  │  P → A → B → C(fail) → P(hotfix) → B → C(pass) → D → checkpoint
-  │
-  ↓ story G003: (런타임에 추가될 수도 — steering)
-  │  P → A → B → C(pass) → D → checkpoint
-  │
-  ↓ all stories done → goal complete
+  PABCD cycle 1: P → A → B → C(pass) → D → IDLE
+  ↓ 에이전트가 goal 확인: "아직 할 거 남았네"
+  ↓ 알아서 P 재진입
+  PABCD cycle 2: P → A → B → C(pass) → D → IDLE
+  ↓ 에이전트가 goal 확인: "이제 다 했다"
+  ↓ /goal done
 ```
 
 핵심 설계:
+- **디스패처/루프 없음** — 에이전트가 IDLE에서 goal 상태를 보고 자율 판단
+- **goal = "IDLE이 끝이 아닐 수 있다"는 인식** — 하나의 goal이 여러 PABCD 사이클을 필요로 할 수 있음
 - **I는 goal 밖** — 유저가 직접 `/interview`로 진입. goal은 I를 안 탐
-- **story 수는 동적** — 처음에 3개로 계획해도 중간에 steering으로 추가/제거
-- **각 story는 독립 PABCD cycle** — D에서 IDLE로 갔다가 다음 story의 P로 재진입
-- **C fail → re-enter P** — cycle counter로 무한루프 방지 (기본 max 3)
+- **C fail → P 재진입** — 에이전트 판단으로 자연스럽게 (코드 강제 아님)
 - standalone PABCD (goal 없이)는 **한 사이클로 끝** — 현재와 동일
+- 구현: 프롬프트/시스템 프롬프트에서 "goal active + IDLE → 남은 작업 확인 → 필요하면 P 재진입" 가이드
 
 ### HITL → HOTL 전환
 
@@ -122,21 +118,13 @@ goal이 PABCD를 감쌀 때는 **유저 게이트를 건너뛰고 자동 진행*
 유저는 HUD에서 `goal:B cycle=1 status=building`을 보면서 필요할 때만 개입.
 이것이 "원래 HITL인데 HOTL로 할 수 있게 해주는" 구조.
 
-### 구현 위치
+### 구현: 프롬프트 가이드 (코드 디스패처 아님)
 
-`ultragoal-runtime.ts`에 새 함수:
-```typescript
-export async function executeGoalWithPabcd(
-  goalId: string,
-  cwd: string,
-  opts: { maxCycles?: number }
-): Promise<GoalExecutionResult> {
-  // 1. Read current goal/story
-  // 2. Loop PABCD phases
-  // 3. Handle C-phase failure → re-enter P
-  // 4. Checkpoint on D completion
-  // 5. Advance to next story
-}
+goal→PABCD 연결은 **프롬프트 레벨**에서 해결:
+
+1. **D phase prompt 수정**: D 완료 후 IDLE 시 goal이 active면 → "남은 작업이 있는지 확인하고, 있으면 P로 재진입하라"
+2. **system-prompt.md 라우팅 규칙 추가**: `goal active + IDLE → 작업 완료 여부 판단 → 미완료면 P 재진입`
+3. **goal HUD에 PABCD 상태 연동**: 에이전트가 현재 phase를 인지할 수 있도록
 ```
 
 의존: `orchestrate-runtime.ts`의 `runNativeOrchestrateCommand` import.
@@ -179,6 +167,7 @@ TaskItem.model 라우팅 (이미 구현 완료)이 여기서 활용됨.
 - **W4**: system-prompt.md 라우팅 테이블 개편 (ralplan/ultragoal 하드코딩 제거)
 - **W5**: skill-keywords.ts `$ralplan` → orchestrate redirect
 - **W6**: HUD ultragoal→goal 네임스페이스 변경
+- **W7**: goal HOTL 프롬프트 가이드 — D→IDLE 시 goal active면 P 재진입 (프롬프트 수정만, 코드 디스패처 없음)
 
 ### Phase 3 — 순차 (의존성)
 - **W7**: goal→PABCD 프로그래밍적 브릿지 (executeGoalWithPabcd)
