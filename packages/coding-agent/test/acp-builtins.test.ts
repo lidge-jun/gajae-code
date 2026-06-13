@@ -1,9 +1,14 @@
 import { describe, expect, it, spyOn } from "bun:test";
+import * as fs from "node:fs/promises";
+import * as os from "node:os";
+import * as path from "node:path";
 import type { AgentMessage } from "@gajae-code/agent-core";
+import { getAgentDir, setAgentDir } from "@gajae-code/utils";
 import { Settings } from "../src/config/settings";
+import * as mcpConfig from "../src/runtime-mcp/config-writer";
 import type { AgentSession } from "../src/session/agent-session";
 import type { SessionManager } from "../src/session/session-manager";
-import { executeAcpBuiltinSlashCommand } from "../src/slash-commands/acp-builtins";
+import { ACP_BUILTIN_SLASH_COMMANDS, executeAcpBuiltinSlashCommand } from "../src/slash-commands/acp-builtins";
 import * as sshConfig from "../src/ssh/config-writer";
 
 interface FakeAcpBuiltinSession {
@@ -681,22 +686,10 @@ describe("wave 3 commands", () => {
 });
 
 describe("wave 4 commands", () => {
-	// /mcp is intentionally not an ACP builtin in gajae-code. MCP-compatible
-	// helpers may remain private, but the default user-facing ACP command surface
-	// must fall through instead of advertising or handling /mcp.
-	it("/mcp commands fall through to the model for MCP quarantine", async () => {
-		const commands = ["/mcp", "/mcp help", "/mcp add", "/mcp reload", "/mcp resources", "/mcp frobnicate"];
-		for (const command of commands) {
-			const { output, runtime } = createRuntime();
-			let refreshCalled = false;
-			runtime.refreshCommands = () => {
-				refreshCalled = true;
-			};
-			const result = await executeAcpBuiltinSlashCommand(command, runtime);
-			expect(result).toBe(false);
-			expect(output).toEqual([]);
-			expect(refreshCalled).toBe(false);
-		}
+	it("/mcp is advertised as an ACP builtin command", () => {
+		const command = ACP_BUILTIN_SLASH_COMMANDS.find(entry => entry.name === "mcp");
+		expect(command?.description).toContain("MCP");
+		expect(command?.input?.hint).toBe("<subcommand>");
 	});
 
 	it("/ssh commands remain preserved in ACP", async () => {
@@ -719,30 +712,96 @@ describe("wave 4 commands", () => {
 });
 
 describe("wave 5 — adapters and polish", () => {
-	// /mcp add stays quarantined from ACP and must not write config through the
-	// private MCP helper when submitted as text-mode slash input.
-	it("/mcp add falls through without writing MCP config", async () => {
-		const mcpModule = await import("../src/runtime-mcp/config-writer");
-		const spy = spyOn(mcpModule, "addMCPServer").mockResolvedValue(undefined);
+	async function withIsolatedAgentDir<T>(fn: () => Promise<T>): Promise<T> {
+		const originalAgentDir = getAgentDir();
+		const tempAgentDir = await fs.mkdtemp(path.join(os.tmpdir(), "jwc-acp-mcp-"));
+		setAgentDir(tempAgentDir);
+		try {
+			return await fn();
+		} finally {
+			setAgentDir(originalAgentDir);
+			await fs.rm(tempAgentDir, { recursive: true, force: true });
+		}
+	}
+
+	it("/mcp help and no-arg invocation render ACP help", async () => {
+		for (const command of ["/mcp", "/mcp help"]) {
+			const { output, runtime } = createRuntime();
+			const result = await executeAcpBuiltinSlashCommand(command, runtime);
+			expect(result).toEqual({ consumed: true });
+			expect(output[0]).toContain("MCP server management");
+			expect(output[0]).toContain("/mcp list");
+			expect(output[0]).toContain("/mcp smithery-search");
+		}
+	});
+
+	it("/mcp ACP safe subcommands consume input without live external connections", async () => {
+		await withIsolatedAgentDir(async () => {
+			const commands = [
+				["/mcp list", "No MCP servers configured."],
+				["/mcp resources", "No MCP servers configured."],
+				["/mcp prompts", "No MCP servers configured."],
+				["/mcp notifications", "MCP notifications require the TUI client"],
+				["/mcp reauth context7", "/mcp reauth requires OAuth or browser flows only available in the TUI client."],
+				["/mcp unauth context7", "/mcp unauth requires OAuth or browser flows only available in the TUI client."],
+				[
+					"/mcp smithery-login",
+					"/mcp smithery-login requires OAuth or browser flows only available in the TUI client.",
+				],
+				[
+					"/mcp smithery-logout",
+					"/mcp smithery-logout requires OAuth or browser flows only available in the TUI client.",
+				],
+				[
+					"/mcp reconnect context7",
+					"/mcp reconnect requires OAuth or browser flows only available in the TUI client.",
+				],
+				["/mcp test missing", 'Server "missing" not found. Run /mcp list to see configured servers.'],
+				["/mcp add", "Usage: /mcp add"],
+				["/mcp enable missing", 'Server "missing" not found in user or project config.'],
+				["/mcp disable", "Usage: /mcp disable <name>"],
+				["/mcp remove", "Usage: /mcp remove <name> [--scope project|user]"],
+				["/mcp smithery-search --scope invalid", "Invalid --scope value. Use project or user."],
+				["/mcp frobnicate", "Unknown /mcp subcommand: frobnicate. Use /mcp help for available subcommands."],
+			] as const;
+
+			for (const [command, expected] of commands) {
+				const { output, runtime } = createRuntime();
+				const result = await executeAcpBuiltinSlashCommand(command, runtime);
+				expect(result).toEqual({ consumed: true });
+				expect(output[0]).toContain(expected);
+			}
+		});
+	});
+
+	it("/mcp reload refreshes ACP command metadata", async () => {
+		const { output, runtime } = createRuntime();
+		let refreshCalled = false;
+		runtime.refreshCommands = () => {
+			refreshCalled = true;
+		};
+
+		const result = await executeAcpBuiltinSlashCommand("/mcp reload", runtime);
+
+		expect(result).toEqual({ consumed: true });
+		expect(refreshCalled).toBe(true);
+		expect(output[0]).toContain("MCP runtime reload requested.");
+	});
+
+	it("/mcp add writes config through the shared MCP config writer", async () => {
+		const spy = spyOn(mcpConfig, "addMCPServer").mockResolvedValue(undefined);
 		try {
 			const { output, runtime } = createRuntime();
 			const result = await executeAcpBuiltinSlashCommand(
 				"/mcp add foo --url https://example.com --token X --scope project",
 				runtime,
 			);
-			expect(result).toBe(false);
-			expect(output).toEqual([]);
-			expect(spy).not.toHaveBeenCalled();
+			expect(result).toEqual({ consumed: true });
+			expect(output[0]).toContain('Added MCP server "foo" (project).');
+			expect(spy).toHaveBeenCalledTimes(1);
 		} finally {
 			spy.mockRestore();
 		}
-	});
-
-	it("/mcp test falls through without producing MCP-specific output", async () => {
-		const { output, runtime } = createRuntime();
-		const result = await executeAcpBuiltinSlashCommand("/mcp test bogus", runtime);
-		expect(result).toBe(false);
-		expect(output).toEqual([]);
 	});
 
 	it("/ssh add remains preserved and calls addSSHHost", async () => {

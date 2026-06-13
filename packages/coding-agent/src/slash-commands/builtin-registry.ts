@@ -13,6 +13,7 @@ import { extractExplicitThinkingSelector, formatModelSelectorValue, parseModelPa
 import { clearPluginRootsAndCaches, isJawBrand, resolveActiveProjectRegistryPath } from "../discovery/helpers.js";
 import { runNativeOrchestrateCommand } from "../jwc-runtime/orchestrate-runtime";
 import { resolveMemoryBackend } from "../memory-backend";
+import { MCPCommandController } from "../modes/controllers/runtime-mcp-command-controller";
 import type { InteractiveModeContext } from "../modes/types";
 import { formatModelOnboardingGuidance } from "../setup/model-onboarding-guidance";
 import {
@@ -38,6 +39,7 @@ function parseEffortArg(raw: string): ThinkingLevel | undefined {
 
 import { buildContextReportText } from "./helpers/context-report";
 import { formatDuration } from "./helpers/format";
+import { handleMcpAcp } from "./helpers/mcp";
 import { commandConsumed, errorMessage, parseSlashCommand, usage } from "./helpers/parse";
 import { handleSshAcp } from "./helpers/ssh";
 import { buildQuotaText, buildUsageReportText } from "./helpers/usage-report";
@@ -1269,6 +1271,39 @@ const BUILTIN_SLASH_COMMAND_REGISTRY: ReadonlyArray<SlashCommandSpec> = [
 			const providerId = command.args.trim() || undefined;
 			void runtime.ctx.showOAuthSelector("logout", providerId);
 			runtime.ctx.editor.setText("");
+		},
+	},
+	{
+		name: "mcp",
+		description: "Manage MCP servers and runtime tools",
+		acpDescription: "Manage MCP servers",
+		acpInputHint: "<subcommand>",
+		subcommands: [
+			{ name: "add", description: "Add a new MCP server" },
+			{ name: "list", description: "List configured MCP servers" },
+			{ name: "remove", description: "Remove an MCP server", usage: "<name> [--scope project|user]" },
+			{ name: "rm", description: "Alias for remove", usage: "<name> [--scope project|user]" },
+			{ name: "test", description: "Test an MCP server connection", usage: "<name>" },
+			{ name: "reauth", description: "Reauthorize OAuth for an MCP server", usage: "<name>" },
+			{ name: "unauth", description: "Remove OAuth auth from an MCP server", usage: "<name>" },
+			{ name: "enable", description: "Enable an MCP server", usage: "<name>" },
+			{ name: "disable", description: "Disable an MCP server", usage: "<name>" },
+			{ name: "resources", description: "List available MCP resources" },
+			{ name: "prompts", description: "List available MCP prompts" },
+			{ name: "notifications", description: "Show MCP notification state" },
+			{ name: "smithery-search", description: "Search Smithery registry", usage: "<keyword>" },
+			{ name: "smithery-login", description: "Login to Smithery" },
+			{ name: "smithery-logout", description: "Remove cached Smithery API key" },
+			{ name: "reconnect", description: "Reconnect an MCP server", usage: "<name>" },
+			{ name: "reload", description: "Reload MCP runtime tools" },
+			{ name: "help", description: "Show MCP help" },
+		],
+		allowArgs: true,
+		handle: handleMcpAcp,
+		handleTui: async (command, runtime) => {
+			runtime.ctx.editor.addToHistory(command.text);
+			runtime.ctx.editor.setText("");
+			await new MCPCommandController(runtime.ctx).handle(command.text);
 		},
 	},
 	{

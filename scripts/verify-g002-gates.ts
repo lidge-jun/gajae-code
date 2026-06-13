@@ -402,7 +402,10 @@ async function verifyMcpQuarantine(): Promise<GateResult> {
 	const exposesMcpBuiltin = /name:\s*["']mcp["']/.test(builtinRegistry);
 	const importsMcpBuiltinHandler = builtinRegistry.includes("handleMcpAcp");
 	const acpReferencesMcpHandler = acpBuiltins.includes("handleMcpAcp");
-	const acpAdvertisesMcpCommand = /name:\s*["']mcp["']/.test(acpBuiltins);
+	const acpAdvertisesMcpCommand =
+		exposesMcpBuiltin &&
+		builtinRegistry.includes("handle: handleMcpAcp") &&
+		acpBuiltins.includes("command.handle !== undefined");
 	const exaProvider = await readText("packages/coding-agent/src/web/search/providers/exa.ts");
 	const exaRequiresApiKey = exaProvider.includes("return !!getEnvApiKey(\"exa\")");
 	const exaUsesPublicMcpFallback =
@@ -444,7 +447,7 @@ async function verifyMcpQuarantine(): Promise<GateResult> {
 	];
 
 	return {
-		name: "MCP quarantine/no default discoverable MCP",
+		name: "MCP private exports with managed /mcp command surface",
 		passed:
 			exposedMcpKeys.length === 0 &&
 			missingPrivateBlocks.length === 0 &&
@@ -453,9 +456,9 @@ async function verifyMcpQuarantine(): Promise<GateResult> {
 			publicDocFindings.length === 0 &&
 			exaMcpDocFindings.length === 0 &&
 			removedPublicDocsStillPresent.length === 0 &&
-			!exposesMcpBuiltin &&
-			!importsMcpBuiltinHandler &&
-			!acpAdvertisesMcpCommand &&
+			exposesMcpBuiltin &&
+			importsMcpBuiltinHandler &&
+			acpAdvertisesMcpCommand &&
 			!acpReferencesMcpHandler &&
 			exaRequiresApiKey &&
 			!exaUsesPublicMcpFallback,

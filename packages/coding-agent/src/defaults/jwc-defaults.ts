@@ -1,5 +1,8 @@
 import * as path from "node:path";
 import { getAgentDir, isEnoent, parseFrontmatter } from "@gajae-code/utils";
+import { readMCPConfigFile, writeMCPConfigFile } from "../runtime-mcp/config-writer";
+import type { MCPConfigFile, MCPServerConfig } from "../runtime-mcp/types";
+import mcpDefaults from "./jwc/mcp-defaults.json" with { type: "json" };
 import autoAnswerUncertainFragment from "./jwc/skills/jaw-interview/auto-answer-uncertain.md" with { type: "text" };
 import autoResearchGreenfieldFragment from "./jwc/skills/jaw-interview/auto-research-greenfield.md" with {
 	type: "text",
@@ -69,6 +72,13 @@ export interface DefaultJwcDefinitionInstallResult {
 	missing: number;
 	different: number;
 	files: DefaultJwcDefinitionInstallFile[];
+}
+
+export interface DefaultMcpConfigInstallResult {
+	targetRoot: string;
+	path: string;
+	serverName: "context7";
+	status: DefaultJwcInstallStatus;
 }
 
 const DEFAULT_GJC_DEFINITIONS: readonly DefaultJwcDefinition[] = [
@@ -180,6 +190,38 @@ export async function installDefaultJwcDefinitions(
 	return summarizeInstallResult(targetRoot, files);
 }
 
+export async function installDefaultMcpConfig(
+	options: InstallDefaultJwcDefinitionsOptions = {},
+): Promise<DefaultMcpConfigInstallResult> {
+	const targetRoot = options.targetRoot ?? getAgentDir();
+	const destination = path.join(targetRoot, "mcp.json");
+	const defaults = mcpDefaults as MCPConfigFile;
+	const defaultContext7 = defaults.mcpServers?.context7;
+	if (!defaultContext7) throw new Error("Bundled MCP defaults are missing the context7 server entry.");
+
+	const existing = await readMCPConfigFile(destination);
+	const currentContext7 = existing.mcpServers?.context7;
+	const status =
+		currentContext7 === undefined
+			? "missing"
+			: configsEqual(currentContext7, defaultContext7)
+				? "matching"
+				: "different";
+
+	if (options.check || status === "matching") {
+		return { targetRoot, path: destination, serverName: "context7", status };
+	}
+
+	await writeMCPConfigFile(destination, {
+		...existing,
+		mcpServers: {
+			...existing.mcpServers,
+			context7: defaultContext7,
+		},
+	});
+	return { targetRoot, path: destination, serverName: "context7", status: "written" };
+}
+
 async function readExistingText(filePath: string): Promise<string | undefined> {
 	try {
 		return await Bun.file(filePath).text();
@@ -207,4 +249,8 @@ function summarizeInstallResult(
 
 function countStatus(files: readonly DefaultJwcDefinitionInstallFile[], status: DefaultJwcInstallStatus): number {
 	return files.filter(file => file.status === status).length;
+}
+
+function configsEqual(left: MCPServerConfig, right: MCPServerConfig): boolean {
+	return JSON.stringify(left) === JSON.stringify(right);
 }
