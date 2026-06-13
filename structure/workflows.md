@@ -11,6 +11,9 @@
 | interview CLI | `jwc interview cancel` | ✅ **99.07-U2** — 세션 스코프 상태 파일 삭제 + HUD inactive 동기화 (`jaw-interview-runtime.ts`) |
 | Slash | `/orchestrate` (jaw brand only) | ✅ |
 | State | `.jwc/state/sessions/<id>/pabcd-state.json` | ✅ `orchestrate-state.ts` |
+| 전이 규칙 | **P 직행 1급화** — `i`는 `P`의 필수 선행이 아님(idle→P 직접 가능) | ✅ `2d3a14a8` (260613 실측) |
+| 세션 스코프 | `JWC_SESSION_ID` env 자동 디폴트 — 전역 상태 오염 차단 | ✅ `8331c03b` (`orchestrate-runtime.ts`) |
+| 상태 리더 폴백 | pabcd 상태 스코프→**공유 경로 폴백** (라이브 TUI HUD 띠/헤더 미표시 버그 수정) | ✅ `ac42e4f3` (`orchestrate-state.ts`·`workflow-readers.ts`) |
 | Stage prompts | `prompts/jaw/orchestrate-*.md` — CLI stdout pull | ✅ |
 | **모델 discovery** | `system-prompt.md`에 orchestrate/IPABCD | ✅ **99.03 M1** 완료 (`45cba4e2`) |
 | **매 턴 단계 헤더** | `pabcd-stage-context` custom message | ✅ **99.03 M2** 완료 (`8a7ea342`) |

@@ -160,6 +160,11 @@
   패키지 스코프 `@gajae-code/*`는 보존(D4). 상세: [_fin/260613_gjc_flip](../devlog/_fin/260613_gjc_flip/00_moc_flip.md), 인덱스 [fork-delta.md](./fork-delta.md).
 - **99.20.08 `/help` 도킹 2-페인 카탈로그**: 모델-셀렉터 문법, builtin/skill/custom 탭 분할, enter로
   커맨드 삽입 — [extensibility.md](./extensibility.md).
+- **99.20.07 TUI 레이아웃 정규화 (P1–P4)**: OAuth 로그인 플로우→`LoginDialogComponent` 도킹
+  (`7aeee91c`), read-once 리포트→`ScrollablePanel`(신규 컴포넌트, `8203b611`), 1줄 성공 알림→상태
+  표면(`a1a8db42`), MCP 연결 대기→상태 표면의 stock `Loader`(`1f7cbd58`). 트랜스크립트 오염 제거.
+- **99.10 thinking 셀 포커스 링**: thinking 보유 assistant 셀이 ctrl+↑ 포커스 링(083.1 패턴-B)에
+  도구 셀과 함께 합류, alt+t 트랜스크립트 오버레이는 `FocusableCell` 유니온으로 확장 (`4cd64e1b`).
 - **99.30.02 ralplan 이별**: jaw-interview 핸드오프를 `jwc orchestrate p --spec-ref`로 재배선,
   ralplan SKILL superseded(스텁), ultragoal 플래닝 전제 네이티브화 — [workflows.md](./workflows.md).
 - **`/model` allowArgs**: `/model <id>`가 채팅으로 폴스루하던 버그 수리(`492913de`) + TUI handleTui
