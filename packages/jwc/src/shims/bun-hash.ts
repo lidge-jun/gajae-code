@@ -25,6 +25,16 @@ function digestOf(input: string | ArrayBufferView | ArrayBuffer, seed?: number |
 
 type Hashable = string | ArrayBufferView | ArrayBuffer;
 
+/**
+ * `Bun.sha(input, encoding?)` — sha256 digest. With an encoding returns the
+ * encoded string (Bun parity: harmony-leak uses Bun.sha(text,"hex")); without
+ * one, raw bytes.
+ */
+export function bunSha(input: Hashable, encoding?: "hex" | "base64" | "base64url"): string | Uint8Array {
+	const hash = createHash("sha256").update(toBuffer(input));
+	return encoding ? hash.digest(encoding) : new Uint8Array(hash.digest());
+}
+
 export const bunHash = Object.assign(
 	(input: Hashable, seed?: number | bigint): bigint => digestOf(input, seed).readBigUInt64LE(0),
 	{

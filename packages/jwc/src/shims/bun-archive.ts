@@ -160,7 +160,16 @@ function buildTar(entries: Map<string, Uint8Array>): Uint8Array {
 // ── format detection + entry coercion ───────────────────────────────────────
 
 function isZip(bytes: Uint8Array): boolean {
-	return bytes[0] === 0x50 && bytes[1] === 0x4b;
+	// Full PK signature, not just "PK": local-file (03 04), empty-archive
+	// (05 06), or spanned (07 08). A bare "PK" prefix misroutes a valid tar
+	// whose first entry name starts with PK (PKG-INFO, PKGBUILD) into unzip
+	// (audit round-5 SQ-1 archive).
+	if (bytes[0] !== 0x50 || bytes[1] !== 0x4b) return false;
+	return (
+		(bytes[2] === 0x03 && bytes[3] === 0x04) ||
+		(bytes[2] === 0x05 && bytes[3] === 0x06) ||
+		(bytes[2] === 0x07 && bytes[3] === 0x08)
+	);
 }
 
 function isGzip(bytes: Uint8Array): boolean {

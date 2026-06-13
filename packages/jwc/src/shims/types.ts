@@ -28,6 +28,7 @@ export interface BunShim {
 	spawn(...args: unknown[]): unknown;
 	spawnSync(...args: unknown[]): unknown;
 	hash(input: string | ArrayBufferView, seed?: number | bigint): bigint;
+	sha(input: string | ArrayBufferView | ArrayBuffer, encoding?: "hex" | "base64" | "base64url"): string | Uint8Array;
 	CryptoHasher: unknown;
 	SHA256: unknown;
 	JSONL: { parseChunk(...args: unknown[]): unknown };
@@ -40,6 +41,7 @@ export interface BunShim {
 	semver: { order(a: string, b: string): -1 | 0 | 1; satisfies(version: string, range: string): boolean };
 	Archive: unknown;
 	Glob: unknown;
+	Image: unknown;
 	gc(force?: boolean): void;
 	env: NodeJS.ProcessEnv;
 	argv: string[];

@@ -16,7 +16,8 @@ import stripAnsi from "strip-ansi";
 import { BunArchive } from "./bun-archive";
 import { bunFile } from "./bun-file";
 import { BunGlob } from "./bun-glob";
-import { BunCryptoHasher, BunSHA256, bunHash } from "./bun-hash";
+import { BunCryptoHasher, BunSHA256, bunHash, bunSha } from "./bun-hash";
+import { BunImage } from "./bun-image";
 import { bunJSONL } from "./bun-jsonl";
 import { bunServe } from "./bun-serve";
 import { bunSleep, bunSleepSync } from "./bun-sleep";
@@ -43,6 +44,7 @@ export function buildNodeBunShim(): BunShim {
 		spawn: bunSpawn as BunShim["spawn"],
 		spawnSync: bunSpawnSync as BunShim["spawnSync"],
 		hash: bunHash as unknown as BunShim["hash"],
+		sha: bunSha,
 		CryptoHasher: BunCryptoHasher,
 		SHA256: BunSHA256,
 		JSONL: bunJSONL,
@@ -80,6 +82,7 @@ export function buildNodeBunShim(): BunShim {
 		},
 		Archive: BunArchive,
 		Glob: BunGlob,
+		Image: BunImage,
 		gc: () => {
 			// no-op on Node by design (100 MOC mapping P)
 		},

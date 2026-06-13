@@ -113,6 +113,21 @@ try {
 			assert.ok(!key.split("/").includes(".."), `traversal key leaked: ${key}`);
 		}
 		console.log("[test-node-shims] archive path-traversal sanitize OK");
+
+		// round-5 SQ-1: a valid tar whose first entry name starts with "PK"
+		// (PKG-INFO) must NOT be misrouted to unzip and must round-trip.
+		const pkTar = path.join(tmpdir(), `jwc-pktar-${process.pid}.tar`);
+		try {
+			await BunArchive.write(pkTar, { "PKG-INFO": "Metadata-Version: 2.1" });
+			const pkBytes = readFileSync(pkTar);
+			assert.equal(pkBytes[0], 0x50, "first entry should start with P");
+			assert.equal(pkBytes[1], 0x4b, "first entry should start with K");
+			const pkFiles = await new BunArchive(pkBytes).files();
+			assert.equal(await pkFiles.get("PKG-INFO").text(), "Metadata-Version: 2.1", "PK-prefixed tar misrouted to unzip");
+			console.log("[test-node-shims] archive PK-prefixed tar not misrouted OK");
+		} finally {
+			rmSync(pkTar, { force: true });
+		}
 	} finally {
 		rmSync(tmpTar, { force: true });
 		rmSync(archiveOut, { force: true });
@@ -262,6 +277,29 @@ try {
 	assert.equal(typeof shim.Glob, "function", "Bun.Glob missing from global shim");
 	assert.ok(new shim.Glob("*.txt").match("a.txt"), "Bun.Glob not usable");
 	console.log("[test-node-shims] Bun.Glob global shim OK");
+
+	// round-5 SQ-2 build: Bun.sha(text,"hex") must exist (harmony-leak audit).
+	assert.equal(typeof shim.sha, "function", "Bun.sha missing from global shim");
+	assert.equal(
+		shim.sha("abc", "hex"),
+		"ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+		"Bun.sha hex digest wrong",
+	);
+	console.log("[test-node-shims] Bun.sha global shim OK");
+
+	// round-5 SQ-1 build: Bun.Image must construct + read metadata from a header.
+	assert.equal(typeof shim.Image, "function", "Bun.Image missing from global shim");
+	// 1x1 PNG.
+	const png = Buffer.from(
+		"iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYPhfDwAChwGA60e6kgAAAABJRU5ErkJggg==",
+		"base64",
+	);
+	const meta = await new shim.Image(png).metadata();
+	assert.equal(meta.format, "png", "Bun.Image png format");
+	assert.equal(meta.width, 1, "Bun.Image png width");
+	assert.equal(meta.height, 1, "Bun.Image png height");
+	console.log("[test-node-shims] Bun.Image metadata OK");
+
 	rmSync(shimOut, { force: true });
 }
 
