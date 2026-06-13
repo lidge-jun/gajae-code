@@ -87,10 +87,24 @@ function writeOctal(target: Uint8Array, offset: number, length: number, value: n
 	target[offset + length - 1] = 0;
 }
 
-function tarHeader(name: string, size: number): Uint8Array {
-	if (ENCODER.encode(name).length > 100) {
-		throw new Error(`Bun.Archive shim: tar entry name exceeds 100 bytes (${name})`);
+/**
+ * Split a >100-byte name into ustar name(≤100)/prefix(≤155) at a `/` boundary,
+ * or return null when it cannot be represented that way (then GNU longname is
+ * used). Matches what parseTar already reads back via the prefix field.
+ */
+function splitUstarName(name: string): { name: string; prefix: string } | null {
+	if (ENCODER.encode(name).length <= 100) return { name, prefix: "" };
+	for (let slash = name.indexOf("/"); slash !== -1; slash = name.indexOf("/", slash + 1)) {
+		const prefix = name.slice(0, slash);
+		const rest = name.slice(slash + 1);
+		if (ENCODER.encode(prefix).length <= 155 && ENCODER.encode(rest).length <= 100 && rest.length > 0) {
+			return { name: rest, prefix };
+		}
 	}
+	return null;
+}
+
+function tarHeader(name: string, size: number, options: { typeflag?: number; prefix?: string } = {}): Uint8Array {
 	const header = new Uint8Array(512);
 	header.set(ENCODER.encode(name).subarray(0, 100), 0);
 	writeOctal(header, 100, 8, 0o644); // mode
@@ -99,9 +113,10 @@ function tarHeader(name: string, size: number): Uint8Array {
 	writeOctal(header, 124, 12, size);
 	writeOctal(header, 136, 12, Math.floor(Date.now() / 1000));
 	header.set(ENCODER.encode("        "), 148); // checksum placeholder (spaces)
-	header[156] = 0x30; // typeflag '0'
+	header[156] = options.typeflag ?? 0x30; // typeflag '0' (file) unless overridden
 	header.set(ENCODER.encode("ustar\0"), 257);
 	header.set(ENCODER.encode("00"), 263);
+	if (options.prefix) header.set(ENCODER.encode(options.prefix).subarray(0, 155), 345);
 	let checksum = 0;
 	for (const byte of header) checksum += byte;
 	const checksumText = `${checksum.toString(8).padStart(6, "0")}\0 `;
@@ -109,13 +124,27 @@ function tarHeader(name: string, size: number): Uint8Array {
 	return header;
 }
 
+function padTo512(part: Uint8Array): Uint8Array[] {
+	const pad = (512 - (part.byteLength % 512)) % 512;
+	return pad ? [part, new Uint8Array(pad)] : [part];
+}
+
+/** Header(s) for one entry: ustar prefix split when possible, else a GNU
+ *  longname ('L') record carrying the full path (parseTar reads both). */
+function entryHeaders(name: string, size: number): Uint8Array[] {
+	const split = splitUstarName(name);
+	if (split) return [tarHeader(split.name, size, { prefix: split.prefix })];
+	const longNameBytes = ENCODER.encode(`${name}\0`);
+	const longHeader = tarHeader("././@LongLink", longNameBytes.byteLength, { typeflag: 0x4c /* 'L' */ });
+	const truncated = new TextDecoder().decode(ENCODER.encode(name).subarray(0, 100));
+	return [longHeader, ...padTo512(longNameBytes), tarHeader(truncated, size)];
+}
+
 function buildTar(entries: Map<string, Uint8Array>): Uint8Array {
 	const parts: Uint8Array[] = [];
 	for (const [name, data] of entries) {
-		parts.push(tarHeader(name, data.byteLength));
-		parts.push(data);
-		const pad = (512 - (data.byteLength % 512)) % 512;
-		if (pad) parts.push(new Uint8Array(pad));
+		parts.push(...entryHeaders(name, data.byteLength));
+		parts.push(...padTo512(data));
 	}
 	parts.push(new Uint8Array(1024)); // end-of-archive blocks
 	const total = parts.reduce((sum, part) => sum + part.byteLength, 0);

@@ -89,6 +89,23 @@ try {
 		assert.ok(entry.lastModified > 0 && entry.lastModified <= before + 2000, "mtime not from tar header");
 		console.log("[test-node-shims] archive mtime round-trip OK");
 
+		// round-4 SQ-1: >100-byte entry names must round-trip (ustar prefix or
+		// GNU longname), not throw — read-then-rewrite of long-path tars.
+		const longName = `${"d".repeat(80)}/${"f".repeat(90)}.txt`; // 171 bytes, splittable
+		const gnuName = `${"x".repeat(140)}.txt`; // 144 bytes, single segment → GNU longname
+		const longTar = path.join(tmpdir(), `jwc-longtar-${process.pid}.tar`);
+		try {
+			await BunArchive.write(longTar, { [longName]: "a", [gnuName]: "b" });
+			const back = await new BunArchive(readFileSync(longTar)).files();
+			assert.ok(back.get(longName), `ustar-prefix long name lost: have ${[...back.keys()]}`);
+			assert.ok(back.get(gnuName), `GNU longname lost: have ${[...back.keys()]}`);
+			assert.equal(await back.get(longName).text(), "a");
+			assert.equal(await back.get(gnuName).text(), "b");
+			console.log("[test-node-shims] archive long-name round-trip OK");
+		} finally {
+			rmSync(longTar, { force: true });
+		}
+
 		// B-3: a traversal entry name must be sanitized in the returned Map keys.
 		const malicious = buildEvilTar();
 		const evilFiles = await new BunArchive(malicious).files();
@@ -266,6 +283,53 @@ try {
 		console.log("[test-node-shims] serve tls → https OK");
 	} finally {
 		server.stop();
+	}
+
+	// round-4 SQ-1 proc: request.signal must abort when the client disconnects
+	// mid-stream (so handlers cancel upstream work / stop token burn).
+	{
+		const { request, get } = await import("node:http");
+		void request;
+		let captured;
+		const plainServer = bunServe({
+			hostname: "127.0.0.1",
+			port: 0,
+			fetch: req => {
+				captured = req.signal;
+				// Never-ending stream so we can disconnect mid-flight.
+				return new Response(
+					new ReadableStream({
+						start(controller) {
+							controller.enqueue(new TextEncoder().encode("x"));
+						},
+					}),
+				);
+			},
+		});
+		try {
+			// listen() is async — wait until the port is actually bound.
+			for (let i = 0; i < 50 && plainServer.port === 0; i++) await new Promise(r => setTimeout(r, 10));
+			const aborted = new Promise(resolve => {
+				const poll = setInterval(() => {
+					if (captured?.aborted) {
+						clearInterval(poll);
+						resolve(true);
+					}
+				}, 10);
+				setTimeout(() => {
+					clearInterval(poll);
+					resolve(false);
+				}, 3000);
+			});
+			const clientReq = get({ hostname: "127.0.0.1", port: plainServer.port, path: "/" }, res => {
+				res.once("data", () => clientReq.destroy()); // disconnect mid-stream
+			});
+			clientReq.on("error", () => {});
+			assert.equal(await aborted, true, "request.signal did not abort on client disconnect");
+			console.log("[test-node-shims] serve request.signal aborts on disconnect OK");
+		} finally {
+			plainServer.stop();
+		}
 	}
 }
 

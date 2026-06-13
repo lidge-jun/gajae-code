@@ -29,7 +29,13 @@ interface BunServeOptions {
 	error?: (error: Error) => Response | Promise<Response>;
 }
 
-function toRequest(req: IncomingMessage, hostname: string, port: number, scheme: "http" | "https"): Request {
+function toRequest(
+	req: IncomingMessage,
+	hostname: string,
+	port: number,
+	scheme: "http" | "https",
+	signal: AbortSignal,
+): Request {
 	const url = `${scheme}://${hostname}:${port}${req.url ?? "/"}`;
 	const headers = new Headers();
 	for (const [key, value] of Object.entries(req.headers)) {
@@ -42,6 +48,10 @@ function toRequest(req: IncomingMessage, hostname: string, port: number, scheme:
 		method,
 		headers,
 		body,
+		// request.signal must fire on client disconnect so handlers abort their
+		// upstream work (audit round-4 — auth-gateway streaming kept burning
+		// tokens after the client hung up).
+		signal,
 		// @ts-expect-error: required by undici for streamed request bodies
 		duplex: body ? "half" : undefined,
 	});
@@ -89,8 +99,16 @@ export function bunServe(options: BunServeOptions) {
 	const scheme: "http" | "https" = useTls ? "https" : "http";
 
 	const handler = (req: IncomingMessage, res: ServerResponse) => {
+		// Abort request.signal when the client disconnects before the response
+		// finishes, so streaming handlers cancel upstream work.
+		const requestAbort = new AbortController();
+		const abortOnDisconnect = () => {
+			if (!res.writableEnded) requestAbort.abort();
+		};
+		req.once("aborted", () => requestAbort.abort());
+		res.once("close", abortOnDisconnect);
 		Promise.resolve()
-			.then(() => options.fetch(toRequest(req, hostname, boundPort(), scheme)))
+			.then(() => options.fetch(toRequest(req, hostname, boundPort(), scheme, requestAbort.signal)))
 			.catch(async error => {
 				if (options.error) return options.error(error instanceof Error ? error : new Error(String(error)));
 				return new Response("Internal Server Error", { status: 500 });
